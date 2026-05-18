@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://dux0c4yvhk7g8"]
+
+[ext_resource type="Script" uid="uid://v3ov57an8kkk" path="res://scripts/computer_mode.gd" id="1_0h3js"]
+[ext_resource type="Texture2D" uid="uid://blw076u518iu4" path="res://assets/textures/2d/DesktopWallpaper.jpg" id="1_cyo47"]
+
+[node name="ComputerMode" type="Node2D" unique_id=1704554778]
+
+[node name="Control" type="Control" parent="." unique_id=1007352054]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1918.0
+offset_bottom = 1093.0
+script = ExtResource("1_0h3js")
+
+[node name="TextureRect" type="TextureRect" parent="Control" unique_id=876093448]
+layout_mode = 0
+offset_top = -1.0
+offset_right = 1924.0
+offset_bottom = 1079.0
+texture = ExtResource("1_cyo47")
+expand_mode = 1
+
+[node name="StartMenu" type="Control" parent="Control" unique_id=675941040]
+anchors_preset = 0
+offset_left = 421.0
+offset_top = 1050.0
+offset_right = 481.0
+offset_bottom = 1078.0

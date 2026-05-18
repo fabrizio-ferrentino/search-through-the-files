@@ -1,0 +1,229 @@
+[gd_scene format=3 uid="uid://c7l3nm4e5fj03"]
+
+[ext_resource type="Script" uid="uid://bpfpflh4pugmb" path="res://scripts/player.gd" id="1_ig7tw"]
+[ext_resource type="Texture2D" uid="uid://cf87bwpecaget" path="res://assets/textures/3d/freccia_test.png" id="3_sugp2"]
+[ext_resource type="PackedScene" uid="uid://cxlp1v6odc6t3" path="res://scenes/fade_transition.tscn" id="4_jyhfs"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_7dm0k"]
+size = Vector3(8, 1, 7)
+
+[sub_resource type="Skin" id="Skin_7dm0k"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ig7tw"]
+albedo_color = Color(0.9999997, 0.95304626, 0.8443742, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ig7tw"]
+size = Vector3(7, 2, 0.5)
+
+[sub_resource type="Skin" id="Skin_ig7tw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
+albedo_color = Color(0, 1, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
+size = Vector3(2, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h2yge"]
+albedo_color = Color(0.7609594, 0.45180422, 0.14333645, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_h2yge"]
+size = Vector3(0.1, 0.5, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1bvp3"]
+albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lquwl"]
+albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7mycd"]
+albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_272bh"]
+albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5vw27"]
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_kek77"]
+size = Vector3(0.8, 0.7, 0.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0xm2m"]
+size = Vector3(0.7980957, 0.7149048, 0.11601257)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1bvp3"]
+size = Vector3(2.5, 0.3, 2.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lquwl"]
+size = Vector3(1, 0.2, 5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7mycd"]
+size = Vector3(0.3, 0.5, 0.7)
+
+[node name="Main" type="Node3D" unique_id=1043109776]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.221631e-05, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=917111675]
+transform = Transform3D(1, 0, 0, 0, 0.99357975, 0.11313385, 0, -0.11313385, 0.99357975, 0, 1.071762, -0.15521282)
+current = true
+script = ExtResource("1_ig7tw")
+
+[node name="RayCast3D" type="RayCast3D" parent="Camera3D" unique_id=58417763]
+target_position = Vector3(0, 0, -5)
+hit_from_inside = true
+
+[node name="floor" type="MeshInstance3D" parent="." unique_id=1915039305]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5229533, -0.3878275, 0.9360542)
+mesh = SubResource("BoxMesh_7dm0k")
+skin = SubResource("Skin_7dm0k")
+surface_material_override/0 = SubResource("StandardMaterial3D_ig7tw")
+
+[node name="wall" type="MeshInstance3D" parent="." unique_id=97706679]
+transform = Transform3D(1, 0, 0, 0, 0.99985194, 0.017208098, 0, -0.017208098, 0.99985194, 0.9258392, 1.0959406, -2.2526855)
+mesh = SubResource("BoxMesh_ig7tw")
+skin = SubResource("Skin_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
+
+[node name="wallLeft" type="MeshInstance3D" parent="." unique_id=585122192]
+transform = Transform3D(-0.007539794, -0.017207608, 0.9998235, 1.15732646e-10, 0.99985194, 0.017208098, -0.99997157, 0.00012974546, -0.0075386763, -1.8615155, 1.0959406, 0.94001746)
+mesh = SubResource("BoxMesh_ig7tw")
+skin = SubResource("Skin_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
+
+[node name="Desk" type="Node3D" parent="." unique_id=594763906]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82042825, -0.43066728)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Desk" unique_id=1790002806]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2652284, -0.84313333)
+mesh = SubResource("BoxMesh_0xm2m")
+surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Desk" unique_id=1841648782]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.71891904, -0.47228283, -0.4786783)
+mesh = SubResource("BoxMesh_h2yge")
+surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Desk" unique_id=209132682]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8013309, -0.47228283, -0.54203135)
+mesh = SubResource("BoxMesh_h2yge")
+surface_material_override/0 = SubResource("StandardMaterial3D_lquwl")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="Desk" unique_id=1395386087]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8013309, -0.47228283, -1.2141782)
+mesh = SubResource("BoxMesh_h2yge")
+surface_material_override/0 = SubResource("StandardMaterial3D_7mycd")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="Desk" unique_id=1168794205]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7523378, -0.47228283, -1.2141782)
+mesh = SubResource("BoxMesh_h2yge")
+surface_material_override/0 = SubResource("StandardMaterial3D_272bh")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=47843843]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08729151, 0.9562241, -1.3487917)
+light_energy = 0.5
+shadow_enabled = true
+distance_fade_enabled = true
+omni_shadow_mode = 0
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=554923459]
+
+[node name="ArrowsUI" type="Control" parent="HUD" unique_id=742749052]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1931.0
+offset_bottom = 1088.0
+mouse_filter = 2
+
+[node name="ArrowLeft" type="TextureRect" parent="HUD/ArrowsUI" unique_id=1999008925]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -440.0
+offset_right = 169.0
+offset_bottom = 440.0
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_sugp2")
+expand_mode = 1
+
+[node name="ArrowRight" type="TextureRect" parent="HUD/ArrowsUI" unique_id=1163388641]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -17.0
+offset_top = 306.0
+offset_right = 153.0
+offset_bottom = 997.0
+grow_horizontal = 0
+grow_vertical = 2
+rotation = -3.1415927
+mouse_filter = 2
+texture = ExtResource("3_sugp2")
+expand_mode = 1
+
+[node name="ArrowDown" type="TextureRect" parent="HUD/ArrowsUI" unique_id=334145443]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -268.5
+offset_top = -14.0
+offset_right = -99.70508
+offset_bottom = 513.8462
+grow_horizontal = 2
+grow_vertical = 0
+rotation = -1.5707964
+mouse_filter = 2
+texture = ExtResource("3_sugp2")
+expand_mode = 1
+
+[node name="Monitor" type="StaticBody3D" parent="." unique_id=1292945562]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07303682, 0.8996804, -1.4771419)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Monitor" unique_id=580456520]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.010440588, 0.061498284, 0.015465856)
+material_override = SubResource("StandardMaterial3D_5vw27")
+mesh = SubResource("BoxMesh_kek77")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Monitor" unique_id=683993499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01159668, 0.05890429, 0.01559937)
+shape = SubResource("BoxShape3D_0xm2m")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1272449623]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2698758, 0.46310008, 2.821858)
+mesh = SubResource("BoxMesh_1bvp3")
+
+[node name="wallBack" type="MeshInstance3D" parent="." unique_id=198318539]
+transform = Transform3D(-0.9999972, 0.0013128931, 0.0019926056, 0.0012881268, 0.99992263, -0.012380946, -0.00200871, -0.012378347, -0.99992144, 0.97240496, 1.1290972, 4.5503745)
+mesh = SubResource("BoxMesh_ig7tw")
+skin = SubResource("Skin_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
+
+[node name="wallRight" type="Node3D" parent="." unique_id=509803419]
+
+[node name="wallBack2" type="MeshInstance3D" parent="wallRight" unique_id=1968206476]
+transform = Transform3D(-0.016511623, -0.012358003, -0.99978733, 0.0012881269, 0.99992263, -0.0123809455, 0.9998628, -0.0014922803, -0.016494421, 4.237809, 1.1290972, 3.4372745)
+mesh = SubResource("BoxMesh_ig7tw")
+skin = SubResource("Skin_ig7tw")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="wallRight" unique_id=1667210667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4158497, 2.0155385, 0)
+mesh = SubResource("BoxMesh_lquwl")
+skeleton = NodePath("../..")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=1258136410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6107557, 0.8688487, -1.2833458)
+mesh = SubResource("BoxMesh_7mycd")
+
+[node name="Fade_transition" parent="." unique_id=978627174 instance=ExtResource("4_jyhfs")]
+visible = false
+
+[node name="fade_timer" type="Timer" parent="Fade_transition" unique_id=1530985540]

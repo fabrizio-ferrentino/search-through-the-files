@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://bc03vn4q0f1j6"]
+
+[ext_resource type="Script" uid="uid://odmd36o4aatm" path="res://scripts/main_menu.gd" id="1_06t4h"]
+[ext_resource type="Texture2D" uid="uid://ci5aecoj8enrl" path="res://logo.png" id="2_bqqt6"]
+[ext_resource type="PackedScene" uid="uid://cxlp1v6odc6t3" path="res://scenes/fade_transition.tscn" id="3_fu7sn"]
+
+[sub_resource type="FontFile" id="FontFile_ekxnf"]
+cache/0/variation_coordinates = {}
+cache/0/face_index = 0
+cache/0/embolden = 0.0
+cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
+cache/0/spacing_top = 0
+cache/0/spacing_bottom = 0
+cache/0/spacing_space = 0
+cache/0/spacing_glyph = 0
+cache/0/baseline_offset = 0.0
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+cache/0/30/0/ascent = 0.0
+cache/0/30/0/descent = 0.0
+cache/0/30/0/underline_position = 0.0
+cache/0/30/0/underline_thickness = 0.0
+cache/0/30/0/scale = 1.0
+cache/0/50/0/ascent = 0.0
+cache/0/50/0/descent = 0.0
+cache/0/50/0/underline_position = 0.0
+cache/0/50/0/underline_thickness = 0.0
+cache/0/50/0/scale = 1.0
+cache/0/60/0/ascent = 0.0
+cache/0/60/0/descent = 0.0
+cache/0/60/0/underline_position = 0.0
+cache/0/60/0/underline_thickness = 0.0
+cache/0/60/0/scale = 1.0
+
+[node name="Main Menu" type="Node2D" unique_id=1896803122]
+position = Vector2(-1, 2)
+script = ExtResource("1_06t4h")
+
+[node name="button_manager" type="Control" parent="." unique_id=1631175372]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Start" type="Button" parent="button_manager" unique_id=624166923]
+layout_mode = 0
+offset_left = 1055.0
+offset_top = 291.0
+offset_right = 1765.0
+offset_bottom = 494.0
+theme_override_fonts/font = SubResource("FontFile_ekxnf")
+theme_override_font_sizes/font_size = 60
+text = "Start"
+
+[node name="Option" type="Button" parent="button_manager" unique_id=1272375437]
+layout_mode = 0
+offset_left = 1048.0
+offset_top = 521.0
+offset_right = 1766.0
+offset_bottom = 726.0
+theme_override_font_sizes/font_size = 60
+disabled = true
+text = "Option"
+
+[node name="Quit" type="Button" parent="button_manager" unique_id=452922375]
+layout_mode = 0
+offset_left = 1053.0
+offset_top = 754.0
+offset_right = 1778.0
+offset_bottom = 961.0
+theme_override_font_sizes/font_size = 60
+text = "Quit"
+
+[node name="Label" type="Label" parent="button_manager" unique_id=419814717]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 4.4220004
+anchor_bottom = 2.782
+offset_left = 213.0
+offset_top = 17.0
+offset_right = 1561.12
+offset_bottom = 171.72
+theme_override_font_sizes/font_size = 90
+text = "Search Through the Files"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="button_manager" unique_id=2085292955]
+layout_mode = 0
+offset_left = -52.0
+offset_top = 224.0
+offset_right = 1116.0
+offset_bottom = 1068.0
+texture = ExtResource("2_bqqt6")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Fade_transition" parent="." unique_id=2045610289 instance=ExtResource("3_fu7sn")]
+visible = false
+
+[node name="fade_timer" type="Timer" parent="Fade_transition" unique_id=1416837605]
+
+[connection signal="pressed" from="button_manager/Start" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="button_manager/Option" to="." method="_on_option_pressed"]
+[connection signal="pressed" from="button_manager/Quit" to="." method="_on_quit_pressed"]
+[connection signal="timeout" from="Fade_transition/fade_timer" to="." method="_on_fade_timer_timeout"]
