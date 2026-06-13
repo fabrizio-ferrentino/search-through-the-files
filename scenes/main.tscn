@@ -111,10 +111,26 @@ surface_material_override/0 = SubResource("StandardMaterial3D_272bh")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=47843843]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08729151, 0.9562241, -1.3487917)
-light_energy = 0.5
+light_color = Color(0.6, 0.7, 0.9, 1)
+light_energy = 0.15
+omni_range = 6.0
 shadow_enabled = true
 distance_fade_enabled = true
 omni_shadow_mode = 0
+
+[node name="ScreenGlow" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.7, -1.0)
+light_color = Color(0.4, 0.7, 1.0, 1)
+light_energy = 0.8
+omni_range = 3.0
+shadow_enabled = true
+
+[node name="CornerShadow" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.5, 1.0)
+light_color = Color(0.5, 0.6, 0.5, 1)
+light_energy = 0.08
+omni_range = 5.0
+shadow_enabled = false
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=554923459]
 
