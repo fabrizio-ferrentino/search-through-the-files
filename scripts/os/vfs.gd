@@ -39,6 +39,20 @@ static func resolve_path(parts: Array) -> Dictionary:
 		cur = found
 	return cur
 
+# Risolve un percorso in un nodo qualsiasi (file o cartella); null se non esiste.
+static func resolve_node(parts: Array):
+	var cur = get_root()
+	for i in range(1, parts.size()):
+		var found = null
+		for c in cur.get("children", []):
+			if c.get("name", "") == parts[i]:
+				found = c
+				break
+		if found == null:
+			return null
+		cur = found
+	return cur
+
 static func _link_parents(node: Dictionary, parent) -> void:
 	node["_parent"] = parent
 	for child in node.get("children", []):
@@ -53,9 +67,15 @@ static func _text(name: String, content: String) -> Dictionary:
 static func _html(name: String, url: String) -> Dictionary:
 	return {"name": name, "type": "file", "icon": "ie", "filetype": "html", "url": url}
 
+# Cartella che rappresenta il Desktop (i file creati sulla scrivania).
+static func get_desktop() -> Dictionary:
+	var d = resolve_node(["Risorse del computer", "Disco locale (C:)", "Desktop"])
+	return d if d is Dictionary else get_root()
+
 static func _build() -> Dictionary:
 	return _folder("Risorse del computer", "computer", [
 		_folder("Disco locale (C:)", "folder", [
+			_folder("Desktop", "folder", []),
 			_folder("Documenti", "folder", [
 				_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),
 				_text("password.txt", "NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)"),

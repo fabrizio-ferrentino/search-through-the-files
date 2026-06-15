@@ -12,6 +12,7 @@ var _scroll: ScrollContainer
 var _page_bg: ColorRect
 var _inspector: Control
 var _inspector_edit: TextEdit
+var _resizing := false
 
 var _ctx_layer: Control
 var _ctx_menu: VBoxContainer
@@ -162,6 +163,28 @@ func _build_inspector(root: Control) -> void:
 	_inspector.add_theme_constant_override("separation", 0)
 	root.add_child(_inspector)
 
+	# maniglia per ridimensionare l'altezza (trascina su/giu')
+	var grip := Panel.new()
+	grip.custom_minimum_size = Vector2(0, 9)
+	grip.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+	grip.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 0, 0, 0, 0))
+	grip.gui_input.connect(_on_grip_input)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	grip.add_child(center)
+	var marker := HBoxContainer.new()
+	marker.add_theme_constant_override("separation", 3)
+	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center.add_child(marker)
+	for i in range(2):
+		var dot := ColorRect.new()
+		dot.color = Win95.C_SHADOW
+		dot.custom_minimum_size = Vector2(22, 2)
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		marker.add_child(dot)
+	_inspector.add_child(grip)
+
 	var head := Panel.new()
 	head.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 6, 3, 6, 3))
 	head.custom_minimum_size = Vector2(0, 26)
@@ -188,6 +211,15 @@ func _build_inspector(root: Control) -> void:
 	_inspector_edit.add_theme_font_size_override("font_size", 16)
 	_inspector_edit.add_theme_font_override("font", ThemeDB.fallback_font)
 	_inspector.add_child(_inspector_edit)
+
+# Trascina la maniglia in cima all'inspector per cambiarne l'altezza.
+func _on_grip_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_resizing = event.pressed
+	elif event is InputEventMouseMotion and _resizing:
+		var cms := _inspector.custom_minimum_size
+		cms.y = clampf(cms.y - event.relative.y, 90.0, maxf(120.0, size.y - 220.0))
+		_inspector.custom_minimum_size = cms
 
 func _build_ctx_menu() -> void:
 	_ctx_layer = Control.new()

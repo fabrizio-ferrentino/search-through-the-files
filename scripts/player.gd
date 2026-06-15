@@ -21,11 +21,7 @@ var reset_margin = 0.10 # Margine largo per resettare
 # --- animazione di ingresso nel PC (telecamera che entra nello schermo) ---
 @export var fly_time := 0.4        # durata del volo verso lo schermo (secondi) - più basso = più veloce
 @export var fly_fov_zoom := 12.0   # di quanto stringere il FOV durante il volo (zoom)
-@export var fade_speed := 2.8      # velocità della dissolvenza al nero (più alto = più rapida)
 var entering := false
-var _fly_from := Vector3.ZERO
-var _fly_to := Vector3.ZERO
-var _fly_look := Vector3.ZERO
 
 # --- schermo del monitor nella stanza (mostra il desktop del PC) ---
 @export_group("Schermo monitor")
@@ -35,14 +31,19 @@ var _fly_look := Vector3.ZERO
 @export var screen_nudge := Vector3(0.007, 0.0, 0)  # micro-aggiustamento di posizione
 
 func _ready():
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	_setup_monitor_screen()
+	if GameManager.returning_from_pc:
+		# rientro dal PC: animazione inversa (zoom-out dallo schermo + dissolvenza dal nero)
+		GameManager.returning_from_pc = false
+		_play_exit_reverse()
+		return
 	if GameManager.first_time_in_room:
 		$"../Fade_transition".show()
 		$"../Fade_transition/fade_timer".start()
 		$"../Fade_transition/AnimationPlayer".play("fade_out")
 		GameManager.first_time_in_room = false
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_update_arrows() # Imposta le frecce iniziali
-	_setup_monitor_screen()
 
 func _input(event):
 	if entering:
@@ -73,20 +74,60 @@ func _enter_pc() -> void:
 	arrow_down.hide()
 
 	var screen := _screen_point()
-	_fly_from = global_position
-	_fly_to = _fly_from.lerp(screen, 0.9)   # quasi a contatto con lo schermo
-	_fly_look = screen
+	# interpola dal transform ATTUALE (niente scatto iniziale del look_at)
+	var t_start := global_transform
+	var near := t_start.origin.lerp(screen, 0.9)   # quasi a contatto con lo schermo
+	var t_end := Transform3D(Basis.IDENTITY, near).looking_at(screen, Vector3.UP)
 	var start_fov := fov
 
+	# dissolvenza al nero IN PARALLELO al volo: a zoom massimo lo schermo e' gia' nero
+	_play_fade("fade_in", fly_time * 0.85)
 	var tw := create_tween()
 	tw.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tw.tween_method(_fly_step, 0.0, 1.0, fly_time)
+	tw.tween_method(func(s: float): global_transform = t_start.interpolate_with(t_end, s), 0.0, 1.0, fly_time)
 	tw.parallel().tween_property(self, "fov", start_fov - fly_fov_zoom, fly_time)
-	tw.tween_callback(_start_fade)
+	tw.tween_callback(_go_to_pc)
 
-func _fly_step(t: float) -> void:
-	global_position = _fly_from.lerp(_fly_to, t)
-	look_at(_fly_look, Vector3.UP)
+func _go_to_pc() -> void:
+	get_tree().change_scene_to_file("res://scenes/ComputerMode.tscn")
+
+# Animazione inversa al rientro: parte dallo schermo (nero + zoom) e si allontana rivelando la stanza.
+func _play_exit_reverse() -> void:
+	entering = true
+	arrow_left.hide()
+	arrow_right.hide()
+	arrow_down.hide()
+	var screen := _screen_point()
+	var t_default := global_transform
+	var fov_default := fov
+	var near := t_default.origin.lerp(screen, 0.9)
+	var t_start := Transform3D(Basis.IDENTITY, near).looking_at(screen, Vector3.UP)
+	global_transform = t_start
+	fov = fov_default - fly_fov_zoom
+	# dissolvenza DAL nero in parallelo allo zoom-out
+	_play_fade("fade_out", fly_time)
+	var tw := create_tween()
+	tw.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_method(func(s: float): global_transform = t_start.interpolate_with(t_default, s), 0.0, 1.0, fly_time)
+	tw.parallel().tween_property(self, "fov", fov_default, fly_time)
+	tw.tween_callback(func():
+		entering = false
+		_update_arrows())
+
+# Avvia un'animazione della dissolvenza ("fade_in"=verso il nero, "fade_out"=dal nero)
+# regolando la velocita' per farla durare il tempo indicato.
+func _play_fade(anim: String, duration: float) -> void:
+	var fade = get_node_or_null("../Fade_transition")
+	if fade == null:
+		return
+	fade.show()
+	var ap = fade.get_node_or_null("AnimationPlayer")
+	if ap == null:
+		return
+	var a = ap.get_animation(anim)
+	if a:
+		ap.speed_scale = a.length / max(0.05, duration)
+	ap.play(anim)
 
 # --- schermo del monitor: mostra la "foto" del desktop sul vetro ---
 func _setup_monitor_screen() -> void:
@@ -234,17 +275,6 @@ func _screen_point() -> Vector3:
 	if glow:
 		return glow.global_position
 	return global_position - global_transform.basis.z * 1.0
-
-func _start_fade() -> void:
-	var fade = get_node_or_null("../Fade_transition")
-	if fade:
-		fade.show()
-		var ap = fade.get_node_or_null("AnimationPlayer")
-		if ap:
-			ap.speed_scale = fade_speed
-			ap.play("fade_in")
-			await ap.animation_finished
-	get_tree().change_scene_to_file("res://scenes/ComputerMode.tscn")
 
 func _process(delta):
 	if entering:

@@ -4,6 +4,7 @@ extends VBoxContainer
 # Icona + etichetta selezionabile, usata sul desktop e dentro l'esplora risorse.
 signal activated(data)        # doppio click / Invio
 signal picked(item)           # singolo click (per la selezione singola del contenitore)
+signal context_requested(item)  # tasto destro
 
 var data: Dictionary = {}
 var selected := false
@@ -40,11 +41,16 @@ func set_selected(v: bool) -> void:
 	queue_redraw()
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		picked.emit(self)
-		if event.double_click:
-			activated.emit(data)
-		accept_event()
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			picked.emit(self)
+			if event.double_click:
+				activated.emit(data)
+			accept_event()
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			picked.emit(self)
+			context_requested.emit(self)
+			accept_event()
 
 func _draw() -> void:
 	if selected and _label:

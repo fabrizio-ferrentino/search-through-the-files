@@ -36,6 +36,14 @@ static func bevel_rid(ci: RID, rect: Rect2, raised: bool, double: bool = true) -
 		RenderingServer.canvas_item_add_rect(ci, Rect2(x + 1.0, y + h - 2.0, w - 2.0, 1.0), br_i)
 		RenderingServer.canvas_item_add_rect(ci, Rect2(x + w - 2.0, y + 1.0, 1.0, h - 2.0), br_i)
 
+# Larghezza adatta per un menu, in base alla voce di testo piu' lunga.
+static func menu_width(labels: Array, min_w := 120.0) -> float:
+	var f := ThemeDB.fallback_font
+	var w := min_w
+	for s in labels:
+		w = max(w, f.get_string_size(str(s), HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x + 38.0)
+	return w
+
 static func _sb(raised: bool, bg: Color, double: bool, ml: int, mt: int, mr: int, mb: int) -> StyleBoxWin95:
 	var s := StyleBoxWin95.new()
 	s.raised = raised

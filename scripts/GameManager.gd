@@ -9,3 +9,6 @@ var pc_session = null
 
 # Ultima "foto" del desktop, mostrata sullo schermo del monitor nella stanza.
 var pc_screenshot: Image = null
+
+# True quando si torna dal PC alla stanza: attiva l'animazione inversa (zoom-out + dissolvenza).
+var returning_from_pc = false

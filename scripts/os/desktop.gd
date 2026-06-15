@@ -19,6 +19,10 @@ var taskbar_buttons: Dictionary = {}   # OSWindow -> Button
 var active_window: OSWindow = null
 var _cascade := 0
 var _desk_sel: DesktopItem = null
+var _exiting := false
+var _ctx_layer: Control
+var _ctx_panel: Panel
+var _ctx_vbox: VBoxContainer
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -37,9 +41,13 @@ func _ready() -> void:
 
 	_build_taskbar()
 	_build_start_menu()
+	_build_desktop_menu()
 
 	# ripristina le finestre della sessione precedente (sessione continua)
 	_restore_session()
+
+	# rivela il desktop dal nero (entrando nel PC)
+	_reveal_screen()
 
 # ---------------- costruzione UI ----------------
 
@@ -49,7 +57,10 @@ func _build_wallpaper() -> void:
 	wp.set_anchors_preset(Control.PRESET_FULL_RECT)
 	wp.gui_input.connect(func(e):
 		if e is InputEventMouseButton and e.pressed:
-			_deselect_desktop())
+			if e.button_index == MOUSE_BUTTON_RIGHT:
+				_show_desktop_menu([["Nuovo documento di testo", _new_desktop_file]])
+			else:
+				_deselect_desktop())
 	add_child(wp)
 
 func _build_icons() -> void:
@@ -57,7 +68,12 @@ func _build_icons() -> void:
 	icons_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	icons_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(icons_layer)
+	_refresh_icons()
 
+func _refresh_icons() -> void:
+	for c in icons_layer.get_children():
+		c.queue_free()
+	_desk_sel = null
 	var defs := [
 		{"name": "Risorse del computer", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
@@ -66,13 +82,22 @@ func _build_icons() -> void:
 	]
 	var y := 24.0
 	for d in defs:
-		var item := DesktopItem.new()
-		item.setup(d, 48, 100, Win95.C_TITLE_TEXT)
-		item.position = Vector2(20, y)
-		item.activated.connect(_on_desktop_activated)
-		item.picked.connect(_on_desktop_picked)
-		icons_layer.add_child(item)
+		_add_desktop_item(d, y, false)
 		y += 108.0
+	# file creati sul desktop (dal VFS)
+	for f in VFS.get_desktop().get("children", []):
+		_add_desktop_item(f, y, true)
+		y += 108.0
+
+func _add_desktop_item(d: Dictionary, y: float, is_file: bool) -> void:
+	var item := DesktopItem.new()
+	item.setup(d, 48, 100, Win95.C_TITLE_TEXT)
+	item.position = Vector2(20, y)
+	item.activated.connect(_on_desktop_activated)
+	item.picked.connect(_on_desktop_picked)
+	if is_file:
+		item.context_requested.connect(_on_desktop_item_context)
+	icons_layer.add_child(item)
 
 func _build_taskbar() -> void:
 	taskbar = Panel.new()
@@ -306,11 +331,106 @@ func _on_desktop_picked(item: DesktopItem) -> void:
 func _on_desktop_activated(data: Dictionary) -> void:
 	if data.has("open"):
 		data["open"].call()
+	elif data.get("type", "") == "folder":
+		open_app("explorer", data)
+	elif data.get("type", "") == "file":
+		if data.get("filetype", "") == "html":
+			open_app("browser", data.get("url", "start"))
+		else:
+			open_app("notepad", data)
+
+func _on_desktop_item_context(item: DesktopItem) -> void:
+	var data: Dictionary = item.data
+	_show_desktop_menu([
+		["Apri", func(): _on_desktop_activated(data)],
+		["Elimina", func(): _delete_desktop_file(data)],
+	])
 
 func _deselect_desktop() -> void:
 	if _desk_sel:
 		_desk_sel.set_selected(false)
 		_desk_sel = null
+
+# ---------------- crea / elimina file sul desktop ----------------
+
+func _new_desktop_file() -> void:
+	var df := VFS.get_desktop()
+	var base := "Nuovo documento"
+	var fname := base + ".txt"
+	var n := 1
+	while _desktop_name_exists(df, fname):
+		n += 1
+		fname = "%s (%d).txt" % [base, n]
+	var f := {"name": fname, "type": "file", "icon": "text", "filetype": "text", "content": "", "_parent": df}
+	if not df.has("children"):
+		df["children"] = []
+	df["children"].append(f)
+	_refresh_icons()
+
+func _desktop_name_exists(df: Dictionary, n: String) -> bool:
+	for c in df.get("children", []):
+		if c.get("name", "") == n:
+			return true
+	return false
+
+func _delete_desktop_file(data) -> void:
+	var ch: Array = VFS.get_desktop().get("children", [])
+	for i in range(ch.size()):
+		if is_same(ch[i], data):
+			ch.remove_at(i)
+			break
+	_refresh_icons()
+
+# ---------------- menu contestuale del desktop ----------------
+
+func _build_desktop_menu() -> void:
+	_ctx_layer = Control.new()
+	_ctx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_ctx_layer.visible = false
+	add_child(_ctx_layer)
+	var catcher := Control.new()
+	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
+	catcher.gui_input.connect(func(e):
+		if e is InputEventMouseButton and e.pressed:
+			_ctx_layer.visible = false)
+	_ctx_layer.add_child(catcher)
+	_ctx_panel = Panel.new()
+	_ctx_layer.add_child(_ctx_panel)
+	_ctx_vbox = VBoxContainer.new()
+	_ctx_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_ctx_vbox.offset_left = 3
+	_ctx_vbox.offset_top = 3
+	_ctx_vbox.offset_right = -3
+	_ctx_vbox.offset_bottom = -3
+	_ctx_vbox.add_theme_constant_override("separation", 0)
+	_ctx_panel.add_child(_ctx_vbox)
+
+func _show_desktop_menu(items: Array) -> void:
+	for c in _ctx_vbox.get_children():
+		c.free()
+	var labels: Array = []
+	for it in items:
+		var b := Button.new()
+		b.text = it[0]
+		b.flat = true
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.focus_mode = Control.FOCUS_NONE
+		var cb: Callable = it[1]
+		b.pressed.connect(func():
+			_ctx_layer.visible = false
+			cb.call())
+		_ctx_vbox.add_child(b)
+		labels.append(it[0])
+	var ms := _ctx_vbox.get_combined_minimum_size()
+	var w := maxf(Win95.menu_width(labels), ms.x + 6.0)
+	var ht := ms.y + 6.0
+	_ctx_panel.size = Vector2(w, ht)
+	var pos := get_local_mouse_position()
+	pos.x = clamp(pos.x, 0.0, max(0.0, size.x - w))
+	pos.y = clamp(pos.y, 0.0, max(0.0, size.y - ht))
+	_ctx_panel.position = pos
+	_ctx_layer.visible = true
+	_ctx_layer.move_to_front()
 
 # ---------------- start menu ----------------
 
@@ -322,6 +442,8 @@ func _toggle_start_menu() -> void:
 # ---------------- input globale ----------------
 
 func _input(event: InputEvent) -> void:
+	if _exiting:
+		return
 	if event.is_action_pressed("ui_cancel"):
 		# ESC: esci subito dal PC e torna nella stanza (salvando la sessione)
 		_exit_to_room()
@@ -338,9 +460,11 @@ func _input(event: InputEvent) -> void:
 		_focus_under_mouse(mp)
 
 func _focus_under_mouse(mp: Vector2) -> void:
-	for i in range(windows.size() - 1, -1, -1):
-		var w: OSWindow = windows[i]
-		if w.visible and w.get_global_rect().has_point(mp):
+	# itera nell'ordine visivo (z-order): l'ultimo figlio e' quello in primo piano
+	var kids := window_layer.get_children()
+	for i in range(kids.size() - 1, -1, -1):
+		var w := kids[i] as OSWindow
+		if w != null and w.visible and w.get_global_rect().has_point(mp):
 			if w != active_window:
 				focus_window(w)
 			else:
@@ -368,9 +492,23 @@ func _folder_path(names: Array) -> Dictionary:
 	return cur
 
 func _exit_to_room() -> void:
+	if _exiting:
+		return
+	_exiting = true
 	_save_session()
 	_capture_screen()
+	GameManager.returning_from_pc = true
+	# cambio scena diretto: e' la stanza a fare l'animazione inversa (parte dal nero)
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+# Overlay nero a tutto schermo: rivela il desktop dal nero entrando nel PC.
+func _reveal_screen() -> void:
+	var ov := get_node_or_null("../../../FadeOverlay") as ColorRect
+	if ov == null:
+		return
+	ov.color.a = 1.0
+	ov.visible = true
+	create_tween().tween_property(ov, "color:a", 0.0, 0.4)
 
 # Cattura il desktop (il SubViewport in cui gira l'OS) per mostrarlo sul monitor 3D.
 func _capture_screen() -> void:
@@ -425,7 +563,14 @@ func _spawn_entry(entry: Dictionary) -> void:
 		"browser":
 			win = open_app("browser", str(entry.get("url", "start")))
 		"notepad":
-			win = open_app("notepad", {"name": entry.get("file_name", "Senza nome"), "content": entry.get("text", "")})
+			# ricollega al file reale del VFS (se esiste ancora) per poterlo salvare
+			var f = null
+			var p: Array = entry.get("path", [])
+			if p.size() > 0:
+				f = VFS.resolve_node(p)
+			if f == null or f.get("type", "") != "file":
+				f = {"name": entry.get("file_name", "Senza nome"), "type": "file", "filetype": "text", "content": entry.get("text", "")}
+			win = open_app("notepad", f)
 	if win == null:
 		return
 	var r: Array = entry.get("rect", [])
