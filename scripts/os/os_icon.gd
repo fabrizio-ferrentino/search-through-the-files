@@ -29,6 +29,8 @@ func _draw() -> void:
 			_notepad(w, h)
 		"trash":
 			_trash(w, h)
+		"trash_full":
+			_trash(w, h, true)
 		"win":
 			_winflag(w, h)
 		"globe":
@@ -128,7 +130,12 @@ func _notepad(w: float, h: float) -> void:
 		var ly := page.position.y + h * (0.34 + i * 0.13)
 		draw_line(Vector2(page.position.x + 4, ly), Vector2(page.position.x + page.size.x - 4, ly), Color("9a9a9a"), 1.0)
 
-func _trash(w: float, h: float) -> void:
+func _trash(w: float, h: float, full := false) -> void:
+	# carta accartocciata che sporge quando il cestino e' pieno (disegnata prima del bidone)
+	if full:
+		for p in [Vector2(w * 0.36, h * 0.16), Vector2(w * 0.58, h * 0.12), Vector2(w * 0.48, h * 0.20)]:
+			draw_circle(p, w * 0.07, Color("eef0f2"))
+			draw_arc(p, w * 0.07, 0, TAU, 12, Color("9aa0a6"), 1.0)
 	var lid := Rect2(w * 0.24, h * 0.20, w * 0.52, h * 0.08)
 	draw_rect(lid, Color("9aa0a6"))
 	_outline(lid, Color("4a4f54"))

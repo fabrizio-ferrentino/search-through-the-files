@@ -72,6 +72,55 @@ static func get_desktop() -> Dictionary:
 	var d = resolve_node(["Risorse del computer", "Disco locale (C:)", "Desktop"])
 	return d if d is Dictionary else get_root()
 
+# Cartella "Cestino" (figlia diretta della radice).
+static func get_trash() -> Dictionary:
+	var d = resolve_node(["Risorse del computer", "Cestino"])
+	return d if d is Dictionary else get_root()
+
+# True se il nodo dato e' proprio la cartella Cestino.
+static func is_trash(node) -> bool:
+	return node is Dictionary and is_same(node, get_trash())
+
+# Sposta un file/cartella nel Cestino: lo stacca dal genitore e lo accoda al
+# Cestino, ricordando l'origine (per un eventuale ripristino) e rinominandolo se
+# nel Cestino esiste gia' un omonimo.
+static func move_to_trash(node) -> void:
+	if not node is Dictionary:
+		return
+	var trash := get_trash()
+	var parent = node.get("_parent", null)
+	# stacca dal genitore
+	if parent is Dictionary:
+		var siblings: Array = parent.get("children", [])
+		for i in range(siblings.size()):
+			if is_same(siblings[i], node):
+				siblings.remove_at(i)
+				break
+	if not trash.has("children"):
+		trash["children"] = []
+	if not node.has("_orig_parent"):
+		node["_orig_parent"] = parent
+	node["name"] = _unique_name(trash, node.get("name", "Senza nome"))
+	node["_parent"] = trash
+	trash["children"].append(node)
+
+# Nome non in conflitto con i figli di "folder" (aggiunge " (n)" prima dell'estensione).
+static func _unique_name(folder: Dictionary, wanted: String) -> String:
+	var taken := {}
+	for c in folder.get("children", []):
+		taken[c.get("name", "")] = true
+	if not taken.has(wanted):
+		return wanted
+	var dot := wanted.rfind(".")
+	var base := wanted if dot <= 0 else wanted.substr(0, dot)
+	var ext := "" if dot <= 0 else wanted.substr(dot)
+	var n := 2
+	var candidate := "%s (%d)%s" % [base, n, ext]
+	while taken.has(candidate):
+		n += 1
+		candidate = "%s (%d)%s" % [base, n, ext]
+	return candidate
+
 static func _build() -> Dictionary:
 	return _folder("Risorse del computer", "computer", [
 		_folder("Disco locale (C:)", "folder", [

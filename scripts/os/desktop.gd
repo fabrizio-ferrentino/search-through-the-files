@@ -82,11 +82,13 @@ func _refresh_icons() -> void:
 	for c in icons_layer.get_children():
 		c.queue_free()
 	_desk_sel = null
+	# icona del Cestino "pieno" quando contiene qualcosa
+	var trash_icon := "trash_full" if not VFS.get_trash().get("children", []).is_empty() else "trash"
 	var defs := [
 		{"name": "Risorse del computer", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
 		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "start")},
-		{"name": "Cestino", "icon": "trash", "open": func(): open_app("explorer", _folder_path(["Cestino"]))},
+		{"name": "Cestino", "icon": trash_icon, "open": func(): open_app("explorer", _folder_path(["Cestino"]))},
 	]
 	var y := 24.0
 	for d in defs:
@@ -382,11 +384,12 @@ func _desktop_name_exists(df: Dictionary, n: String) -> bool:
 	return false
 
 func _delete_desktop_file(data) -> void:
-	var ch: Array = VFS.get_desktop().get("children", [])
-	for i in range(ch.size()):
-		if is_same(ch[i], data):
-			ch.remove_at(i)
-			break
+	VFS.move_to_trash(data)   # va nel Cestino, non sparisce
+	_refresh_icons()
+
+# Ricostruisce le icone del desktop (es. dopo aver spostato file nel Cestino da
+# un'altra finestra): aggiorna anche lo stato pieno/vuoto del Cestino.
+func refresh_desktop() -> void:
 	_refresh_icons()
 
 # ---------------- menu contestuale del desktop ----------------
@@ -627,7 +630,7 @@ func _make_modal(title: String, dlg_size: Vector2, bg: Color) -> Dictionary:
 # Schermata di login: chiede la password (per ora "123") prima di mostrare il desktop.
 func _show_login() -> void:
 	_clear_state()
-	var dlg := _make_modal("Accesso a 52-HZ WHALE", Vector2(380, 196), Win95.C_DESKTOP)
+	var dlg := _make_modal("Accesso a 52-hz Whale", Vector2(380, 196), Win95.C_DESKTOP)
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 	_state_overlay = layer

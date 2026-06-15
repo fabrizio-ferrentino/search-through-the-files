@@ -250,12 +250,18 @@ func _delete_selected() -> void:
 		_delete_item(_selected.data)
 
 func _delete_item(data) -> void:
-	var ch: Array = _folder.get("children", [])
-	for i in range(ch.size()):
-		if is_same(ch[i], data):
-			ch.remove_at(i)
-			break
+	if VFS.is_trash(_folder):
+		# gia' nel Cestino: l'eliminazione e' definitiva
+		var ch: Array = _folder.get("children", [])
+		for i in range(ch.size()):
+			if is_same(ch[i], data):
+				ch.remove_at(i)
+				break
+	else:
+		VFS.move_to_trash(data)
 	_refresh()
+	if os and os.has_method("refresh_desktop"):
+		os.refresh_desktop()   # aggiorna l'icona del Cestino sul desktop
 
 # ---------------- menu contestuale ----------------
 
