@@ -8,7 +8,8 @@ var window
 var _folder: Dictionary
 var _history: Array = []          # per il pulsante "Indietro"
 var _grid: GridContainer
-var _addr: LineEdit
+var _addr: Label
+var _combo_icon: OSIcon
 var _items: Array = []
 var _selected: DesktopItem
 
@@ -16,35 +17,80 @@ func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var root := VBoxContainer.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_theme_constant_override("separation", 3)
+	root.add_theme_constant_override("separation", 2)
 	add_child(root)
 
-	# barra strumenti
-	var bar := HBoxContainer.new()
-	bar.add_theme_constant_override("separation", 4)
-	root.add_child(bar)
+	# --- barra dei menu ---
+	var menubar := HBoxContainer.new()
+	menubar.add_theme_constant_override("separation", 2)
+	for m in ["File", "Modifica", "Visualizza", "Strumenti", "?"]:
+		var mb := Button.new()
+		mb.text = m
+		mb.flat = true
+		mb.focus_mode = Control.FOCUS_NONE
+		menubar.add_child(mb)
+	root.add_child(menubar)
 
-	var b_back := Button.new()
-	b_back.text = "Indietro"
-	b_back.focus_mode = Control.FOCUS_NONE
-	b_back.pressed.connect(_go_back)
-	bar.add_child(b_back)
+	# --- barra strumenti (icone) ---
+	var toolbar := HBoxContainer.new()
+	toolbar.add_theme_constant_override("separation", 2)
+	root.add_child(toolbar)
+	toolbar.add_child(_tool_btn("back", _go_back))   # funzionante
+	toolbar.add_child(_tool_btn("up", _go_up))       # funzionante
+	toolbar.add_child(_vsep())
+	toolbar.add_child(_tool_btn("cut"))              # decorativi
+	toolbar.add_child(_tool_btn("copy"))
+	toolbar.add_child(_tool_btn("paste"))
+	toolbar.add_child(_vsep())
+	toolbar.add_child(_tool_btn("delete"))
+	toolbar.add_child(_tool_btn("props"))
+	toolbar.add_child(_vsep())
+	toolbar.add_child(_tool_btn("views"))
 
-	var b_up := Button.new()
-	b_up.text = "Su"
-	b_up.focus_mode = Control.FOCUS_NONE
-	b_up.pressed.connect(_go_up)
-	bar.add_child(b_up)
-
+	# --- barra indirizzo (stile combo) ---
+	var addrbar := HBoxContainer.new()
+	addrbar.add_theme_constant_override("separation", 6)
+	root.add_child(addrbar)
 	var addr_lbl := Label.new()
 	addr_lbl.text = "Indirizzo:"
 	addr_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	bar.add_child(addr_lbl)
+	addrbar.add_child(addr_lbl)
 
-	_addr = LineEdit.new()
-	_addr.editable = false
+	var combo := Panel.new()
+	combo.add_theme_stylebox_override("panel", Win95._sb(false, Win95.C_LIGHT, true, 4, 2, 4, 2))
+	combo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	combo.custom_minimum_size = Vector2(0, 28)
+	addrbar.add_child(combo)
+	var chb := HBoxContainer.new()
+	chb.set_anchors_preset(Control.PRESET_FULL_RECT)
+	chb.offset_left = 4
+	chb.offset_top = 2
+	chb.offset_right = -3
+	chb.offset_bottom = -2
+	chb.add_theme_constant_override("separation", 5)
+	combo.add_child(chb)
+	_combo_icon = OSIcon.new()
+	_combo_icon.kind = "folder_open"
+	_combo_icon.custom_minimum_size = Vector2(18, 18)
+	_combo_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_combo_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chb.add_child(_combo_icon)
+	_addr = Label.new()
+	_addr.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_addr.clip_text = true
 	_addr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(_addr)
+	_addr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chb.add_child(_addr)
+	var drop := Button.new()
+	drop.custom_minimum_size = Vector2(20, 22)
+	drop.focus_mode = Control.FOCUS_NONE
+	var di := OSIcon.new()
+	di.kind = "dropdown"
+	di.size = Vector2(16, 16)
+	di.position = Vector2(2, 3)
+	di.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	drop.add_child(di)
+	chb.add_child(drop)
 
 	# area contenuto (campo incassato bianco con scorrimento)
 	var panel := Panel.new()
@@ -70,6 +116,30 @@ func launch(arg) -> void:
 	_folder = arg if arg is Dictionary else VFS.get_root()
 	_refresh()
 
+func _tool_btn(kind: String, cb := Callable()) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(30, 28)
+	b.focus_mode = Control.FOCUS_NONE
+	var ic := OSIcon.new()
+	ic.kind = kind
+	ic.size = Vector2(20, 20)
+	ic.position = Vector2(5, 4)
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(ic)
+	if cb.is_valid():
+		b.pressed.connect(cb)
+	return b
+
+func _vsep() -> VSeparator:
+	var s := VSeparator.new()
+	var sb := StyleBoxLine.new()
+	sb.color = Win95.C_SHADOW
+	sb.thickness = 1
+	sb.vertical = true
+	s.add_theme_stylebox_override("separator", sb)
+	s.add_theme_constant_override("separation", 8)
+	return s
+
 func _path_string(node: Dictionary) -> String:
 	var parts := PackedStringArray()
 	var cur = node
@@ -82,6 +152,8 @@ func _refresh() -> void:
 	if window:
 		window.set_title(_folder.get("name", "Esplora risorse"))
 	_addr.text = _path_string(_folder)
+	if _combo_icon:
+		_combo_icon.set_kind(_folder.get("icon", "folder"))
 	_selected = null
 	for c in _grid.get_children():
 		c.queue_free()
@@ -124,3 +196,8 @@ func _go_up() -> void:
 		_history.append(_folder)
 		_folder = parent
 		_refresh()
+
+# ---------------- sessione ----------------
+
+func get_session() -> Dictionary:
+	return {"kind": "explorer", "folder_path": VFS.path_of(_folder)}

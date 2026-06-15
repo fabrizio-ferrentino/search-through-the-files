@@ -6,8 +6,6 @@ extends Control
 var os
 var window
 
-const HOST := "webnet95"
-
 var _addr: LineEdit
 var _page_vbox: VBoxContainer
 var _scroll: ScrollContainer
@@ -31,26 +29,64 @@ func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var root := VBoxContainer.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_theme_constant_override("separation", 3)
+	root.add_theme_constant_override("separation", 2)
 	add_child(root)
 
-	# --- barra strumenti ---
-	var bar := HBoxContainer.new()
-	bar.add_theme_constant_override("separation", 4)
-	root.add_child(bar)
-	_tool_btn(bar, "< Indietro", _go_back)
-	_tool_btn(bar, "Avanti >", _go_forward)
-	_tool_btn(bar, "Aggiorna", func(): _load(_current))
+	# --- barra dei menu ---
+	var menubar := HBoxContainer.new()
+	menubar.add_theme_constant_override("separation", 2)
+	for m in ["File", "Modifica", "Visualizza", "Preferiti", "?"]:
+		var mb := Button.new()
+		mb.text = m
+		mb.flat = true
+		mb.focus_mode = Control.FOCUS_NONE
+		menubar.add_child(mb)
+	root.add_child(menubar)
+
+	# --- barra strumenti (icone) ---
+	var toolbar := HBoxContainer.new()
+	toolbar.add_theme_constant_override("separation", 2)
+	root.add_child(toolbar)
+	toolbar.add_child(_icon_btn("back", _go_back))                    # funzionante
+	toolbar.add_child(_icon_btn("fwd", _go_forward))                 # funzionante
+	toolbar.add_child(_icon_btn("stop"))                             # finto
+	toolbar.add_child(_icon_btn("refresh", func(): _load(_current))) # funzionante
+	toolbar.add_child(_icon_btn("home", func(): _go("start")))       # funzionante
+	toolbar.add_child(_vsep())
+	toolbar.add_child(_icon_btn("search", func(): _toggle_inspector())) # Ispeziona
+	toolbar.add_child(_icon_btn("star"))                             # finto (Preferiti)
+	toolbar.add_child(_icon_btn("print"))                            # finto
+
+	# --- barra indirizzo (stile combo) ---
+	var addrbar := HBoxContainer.new()
+	addrbar.add_theme_constant_override("separation", 6)
+	root.add_child(addrbar)
 	var lbl := Label.new()
 	lbl.text = "Indirizzo:"
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	bar.add_child(lbl)
+	addrbar.add_child(lbl)
+	var gicon := OSIcon.new()
+	gicon.kind = "ie"
+	gicon.custom_minimum_size = Vector2(18, 18)
+	gicon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	gicon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	addrbar.add_child(gicon)
 	_addr = LineEdit.new()
 	_addr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_addr.placeholder_text = "Digita un indirizzo, es. http://news.com"
 	_addr.text_submitted.connect(_on_addr_submit)
-	bar.add_child(_addr)
-	_tool_btn(bar, "Vai", func(): _on_addr_submit(_addr.text))
-	_tool_btn(bar, "Ispeziona", func(): _toggle_inspector())
+	addrbar.add_child(_addr)
+	var drop := Button.new()
+	drop.custom_minimum_size = Vector2(20, 24)
+	drop.focus_mode = Control.FOCUS_NONE
+	var di := OSIcon.new()
+	di.kind = "dropdown"
+	di.size = Vector2(16, 16)
+	di.position = Vector2(2, 4)
+	di.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	drop.add_child(di)
+	addrbar.add_child(drop)
+	addrbar.add_child(_text_btn("Vai", func(): _on_addr_submit(_addr.text)))
 
 	# --- area pagina ---
 	var page_area := Control.new()
@@ -86,15 +122,38 @@ func launch(arg) -> void:
 	# --- menu contestuale custom ---
 	_build_ctx_menu()
 
-	_load(arg if arg is String else "home")
+	_load(arg if arg is String else "start")
 
-func _tool_btn(parent: Control, text: String, cb: Callable) -> Button:
+func _icon_btn(kind: String, cb := Callable()) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(30, 28)
+	b.focus_mode = Control.FOCUS_NONE
+	var ic := OSIcon.new()
+	ic.kind = kind
+	ic.size = Vector2(20, 20)
+	ic.position = Vector2(5, 4)
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(ic)
+	if cb.is_valid():
+		b.pressed.connect(cb)
+	return b
+
+func _text_btn(text: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.focus_mode = Control.FOCUS_NONE
 	b.pressed.connect(cb)
-	parent.add_child(b)
 	return b
+
+func _vsep() -> VSeparator:
+	var s := VSeparator.new()
+	var sb := StyleBoxLine.new()
+	sb.color = Win95.C_SHADOW
+	sb.thickness = 1
+	sb.vertical = true
+	s.add_theme_stylebox_override("separator", sb)
+	s.add_theme_constant_override("separation", 8)
+	return s
 
 func _build_inspector(root: Control) -> void:
 	_inspector = VBoxContainer.new()
@@ -188,9 +247,9 @@ func _show_ctx(idx: int) -> void:
 
 func _on_addr_submit(text: String) -> void:
 	var url := text.strip_edges()
-	url = url.trim_prefix("http://").trim_prefix(HOST + "/").trim_prefix("/")
+	url = url.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
 	if url == "":
-		url = "home"
+		url = "start"
 	_go(url)
 
 func _go(url: String) -> void:
@@ -213,10 +272,10 @@ func _go_forward() -> void:
 
 func _load(url: String) -> void:
 	if url == "":
-		url = "home"
+		url = "start"
 	_current = url
 	var page: Dictionary = _pages().get(url, _page_404(url))
-	_addr.text = "http://%s/%s" % [HOST, url]
+	_addr.text = "" if url == "start" else "http://" + url
 	if window:
 		window.set_title(str(page.get("title", url)) + " - Web")
 	var built := _build_html(page)
@@ -262,7 +321,7 @@ func _make_element(el: Dictionary) -> Control:
 			link.add_theme_color_override("font_color", Win95.C_LINK)
 			link.add_theme_color_override("font_hover_color", Color("ee0000"))
 			link.add_theme_font_size_override("font_size", 18)
-			var href: String = el.get("href", "home")
+			var href: String = el.get("href", "start")
 			link.pressed.connect(func(): _go(href))
 			return link
 		"hr":
@@ -372,6 +431,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			_toggle_inspector()
 			get_viewport().set_input_as_handled()
 
+# ---------------- sessione (salva/ripristina) ----------------
+
+func get_session() -> Dictionary:
+	return {
+		"kind": "browser",
+		"url": _current,
+		"back": _back.duplicate(),
+		"forward": _forward.duplicate(),
+		"inspector": _inspector.visible,
+	}
+
+func restore_session(d: Dictionary) -> void:
+	_back = (d.get("back", []) as Array).duplicate()
+	_forward = (d.get("forward", []) as Array).duplicate()
+	if d.get("inspector", false):
+		_open_inspector(-1)
+
 # ---------------- contenuti delle pagine ----------------
 
 func _page_404(url: String) -> Dictionary:
@@ -379,55 +455,95 @@ func _page_404(url: String) -> Dictionary:
 		"title": "Pagina non trovata",
 		"elements": [
 			{"tag": "h1", "text": "Errore 404"},
-			{"tag": "p", "text": "La pagina \"" + url + "\" non e' stata trovata su questo server."},
+			{"tag": "p", "text": "Impossibile trovare il sito \"http://" + url + "\"."},
+			{"tag": "p", "text": "Controlla l'indirizzo o la connessione del modem."},
 			{"tag": "hr"},
-			{"tag": "a", "text": "Torna alla home", "href": "home"},
+			{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 		]
 	}
 
 func _pages() -> Dictionary:
 	if _pages_cache.is_empty():
 		_pages_cache = {
-			"home": {
-				"title": "WebNet 95 - Home",
+			"start": {
+				"title": "Pagina iniziale",
 				"elements": [
-					{"tag": "img", "alt": "WebNet 95", "color": "1a3f8a", "w": 560, "h": 90},
-					{"tag": "h1", "text": "Benvenuto su WebNet 95"},
-					{"tag": "p", "text": "Il portale del World Wide Web ottimizzato per il tuo modem a 56k. Naviga con il mouse, e prova il tasto destro per ispezionare la pagina!"},
-					{"tag": "h2", "text": "Collegamenti"},
-					{"tag": "a", "text": "Ultime notizie", "href": "news"},
-					{"tag": "a", "text": "Il blog segreto", "href": "blog"},
-					{"tag": "a", "text": "Un link rotto", "href": "boh"},
+					{"tag": "img", "alt": "Il mio portale", "color": "1a3f8a", "w": 560, "h": 80},
+					{"tag": "h1", "text": "Pagina iniziale"},
+					{"tag": "h2", "text": "Collegamenti piu' visti"},
+					{"tag": "a", "text": "NewsOggi - Le ultime notizie", "href": "news.com"},
+					{"tag": "a", "text": "GiocaWeb - Giochi gratis online", "href": "giochi.net"},
+					{"tag": "a", "text": "MeteoNow - Previsioni del tempo", "href": "meteo.com"},
 					{"tag": "hr"},
-					{"tag": "h2", "text": "Lo sapevi che..."},
+					{"tag": "h2", "text": "Collegamenti recenti"},
+					{"tag": "a", "text": "Il blog segreto", "href": "blog.io"},
+					{"tag": "a", "text": "WebMail - La tua posta", "href": "mail.com"},
+					{"tag": "a", "text": "Sito inesistente (prova 404)", "href": "sito-finto.com"},
+					{"tag": "p", "text": "Suggerimento: tasto destro -> Ispeziona elemento per vedere l'HTML."},
+				]
+			},
+			"news.com": {
+				"title": "NewsOggi",
+				"elements": [
+					{"tag": "img", "alt": "NewsOggi", "color": "8a1f1f", "w": 560, "h": 70},
+					{"tag": "h1", "text": "NewsOggi"},
+					{"tag": "h2", "text": "In primo piano"},
+					{"tag": "p", "text": "Rilasciato un nuovo sistema operativo a finestre: code ai negozi."},
+					{"tag": "p", "text": "Gli esperti: i floppy da 1.44 MB sono il futuro dell'archiviazione."},
+					{"tag": "img", "alt": "foto sgranata", "color": "777777", "w": 320, "h": 180},
+					{"tag": "hr"},
+					{"tag": "a", "text": "Vai a GiocaWeb", "href": "giochi.net"},
+					{"tag": "a", "text": "Pagina iniziale", "href": "start"},
+				]
+			},
+			"giochi.net": {
+				"title": "GiocaWeb",
+				"elements": [
+					{"tag": "img", "alt": "GiocaWeb", "color": "1f6a2f", "w": 560, "h": 70},
+					{"tag": "h1", "text": "GiocaWeb"},
+					{"tag": "p", "text": "I migliori giochi shareware da scaricare col tuo modem a 56k."},
 					{"tag": "ul", "items": [
-						"Questo schermo e' un vero 4:3 con effetto CRT.",
-						"Il tasto destro apre 'Ispeziona elemento'.",
-						"Tutto l'HTML qui sotto e' generato dal gioco.",
+						"Solitario Deluxe",
+						"Campo Minato 3D",
+						"Serpente 2000",
 					]},
-					{"tag": "p", "text": "© 1995 WebNet. Tutti i diritti riservati."},
-				]
-			},
-			"news": {
-				"title": "WebNet 95 - Notizie",
-				"elements": [
-					{"tag": "h1", "text": "Ultime notizie"},
-					{"tag": "p", "text": "Rilasciato un nuovo sistema operativo a finestre: tutti ne parlano."},
-					{"tag": "h2", "text": "Tecnologia"},
-					{"tag": "p", "text": "I floppy da 1.44 MB sono il futuro dell'archiviazione portatile."},
-					{"tag": "img", "alt": "foto sgranata", "color": "777777", "w": 300, "h": 180},
 					{"tag": "hr"},
-					{"tag": "a", "text": "Torna alla home", "href": "home"},
+					{"tag": "a", "text": "Leggi le notizie", "href": "news.com"},
+					{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 				]
 			},
-			"blog": {
+			"meteo.com": {
+				"title": "MeteoNow",
+				"elements": [
+					{"tag": "img", "alt": "MeteoNow", "color": "2f6a8a", "w": 560, "h": 70},
+					{"tag": "h1", "text": "MeteoNow"},
+					{"tag": "h2", "text": "Oggi"},
+					{"tag": "p", "text": "Sole con qualche nuvola. Massima 24 gradi, minima 14 gradi."},
+					{"tag": "p", "text": "Domani: pioggia in arrivo dal pomeriggio."},
+					{"tag": "hr"},
+					{"tag": "a", "text": "Pagina iniziale", "href": "start"},
+				]
+			},
+			"blog.io": {
 				"title": "Il blog segreto",
 				"elements": [
 					{"tag": "h1", "text": "Pagina nascosta"},
 					{"tag": "p", "text": "Se stai leggendo questo, hai trovato il collegamento giusto nel computer."},
 					{"tag": "p", "text": "La password e' nascosta in un file di testo dentro Documenti..."},
 					{"tag": "hr"},
-					{"tag": "a", "text": "Torna alla home", "href": "home"},
+					{"tag": "a", "text": "Pagina iniziale", "href": "start"},
+				]
+			},
+			"mail.com": {
+				"title": "WebMail",
+				"elements": [
+					{"tag": "img", "alt": "WebMail", "color": "5a3f8a", "w": 560, "h": 70},
+					{"tag": "h1", "text": "WebMail"},
+					{"tag": "p", "text": "Accedi alla tua casella di posta elettronica."},
+					{"tag": "p", "text": "Utente: ______    Password: ______"},
+					{"tag": "p", "text": "(Modulo di accesso non disponibile in questa demo.)"},
+					{"tag": "hr"},
+					{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 				]
 			},
 		}

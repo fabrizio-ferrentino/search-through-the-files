@@ -5,11 +5,11 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
 shader = ExtResource("2_crt")
-shader_parameter/curvature = 7.0
-shader_parameter/scanline_strength = 0.18
-shader_parameter/vignette_strength = 0.35
-shader_parameter/aberration = 0.7
-shader_parameter/brightness = 1.12
+shader_parameter/scanline_strength = 0.2
+shader_parameter/mask_strength = 0.12
+shader_parameter/aberration = 0.5
+shader_parameter/vignette_strength = 0.2
+shader_parameter/brightness = 1.22
 shader_parameter/screen_size = Vector2(1440, 1080)
 
 [node name="ComputerMode" type="Control"]

@@ -13,10 +13,26 @@ var pos_right = -70.0
 var pos_back = 180.0 
 
 var target_yaw = 0.0
-var edge_margin = 0.05 
+var edge_margin = 0.05
 var move_speed = 12.0
 var can_change_pos = true
 var reset_margin = 0.10 # Margine largo per resettare
+
+# --- animazione di ingresso nel PC (telecamera che entra nello schermo) ---
+@export var fly_time := 0.4        # durata del volo verso lo schermo (secondi) - più basso = più veloce
+@export var fly_fov_zoom := 12.0   # di quanto stringere il FOV durante il volo (zoom)
+@export var fade_speed := 2.8      # velocità della dissolvenza al nero (più alto = più rapida)
+var entering := false
+var _fly_from := Vector3.ZERO
+var _fly_to := Vector3.ZERO
+var _fly_look := Vector3.ZERO
+
+# --- schermo del monitor nella stanza (mostra il desktop del PC) ---
+@export_group("Schermo monitor")
+@export var screen_w := 0.35                        # larghezza del pannello dello schermo
+@export var screen_h := 0.31                        # altezza del pannello dello schermo
+@export var screen_push := 0.03                     # sporgenza davanti al vetro bombato del CRT (evita che la bombatura buchi il pannello)
+@export var screen_nudge := Vector3(0.007, 0.0, 0)  # micro-aggiustamento di posizione
 
 func _ready():
 	if GameManager.first_time_in_room:
@@ -26,8 +42,11 @@ func _ready():
 		GameManager.first_time_in_room = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_update_arrows() # Imposta le frecce iniziali
+	_setup_monitor_screen()
 
 func _input(event):
+	if entering:
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		# Creiamo un raggio che parte dalla punta del mouse
 		var camera = self
@@ -39,12 +58,197 @@ func _input(event):
 		var result = space_state.intersect_ray(query)
 		if result:
 			var collider = result.collider
-			print("Ho colpito: ", collider.name) 
+			print("Ho colpito: ", collider.name)
 			if (collider.name == "Monitor") and target_yaw == pos_center:
 				print("Enter in Pc mode")
-				var error = get_tree().change_scene_to_file("res://scenes/ComputerMode.tscn")
+				_enter_pc()
+
+# Animazione: la telecamera entra dentro lo schermo, poi dissolvenza e scena PC.
+func _enter_pc() -> void:
+	if entering:
+		return
+	entering = true
+	arrow_left.hide()
+	arrow_right.hide()
+	arrow_down.hide()
+
+	var screen := _screen_point()
+	_fly_from = global_position
+	_fly_to = _fly_from.lerp(screen, 0.9)   # quasi a contatto con lo schermo
+	_fly_look = screen
+	var start_fov := fov
+
+	var tw := create_tween()
+	tw.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tw.tween_method(_fly_step, 0.0, 1.0, fly_time)
+	tw.parallel().tween_property(self, "fov", start_fov - fly_fov_zoom, fly_time)
+	tw.tween_callback(_start_fade)
+
+func _fly_step(t: float) -> void:
+	global_position = _fly_from.lerp(_fly_to, t)
+	look_at(_fly_look, Vector3.UP)
+
+# --- schermo del monitor: mostra la "foto" del desktop sul vetro ---
+func _setup_monitor_screen() -> void:
+	# esci dalla fase di _ready prima di toccare l'albero (altrimenti add_child fallisce)
+	await get_tree().process_frame
+	_kill_monitor_emission()   # spegne le scritte verdi del terminale del modello
+	if GameManager.pc_screenshot == null:
+		await _make_initial_screenshot()
+	if GameManager.pc_screenshot != null:
+		_build_screen_quad(GameManager.pc_screenshot)
+
+# Spegne l'emissivo del modello del monitor (il finto terminale verde) cosi' lo
+# schermo sottostante e' nero e il pannello del desktop puo' stare dentro la cornice.
+func _kill_monitor_emission() -> void:
+	var mon = get_node_or_null("../Monitor")
+	if mon == null:
+		return
+	var mi = _find_mesh(mon)
+	if mi == null:
+		return
+	for s in range(mi.get_surface_override_material_count()):
+		var m = mi.get_active_material(s)
+		if m is BaseMaterial3D:
+			var d = m.duplicate()
+			d.emission_enabled = false
+			mi.set_surface_override_material(s, d)
+
+func _find_mesh(n: Node) -> MeshInstance3D:
+	if n is MeshInstance3D:
+		return n
+	for c in n.get_children():
+		var r = _find_mesh(c)
+		if r:
+			return r
+	return null
+
+# Genera una foto iniziale renderizzando il desktop una volta (così lo schermo
+# si vede "acceso" anche prima di entrare nel PC).
+func _make_initial_screenshot() -> void:
+	if DisplayServer.get_name() == "headless":
+		return   # niente GPU: impossibile leggere la texture del viewport
+	# Render-to-texture: un SubViewport dedicato in cui gira solo il desktop.
+	var sv := SubViewport.new()
+	sv.size = Vector2i(1440, 1080)
+	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	sv.transparent_bg = false
+	sv.disable_3d = true
+	add_child(sv)
+	var os_ctrl = load("res://scripts/os/desktop.gd").new()
+	sv.add_child(os_ctrl)
+	os_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	os_ctrl.set_process_input(false)
+	os_ctrl.set_process_unhandled_input(false)
+	for i in range(6):
+		await get_tree().process_frame
+	if is_instance_valid(sv):
+		var img = sv.get_texture().get_image()
+		if img != null and not img.is_empty():
+			GameManager.pc_screenshot = img
+		sv.queue_free()
+
+func _build_screen_quad(img: Image) -> void:
+	if img == null or img.is_empty():
+		return
+	var old = get_parent().get_node_or_null("MonitorScreen")
+	if old:
+		old.queue_free()
+
+	var tex := ImageTexture.create_from_image(img)
+	var quad := MeshInstance3D.new()
+	quad.name = "MonitorScreen"
+	var mesh := QuadMesh.new()
+	quad.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = tex
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	quad.material_override = mat
+	get_parent().add_child(quad)
+
+	# Se esiste il nodo di riferimento "test-schermo", ricalca esattamente
+	# posizione/orientamento/dimensione del suo lato schermo.
+	var ref = get_node_or_null("../test-schermo")
+	if ref is MeshInstance3D and ref.mesh is BoxMesh:
+		ref.visible = false
+		var info := _face_from_box(ref)
+		mesh.size = info["size"]
+		quad.global_transform = Transform3D(info["basis"], info["origin"] + info["basis"].z * screen_push)
+	else:
+		mesh.size = Vector2(screen_w, screen_h)
+		quad.global_position = _screen_point() + Vector3(0, 0, screen_push) + screen_nudge
+
+# Ricava il rettangolo dello "schermo" da un box piatto: la faccia grande
+# (asse piu' sottile = normale), orientata verso la camera e con l'alto in su.
+func _face_from_box(box: MeshInstance3D) -> Dictionary:
+	var t := box.global_transform
+	var ms: Vector3 = box.mesh.size
+	var dirs := [t.basis.x, t.basis.y, t.basis.z]
+	var lens := [ms.x, ms.y, ms.z]
+	# normale = asse con spessore (mondo) minore
+	var ni := 0
+	var minw := INF
+	for i in range(3):
+		var wl: float = dirs[i].length() * lens[i]
+		if wl < minw:
+			minw = wl
+			ni = i
+	# i due assi della faccia
+	var face: Array = []
+	for i in range(3):
+		if i != ni:
+			face.append(i)
+	# larghezza = asse piu' orizzontale, altezza = piu' verticale
+	var wi: int = face[0]
+	var hi: int = face[1]
+	if absf(dirs[face[0]].normalized().y) > absf(dirs[face[1]].normalized().y):
+		wi = face[1]
+		hi = face[0]
+	var nz: Vector3 = dirs[ni].normalized()
+	if nz.z < 0.0:
+		nz = -nz
+	var ny: Vector3 = dirs[hi].normalized()
+	if ny.y < 0.0:
+		ny = -ny
+	var nx: Vector3 = ny.cross(nz).normalized()
+	ny = nz.cross(nx).normalized()
+	var width: float = dirs[wi].length() * lens[wi]
+	var height: float = dirs[hi].length() * lens[hi]
+	return {"basis": Basis(nx, ny, nz), "size": Vector2(width, height), "origin": t.origin}
+
+func _screen_point() -> Vector3:
+	# Centro dello schermo: centro dell'area di collisione del Monitor, spostato
+	# sulla faccia frontale (verso la camera).
+	var mon = get_node_or_null("../Monitor")
+	if mon:
+		var col = mon.get_node_or_null("CollisionShape3D")
+		if col:
+			var center = mon.global_transform * col.position
+			if col.shape is BoxShape3D:
+				# faccia frontale = mezza profondità lungo l'asse Z del monitor (verso la camera)
+				center += mon.global_transform.basis.z * (col.shape.size.z * 0.5)
+			return center
+		return mon.global_position
+	var glow = get_node_or_null("../ScreenGlow")
+	if glow:
+		return glow.global_position
+	return global_position - global_transform.basis.z * 1.0
+
+func _start_fade() -> void:
+	var fade = get_node_or_null("../Fade_transition")
+	if fade:
+		fade.show()
+		var ap = fade.get_node_or_null("AnimationPlayer")
+		if ap:
+			ap.speed_scale = fade_speed
+			ap.play("fade_in")
+			await ap.animation_finished
+	get_tree().change_scene_to_file("res://scenes/ComputerMode.tscn")
 
 func _process(delta):
+	if entering:
+		return
 	var viewport_size = get_viewport().get_visible_rect().size
 	var mouse_pos = get_viewport().get_mouse_position()
 	var mouse_x_pct = mouse_pos.x / viewport_size.x

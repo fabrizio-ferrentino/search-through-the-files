@@ -16,6 +16,29 @@ static func get_root() -> Dictionary:
 		_link_parents(_root, null)
 	return _root
 
+# Percorso (array di nomi dalla radice) di un nodo, per salvare/ripristinare la sessione.
+static func path_of(node) -> Array:
+	var parts: Array = []
+	var cur = node
+	while cur != null and cur is Dictionary:
+		parts.push_front(cur.get("name", ""))
+		cur = cur.get("_parent", null)
+	return parts
+
+# Risolve un percorso (array di nomi) in un nodo cartella del VFS.
+static func resolve_path(parts: Array) -> Dictionary:
+	var cur := get_root()
+	for i in range(1, parts.size()):
+		var found := {}
+		for c in cur.get("children", []):
+			if c.get("name", "") == parts[i]:
+				found = c
+				break
+		if found.is_empty():
+			return cur
+		cur = found
+	return cur
+
 static func _link_parents(node: Dictionary, parent) -> void:
 	node["_parent"] = parent
 	for child in node.get("children", []):
@@ -42,8 +65,8 @@ static func _build() -> Dictionary:
 				_text("leggimi.txt", "Le immagini sono andate perse durante l'ultimo riavvio."),
 			]),
 			_folder("Internet", "folder", [
-				_html("Home.url", "home"),
-				_html("Blog segreto.url", "blog"),
+				_html("Pagina iniziale.url", "start"),
+				_html("Blog segreto.url", "blog.io"),
 			]),
 			_folder("Sistema", "folder", [
 				_text("config.sys", "DEVICE=HIMEM.SYS\nDOS=HIGH,UMB\nFILES=30\nBUFFERS=20"),

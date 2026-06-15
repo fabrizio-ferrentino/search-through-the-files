@@ -38,6 +38,9 @@ func _ready() -> void:
 	_build_taskbar()
 	_build_start_menu()
 
+	# ripristina le finestre della sessione precedente (sessione continua)
+	_restore_session()
+
 # ---------------- costruzione UI ----------------
 
 func _build_wallpaper() -> void:
@@ -58,7 +61,7 @@ func _build_icons() -> void:
 	var defs := [
 		{"name": "Risorse del computer", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
-		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "home")},
+		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "start")},
 		{"name": "Cestino", "icon": "trash", "open": func(): open_app("explorer", _folder_path(["Cestino"]))},
 	]
 	var y := 24.0
@@ -124,7 +127,7 @@ func _build_start_menu() -> void:
 	var item_h := 42
 	var items := [
 		{"name": "Esplora risorse", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
-		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "home")},
+		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "start")},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
 		{"sep": true},
 		{"name": "Chiudi sessione...", "icon": "trash", "open": func(): _exit_to_room()},
@@ -207,7 +210,7 @@ func open_window(title: String, win_size: Vector2, icon_kind: String) -> OSWindo
 	focus_window(win)
 	return win
 
-func open_app(kind: String, arg = null) -> void:
+func open_app(kind: String, arg = null) -> OSWindow:
 	match kind:
 		"explorer":
 			var folder: Dictionary = arg if arg is Dictionary else VFS.get_root()
@@ -217,13 +220,15 @@ func open_app(kind: String, arg = null) -> void:
 			app.os = self
 			app.window = win
 			app.launch(folder)
+			return win
 		"browser":
 			var win := open_window("Web", Vector2(900, 640), "ie")
 			var app := BrowserApp.new()
 			win.content_root.add_child(app)
 			app.os = self
 			app.window = win
-			app.launch(arg if arg is String else "home")
+			app.launch(arg if arg is String else "start")
+			return win
 		"notepad":
 			var file: Dictionary = arg if arg is Dictionary else {}
 			var win := open_window(str(file.get("name", "Senza nome")) + " - Blocco note", Vector2(560, 460), "notepad")
@@ -232,6 +237,8 @@ func open_app(kind: String, arg = null) -> void:
 			app.os = self
 			app.window = win
 			app.launch(file)
+			return win
+	return null
 
 func focus_window(win: OSWindow) -> void:
 	active_window = win
@@ -316,12 +323,8 @@ func _toggle_start_menu() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		if active_window != null and is_instance_valid(active_window):
-			active_window.close()
-		elif not windows.is_empty():
-			windows[windows.size() - 1].close()
-		else:
-			_exit_to_room()
+		# ESC: esci subito dal PC e torna nella stanza (salvando la sessione)
+		_exit_to_room()
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -365,4 +368,75 @@ func _folder_path(names: Array) -> Dictionary:
 	return cur
 
 func _exit_to_room() -> void:
+	_save_session()
+	_capture_screen()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+# Cattura il desktop (il SubViewport in cui gira l'OS) per mostrarlo sul monitor 3D.
+func _capture_screen() -> void:
+	if DisplayServer.get_name() == "headless":
+		return   # niente GPU: impossibile leggere la texture del viewport
+	var vp := get_viewport()
+	if vp == null:
+		return
+	var img := vp.get_texture().get_image()
+	if img != null and not img.is_empty():
+		GameManager.pc_screenshot = img
+
+# ---------------- sessione continua ----------------
+
+func _save_session() -> void:
+	var data := {"windows": [], "active": -1}
+	var kids := window_layer.get_children()   # ordine = z-order
+	for i in range(kids.size()):
+		var win := kids[i] as OSWindow
+		if win == null or win.content_root.get_child_count() == 0:
+			continue
+		var app = win.content_root.get_child(0)
+		if not app.has_method("get_session"):
+			continue
+		if win == active_window:
+			data["active"] = data["windows"].size()
+		var entry: Dictionary = app.get_session()
+		entry["rect"] = [win.position.x, win.position.y, win.size.x, win.size.y]
+		entry["minimized"] = not win.visible
+		data["windows"].append(entry)
+	GameManager.pc_session = data
+
+func _restore_session() -> void:
+	var data = GameManager.pc_session
+	if data == null or not (data is Dictionary):
+		return
+	for entry in data.get("windows", []):
+		_spawn_entry(entry)
+	var ai := int(data.get("active", -1))
+	var kids := window_layer.get_children()
+	if ai >= 0 and ai < kids.size() and kids[ai].visible:
+		focus_window(kids[ai] as OSWindow)
+	else:
+		active_window = null
+		_update_taskbar()
+
+func _spawn_entry(entry: Dictionary) -> void:
+	var win: OSWindow = null
+	match entry.get("kind", ""):
+		"explorer":
+			win = open_app("explorer", VFS.resolve_path(entry.get("folder_path", [])))
+		"browser":
+			win = open_app("browser", str(entry.get("url", "start")))
+		"notepad":
+			win = open_app("notepad", {"name": entry.get("file_name", "Senza nome"), "content": entry.get("text", "")})
+	if win == null:
+		return
+	var r: Array = entry.get("rect", [])
+	if r.size() == 4:
+		win.position = Vector2(r[0], r[1])
+		win.size = Vector2(r[2], r[3])
+	var app = win.content_root.get_child(0)
+	if app.has_method("restore_session"):
+		app.restore_session(entry)
+	if entry.get("minimized", false):
+		win.hide()
+		if active_window == win:
+			active_window = null
+		_update_taskbar()

@@ -5,6 +5,12 @@
 [ext_resource type="Texture2D" uid="uid://cf87bwpecaget" path="res://assets/textures/3d/freccia_test.png" id="3_sugp2"]
 [ext_resource type="PackedScene" uid="uid://cxlp1v6odc6t3" path="res://scenes/fade_transition.tscn" id="4_jyhfs"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
+size = Vector3(0.9, 0.01, 0.78)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h2yge"]
+albedo_color = Color(0, 0, 0, 1)
+
 [sub_resource type="BoxMesh" id="BoxMesh_7dm0k"]
 size = Vector3(8, 1, 7)
 
@@ -20,12 +26,6 @@ size = Vector3(7, 2, 0.5)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0, 1, 1, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
-size = Vector3(2, 0.1, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h2yge"]
-albedo_color = Color(0.7609594, 0.45180422, 0.14333645, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_h2yge"]
 size = Vector3(0.1, 0.5, 0.1)
@@ -53,6 +53,13 @@ size = Vector3(1, 0.2, 5)
 
 [node name="Main" type="Node3D" unique_id=1043109776]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.221631e-05, 0, 0)
+
+[node name="test-schermo" type="MeshInstance3D" parent="." unique_id=2142727866]
+transform = Transform3D(0.4906131, -0.096331544, -0.0043651816, -0.006240405, -0.05430343, 0.49700314, -0.09622829, -0.4876181, -0.05448623, -0.14000383, 0.93293786, -1.2678564)
+rotation_edit_mode = 1
+mesh = SubResource("BoxMesh_0xm2m")
+skeleton = NodePath("../Desk")
+surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=917111675]
 transform = Transform3D(1, 0, 0, 0, 0.99357975, 0.11313385, 0, -0.11313385, 0.99357975, 0, 1.071762, -0.15521282)
@@ -113,24 +120,22 @@ surface_material_override/0 = SubResource("StandardMaterial3D_272bh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08729151, 0.9562241, -1.3487917)
 light_color = Color(0.6, 0.7, 0.9, 1)
 light_energy = 0.15
-omni_range = 6.0
 shadow_enabled = true
 distance_fade_enabled = true
+omni_range = 6.0
 omni_shadow_mode = 0
 
-[node name="ScreenGlow" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.7, -1.0)
-light_color = Color(0.4, 0.7, 1.0, 1)
+[node name="ScreenGlow" type="OmniLight3D" parent="." unique_id=704683100]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.7, -1)
+light_color = Color(0.4, 0.7, 1, 1)
 light_energy = 0.8
-omni_range = 3.0
 shadow_enabled = true
+omni_range = 3.0
 
-[node name="CornerShadow" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.5, 1.0)
+[node name="CornerShadow" type="OmniLight3D" parent="." unique_id=446033683]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.5, 1)
 light_color = Color(0.5, 0.6, 0.5, 1)
 light_energy = 0.08
-omni_range = 5.0
-shadow_enabled = false
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=554923459]
 
