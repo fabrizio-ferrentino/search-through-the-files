@@ -309,7 +309,7 @@ func _load(url: String) -> void:
 	var page: Dictionary = _pages().get(url, _page_404(url))
 	_addr.text = "" if url == "start" else "http://" + url
 	if window:
-		window.set_title(str(page.get("title", url)) + " - Web")
+		window.set_title(str(page.get("title", url)))
 	var built := _build_html(page)
 	_html_text = built["text"]
 	_line_map = built["map"]

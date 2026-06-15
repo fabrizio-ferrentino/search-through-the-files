@@ -3,6 +3,12 @@ extends Control
 
 # Controller principale del mini-OS (stile retro' anni '90) renderizzato dentro il SubViewport 4:3.
 # Gestisce desktop, taskbar, menu Start e il window manager.
+#
+# L'OS vive sempre (la stanza e il PC coesistono): lo schermo del monitor 3D
+# mostra dal vivo questo SubViewport. Accensione/spegnimento/login sono metodi a
+# runtime (boot / power_off), non cambi di scena. ESC chiede l'uscita alla stanza.
+
+signal exit_requested   # ESC o "Annulla": torna alla vista stanza (senza spegnere)
 
 const TASKBAR_H := 40
 
@@ -19,7 +25,7 @@ var taskbar_buttons: Dictionary = {}   # OSWindow -> Button
 var active_window: OSWindow = null
 var _cascade := 0
 var _desk_sel: DesktopItem = null
-var _exiting := false
+var _state_overlay: Control = null   # overlay di stato a tutto schermo (login / nessun segnale / avvio)
 var _ctx_layer: Control
 var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
@@ -43,11 +49,11 @@ func _ready() -> void:
 	_build_start_menu()
 	_build_desktop_menu()
 
-	# ripristina le finestre della sessione precedente (sessione continua)
-	_restore_session()
-
-	# rivela il desktop dal nero (entrando nel PC)
-	_reveal_screen()
+	# stato iniziale: il PC parte spento -> "nessun segnale" sul monitor
+	if not GameManager.pc_on:
+		_show_no_signal()
+	elif not GameManager.logged_in:
+		_show_login()
 
 # ---------------- costruzione UI ----------------
 
@@ -155,7 +161,7 @@ func _build_start_menu() -> void:
 		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "start")},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
 		{"sep": true},
-		{"name": "Chiudi sessione...", "icon": "trash", "open": func(): _exit_to_room()},
+		{"name": "Spegni il PC", "icon": "win", "open": func(): _show_shutdown()},
 	]
 	var menu_w := 250
 	var stripe_w := 34
@@ -256,7 +262,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			return win
 		"notepad":
 			var file: Dictionary = arg if arg is Dictionary else {}
-			var win := open_window(str(file.get("name", "Senza nome")) + " - Blocco note", Vector2(560, 460), "notepad")
+			var win := open_window(str(file.get("name", "Senza nome")), Vector2(560, 460), "notepad")
 			var app := NotepadApp.new()
 			win.content_root.add_child(app)
 			app.os = self
@@ -437,16 +443,16 @@ func _show_desktop_menu(items: Array) -> void:
 func _toggle_start_menu() -> void:
 	start_menu.visible = start_btn.button_pressed
 	if start_menu.visible:
+		# riposiziona sempre sopra la taskbar (robusto anche se la dimensione cambia)
+		start_menu.position = Vector2(0, size.y - TASKBAR_H - start_menu.size.y)
 		start_menu.move_to_front()
 
 # ---------------- input globale ----------------
 
 func _input(event: InputEvent) -> void:
-	if _exiting:
-		return
 	if event.is_action_pressed("ui_cancel"):
-		# ESC: esci subito dal PC e torna nella stanza (salvando la sessione)
-		_exit_to_room()
+		# ESC: torna alla vista stanza (il PC resta nello stato attuale)
+		exit_requested.emit()
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -491,97 +497,242 @@ func _folder_path(names: Array) -> Dictionary:
 		cur = found
 	return cur
 
-func _exit_to_room() -> void:
-	if _exiting:
-		return
-	_exiting = true
-	_save_session()
-	_capture_screen()
-	GameManager.returning_from_pc = true
-	# cambio scena diretto: e' la stanza a fare l'animazione inversa (parte dal nero)
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+# ---------------- accensione / spegnimento (runtime) ----------------
 
-# Overlay nero a tutto schermo: rivela il desktop dal nero entrando nel PC.
-func _reveal_screen() -> void:
-	var ov := get_node_or_null("../../../FadeOverlay") as ColorRect
-	if ov == null:
-		return
-	ov.color.a = 1.0
-	ov.visible = true
-	create_tween().tween_property(ov, "color:a", 0.0, 0.4)
+# Rimuove l'overlay di stato corrente (login / nessun segnale / avvio).
+func _clear_state() -> void:
+	if _state_overlay and is_instance_valid(_state_overlay):
+		_state_overlay.queue_free()
+	_state_overlay = null
 
-# Cattura il desktop (il SubViewport in cui gira l'OS) per mostrarlo sul monitor 3D.
-func _capture_screen() -> void:
-	if DisplayServer.get_name() == "headless":
-		return   # niente GPU: impossibile leggere la texture del viewport
-	var vp := get_viewport()
-	if vp == null:
-		return
-	var img := vp.get_texture().get_image()
-	if img != null and not img.is_empty():
-		GameManager.pc_screenshot = img
+# Accensione del case (dal pulsante nella stanza): animazione di avvio, poi login.
+func boot() -> void:
+	GameManager.pc_on = true
+	GameManager.logged_in = false
+	_play_boot()
 
-# ---------------- sessione continua ----------------
+# Spegnimento del case: chiude tutto e mostra "nessun segnale".
+func power_off() -> void:
+	for w in windows.duplicate():
+		if is_instance_valid(w):
+			w.close()
+	GameManager.pc_on = false
+	GameManager.logged_in = false
+	active_window = null
+	_update_taskbar()
+	_show_no_signal()
 
-func _save_session() -> void:
-	var data := {"windows": [], "active": -1}
-	var kids := window_layer.get_children()   # ordine = z-order
-	for i in range(kids.size()):
-		var win := kids[i] as OSWindow
-		if win == null or win.content_root.get_child_count() == 0:
-			continue
-		var app = win.content_root.get_child(0)
-		if not app.has_method("get_session"):
-			continue
-		if win == active_window:
-			data["active"] = data["windows"].size()
-		var entry: Dictionary = app.get_session()
-		entry["rect"] = [win.position.x, win.position.y, win.size.x, win.size.y]
-		entry["minimized"] = not win.visible
-		data["windows"].append(entry)
-	GameManager.pc_session = data
+# Animazione di avvio: splash nero con logo e barra di avanzamento, poi il login.
+func _play_boot() -> void:
+	_clear_state()
+	var splash := ColorRect.new()
+	splash.color = Color.BLACK
+	splash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	splash.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(splash)
+	splash.move_to_front()
+	_state_overlay = splash
 
-func _restore_session() -> void:
-	var data = GameManager.pc_session
-	if data == null or not (data is Dictionary):
-		return
-	for entry in data.get("windows", []):
-		_spawn_entry(entry)
-	var ai := int(data.get("active", -1))
-	var kids := window_layer.get_children()
-	if ai >= 0 and ai < kids.size() and kids[ai].visible:
-		focus_window(kids[ai] as OSWindow)
-	else:
-		active_window = null
-		_update_taskbar()
+	var logo := Label.new()
+	logo.text = "MOLROO"
+	logo.add_theme_color_override("font_color", Win95.C_LIGHT)
+	logo.add_theme_font_size_override("font_size", 64)
+	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	logo.position = Vector2(size.x * 0.5 - 200, size.y * 0.5 - 110)
+	logo.size = Vector2(400, 80)
+	splash.add_child(logo)
 
-func _spawn_entry(entry: Dictionary) -> void:
-	var win: OSWindow = null
-	match entry.get("kind", ""):
-		"explorer":
-			win = open_app("explorer", VFS.resolve_path(entry.get("folder_path", [])))
-		"browser":
-			win = open_app("browser", str(entry.get("url", "start")))
-		"notepad":
-			# ricollega al file reale del VFS (se esiste ancora) per poterlo salvare
-			var f = null
-			var p: Array = entry.get("path", [])
-			if p.size() > 0:
-				f = VFS.resolve_node(p)
-			if f == null or f.get("type", "") != "file":
-				f = {"name": entry.get("file_name", "Senza nome"), "type": "file", "filetype": "text", "content": entry.get("text", "")}
-			win = open_app("notepad", f)
-	if win == null:
-		return
-	var r: Array = entry.get("rect", [])
-	if r.size() == 4:
-		win.position = Vector2(r[0], r[1])
-		win.size = Vector2(r[2], r[3])
-	var app = win.content_root.get_child(0)
-	if app.has_method("restore_session"):
-		app.restore_session(entry)
-	if entry.get("minimized", false):
-		win.hide()
-		if active_window == win:
-			active_window = null
-		_update_taskbar()
+	var sub := Label.new()
+	sub.text = "Avvio del sistema in corso..."
+	sub.add_theme_color_override("font_color", Win95.C_HILIGHT)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.position = Vector2(size.x * 0.5 - 200, size.y * 0.5 + 12)
+	sub.size = Vector2(400, 24)
+	splash.add_child(sub)
+
+	var bar_w := 300.0
+	var track := Panel.new()
+	track.add_theme_stylebox_override("panel", Win95._sb(false, Win95.C_LIGHT, true, 2, 2, 2, 2))
+	track.position = Vector2(size.x * 0.5 - bar_w * 0.5, size.y * 0.5 + 52)
+	track.size = Vector2(bar_w, 22)
+	splash.add_child(track)
+	var fill := ColorRect.new()
+	fill.color = Win95.C_TITLE
+	fill.position = Vector2(3, 3)
+	fill.size = Vector2(0, 16)
+	track.add_child(fill)
+
+	var tw := create_tween()
+	tw.tween_property(fill, "size:x", bar_w - 6.0, 1.3)
+	tw.tween_callback(func():
+		if GameManager.pc_on:
+			_show_login())
+
+# ---------------- finestre modali ----------------
+
+# Crea un overlay modale a tutto schermo con un riquadro centrale in stile Win95
+# (barra del titolo blu + corpo grigio). Riusato da login e arresto.
+func _make_modal(title: String, dlg_size: Vector2, bg: Color) -> Dictionary:
+	var layer := Control.new()
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_STOP   # blocca i click al desktop sotto
+	add_child(layer)
+	layer.move_to_front()
+
+	var back := ColorRect.new()
+	back.color = bg
+	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(back)
+
+	var panel := Panel.new()
+	panel.size = dlg_size
+	panel.position = ((size - dlg_size) * 0.5).floor()
+	layer.add_child(panel)
+
+	var tbar := ColorRect.new()
+	tbar.color = Win95.C_TITLE
+	tbar.position = Vector2(3, 3)
+	tbar.size = Vector2(dlg_size.x - 6, 26)
+	panel.add_child(tbar)
+	var tl := Label.new()
+	tl.text = title
+	tl.add_theme_color_override("font_color", Win95.C_TITLE_TEXT)
+	tl.position = Vector2(7, 2)
+	tl.size = Vector2(dlg_size.x - 14, 26)
+	tl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	tbar.add_child(tl)
+
+	return {"layer": layer, "panel": panel}
+
+# Schermata di login: chiede la password (per ora "123") prima di mostrare il desktop.
+func _show_login() -> void:
+	_clear_state()
+	var dlg := _make_modal("Accesso a Windows", Vector2(380, 196), Win95.C_DESKTOP)
+	var layer: Control = dlg["layer"]
+	var panel: Panel = dlg["panel"]
+	_state_overlay = layer
+
+	var msg := Label.new()
+	msg.text = "Digitare la password per accedere."
+	msg.position = Vector2(16, 42)
+	panel.add_child(msg)
+
+	var cap := Label.new()
+	cap.text = "Password:"
+	cap.position = Vector2(16, 80)
+	panel.add_child(cap)
+
+	var pw := LineEdit.new()
+	pw.secret = true
+	pw.position = Vector2(120, 76)
+	pw.size = Vector2(140, 30)
+	panel.add_child(pw)
+
+	var err := Label.new()
+	err.add_theme_color_override("font_color", Color(0.6, 0, 0))
+	err.position = Vector2(16, 120)
+	err.size = Vector2(panel.size.x - 32, 24)
+	panel.add_child(err)
+
+	var ok := Button.new()
+	ok.text = "OK"
+	ok.position = Vector2(panel.size.x - 110, 76)
+	ok.size = Vector2(92, 32)
+	panel.add_child(ok)
+
+	var attempt := func():
+		if pw.text == "123":
+			GameManager.logged_in = true
+			_clear_state()   # rimuove il login -> compare il desktop
+		else:
+			err.text = "Password non corretta. Riprovare."
+			pw.clear()
+			pw.grab_focus()
+	ok.pressed.connect(attempt)
+	pw.text_submitted.connect(func(_t): attempt.call())
+	# (niente "Annulla": per uscire senza loggare si preme ESC)
+	pw.call_deferred("grab_focus")
+
+# Conferma di spegnimento (stile classico: solo Sì / No).
+func _show_shutdown() -> void:
+	var dlg := _make_modal("Spegnimento", Vector2(380, 170), Color(0, 0, 0, 0.35))
+	var layer: Control = dlg["layer"]
+	var panel: Panel = dlg["panel"]
+
+	# triangolo di avviso (disegnato a mano)
+	var warn := Control.new()
+	warn.position = Vector2(20, 48)
+	warn.size = Vector2(36, 36)
+	panel.add_child(warn)
+	warn.draw.connect(func():
+		var pts := PackedVector2Array([Vector2(18, 2), Vector2(34, 32), Vector2(2, 32)])
+		warn.draw_colored_polygon(pts, Color("efc63c"))
+		warn.draw_polyline(pts + PackedVector2Array([pts[0]]), Color.BLACK, 1.5)
+		warn.draw_string(ThemeDB.fallback_font, Vector2(14, 28), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.BLACK))
+
+	var lbl := Label.new()
+	lbl.text = "Sei sicuro di voler spegnere il PC?"
+	lbl.position = Vector2(72, 52)
+	lbl.size = Vector2(panel.size.x - 90, 40)
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	panel.add_child(lbl)
+
+	var yes := Button.new()
+	yes.text = "Sì"
+	yes.position = Vector2(panel.size.x * 0.5 - 104, 118)
+	yes.size = Vector2(96, 32)
+	panel.add_child(yes)
+
+	var no := Button.new()
+	no.text = "No"
+	no.position = Vector2(panel.size.x * 0.5 + 8, 118)
+	no.size = Vector2(96, 32)
+	panel.add_child(no)
+
+	yes.pressed.connect(func(): layer.queue_free(); power_off())
+	no.pressed.connect(func(): layer.queue_free())
+
+# Schermo "nessun segnale": come i vecchi monitor CRT col cavo staccato / PC
+# spento. Riquadro che vaga lentamente su sfondo nero (anti burn-in).
+func _show_no_signal() -> void:
+	_clear_state()
+	var ov := ColorRect.new()
+	ov.color = Color.BLACK
+	ov.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ov.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(ov)
+	ov.move_to_front()
+	_state_overlay = ov
+
+	var box := Panel.new()
+	box.add_theme_stylebox_override("panel", Win95._sb(true, Color(0.13, 0.13, 0.16), true, 0, 0, 0, 0))
+	box.size = Vector2(360, 116)
+	box.position = Vector2((size.x - box.size.x) * 0.5, (size.y - box.size.y) * 0.5)
+	ov.add_child(box)
+
+	var title := Label.new()
+	title.text = "NESSUN SEGNALE"
+	title.add_theme_color_override("font_color", Color(0.92, 0.92, 0.95))
+	title.add_theme_font_size_override("font_size", 30)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.position = Vector2(0, 26)
+	title.size = Vector2(box.size.x, 38)
+	box.add_child(title)
+
+	var sub := Label.new()
+	sub.text = "Controllare il cavo del segnale"
+	sub.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.position = Vector2(0, 70)
+	sub.size = Vector2(box.size.x, 24)
+	box.add_child(sub)
+
+	# deriva lenta tra i quattro angoli, in loop
+	var m := 50.0
+	var p1 := Vector2(m, m)
+	var p2 := Vector2(size.x - box.size.x - m, m)
+	var p3 := Vector2(size.x - box.size.x - m, size.y - box.size.y - m)
+	var p4 := Vector2(m, size.y - box.size.y - m)
+	var tw := create_tween().set_loops()
+	for p in [p2, p3, p4, p1]:
+		tw.tween_property(box, "position", p, 4.0)

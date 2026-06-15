@@ -73,7 +73,7 @@ func _on_text_changed() -> void:
 
 func _update_title() -> void:
 	if window:
-		window.set_title(("* " if _modified else "") + _file_name + " - Blocco note")
+		window.set_title(("* " if _modified else "") + _file_name)
 
 func _save() -> void:
 	if _file_dict != null:

@@ -21,7 +21,19 @@ var reset_margin = 0.10 # Margine largo per resettare
 # --- animazione di ingresso nel PC (telecamera che entra nello schermo) ---
 @export var fly_time := 0.4        # durata del volo verso lo schermo (secondi) - più basso = più veloce
 @export var fly_fov_zoom := 12.0   # di quanto stringere il FOV durante il volo (zoom)
-var entering := false
+var entering := false               # transizione in corso (volo telecamera)
+var _in_pc := false                 # vista PC attiva (overlay a tutto schermo)
+
+# --- PC coesistente: l'OS gira sempre in un SubViewport autonomo ---
+const OS_SIZE := Vector2i(1440, 1080)
+var _os_viewport: SubViewport = null   # qui vive l'OS, rende sempre (monitor dal vivo)
+var _os = null                         # OSDesktop
+var _pc_layer: CanvasLayer = null      # overlay a tutto schermo (vista "dentro il PC")
+var _pc_fade: ColorRect = null         # rettangolo nero per le dissolvenze dell'overlay
+var _screen_tex: ImageTexture = null   # texture del monitor 3D (aggiornata dal SubViewport)
+var _poll_accum := 0.0
+var _home_transform: Transform3D       # posa "a riposo" della telecamera (centro stanza)
+var _home_fov := 75.0
 
 # --- schermo del monitor nella stanza (mostra il desktop del PC) ---
 @export_group("Schermo monitor")
@@ -32,12 +44,12 @@ var entering := false
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	_setup_monitor_screen()
-	if GameManager.returning_from_pc:
-		# rientro dal PC: animazione inversa (zoom-out dallo schermo + dissolvenza dal nero)
-		GameManager.returning_from_pc = false
-		_play_exit_reverse()
-		return
+	_home_transform = global_transform   # posa centrale da cui si entra/torna
+	_home_fov = fov
+	# attendi che Main finisca di costruirsi prima di aggiungere nodi fratelli
+	await get_tree().process_frame
+	_spawn_computer()                    # crea l'OS persistente (overlay nascosto)
+	await _setup_monitor_screen()
 	if GameManager.first_time_in_room:
 		$"../Fade_transition".show()
 		$"../Fade_transition/fade_timer".start()
@@ -45,8 +57,66 @@ func _ready():
 		GameManager.first_time_in_room = false
 	_update_arrows() # Imposta le frecce iniziali
 
+# Crea l'OS in un SubViewport autonomo che gira SEMPRE (anche stando in stanza):
+# cosi' il monitor 3D mostra il PC dal vivo (avvio compreso). La vista a tutto
+# schermo e' un overlay separato, mostrato solo quando si "entra" nello schermo.
+func _spawn_computer() -> void:
+	# 1) SubViewport dell'OS: sempre nell'albero e visibile -> rende di continuo.
+	_os_viewport = SubViewport.new()
+	_os_viewport.size = OS_SIZE
+	_os_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_os_viewport.transparent_bg = false
+	_os_viewport.disable_3d = true
+	get_parent().add_child(_os_viewport)
+	_os = load("res://scripts/os/desktop.gd").new()
+	# rettangolo fisso 1440x1080 (ancore in alto a sx, niente full-rect che
+	# raddoppierebbe gli offset): cosi' size e' corretta gia' in _ready -> taskbar,
+	# menu Start e overlay risultano centrati anche al primo avvio.
+	_os.position = Vector2.ZERO
+	_os.size = Vector2(OS_SIZE)
+	_os_viewport.add_child(_os)
+	if _os.has_signal("exit_requested"):
+		_os.exit_requested.connect(_exit_pc)
+
+	# 2) Overlay a tutto schermo: lo stesso schermo, ingrandito col CRT (nascosto in stanza).
+	_pc_layer = CanvasLayer.new()
+	_pc_layer.name = "PCLayer"
+	_pc_layer.layer = 10
+	_pc_layer.visible = false
+	get_parent().add_child(_pc_layer)
+
+	var bg := ColorRect.new()
+	bg.color = Color.BLACK
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	_pc_layer.add_child(bg)
+
+	var screen := TextureRect.new()
+	screen.texture = _os_viewport.get_texture()
+	screen.position = Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
+	screen.size = Vector2(OS_SIZE)
+	screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://scripts/os/crt.gdshader")
+	mat.set_shader_parameter("screen_size", Vector2(OS_SIZE))
+	screen.material = mat
+	_pc_layer.add_child(screen)
+
+	_pc_fade = ColorRect.new()
+	_pc_fade.color = Color.BLACK
+	_pc_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pc_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pc_layer.add_child(_pc_fade)
+
 func _input(event):
 	if entering:
+		return
+	if _in_pc:
+		# in vista PC: ESC esce, tutto il resto va inoltrato all'OS nel SubViewport
+		if event.is_action_pressed("ui_cancel"):
+			_exit_pc()
+			return
+		_forward_to_os(event)
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		# Creiamo un raggio che parte dalla punta del mouse
@@ -61,12 +131,47 @@ func _input(event):
 			var collider = result.collider
 			print("Ho colpito: ", collider.name)
 			if (collider.name == "Monitor") and target_yaw == pos_center:
-				print("Enter in Pc mode")
-				_enter_pc()
+				var part := _hit_part(collider, int(result.get("shape", -1)))
+				if part == "Computer":
+					# pulsante di accensione del case: accende se spento, spegne se acceso
+					_power_button()
+				else:
+					# schermo del monitor: entra nel PC (se spento si vedra' "nessun segnale")
+					_enter_pc()
 
-# Animazione: la telecamera entra dentro lo schermo, poi dissolvenza e scena PC.
+# Ricava il nome del CollisionShape3D colpito (CollisionShape3D = schermo, Computer = case).
+func _hit_part(body, shape_idx: int) -> String:
+	if shape_idx < 0 or not body.has_method("shape_find_owner"):
+		return ""
+	var owner_id: int = body.shape_find_owner(shape_idx)
+	var node = body.shape_owner_get_owner(owner_id)
+	return node.name if node else ""
+
+# Inoltra l'input della stanza all'OS nel SubViewport, riportando la posizione
+# del mouse nello spazio dello schermo (lo schermo e' centrato in orizzontale).
+func _forward_to_os(event: InputEvent) -> void:
+	if _os_viewport == null:
+		return
+	var ev := event
+	if event is InputEventMouse:
+		ev = event.duplicate()
+		ev.position = event.position - Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
+	_os_viewport.push_input(ev, true)
+
+# Pulsante di accensione sul case: spegne il PC se acceso, lo accende se spento.
+# Non cambia scena: l'OS vive sempre, il monitor mostra l'avvio/login dal vivo.
+func _power_button() -> void:
+	if entering or _in_pc or _os == null:
+		return
+	if GameManager.pc_on:
+		_os.power_off()
+	else:
+		_os.boot()
+
+# Entra nella vista PC: la telecamera vola nello schermo, poi appare l'overlay
+# a tutto schermo dell'OS (lo stesso che gira sul monitor).
 func _enter_pc() -> void:
-	if entering:
+	if entering or _in_pc or _pc_layer == null:
 		return
 	entering = true
 	arrow_left.hide()
@@ -74,42 +179,47 @@ func _enter_pc() -> void:
 	arrow_down.hide()
 
 	var screen := _screen_point()
-	# interpola dal transform ATTUALE (niente scatto iniziale del look_at)
 	var t_start := global_transform
 	var near := t_start.origin.lerp(screen, 0.9)   # quasi a contatto con lo schermo
 	var t_end := Transform3D(Basis.IDENTITY, near).looking_at(screen, Vector3.UP)
 	var start_fov := fov
 
-	# dissolvenza al nero IN PARALLELO al volo: a zoom massimo lo schermo e' gia' nero
-	_play_fade("fade_in", fly_time * 0.85)
+	_play_fade("fade_in", fly_time * 0.85)   # la stanza va al nero durante il volo
 	var tw := create_tween()
 	tw.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tw.tween_method(func(s: float): global_transform = t_start.interpolate_with(t_end, s), 0.0, 1.0, fly_time)
 	tw.parallel().tween_property(self, "fov", start_fov - fly_fov_zoom, fly_time)
-	tw.tween_callback(_go_to_pc)
+	tw.tween_callback(_show_pc_overlay)
 
-func _go_to_pc() -> void:
-	get_tree().change_scene_to_file("res://scenes/ComputerMode.tscn")
+# A volo finito (schermo nero) mostra l'overlay dell'OS e lo rivela dal nero.
+func _show_pc_overlay() -> void:
+	_in_pc = true
+	_pc_fade.color.a = 1.0
+	_pc_layer.visible = true
+	var tw := create_tween()
+	tw.tween_property(_pc_fade, "color:a", 0.0, 0.3)
+	tw.tween_callback(func(): entering = false)
 
-# Animazione inversa al rientro: parte dallo schermo (nero + zoom) e si allontana rivelando la stanza.
-func _play_exit_reverse() -> void:
+# Esce dalla vista PC (ESC o "Annulla"): l'OS va al nero, si nasconde l'overlay e
+# la telecamera torna indietro rivelando la stanza. L'OS resta com'e' (acceso/login/desktop).
+func _exit_pc() -> void:
+	if not _in_pc or entering:
+		return
 	entering = true
-	arrow_left.hide()
-	arrow_right.hide()
-	arrow_down.hide()
-	var screen := _screen_point()
-	var t_default := global_transform
-	var fov_default := fov
-	var near := t_default.origin.lerp(screen, 0.9)
-	var t_start := Transform3D(Basis.IDENTITY, near).looking_at(screen, Vector3.UP)
-	global_transform = t_start
-	fov = fov_default - fly_fov_zoom
-	# dissolvenza DAL nero in parallelo allo zoom-out
+	var tw := create_tween()
+	tw.tween_property(_pc_fade, "color:a", 1.0, 0.25)
+	tw.tween_callback(_finish_exit)
+
+func _finish_exit() -> void:
+	_pc_layer.visible = false
+	_in_pc = false
+	# la stanza e' nera (Fade_transition): torna alla posa di partenza svelandola
+	var t_now := global_transform
 	_play_fade("fade_out", fly_time)
 	var tw := create_tween()
 	tw.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_method(func(s: float): global_transform = t_start.interpolate_with(t_default, s), 0.0, 1.0, fly_time)
-	tw.parallel().tween_property(self, "fov", fov_default, fly_time)
+	tw.tween_method(func(s: float): global_transform = t_now.interpolate_with(_home_transform, s), 0.0, 1.0, fly_time)
+	tw.parallel().tween_property(self, "fov", _home_fov, fly_time)
 	tw.tween_callback(func():
 		entering = false
 		_update_arrows())
@@ -129,15 +239,37 @@ func _play_fade(anim: String, duration: float) -> void:
 		ap.speed_scale = a.length / max(0.05, duration)
 	ap.play(anim)
 
-# --- schermo del monitor: mostra la "foto" del desktop sul vetro ---
+# --- schermo del monitor: mostra DAL VIVO il SubViewport dell'OS sul vetro ---
 func _setup_monitor_screen() -> void:
-	# esci dalla fase di _ready prima di toccare l'albero (altrimenti add_child fallisce)
-	await get_tree().process_frame
 	_kill_monitor_emission()   # spegne le scritte verdi del terminale del modello
-	if GameManager.pc_screenshot == null:
-		await _make_initial_screenshot()
-	if GameManager.pc_screenshot != null:
-		_build_screen_quad(GameManager.pc_screenshot)
+	if _os_viewport == null:
+		return
+	# lascia renderizzare il SubViewport un paio di frame prima di leggerne la texture
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var img := _os_viewport.get_texture().get_image()
+	if img == null or img.is_empty():
+		img = Image.create(OS_SIZE.x, OS_SIZE.y, false, Image.FORMAT_RGBA8)
+		img.fill(Color.BLACK)
+	_screen_tex = ImageTexture.create_from_image(img)
+	_build_screen_quad(_screen_tex)
+
+# Aggiorna la texture del monitor 3D col contenuto attuale dell'OS (poche volte
+# al secondo: basta per avvio/login/desktop e non pesa).
+func _poll_monitor(delta: float) -> void:
+	if _screen_tex == null or _os_viewport == null:
+		return
+	_poll_accum += delta
+	if _poll_accum < 0.08:
+		return
+	_poll_accum = 0.0
+	var img := _os_viewport.get_texture().get_image()
+	if img == null or img.is_empty():
+		return
+	if img.get_size() == Vector2i(_screen_tex.get_width(), _screen_tex.get_height()):
+		_screen_tex.update(img)
+	else:
+		_screen_tex.set_image(img)
 
 # Spegne l'emissivo del modello del monitor (il finto terminale verde) cosi' lo
 # schermo sottostante e' nero e il pannello del desktop puo' stare dentro la cornice.
@@ -164,45 +296,19 @@ func _find_mesh(n: Node) -> MeshInstance3D:
 			return r
 	return null
 
-# Genera una foto iniziale renderizzando il desktop una volta (così lo schermo
-# si vede "acceso" anche prima di entrare nel PC).
-func _make_initial_screenshot() -> void:
-	if DisplayServer.get_name() == "headless":
-		return   # niente GPU: impossibile leggere la texture del viewport
-	# Render-to-texture: un SubViewport dedicato in cui gira solo il desktop.
-	var sv := SubViewport.new()
-	sv.size = Vector2i(1440, 1080)
-	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	sv.transparent_bg = false
-	sv.disable_3d = true
-	add_child(sv)
-	var os_ctrl = load("res://scripts/os/desktop.gd").new()
-	sv.add_child(os_ctrl)
-	os_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	os_ctrl.set_process_input(false)
-	os_ctrl.set_process_unhandled_input(false)
-	for i in range(6):
-		await get_tree().process_frame
-	if is_instance_valid(sv):
-		var img = sv.get_texture().get_image()
-		if img != null and not img.is_empty():
-			GameManager.pc_screenshot = img
-		sv.queue_free()
-
-func _build_screen_quad(img: Image) -> void:
-	if img == null or img.is_empty():
+func _build_screen_quad(tex: Texture2D) -> void:
+	if tex == null:
 		return
 	var old = get_parent().get_node_or_null("MonitorScreen")
 	if old:
 		old.queue_free()
 
-	var tex := ImageTexture.create_from_image(img)
 	var quad := MeshInstance3D.new()
 	quad.name = "MonitorScreen"
 	var mesh := QuadMesh.new()
 	quad.mesh = mesh
 	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = tex
+	mat.albedo_texture = tex   # ViewportTexture: il monitor mostra l'OS dal vivo
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
 	quad.material_override = mat
@@ -277,7 +383,9 @@ func _screen_point() -> Vector3:
 	return global_position - global_transform.basis.z * 1.0
 
 func _process(delta):
-	if entering:
+	if not _in_pc:
+		_poll_monitor(delta)   # tieni il monitor 3D aggiornato quando si e' in stanza
+	if entering or _in_pc:
 		return
 	var viewport_size = get_viewport().get_visible_rect().size
 	var mouse_pos = get_viewport().get_mouse_position()
