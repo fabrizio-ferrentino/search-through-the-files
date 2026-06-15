@@ -484,20 +484,28 @@ func _focus_under_mouse(mp: Vector2) -> void:
 			return
 
 # Forma del cursore per un punto in coordinate del desktop. La stanza la usa per
-# mostrare il cursore di ridimensionamento sull'overlay del PC: il SubViewport non
-# pilota il cursore reale, quindi lo facciamo dal lato stanza.
+# pilotare il cursore reale sull'overlay del PC: il SubViewport non lo fa da solo.
+# Copre il ridimensionamento delle finestre e il cursore del controllo sotto il
+# mouse (link -> manina, campi di testo -> I-beam, maniglie -> resize, ...).
 func cursor_shape_at(pos: Vector2) -> int:
 	var kids := window_layer.get_children()
-	# una finestra in ridimensionamento mantiene il suo cursore ovunque sia il mouse
+	# 1) una finestra in ridimensionamento mantiene il suo cursore ovunque sia il mouse
 	for k in kids:
 		var rw := k as OSWindow
 		if rw and rw.is_resizing():
 			return rw.cursor_at(Vector2.ZERO)
-	# altrimenti: finestra in cima (ultimo figlio) sotto il punto
+	# 2) bordo di una finestra sotto il punto -> cursore di ridimensionamento
 	for i in range(kids.size() - 1, -1, -1):
 		var w := kids[i] as OSWindow
 		if w and w.visible and Rect2(w.position, w.size).has_point(pos):
-			return w.cursor_at(pos - w.position)
+			var edge := w.cursor_at(pos - w.position)
+			if edge != Control.CURSOR_ARROW:
+				return edge
+			break   # la finestra in cima copre quelle sotto
+	# 3) cursore del controllo effettivamente sotto il mouse nel SubViewport
+	var hov := get_viewport().gui_get_hovered_control()
+	if hov != null:
+		return hov.get_cursor_shape(hov.get_local_mouse_position())
 	return Control.CURSOR_ARROW
 
 # ---------------- util ----------------

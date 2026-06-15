@@ -350,6 +350,9 @@ func _make_element(el: Dictionary) -> Control:
 			var link := LinkButton.new()
 			link.text = el.get("text", "")
 			link.focus_mode = Control.FOCUS_NONE
+			# largo solo quanto il testo (allineato a sx): l'area link/hover non
+			# deve coprire tutta la riga, ma solo la scritta, come un link reale
+			link.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 			link.add_theme_color_override("font_color", Win95.C_LINK)
 			link.add_theme_color_override("font_hover_color", Color("ee0000"))
 			link.add_theme_font_size_override("font_size", 18)
