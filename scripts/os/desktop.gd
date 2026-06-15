@@ -29,6 +29,8 @@ var _state_overlay: Control = null   # overlay di stato a tutto schermo (login /
 var _ctx_layer: Control
 var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
+var _no_signal_box: Panel = null
+var _no_signal_vel: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -478,6 +480,23 @@ func _focus_under_mouse(mp: Vector2) -> void:
 				window_layer.move_child(w, -1)
 			return
 
+# Forma del cursore per un punto in coordinate del desktop. La stanza la usa per
+# mostrare il cursore di ridimensionamento sull'overlay del PC: il SubViewport non
+# pilota il cursore reale, quindi lo facciamo dal lato stanza.
+func cursor_shape_at(pos: Vector2) -> int:
+	var kids := window_layer.get_children()
+	# una finestra in ridimensionamento mantiene il suo cursore ovunque sia il mouse
+	for k in kids:
+		var rw := k as OSWindow
+		if rw and rw.is_resizing():
+			return rw.cursor_at(Vector2.ZERO)
+	# altrimenti: finestra in cima (ultimo figlio) sotto il punto
+	for i in range(kids.size() - 1, -1, -1):
+		var w := kids[i] as OSWindow
+		if w and w.visible and Rect2(w.position, w.size).has_point(pos):
+			return w.cursor_at(pos - w.position)
+	return Control.CURSOR_ARROW
+
 # ---------------- util ----------------
 
 func _update_clock() -> void:
@@ -504,6 +523,7 @@ func _clear_state() -> void:
 	if _state_overlay and is_instance_valid(_state_overlay):
 		_state_overlay.queue_free()
 	_state_overlay = null
+	_no_signal_box = null # Interrompe il movimento in _process
 
 # Accensione del case (dal pulsante nella stanza): animazione di avvio, poi login.
 func boot() -> void:
@@ -534,7 +554,7 @@ func _play_boot() -> void:
 	_state_overlay = splash
 
 	var logo := Label.new()
-	logo.text = "MOLROO"
+	logo.text = "52-HZ WHALE"
 	logo.add_theme_color_override("font_color", Win95.C_LIGHT)
 	logo.add_theme_font_size_override("font_size", 64)
 	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -607,7 +627,7 @@ func _make_modal(title: String, dlg_size: Vector2, bg: Color) -> Dictionary:
 # Schermata di login: chiede la password (per ora "123") prima di mostrare il desktop.
 func _show_login() -> void:
 	_clear_state()
-	var dlg := _make_modal("Accesso a Windows", Vector2(380, 196), Win95.C_DESKTOP)
+	var dlg := _make_modal("Accesso a 52-HZ WHALE", Vector2(380, 196), Win95.C_DESKTOP)
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 	_state_overlay = layer
@@ -707,7 +727,11 @@ func _show_no_signal() -> void:
 	var box := Panel.new()
 	box.add_theme_stylebox_override("panel", Win95._sb(true, Color(0.13, 0.13, 0.16), true, 0, 0, 0, 0))
 	box.size = Vector2(360, 116)
-	box.position = Vector2((size.x - box.size.x) * 0.5, (size.y - box.size.y) * 0.5)
+	
+	# Posizione iniziale casuale per non farlo partire sempre dallo stesso punto
+	var max_x := size.x - box.size.x
+	var max_y := size.y - box.size.y
+	box.position = Vector2(randf_range(20.0, max_x - 20.0), randf_range(20.0, max_y - 20.0))
 	ov.add_child(box)
 
 	var title := Label.new()
@@ -727,12 +751,42 @@ func _show_no_signal() -> void:
 	sub.size = Vector2(box.size.x, 24)
 	box.add_child(sub)
 
-	# deriva lenta tra i quattro angoli, in loop
-	var m := 50.0
-	var p1 := Vector2(m, m)
-	var p2 := Vector2(size.x - box.size.x - m, m)
-	var p3 := Vector2(size.x - box.size.x - m, size.y - box.size.y - m)
-	var p4 := Vector2(m, size.y - box.size.y - m)
-	var tw := create_tween().set_loops()
-	for p in [p2, p3, p4, p1]:
-		tw.tween_property(box, "position", p, 4.0)
+	# Assegna il riquadro per abilitare il movimento in _process
+	_no_signal_box = box
+
+	# Configura la velocità e una direzione diagonale casuale
+	var speed := 110.0 # Velocità in pixel al secondo
+	# Genera un angolo tra ~27° e ~63° per evitare movimenti troppo orizzontali o verticali
+	var angle := randf_range(0.15, 0.35) * PI 
+	var dir_x := 1.0 if randf() > 0.5 else -1.0
+	var dir_y := 1.0 if randf() > 0.5 else -1.0
+	_no_signal_vel = Vector2(cos(angle) * dir_x, sin(angle) * dir_y) * speed
+	
+	# ---------------- loop di aggiornamento ----------------
+
+func _process(delta: float) -> void:
+	if is_instance_valid(_no_signal_box) and _no_signal_box.is_inside_tree():
+		# Sposta il riquadro in base alla velocità e al tempo trascorso
+		_no_signal_box.position += _no_signal_vel * delta
+		
+		# Limiti di movimento entro lo schermo del desktop
+		var min_x := 0.0
+		var max_x := size.x - _no_signal_box.size.x
+		var min_y := 0.0
+		var max_y := size.y - _no_signal_box.size.y
+		
+		# Rimbalzo e correzione per l'asse X
+		if _no_signal_box.position.x <= min_x:
+			_no_signal_box.position.x = min_x
+			_no_signal_vel.x = abs(_no_signal_vel.x)
+		elif _no_signal_box.position.x >= max_x:
+			_no_signal_box.position.x = max_x
+			_no_signal_vel.x = -abs(_no_signal_vel.x)
+			
+		# Rimbalzo e correzione per l'asse Y
+		if _no_signal_box.position.y <= min_y:
+			_no_signal_box.position.y = min_y
+			_no_signal_vel.y = abs(_no_signal_vel.y)
+		elif _no_signal_box.position.y >= max_y:
+			_no_signal_box.position.y = max_y
+			_no_signal_vel.y = -abs(_no_signal_vel.y)

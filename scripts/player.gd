@@ -29,6 +29,7 @@ const OS_SIZE := Vector2i(1440, 1080)
 var _os_viewport: SubViewport = null   # qui vive l'OS, rende sempre (monitor dal vivo)
 var _os = null                         # OSDesktop
 var _pc_layer: CanvasLayer = null      # overlay a tutto schermo (vista "dentro il PC")
+var _pc_bg: ColorRect = null           # sfondo nero dell'overlay (porta il cursore reale)
 var _pc_fade: ColorRect = null         # rettangolo nero per le dissolvenze dell'overlay
 var _screen_tex: ImageTexture = null   # texture del monitor 3D (aggiornata dal SubViewport)
 var _poll_accum := 0.0
@@ -46,12 +47,18 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_home_transform = global_transform   # posa centrale da cui si entra/torna
 	_home_fov = fov
+	# Al primo ingresso copri SUBITO lo schermo col nero, PRIMA di qualsiasi await:
+	# cosi' il livello non lampeggia mentre si costruiscono SubViewport e schermo
+	# del monitor. La rivelazione (fade_out) parte solo a costruzione finita.
+	var first: bool = GameManager.first_time_in_room
+	if first:
+		$"../Fade_transition".show()
+		$"../Fade_transition".color = Color(0, 0, 0, 1)
 	# attendi che Main finisca di costruirsi prima di aggiungere nodi fratelli
 	await get_tree().process_frame
 	_spawn_computer()                    # crea l'OS persistente (overlay nascosto)
 	await _setup_monitor_screen()
-	if GameManager.first_time_in_room:
-		$"../Fade_transition".show()
+	if first:
 		$"../Fade_transition/fade_timer".start()
 		$"../Fade_transition/AnimationPlayer".play("fade_out")
 		GameManager.first_time_in_room = false
@@ -90,6 +97,7 @@ func _spawn_computer() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP
 	_pc_layer.add_child(bg)
+	_pc_bg = bg   # e' il Control del viewport principale sotto il mouse: pilota il cursore
 
 	var screen := TextureRect.new()
 	screen.texture = _os_viewport.get_texture()
@@ -117,6 +125,8 @@ func _input(event):
 			_exit_pc()
 			return
 		_forward_to_os(event)
+		if event is InputEventMouse:
+			_update_pc_cursor((event as InputEventMouse).position)
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		# Creiamo un raggio che parte dalla punta del mouse
@@ -158,6 +168,15 @@ func _forward_to_os(event: InputEvent) -> void:
 		ev.position = event.position - Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
 	_os_viewport.push_input(ev, true)
 
+# Aggiorna il cursore reale dell'overlay PC chiedendo all'OS la forma per il punto
+# sotto il mouse. Il SubViewport non pilota il cursore reale: lo applichiamo qui sul
+# ColorRect dell'overlay, l'unico Control del viewport principale sotto il mouse.
+func _update_pc_cursor(screen_pos: Vector2) -> void:
+	if _pc_bg == null or _os == null:
+		return
+	var os_pos := screen_pos - Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
+	_pc_bg.mouse_default_cursor_shape = _os.cursor_shape_at(os_pos)
+
 # Pulsante di accensione sul case: spegne il PC se acceso, lo accende se spento.
 # Non cambia scena: l'OS vive sempre, il monitor mostra l'avvio/login dal vivo.
 func _power_button() -> void:
@@ -191,14 +210,13 @@ func _enter_pc() -> void:
 	tw.parallel().tween_property(self, "fov", start_fov - fly_fov_zoom, fly_time)
 	tw.tween_callback(_show_pc_overlay)
 
-# A volo finito (schermo nero) mostra l'overlay dell'OS e lo rivela dal nero.
+# A volo finito (schermo nero) mostra subito l'overlay dell'OS, senza dissolvenza
+# dal nero: una volta "dentro" il PC il desktop compare immediatamente.
 func _show_pc_overlay() -> void:
 	_in_pc = true
-	_pc_fade.color.a = 1.0
+	_pc_fade.color.a = 0.0
 	_pc_layer.visible = true
-	var tw := create_tween()
-	tw.tween_property(_pc_fade, "color:a", 0.0, 0.3)
-	tw.tween_callback(func(): entering = false)
+	entering = false
 
 # Esce dalla vista PC (ESC o "Annulla"): l'OS va al nero, si nasconde l'overlay e
 # la telecamera torna indietro rivelando la stanza. L'OS resta com'e' (acceso/login/desktop).
@@ -206,6 +224,10 @@ func _exit_pc() -> void:
 	if not _in_pc or entering:
 		return
 	entering = true
+	# l'OS puo' aver lasciato un cursore di resize sull'overlay: torna alla freccia
+	if _pc_bg:
+		_pc_bg.mouse_default_cursor_shape = Control.CURSOR_ARROW
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	var tw := create_tween()
 	tw.tween_property(_pc_fade, "color:a", 1.0, 0.25)
 	tw.tween_callback(_finish_exit)
