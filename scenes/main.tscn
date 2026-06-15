@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://brp46cjsnsa62" path="res://assets/textures/3d/computer/scene.gltf" id="3_jyhfs"]
 [ext_resource type="Texture2D" uid="uid://cf87bwpecaget" path="res://assets/textures/3d/freccia_test.png" id="3_sugp2"]
 [ext_resource type="PackedScene" uid="uid://cxlp1v6odc6t3" path="res://scenes/fade_transition.tscn" id="4_jyhfs"]
+[ext_resource type="PackedScene" uid="uid://dhdl8y1nogrc7" path="res://assets/textures/3d/desk/Desk.glb" id="5_tbgi4"]
+[ext_resource type="PackedScene" uid="uid://r55a65e2h78l" path="res://assets/textures/3d/deskLamp/Lamp With Shade.glb" id="6_tefeu"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
 size = Vector3(0.89, 0.01, 0.77)
@@ -26,21 +28,6 @@ size = Vector3(7, 2, 0.5)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0, 1, 1, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_h2yge"]
-size = Vector3(0.1, 0.5, 0.1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1bvp3"]
-albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lquwl"]
-albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7mycd"]
-albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_272bh"]
-albedo_color = Color(0.7607843, 0.4509804, 0.14509805, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_monitor"]
 size = Vector3(46.40619, 43.118484, 20)
@@ -93,32 +80,7 @@ skin = SubResource("Skin_ig7tw")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
 
 [node name="Desk" type="Node3D" parent="." unique_id=594763906]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82042825, -0.43066728)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Desk" unique_id=1790002806]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2652284, -0.84313333)
-mesh = SubResource("BoxMesh_0xm2m")
-surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="Desk" unique_id=1841648782]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.71891904, -0.47228283, -0.4786783)
-mesh = SubResource("BoxMesh_h2yge")
-surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
-
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="Desk" unique_id=209132682]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8013309, -0.47228283, -0.54203135)
-mesh = SubResource("BoxMesh_h2yge")
-surface_material_override/0 = SubResource("StandardMaterial3D_lquwl")
-
-[node name="MeshInstance3D4" type="MeshInstance3D" parent="Desk" unique_id=1395386087]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8013309, -0.47228283, -1.2141782)
-mesh = SubResource("BoxMesh_h2yge")
-surface_material_override/0 = SubResource("StandardMaterial3D_7mycd")
-
-[node name="MeshInstance3D5" type="MeshInstance3D" parent="Desk" unique_id=1168794205]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7523378, -0.47228283, -1.2141782)
-mesh = SubResource("BoxMesh_h2yge")
-surface_material_override/0 = SubResource("StandardMaterial3D_272bh")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.444794, 1.182103, 18.783127)
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=47843843]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08729151, 0.9562241, -1.3487917)
@@ -129,9 +91,9 @@ distance_fade_enabled = true
 omni_range = 6.0
 omni_shadow_mode = 0
 
-[node name="ScreenGlow" type="OmniLight3D" parent="." unique_id=704683100]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.7, -1)
-light_color = Color(0.4, 0.7, 1, 1)
+[node name="Light" type="OmniLight3D" parent="." unique_id=704683100]
+transform = Transform3D(0.8471001, 0.0382127, -0.53005785, -0.017572036, 0.99888015, 0.04392848, 0.5311429, -0.027897626, 0.84682286, -0.68470275, 1.1800929, -1.0152187)
+light_color = Color(0.7246083, 0.6956108, 0.3423986, 1)
 light_energy = 0.8
 shadow_enabled = true
 omni_range = 3.0
@@ -240,3 +202,9 @@ skeleton = NodePath("../..")
 visible = false
 
 [node name="fade_timer" type="Timer" parent="Fade_transition" unique_id=1530985540]
+
+[node name="DeskModel" parent="." unique_id=1424267003 instance=ExtResource("5_tbgi4")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, -0.6388695, -0.007021636, -1.2085266)
+
+[node name="DeskLamp" parent="." unique_id=1173508089 instance=ExtResource("6_tefeu")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.88703775, 0.610674, -1.3635969)
