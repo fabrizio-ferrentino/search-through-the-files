@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://bpfpflh4pugmb" path="res://scripts/player.gd" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://brp46cjsnsa62" path="res://assets/textures/3d/computer/scene.gltf" id="3_jyhfs"]
-[ext_resource type="Texture2D" uid="uid://cf87bwpecaget" path="res://assets/textures/3d/freccia_test.png" id="3_sugp2"]
 [ext_resource type="PackedScene" uid="uid://cxlp1v6odc6t3" path="res://scenes/fade_transition.tscn" id="4_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://dhdl8y1nogrc7" path="res://assets/textures/3d/desk/Desk.glb" id="5_tbgi4"]
 [ext_resource type="PackedScene" uid="uid://r55a65e2h78l" path="res://assets/textures/3d/deskLamp/Lamp With Shade.glb" id="6_tefeu"]
 [ext_resource type="PackedScene" uid="uid://ktr5x76xpddl" path="res://assets/textures/3d/bed/Bed.glb" id="7_o6xl0"]
+[ext_resource type="Script" uid="uid://brc1ca1jykros" path="res://scripts/nav_arrow.gd" id="nav_arrow"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
 size = Vector3(0.89, 0.01, 0.77)
@@ -110,54 +110,52 @@ offset_right = 1931.0
 offset_bottom = 1088.0
 mouse_filter = 2
 
-[node name="ArrowLeft" type="TextureRect" parent="HUD/ArrowsUI" unique_id=1999008925]
+[node name="ArrowLeft" type="Control" parent="HUD/ArrowsUI" unique_id=1999008925]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_top = -440.0
-offset_right = 169.0
-offset_bottom = 440.0
+offset_left = 40.0
+offset_top = -270.0
+offset_right = 140.0
+offset_bottom = 270.0
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("3_sugp2")
-expand_mode = 1
+script = ExtResource("nav_arrow")
+dir = "left"
 
-[node name="ArrowRight" type="TextureRect" parent="HUD/ArrowsUI" unique_id=1163388641]
+[node name="ArrowRight" type="Control" parent="HUD/ArrowsUI" unique_id=1163388641]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -17.0
-offset_top = 306.0
-offset_right = 153.0
-offset_bottom = 997.0
+offset_left = -140.0
+offset_top = -270.0
+offset_right = -40.0
+offset_bottom = 270.0
 grow_horizontal = 0
 grow_vertical = 2
-rotation = -3.1415927
 mouse_filter = 2
-texture = ExtResource("3_sugp2")
-expand_mode = 1
+script = ExtResource("nav_arrow")
 
-[node name="ArrowDown" type="TextureRect" parent="HUD/ArrowsUI" unique_id=334145443]
+[node name="ArrowDown" type="Control" parent="HUD/ArrowsUI" unique_id=334145443]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -268.5
-offset_top = -14.0
-offset_right = -99.70508
-offset_bottom = 513.8462
+offset_left = -270.0
+offset_top = -140.0
+offset_right = 270.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 0
-rotation = -1.5707964
 mouse_filter = 2
-texture = ExtResource("3_sugp2")
-expand_mode = 1
+script = ExtResource("nav_arrow")
+dir = "down"
 
 [node name="Monitor" type="StaticBody3D" parent="." unique_id=1292945562]
 transform = Transform3D(0.011, 0, 0, 0, 0.011, 0, 0, 0, 0.011, 0.10829714, 0.61248535, -1.1665897)

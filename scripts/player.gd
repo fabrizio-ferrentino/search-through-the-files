@@ -13,10 +13,12 @@ var pos_right = -70.0
 var pos_back = 180.0 
 
 var target_yaw = 0.0
-var edge_margin = 0.05
 var move_speed = 12.0
 var can_change_pos = true
-var reset_margin = 0.10 # Margine largo per resettare
+
+# Metodo delle frecce: false = al passaggio del mouse (hover, com'e' ora);
+# true = bisogna CLICCARE la freccia. Cambia qui (o dall'Inspector) per scegliere.
+@export var click_to_turn := true
 
 # --- animazione di ingresso nel PC (telecamera che entra nello schermo) ---
 @export var fly_time := 0.4        # durata del volo verso lo schermo (secondi) - più basso = più veloce
@@ -64,6 +66,7 @@ func _ready():
 		$"../Fade_transition/AnimationPlayer".play("fade_out")
 		GameManager.first_time_in_room = false
 	_update_arrows() # Imposta le frecce iniziali
+	_setup_arrow_input()
 
 # Crea l'OS in un SubViewport autonomo che gira SEMPRE (anche stando in stanza):
 # cosi' il monitor 3D mostra il PC dal vivo (avvio compreso). La vista a tutto
@@ -461,38 +464,82 @@ func _process(delta):
 		_poll_monitor(delta)   # tieni il monitor 3D aggiornato quando si e' in stanza
 	if entering or _in_pc:
 		return
-	var viewport_size = get_viewport().get_visible_rect().size
-	var mouse_pos = get_viewport().get_mouse_position()
-	var mouse_x_pct = mouse_pos.x / viewport_size.x
-	var mouse_y_pct = mouse_pos.y / viewport_size.y
-	
 	# --- LOGICA DI MOVIMENTO ---
-	if mouse_x_pct < edge_margin:
-		if can_change_pos and target_yaw != pos_back:
-			print("Guardo a Sinistra")
-			_move_view("left")
-			can_change_pos = false
-			
-	elif mouse_x_pct > (1.0 - edge_margin):
-		if can_change_pos and target_yaw != pos_back:
-			print("Guardo a Destra")
-			_move_view("right")
-			can_change_pos = false
-			
-	elif mouse_y_pct > 0.95:
-		if can_change_pos:
+	# La zona attiva e' il RETTANGOLO della freccia visibile (non piu' tutto il bordo):
+	# il cursore deve stare sul box-freccia al centro del lato.
+	var mp := get_viewport().get_mouse_position()
+	var r_left: Rect2 = arrow_left.get_global_rect()
+	var r_right: Rect2 = arrow_right.get_global_rect()
+	var r_down: Rect2 = arrow_down.get_global_rect()
+	var over_left: bool = arrow_left.visible and r_left.has_point(mp)
+	var over_right: bool = arrow_right.visible and r_right.has_point(mp)
+	var over_down: bool = arrow_down.visible and r_down.has_point(mp)
+
+	# feedback visivo: il pulsante sotto il cursore si illumina (in entrambe le modalita')
+	arrow_left.hovered = over_left
+	arrow_right.hovered = over_right
+	arrow_down.hovered = over_down
+
+	# Modalita' HOVER: il cursore sopra la freccia gira la visuale (con isteresi).
+	# Modalita' CLICK: il giro avviene su _arrow_action() via segnale "clicked".
+	if not click_to_turn:
+		if over_left:
+			if can_change_pos and target_yaw != pos_back:
+				_move_view("left")
+				can_change_pos = false
+		elif over_right:
+			if can_change_pos and target_yaw != pos_back:
+				_move_view("right")
+				can_change_pos = false
+		elif over_down:
+			if can_change_pos:
+				if target_yaw == pos_center:
+					target_yaw = pos_back
+				elif target_yaw == pos_back:
+					target_yaw = pos_center
+				can_change_pos = false
+				_update_arrows()
+		else:
+			# Isteresi: ri-abilita il cambio solo quando il cursore e' BEN FUORI da ogni
+			# freccia (rettangolo + margine). Cosi' dopo un cambio un piccolo movimento
+			# non ne fa subito un altro: il mouse deve davvero uscire dalla zona.
+			var m := 70.0
+			var near_arrow: bool = (arrow_left.visible and r_left.grow(m).has_point(mp)) \
+				or (arrow_right.visible and r_right.grow(m).has_point(mp)) \
+				or (arrow_down.visible and r_down.grow(m).has_point(mp))
+			if not near_arrow:
+				can_change_pos = true
+	# Rotazione fluida
+	rotation_degrees.y = lerp(rotation_degrees.y, target_yaw, delta * move_speed)
+
+# Collega le frecce e imposta il filtro del mouse a seconda della modalita'.
+func _setup_arrow_input() -> void:
+	for a in [arrow_left, arrow_right, arrow_down]:
+		a.mouse_filter = Control.MOUSE_FILTER_STOP if click_to_turn else Control.MOUSE_FILTER_IGNORE
+		if click_to_turn:
+			a.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	# il segnale scatta solo in modalita' click (in hover il mouse_filter e' IGNORE)
+	arrow_left.clicked.connect(func(): _arrow_action("left"))
+	arrow_right.clicked.connect(func(): _arrow_action("right"))
+	arrow_down.clicked.connect(func(): _arrow_action("down"))
+
+# Cambio di visuale per la modalita' click (chiamato dal segnale della freccia).
+func _arrow_action(d: String) -> void:
+	if entering or _in_pc or _ending:
+		return
+	match d:
+		"left":
+			if target_yaw != pos_back:
+				_move_view("left")
+		"right":
+			if target_yaw != pos_back:
+				_move_view("right")
+		"down":
 			if target_yaw == pos_center:
 				target_yaw = pos_back
 			elif target_yaw == pos_back:
 				target_yaw = pos_center
-			can_change_pos = false
 			_update_arrows()
-	else:
-		# Resettiamo il comando SOLO se il mouse si allontana bene dai bordi
-		if mouse_x_pct > reset_margin and mouse_x_pct < (1.0 - reset_margin) and mouse_y_pct < 0.85:
-			can_change_pos = true
-	# Rotazione fluida
-	rotation_degrees.y = lerp(rotation_degrees.y, target_yaw, delta * move_speed)
 
 func _move_view(direction):
 	var old_yaw = target_yaw
