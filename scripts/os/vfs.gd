@@ -136,7 +136,7 @@ static func _build() -> Dictionary:
 		_folder("Disco locale (C:)", "folder", [
 			# La cartella protetta vive sul Desktop (compare come icona sulla scrivania).
 			_folder("Desktop", "folder", [
-				{"name": "Cartella protetta", "type": "secret", "icon": "locked"},
+				{"name": "Documenti", "type": "secret", "icon": "locked"},
 			]),
 			_folder("Documenti", "folder", [
 				_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),

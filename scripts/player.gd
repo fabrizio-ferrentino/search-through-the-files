@@ -267,7 +267,7 @@ func _show_ending() -> void:
 	bg.add_child(vb)
 
 	var title := Label.new()
-	title.text = "SEI FUGGITO"
+	title.text = "HAI VINTO"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 96)
 	title.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))

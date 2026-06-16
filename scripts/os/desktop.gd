@@ -707,38 +707,24 @@ func open_secret_folder(_node: Dictionary) -> void:
 		return
 
 	var pad := 28.0
-	var label_w := 52.0
 	var field_h := 44.0
 	var row_gap := 12.0
-	var rows_top := 92.0
+	var rows_top := 54.0
 	var dlg_w := 460.0
-	var field_w: float = dlg_w - pad * 2.0 - label_w
+	var field_w: float = dlg_w - pad * 2.0
 	var dlg_h: float = rows_top + n * (field_h + row_gap) + 86.0
 
-	var dlg := _make_modal("Cartella protetta", Vector2(dlg_w, dlg_h), Color(0, 0, 0, 0.45))
+	var dlg := _make_modal("ACCESSO NEGATO", Vector2(dlg_w, dlg_h), Color(0, 0, 0, 0.55))
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 
-	var msg := Label.new()
-	msg.text = "Inserire il codice di ogni riga:"
-	msg.position = Vector2(pad, 46)
-	msg.size = Vector2(dlg_w - pad * 2.0, 26)
-	panel.add_child(msg)
-
+	# Niente istruzioni ne' etichette di riga: solo i campi. Il giocatore deduce la
+	# riga dal prefisso trovato nei contenuti (es. "2-..." -> 2o campo dall'alto).
 	var fields: Array = []   # un LineEdit per riga (chiave)
 	for r in range(n):
-		var ry: float = rows_top + r * (field_h + row_gap)
-		var rl := Label.new()
-		rl.text = "%d-" % (r + 1)
-		rl.position = Vector2(pad, ry)
-		rl.size = Vector2(label_w, field_h)
-		rl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		rl.add_theme_font_size_override("font_size", 24)
-		panel.add_child(rl)
-
 		var le := LineEdit.new()
 		le.max_length = GameManager.KEY_LEN   # solo il codice nudo (es. 4 caratteri)
-		le.position = Vector2(pad + label_w, ry)
+		le.position = Vector2(pad, rows_top + r * (field_h + row_gap))
 		le.size = Vector2(field_w, field_h)
 		le.add_theme_font_size_override("font_size", 24)
 		# maiuscolo automatico mantenendo il cursore (guardia anti-ricorsione)
@@ -786,6 +772,33 @@ func open_secret_folder(_node: Dictionary) -> void:
 		le3.text_submitted.connect(func(_t): attempt.call())
 	if not fields.is_empty():
 		fields[0].call_deferred("grab_focus")
+
+	# --- effetto "rotto/glitch" sul dialogo ---
+	# Overlay sopra il pannello che legge lo schermo sotto e lo distorce. mouse IGNORE:
+	# non blocca i campi/pulsanti sotto. Aggiunto per ultimo -> disegnato in cima.
+	var fx := ColorRect.new()
+	fx.name = "GlitchFX"
+	fx.position = Vector2.ZERO
+	fx.size = panel.size
+	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://scripts/os/glitch.gdshader")
+	mat.set_shader_parameter("intensity", 0.05)   # fondo basso: mai del tutto pulito
+	fx.material = mat
+	panel.add_child(fx)
+
+	# Raffiche: per lo piu' calmo, con brevi picchi di glitch a intervalli casuali.
+	var burst := Timer.new()
+	burst.one_shot = false
+	burst.wait_time = randf_range(1.5, 3.0)
+	panel.add_child(burst)
+	burst.timeout.connect(func():
+		burst.wait_time = randf_range(1.5, 3.0)   # prossima raffica
+		var tw := create_tween()
+		tw.tween_property(mat, "shader_parameter/intensity", randf_range(0.6, 1.0), 0.04)
+		tw.tween_interval(randf_range(0.12, 0.3))
+		tw.tween_property(mat, "shader_parameter/intensity", 0.05, 0.22))
+	burst.start()
 
 # Conferma di spegnimento (stile classico: solo Sì / No).
 func _show_shutdown() -> void:
