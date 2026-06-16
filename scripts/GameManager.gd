@@ -34,6 +34,9 @@ var pc_on := false
 # spegnimento. Un PC puo' essere acceso ma non ancora loggato (mostra il login).
 var logged_in := false
 
+# True mentre l'overlay di morte e' in corso: evita game over multipli sovrapposti.
+var _game_over_active := false
+
 # ---------------- ciclo di vita del run ----------------
 
 # Avvia una nuova partita: fissa il seme, azzera lo stato del PC e ricostruisce
@@ -46,18 +49,34 @@ func start_new_run(new_seed: int = 0) -> void:
 	first_time_in_room = true
 	pc_on = false
 	logged_in = false
+	_game_over_active = false
 	VFS.build_run(run_seed)    # filesystem fresco: "perdere -> run nuovo" riparte pulito
 	BrowserApp.reset_pages()   # pagine web rigenerate per il nuovo run (con le nuove chiavi)
 
-# Fine partita per morte/jumpscare. Punto di aggancio unico: per ora segna lo
-# stato e logga; jumpscare e flusso di restart arrivano con la Milestone 2.
-func game_over() -> void:
-	print("[GameManager] game_over()")
-	# M2: jumpscare -> fade -> restart()
+# Fine partita: lo chiameranno i nemici (M4), dalla stanza o dal PC. Mostra
+# l'overlay di morte (jumpscare -> schermata GAME OVER -> menu), sopra a tutto.
+# cause = chi/cosa ha ucciso il giocatore (gancio: in M4 sceglie il sottotitolo).
+func game_over(cause := "") -> void:
+	if _game_over_active:
+		return
+	_game_over_active = true
+	print("[GameManager] game_over(", cause, ")")
+	var ds = load("res://scripts/death_screen.gd").new()
+	ds.cause = cause
+	# alla radice: copre stanza E vista PC, regge il cambio scena. call_deferred:
+	# sicuro anche se game_over scatta mentre l'albero sta costruendo dei nodi.
+	get_tree().root.add_child.call_deferred(ds)
 
 # Ricomincia da capo: nuovo seme, filesystem ricostruito, stato azzerato.
+# (Non usato dal flusso di morte, che torna al menu; resta come hook per M4 / "Riprova".)
 func restart() -> void:
 	start_new_run()
+
+# DEV-ONLY (M2): F10 forza il game over per provare jumpscare/flusso. In M4 sara'
+# un nemico a chiamarlo: rimuovere allora questo input di debug.
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F10:
+		game_over("debug")
 
 # ---------------- chiavi (M1) ----------------
 
