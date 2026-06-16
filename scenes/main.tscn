@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://cxlp1v6odc6t3" path="res://scenes/fade_transition.tscn" id="4_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://dhdl8y1nogrc7" path="res://assets/textures/3d/desk/Desk.glb" id="5_tbgi4"]
 [ext_resource type="PackedScene" uid="uid://r55a65e2h78l" path="res://assets/textures/3d/deskLamp/Lamp With Shade.glb" id="6_tefeu"]
+[ext_resource type="PackedScene" uid="uid://ktr5x76xpddl" path="res://assets/textures/3d/bed/Bed.glb" id="7_o6xl0"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
 size = Vector3(0.89, 0.01, 0.77)
@@ -27,16 +28,13 @@ size = Vector3(7, 2, 0.5)
 [sub_resource type="Skin" id="Skin_ig7tw"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
-albedo_color = Color(0, 1, 1, 1)
+albedo_color = Color(0, 0.23921569, 1, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_monitor"]
 size = Vector3(46.40619, 43.118484, 20)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jyhfs"]
 size = Vector3(22.02628, 44.65423, 43.78023)
-
-[sub_resource type="BoxMesh" id="BoxMesh_1bvp3"]
-size = Vector3(2.5, 0.3, 2.8)
 
 [sub_resource type="BoxMesh" id="BoxMesh_lquwl"]
 size = Vector3(1, 0.2, 5)
@@ -174,10 +172,6 @@ shape = SubResource("BoxShape3D_monitor")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.042263, 24.329666, -21.640266)
 shape = SubResource("BoxShape3D_jyhfs")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1272449623]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2698758, 0.46310008, 2.821858)
-mesh = SubResource("BoxMesh_1bvp3")
-
 [node name="wallBack" type="MeshInstance3D" parent="." unique_id=198318539]
 transform = Transform3D(-0.9999972, 0.0013128931, 0.0019926056, 0.0012881268, 0.99992263, -0.012380946, -0.00200871, -0.012378347, -0.99992144, 0.97240496, 1.1290972, 4.5503745)
 mesh = SubResource("BoxMesh_ig7tw")
@@ -199,7 +193,6 @@ mesh = SubResource("BoxMesh_lquwl")
 skeleton = NodePath("../..")
 
 [node name="Fade_transition" parent="." unique_id=978627174 instance=ExtResource("4_jyhfs")]
-visible = false
 
 [node name="fade_timer" type="Timer" parent="Fade_transition" unique_id=1530985540]
 
@@ -208,3 +201,6 @@ transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, -0.6388695, -0.00702163
 
 [node name="DeskLamp" parent="." unique_id=1173508089 instance=ExtResource("6_tefeu")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.88703775, 0.610674, -1.3635969)
+
+[node name="Bed" parent="." unique_id=1823832854 instance=ExtResource("7_o6xl0")]
+transform = Transform3D(-1.1999888, 0, 0.005131242, 0, 1.1999999, 0, -0.005131242, 0, -1.1999888, -0.3901032, -0.108777106, 3.0919957)
