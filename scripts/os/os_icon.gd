@@ -19,6 +19,8 @@ func _draw() -> void:
 			_folder(w, h)
 		"folder_open":
 			_folder(w, h, true)
+		"locked":
+			_locked(w, h)
 		"computer":
 			_computer(w, h)
 		"ie":
@@ -79,6 +81,19 @@ func _folder(w: float, h: float, open := false) -> void:
 	var body := Rect2(w * 0.08, h * 0.32, w * 0.84, h * 0.48)
 	draw_rect(body, Color("f2c84b") if not open else Color("ffe08a"))
 	_outline(body, Color("80631a"))
+
+func _locked(w: float, h: float) -> void:
+	# cartella con un lucchetto sopra (nodo "secret")
+	_folder(w, h)
+	var body := Rect2(w * 0.40, h * 0.50, w * 0.34, h * 0.30)
+	var c := Vector2(body.position.x + body.size.x * 0.5, body.position.y)
+	# staffa del lucchetto
+	draw_arc(c, w * 0.11, deg_to_rad(180.0), deg_to_rad(360.0), 16, Color("3a3a3a"), 3.0)
+	# corpo
+	draw_rect(body, Color("e0c020"))
+	_outline(body, Color("6a5600"))
+	# buco della chiave
+	draw_circle(body.position + body.size * Vector2(0.5, 0.45), w * 0.035, Color("3a3a3a"))
 
 func _computer(w: float, h: float) -> void:
 	var mon := Rect2(w * 0.14, h * 0.12, w * 0.72, h * 0.52)

@@ -443,6 +443,10 @@ func _emit(lines: Array, el: Dictionary, indent: String) -> void:
 			for it in el.get("items", []):
 				lines.append("%s    <li>%s</li>" % [indent, _esc(str(it))])
 			lines.append(indent + "</ul>")
+			# Commento HTML: compare nel sorgente (Ispeziona elemento) ma _make_element
+			# non lo rende a video -> ottimo nascondiglio per una chiave.
+		"comment":
+			lines.append("%s<!-- %s -->" % [indent, str(el.get("text", ""))])
 
 func _toggle_inspector() -> void:
 	if _inspector.visible:
@@ -466,23 +470,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_toggle_inspector()
 			get_viewport().set_input_as_handled()
 
-# ---------------- sessione (salva/ripristina) ----------------
-
-func get_session() -> Dictionary:
-	return {
-		"kind": "browser",
-		"url": _current,
-		"back": _back.duplicate(),
-		"forward": _forward.duplicate(),
-		"inspector": _inspector.visible,
-	}
-
-func restore_session(d: Dictionary) -> void:
-	_back = (d.get("back", []) as Array).duplicate()
-	_forward = (d.get("forward", []) as Array).duplicate()
-	if d.get("inspector", false):
-		_open_inspector(-1)
-
 # ---------------- contenuti delle pagine ----------------
 
 func _page_404(url: String) -> Dictionary:
@@ -497,8 +484,15 @@ func _page_404(url: String) -> Dictionary:
 		]
 	}
 
+# Svuota la cache delle pagine: chiamato da GameManager.start_new_run() cosi' le
+# pagine (e le chiavi che contengono) si rigenerano per ogni nuovo run.
+static func reset_pages() -> void:
+	_pages_cache = {}
+
 func _pages() -> Dictionary:
 	if _pages_cache.is_empty():
+		var k3 := GameManager.key_label(3)   # chiave nel testo VISIBILE di una pagina (con prefisso "3-")
+		var k4 := GameManager.key_label(4)   # chiave nel SORGENTE HTML (commento, con prefisso "4-")
 		_pages_cache = {
 			"start": {
 				"title": "Pagina iniziale",
@@ -522,6 +516,7 @@ func _pages() -> Dictionary:
 				"elements": [
 					{"tag": "img", "alt": "NewsOggi", "color": "8a1f1f", "w": 560, "h": 70},
 					{"tag": "h1", "text": "NewsOggi"},
+					{"tag": "comment", "text": "build-key=" + k4},
 					{"tag": "h2", "text": "In primo piano"},
 					{"tag": "p", "text": "Rilasciato un nuovo sistema operativo a finestre: code ai negozi."},
 					{"tag": "p", "text": "Gli esperti: i floppy da 1.44 MB sono il futuro dell'archiviazione."},
@@ -565,6 +560,7 @@ func _pages() -> Dictionary:
 					{"tag": "h1", "text": "Pagina nascosta"},
 					{"tag": "p", "text": "Se stai leggendo questo, hai trovato il collegamento giusto nel computer."},
 					{"tag": "p", "text": "La password e' nascosta in un file di testo dentro Documenti..."},
+					{"tag": "p", "text": "Promemoria personale: il terzo frammento e' " + k3 + ". Gli altri li ho sparsi altrove."},
 					{"tag": "hr"},
 					{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 				]

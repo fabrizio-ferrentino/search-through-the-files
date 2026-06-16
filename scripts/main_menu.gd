@@ -4,6 +4,7 @@ var button_type = null
 
 func _on_start_pressed() -> void:
 	button_type = "start"
+	GameManager.start_new_run()   # nuovo run: seme, stato PC azzerato e filesystem fresco
 	$Fade_transition.show()
 	$Fade_transition/fade_timer.start()
 	$Fade_transition/AnimationPlayer.play("fade_in")

@@ -55,18 +55,6 @@ func launch(arg) -> void:
 	# da qui in poi le modifiche dell'utente segnano il file come "non salvato"
 	_edit.text_changed.connect(_on_text_changed)
 
-func get_session() -> Dictionary:
-	var p: Array = []
-	if _file_dict != null and _file_dict.has("_parent"):
-		p = VFS.path_of(_file_dict)
-	return {"kind": "notepad", "file_name": _file_name, "text": _edit.text, "path": p}
-
-func restore_session(entry: Dictionary) -> void:
-	_edit.text = str(entry.get("text", _edit.text))
-	_edit.clear_undo_history()
-	_modified = _file_dict != null and _edit.text != str(_file_dict.get("content", ""))
-	_update_title()
-
 func _on_text_changed() -> void:
 	_modified = true
 	_update_title()

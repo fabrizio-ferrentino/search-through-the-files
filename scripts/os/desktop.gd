@@ -9,6 +9,7 @@ extends Control
 # runtime (boot / power_off), non cambi di scena. ESC chiede l'uscita alla stanza.
 
 signal exit_requested   # ESC o "Annulla": torna alla vista stanza (senza spegnere)
+signal game_won         # cartella segreta sbloccata: la stanza mostra il finale
 
 const TASKBAR_H := 40
 
@@ -26,6 +27,7 @@ var active_window: OSWindow = null
 var _cascade := 0
 var _desk_sel: DesktopItem = null
 var _state_overlay: Control = null   # overlay di stato a tutto schermo (login / nessun segnale / avvio)
+var _modal_layer: Control = null     # ultimo dialogo modale aperto (login / arresto / cartella segreta)
 var _ctx_layer: Control
 var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
@@ -105,7 +107,8 @@ func _add_desktop_item(d: Dictionary, y: float, is_file: bool) -> void:
 	item.position = Vector2(20, y)
 	item.activated.connect(_on_desktop_activated)
 	item.picked.connect(_on_desktop_picked)
-	if is_file:
+	# la cartella protetta non e' eliminabile: niente menu contestuale "Elimina"
+	if is_file and d.get("type", "") != "secret":
 		item.context_requested.connect(_on_desktop_item_context)
 	icons_layer.add_child(item)
 
@@ -343,6 +346,8 @@ func _on_desktop_activated(data: Dictionary) -> void:
 		data["open"].call()
 	elif data.get("type", "") == "folder":
 		open_app("explorer", data)
+	elif data.get("type", "") == "secret":
+		open_secret_folder(data)
 	elif data.get("type", "") == "file":
 		if data.get("filetype", "") == "html":
 			open_app("browser", data.get("url", "start"))
@@ -488,6 +493,11 @@ func _focus_under_mouse(mp: Vector2) -> void:
 # Copre il ridimensionamento delle finestre e il cursore del controllo sotto il
 # mouse (link -> manina, campi di testo -> I-beam, maniglie -> resize, ...).
 func cursor_shape_at(pos: Vector2) -> int:
+	# se c'e' un dialogo modale aperto conta solo il controllo sotto il mouse (il
+	# modale stesso): niente cursore di resize delle finestre che sta sotto.
+	if _modal_layer != null and is_instance_valid(_modal_layer):
+		var hovm := get_viewport().gui_get_hovered_control()
+		return hovm.get_cursor_shape(hovm.get_local_mouse_position()) if hovm != null else Control.CURSOR_ARROW
 	var kids := window_layer.get_children()
 	# 1) una finestra in ridimensionamento mantiene il suo cursore ovunque sia il mouse
 	for k in kids:
@@ -609,6 +619,7 @@ func _make_modal(title: String, dlg_size: Vector2, bg: Color) -> Dictionary:
 	layer.mouse_filter = Control.MOUSE_FILTER_STOP   # blocca i click al desktop sotto
 	add_child(layer)
 	layer.move_to_front()
+	_modal_layer = layer   # cursor_shape_at: ignora i bordi finestra mentre e' aperto
 
 	var back := ColorRect.new()
 	back.color = bg
@@ -683,6 +694,98 @@ func _show_login() -> void:
 	pw.text_submitted.connect(func(_t): attempt.call())
 	# (niente "Annulla": per uscire senza loggare si preme ESC)
 	pw.call_deferred("grab_focus")
+
+# ---------------- cartella segreta (M1) ----------------
+
+# Dialogo modale per inserire le chiavi: una riga per chiave, con l'etichetta
+# "1-", "2-"... a sinistra. Nel campo si scrive solo il CODICE nudo ("ABCD"): la
+# riga (data dall'etichetta) dice a quale chiave appartiene. Tutti corretti -> game_won.
+func open_secret_folder(_node: Dictionary) -> void:
+	var keys: Array = GameManager.keys
+	var n: int = keys.size()
+	if n == 0:
+		return
+
+	var pad := 28.0
+	var label_w := 52.0
+	var field_h := 44.0
+	var row_gap := 12.0
+	var rows_top := 92.0
+	var dlg_w := 460.0
+	var field_w: float = dlg_w - pad * 2.0 - label_w
+	var dlg_h: float = rows_top + n * (field_h + row_gap) + 86.0
+
+	var dlg := _make_modal("Cartella protetta", Vector2(dlg_w, dlg_h), Color(0, 0, 0, 0.45))
+	var layer: Control = dlg["layer"]
+	var panel: Panel = dlg["panel"]
+
+	var msg := Label.new()
+	msg.text = "Inserire il codice di ogni riga:"
+	msg.position = Vector2(pad, 46)
+	msg.size = Vector2(dlg_w - pad * 2.0, 26)
+	panel.add_child(msg)
+
+	var fields: Array = []   # un LineEdit per riga (chiave)
+	for r in range(n):
+		var ry: float = rows_top + r * (field_h + row_gap)
+		var rl := Label.new()
+		rl.text = "%d-" % (r + 1)
+		rl.position = Vector2(pad, ry)
+		rl.size = Vector2(label_w, field_h)
+		rl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		rl.add_theme_font_size_override("font_size", 24)
+		panel.add_child(rl)
+
+		var le := LineEdit.new()
+		le.max_length = GameManager.KEY_LEN   # solo il codice nudo (es. 4 caratteri)
+		le.position = Vector2(pad + label_w, ry)
+		le.size = Vector2(field_w, field_h)
+		le.add_theme_font_size_override("font_size", 24)
+		# maiuscolo automatico mantenendo il cursore (guardia anti-ricorsione)
+		le.text_changed.connect(func(t: String):
+			var u := t.to_upper()
+			if u != le.text:
+				var col := le.caret_column
+				le.text = u
+				le.caret_column = col)
+		panel.add_child(le)
+		fields.append(le)
+
+	var err := Label.new()
+	err.add_theme_color_override("font_color", Color(0.7, 0.1, 0.1))
+	err.position = Vector2(pad, dlg_h - 78.0)
+	err.size = Vector2(field_w, 24)
+	panel.add_child(err)
+
+	var by: float = dlg_h - 48.0
+	var unlock := Button.new()
+	unlock.text = "Sblocca"
+	unlock.position = Vector2(dlg_w - 232.0, by)
+	unlock.size = Vector2(104, 36)
+	panel.add_child(unlock)
+
+	var cancel := Button.new()
+	cancel.text = "Annulla"
+	cancel.position = Vector2(dlg_w - 120.0, by)
+	cancel.size = Vector2(104, 36)
+	panel.add_child(cancel)
+
+	var attempt := func():
+		var rows: Array = []
+		for le2 in fields:
+			rows.append(str(le2.text))
+		if GameManager.check_keys(rows):
+			layer.queue_free()
+			game_won.emit()
+		else:
+			err.text = "Codici errati o incompleti. Riprovare."
+
+	cancel.pressed.connect(func(): layer.queue_free())
+	unlock.pressed.connect(attempt)
+	for le3 in fields:
+		le3.text_submitted.connect(func(_t): attempt.call())
+	if not fields.is_empty():
+		fields[0].call_deferred("grab_focus")
 
 # Conferma di spegnimento (stile classico: solo Sì / No).
 func _show_shutdown() -> void:

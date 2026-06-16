@@ -191,6 +191,8 @@ func _on_activated(data: Dictionary) -> void:
 				os.open_app("browser", data.get("url", "home"))
 			else:
 				os.open_app("notepad", data)
+		"secret":
+			os.open_secret_folder(data)
 
 func _go_back() -> void:
 	if _history.is_empty():
@@ -313,8 +315,3 @@ func _show_menu(items: Array) -> void:
 	_ctx_panel.position = pos
 	_ctx_layer.visible = true
 	_ctx_layer.move_to_front()
-
-# ---------------- sessione ----------------
-
-func get_session() -> Dictionary:
-	return {"kind": "explorer", "folder_path": VFS.path_of(_folder)}

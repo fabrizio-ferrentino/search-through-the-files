@@ -16,6 +16,14 @@ static func get_root() -> Dictionary:
 		_link_parents(_root, null)
 	return _root
 
+# (Ri)costruisce il filesystem per un nuovo run: scarta lo stato precedente
+# (file modificati, elementi nel Cestino) e riparte dall'albero base. Lo chiama
+# GameManager.start_new_run() cosi' "perdere -> run nuovo" parte sempre pulito.
+# Il seed e' previsto per la randomizzazione (M3); per ora l'albero e' fisso.
+static func build_run(_seed: int = 0) -> void:
+	_root = _build()
+	_link_parents(_root, null)
+
 # Percorso (array di nomi dalla radice) di un nodo, per salvare/ripristinare la sessione.
 static func path_of(node) -> Array:
 	var parts: Array = []
@@ -122,9 +130,14 @@ static func _unique_name(folder: Dictionary, wanted: String) -> String:
 	return candidate
 
 static func _build() -> Dictionary:
+	var k1 := GameManager.key_label(1)   # chiave nascosta dentro un file di testo (con prefisso "1-")
+	var k2 := GameManager.key_label(2)   # chiave nascosta nel NOME di una cartella (con prefisso "2-")
 	return _folder("Risorse del computer", "computer", [
 		_folder("Disco locale (C:)", "folder", [
-			_folder("Desktop", "folder", []),
+			# La cartella protetta vive sul Desktop (compare come icona sulla scrivania).
+			_folder("Desktop", "folder", [
+				{"name": "Cartella protetta", "type": "secret", "icon": "locked"},
+			]),
 			_folder("Documenti", "folder", [
 				_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),
 				_text("password.txt", "NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)"),
@@ -140,6 +153,11 @@ static func _build() -> Dictionary:
 			_folder("Sistema", "folder", [
 				_text("config.sys", "DEVICE=HIMEM.SYS\nDOS=HIGH,UMB\nFILES=30\nBUFFERS=20"),
 				_text("autoexec.bat", "@ECHO OFF\nPROMPT $P$G\nPATH C:\\DOS\nSET TEMP=C:\\TEMP"),
+				_text("seriale.txt", "Codice di attivazione del prodotto:\n  " + k1 + "\n\nConservare in luogo sicuro. Non divulgare a terzi."),
+			]),
+			# La chiave 2 e' contenuta nel NOME stesso di questa cartella (visibile in Esplora risorse).
+			_folder("Backup " + k2, "folder", [
+				_text("note.txt", "Copia di sicurezza automatica.\nNon eliminare questa cartella."),
 			]),
 		]),
 		_folder("Cestino", "trash", []),

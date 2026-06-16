@@ -23,6 +23,7 @@ var reset_margin = 0.10 # Margine largo per resettare
 @export var fly_fov_zoom := 12.0   # di quanto stringere il FOV durante il volo (zoom)
 var entering := false               # transizione in corso (volo telecamera)
 var _in_pc := false                 # vista PC attiva (overlay a tutto schermo)
+var _ending := false                # finale in corso (vittoria): blocca ogni input
 
 # --- PC coesistente: l'OS gira sempre in un SubViewport autonomo ---
 const OS_SIZE := Vector2i(1440, 1080)
@@ -84,6 +85,8 @@ func _spawn_computer() -> void:
 	_os_viewport.add_child(_os)
 	if _os.has_signal("exit_requested"):
 		_os.exit_requested.connect(_exit_pc)
+	if _os.has_signal("game_won"):
+		_os.game_won.connect(_on_game_won)
 
 	# 2) Overlay a tutto schermo: lo stesso schermo, ingrandito col CRT (nascosto in stanza).
 	_pc_layer = CanvasLayer.new()
@@ -231,6 +234,55 @@ func _exit_pc() -> void:
 	var tw := create_tween()
 	tw.tween_property(_pc_fade, "color:a", 1.0, 0.25)
 	tw.tween_callback(_finish_exit)
+
+# --- vittoria: cartella segreta sbloccata (segnale dall'OS) ---
+func _on_game_won() -> void:
+	if _ending:
+		return
+	_ending = true
+	entering = true            # blocca input e movimento fino al cambio scena
+	if _pc_layer:
+		_pc_layer.visible = false
+	_in_pc = false
+	_show_ending()
+
+# Schermata finale a tutto schermo (sopra ogni cosa), con ritorno al menu.
+func _show_ending() -> void:
+	var layer := CanvasLayer.new()
+	layer.name = "EndingLayer"
+	layer.layer = 20
+	get_parent().add_child(layer)
+
+	var bg := ColorRect.new()
+	bg.color = Color.BLACK
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	bg.modulate.a = 0.0
+	layer.add_child(bg)
+
+	var vb := VBoxContainer.new()
+	vb.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_theme_constant_override("separation", 40)
+	bg.add_child(vb)
+
+	var title := Label.new()
+	title.text = "SEI FUGGITO"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 96)
+	title.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+	vb.add_child(title)
+
+	var btn := Button.new()
+	btn.text = "Torna al menu"
+	btn.custom_minimum_size = Vector2(240, 56)
+	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
+	vb.add_child(btn)
+
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	var tw := create_tween()
+	tw.tween_property(bg, "modulate:a", 1.0, 1.2)
 
 func _finish_exit() -> void:
 	_pc_layer.visible = false
