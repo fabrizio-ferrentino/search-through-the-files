@@ -2,95 +2,168 @@ class_name OSContent
 extends RefCounted
 
 # ============================================================
-# Libreria dei contenuti "autoriali" dell'OS — M3 (parte 1: contenuto data-driven).
+# Libreria dei contenuti dell'OS — M3 (parti 1+2: contenuto data-driven + generatore).
 #
-# Qui vivono, come DATI separati dalla logica, i due grandi blocchi di contenuto
-# del gioco:
-#   * l'albero base del filesystem (prima cablato in vfs.gd::_build)
-#   * il "pool" di siti web del browser (prima cablato in app_browser.gd::_pages)
+# Parte 1: i contenuti (albero base del filesystem + pool di siti web) vivono qui
+# come DATI, separati da chi li costruisce/mostra (vfs.gd, app_browser.gd).
 #
-# vfs.gd e app_browser.gd ora si limitano a COSTRUIRE/MOSTRARE cio' che questa
-# libreria restituisce. Le chiavi del run vengono iniettate nei contenuti tramite
-# segnaposto {{KEYn}} (vedi _apply_keys): il testo autoriale non contiene codici,
-# e' la libreria a sostituirli con GameManager.key_label(n) (es. "1-Q9FY").
+# Parte 2 (generatore seminato): dal seme del run (GameManager.run_seed) decidiamo
+# in modo RIPRODUCIBILE quali ~5 siti del pool entrano nel run e DOVE finiscono le
+# chiavi. Le chiavi non stanno piu' in posizioni fisse:
+#   * chiave in FILE   -> file portatore (nome + testo a caso) in una cartella a caso
+#   * chiave in CARTELLA -> cartella "di backup" (nome a caso) col codice nel nome
+#   * 2 chiavi WEB     -> 2 siti distinti scelti a caso tra quelli del run, ciascuna
+#                          a caso nel TESTO VISIBILE oppure nel SORGENTE HTML (commento)
 #
-# La randomizzazione seminata (scegliere ~5 siti dal pool, spostare a caso la
-# posizione delle chiavi, generare nomi/contenuti) e' la PARTE 2 della Milestone 3:
-# qui il pool e' completo e gli slot delle chiavi sono fissi. La struttura a pool +
-# segnaposto e' pero' gia' quella su cui il generatore seminato si innestera'.
+# Robustezza: ogni funzione di build usa un RandomNumberGenerator PROPRIO, seminato
+# da run_seed + un salt costante. Cosi' il risultato e' riproducibile e NON dipende
+# dall'ordine o dal momento di chiamata (il browser genera le pagine in modo lazy,
+# il VFS al build_run): stesso seme -> stesso contenuto. La mappa indice->categoria
+# e' fissa (1=file, 2=cartella, 3/4=web), cosi' VFS e siti scelgono le proprie
+# chiavi senza doversi coordinare; e' solo la POSIZIONE dentro la categoria a variare.
 # ============================================================
 
-# Modello del segnaposto di chiave nei testi autoriali: "{{KEY1}}".."{{KEYn}}".
-# _apply_keys() lo sostituisce in TUTTO l'albero (nomi, contenuti, testi, commenti).
-const KEY_TOKEN := "{{KEY%d}}"
+# Segnaposto generico di chiave nei testi portatori: sostituito con key_label(n).
+const KEY_SLOT := "{{KEY}}"
+
+# Quanti siti del pool entrano in un run (il pool ne ha di piu': vedi _site_pool).
+const SITE_COUNT := 5
+
+# Salt distinti per i generatori seminati (cosi' VFS e siti non si correlano).
+const VFS_SALT := 1001
+const SITE_SALT := 2002
+
+# Testi portatori della chiave WEB nel TESTO VISIBILE (una riga <p>).
+const _TEXT_CARRIERS := [
+	"Promemoria personale: {{KEY}}. Gli altri lo sanno.",
+	"Nota a margine: il codice e' {{KEY}}, non perderlo.",
+	"P.S. ho segnato {{KEY}} per non scordarlo.",
+	"Per accedere ricordarsi di: {{KEY}}.",
+]
+# Testi portatori della chiave WEB nel SORGENTE HTML (commento, non reso a video).
+const _COMMENT_CARRIERS := [
+	"build-key={{KEY}}",
+	"TODO rimuovere prima del rilascio: {{KEY}}",
+	"debug {{KEY}}",
+	"chiave temporanea {{KEY}}",
+]
+# Testi portatori della chiave in un FILE di testo.
+const _FILE_CARRIERS := [
+	"Codice di attivazione del prodotto:\n  {{KEY}}\n\nConservare in luogo sicuro. Non divulgare a terzi.",
+	"Appunti:\n- comprare floppy\n- {{KEY}} (importante!)\n- chiamare Luca",
+	"Licenza d'uso\nNumero di serie: {{KEY}}\nValida per un solo computer.",
+	"non dimenticare il codice {{KEY}}\nstavolta l'ho nascosto bene.",
+]
+# Nomi possibili del file portatore (devono NON collidere coi file base del VFS).
+const _FILE_NAMES := ["codice.txt", "licenza.txt", "attivazione.txt", "promemoria.txt", "scratch.txt"]
+# Cartelle del VFS dove puo' finire il file portatore della chiave.
+const _FILE_FOLDERS := ["Documenti", "Sistema", "Immagini"]
+# Nomi possibili della cartella che porta il codice nel proprio nome.
+const _FOLDER_NAMES := ["Backup", "Archivio", "Copia", "Vecchi file", "Riserva"]
 
 # ---------------- filesystem (albero base del run) ----------------
 
-# Albero base del filesystem (radice "Risorse del computer"). I codici chiave sono
-# segnaposto {{KEYn}}, riempiti qui da _apply_keys prima di restituire. Lo consuma
-# VFS._build(), che aggiunge poi i back-reference _parent.
+# Albero base del filesystem (radice "Risorse del computer"). Il filler e' fisso;
+# le chiavi 1 (file) e 2 (nome cartella) vengono piazzate a caso (seminato) prima di
+# restituire. Lo consuma VFS._build(), che aggiunge poi i back-reference _parent.
 static func build_filesystem() -> Dictionary:
-	var root := _folder("Risorse del computer", "computer", [
-		_folder("Disco locale (C:)", "folder", [
-			# La cartella protetta vive sul Desktop: l'icona "Documenti" e' un'esca
-			# (sembra normale ma e' la cartella segreta da sbloccare, type "secret").
-			_folder("Desktop", "folder", [
-				{"name": "Documenti", "type": "secret", "icon": "locked"},
-			]),
-			_folder("Documenti", "folder", [
-				_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),
-				_text("password.txt", "NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)"),
-				_text("lista_spesa.txt", "- floppy disk\n- nastro adesivo\n- caffe'\n- una nuova tastiera"),
-			]),
-			_folder("Immagini", "folder", [
-				_text("leggimi.txt", "Le immagini sono andate perse durante l'ultimo riavvio."),
-			]),
-			_folder("Internet", "folder", [
-				_html("Pagina iniziale.url", "start"),
-				_html("Blog segreto.url", "blog.io"),
-			]),
-			_folder("Sistema", "folder", [
-				_text("config.sys", "DEVICE=HIMEM.SYS\nDOS=HIGH,UMB\nFILES=30\nBUFFERS=20"),
-				_text("autoexec.bat", "@ECHO OFF\nPROMPT $P$G\nPATH C:\\DOS\nSET TEMP=C:\\TEMP"),
-				# Chiave 1: nascosta nel CONTENUTO di un file di testo.
-				_text("seriale.txt", "Codice di attivazione del prodotto:\n  {{KEY1}}\n\nConservare in luogo sicuro. Non divulgare a terzi."),
-			]),
-			# Chiave 2: nascosta nel NOME stesso della cartella (visibile in Esplora risorse).
-			_folder("Backup {{KEY2}}", "folder", [
-				_text("note.txt", "Copia di sicurezza automatica.\nNon eliminare questa cartella."),
-			]),
+	var rng := _run_rng(VFS_SALT)
+	var c_children: Array = [
+		# La cartella protetta vive sul Desktop: l'icona "Documenti" e' un'esca
+		# (sembra normale ma e' la cartella segreta da sbloccare, type "secret").
+		_folder("Desktop", "folder", [
+			{"name": "Documenti", "type": "secret", "icon": "locked"},
 		]),
+		_folder("Documenti", "folder", [
+			_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),
+			_text("password.txt", "NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)"),
+			_text("lista_spesa.txt", "- floppy disk\n- nastro adesivo\n- caffe'\n- una nuova tastiera"),
+		]),
+		_folder("Immagini", "folder", [
+			_text("leggimi.txt", "Le immagini sono andate perse durante l'ultimo riavvio."),
+		]),
+		_folder("Internet", "folder", [
+			_html("Pagina iniziale.url", "start"),
+		]),
+		_folder("Sistema", "folder", [
+			_text("config.sys", "DEVICE=HIMEM.SYS\nDOS=HIGH,UMB\nFILES=30\nBUFFERS=20"),
+			_text("autoexec.bat", "@ECHO OFF\nPROMPT $P$G\nPATH C:\\DOS\nSET TEMP=C:\\TEMP"),
+			_text("note_sistema.txt", "Manutenzione completata.\nUltimo riavvio: lunedi'."),
+		]),
+	]
+	_place_file_key(c_children, rng)     # chiave 1
+	_place_folder_key(c_children, rng)   # chiave 2
+	return _folder("Risorse del computer", "computer", [
+		_folder("Disco locale (C:)", "folder", c_children),
 		_folder("Cestino", "trash", []),
 	])
-	_apply_keys(root)
-	return root
 
-# ---------------- siti web (pool autoriale) ----------------
+# Chiave 1: file portatore (nome + contenuto a caso) in una cartella a caso.
+static func _place_file_key(c_children: Array, rng: RandomNumberGenerator) -> void:
+	var label := GameManager.key_label(1)
+	if label == "":
+		return
+	var folder := _find_child(c_children, _pick(_FILE_FOLDERS, rng))
+	if folder.is_empty():
+		return
+	var name: String = _pick(_FILE_NAMES, rng)
+	var content: String = _pick(_FILE_CARRIERS, rng)
+	folder["children"].append(_text(name, content.replace(KEY_SLOT, label)))
 
-# Dizionario di pagine per il browser: { "dominio": pagina, ... }. Le pagine vengono
-# dal pool autoriale (_site_pool); la "start" e' GENERATA dai siti del run (un
-# collegamento per sito) cosi' si adatta da sola a quali siti esistono. I segnaposto
-# {{KEYn}} sono riempiti alla fine. Lo consuma BrowserApp._pages().
+# Chiave 2: cartella di "backup" (nome a caso) col codice scritto nel nome stesso,
+# inserita in un punto a caso tra i figli di C:.
+static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> void:
+	var label := GameManager.key_label(2)
+	if label == "":
+		return
+	var base: String = _pick(_FOLDER_NAMES, rng)
+	var folder := _folder("%s %s" % [base, label], "folder", [
+		_text("note.txt", "Copia di sicurezza automatica.\nNon eliminare questa cartella."),
+	])
+	c_children.insert(rng.randi_range(0, c_children.size()), folder)
+
+# ---------------- siti web (pool + selezione + chiavi) ----------------
+
+# Dizionario di pagine per il browser: { "dominio": pagina, ... }. Sceglie ~SITE_COUNT
+# siti dal pool (seminato), pota i link interni verso siti non inclusi (niente 404
+# dai collegamenti), piazza le 2 chiavi web e genera la "start" dai siti del run.
+# Lo consuma BrowserApp._pages().
 static func build_sites() -> Dictionary:
-	var sites := _site_pool()
+	var pool := _site_pool()
+	var rng := _run_rng(SITE_SALT)
+	var chosen := _shuffled(pool, rng)
+	if chosen.size() > SITE_COUNT:
+		chosen = chosen.slice(0, SITE_COUNT)
+
+	# insiemi dei domini: quelli del run e quelli dell'intero pool
+	var selected := {}
+	for s in chosen:
+		selected[str(s["domain"])] = true
+	var pool_domains := {}
+	for s in pool:
+		pool_domains[str(s["domain"])] = true
+
+	# pota i link verso ALTRI siti del pool non inclusi nel run
+	for s in chosen:
+		_prune_links(s["page"], selected, pool_domains)
+	# colloca le 2 chiavi web (indici 3 e 4) in 2 siti distinti tra quelli scelti
+	_place_web_keys(chosen, rng)
+
 	var pages := {}
-	for s in sites:
-		pages[s["domain"]] = s["page"]
-	pages["start"] = _make_start_page(sites)
-	_apply_keys(pages)
+	for s in chosen:
+		pages[str(s["domain"])] = s["page"]
+	pages["start"] = _make_start_page(chosen)
 	return pages
 
-# Pool autoriale dei siti. Ogni voce: { domain, name, tagline, featured, page }.
-# "featured" -> compare tra i "piu' visti" della home; gli altri tra i "recenti"
-# (meno in vista: e' li' che si nasconde la chiave web). Aggiungere un sito qui lo
-# rende automaticamente raggiungibile e linkato dalla home, senza toccare altro.
+# Pool autoriale dei siti (8 oggi: piu' di quanti ne usi un run). Ogni voce:
+# { domain, name, tagline, featured, page }. "featured" -> compare tra i "piu' visti"
+# della home; gli altri tra i "recenti". Le pagine sono SENZA chiave: e' il generatore
+# a iniettarla a runtime nei siti scelti. Aggiungere un sito qui lo rende pescabile.
 static func _site_pool() -> Array:
 	return [
 		_site("news.com", "NewsOggi", "Le ultime notizie", true, [
 			{"tag": "img", "alt": "NewsOggi", "color": "8a1f1f", "w": 560, "h": 70},
 			{"tag": "h1", "text": "NewsOggi"},
-			# Chiave 4: nascosta nel SORGENTE HTML (commento, non reso a video).
-			{"tag": "comment", "text": "build-key={{KEY4}}"},
 			{"tag": "h2", "text": "In primo piano"},
 			{"tag": "p", "text": "Rilasciato un nuovo sistema operativo a finestre: code ai negozi."},
 			{"tag": "p", "text": "Gli esperti: i floppy da 1.44 MB sono il futuro dell'archiviazione."},
@@ -130,16 +203,13 @@ static func _site_pool() -> Array:
 			{"tag": "hr"},
 			{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 		]),
-		# Chiave 3: nel TESTO VISIBILE. blog.io e' "recente" (poco in vista) di proposito.
 		_site("blog.io", "Il blog segreto", "il diario di qualcuno", false, [
 			{"tag": "h1", "text": "Pagina nascosta"},
 			{"tag": "p", "text": "Se stai leggendo questo, hai trovato il collegamento giusto nel computer."},
-			{"tag": "p", "text": "La password e' nascosta in un file di testo dentro Documenti..."},
-			{"tag": "p", "text": "Promemoria personale: {{KEY3}}. Gli altri lo sanno."},
+			{"tag": "p", "text": "La password e' sparsa nei file e nei siti di questo computer..."},
 			{"tag": "hr"},
 			{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 		]),
-		# --- siti extra: riempiono il pool (in parte 2 il run ne scegliera' ~5) ---
 		_site("forum.bbs", "RetroForum", "La bacheca dei nostalgici", false, [
 			{"tag": "img", "alt": "RetroForum", "color": "3a5a2f", "w": 560, "h": 70},
 			{"tag": "h1", "text": "RetroForum"},
@@ -177,6 +247,48 @@ static func _site_pool() -> Array:
 		]),
 	]
 
+# Le 2 chiavi web (indici 3 e 4) in 2 siti distinti scelti a caso tra quelli del run,
+# ciascuna a caso nel testo visibile (<p>) oppure nel sorgente HTML (commento).
+static func _place_web_keys(chosen: Array, rng: RandomNumberGenerator) -> void:
+	var hosts := _shuffled(chosen, rng)
+	var web_indices := [3, 4]
+	for n in range(web_indices.size()):
+		if n >= hosts.size():
+			break
+		var label := GameManager.key_label(int(web_indices[n]))
+		if label == "":
+			continue
+		var page: Dictionary = hosts[n]["page"]
+		var els: Array = page.get("elements", [])
+		var el: Dictionary
+		if rng.randf() < 0.5:
+			var t: String = _pick(_TEXT_CARRIERS, rng)
+			el = {"tag": "p", "text": t.replace(KEY_SLOT, label)}
+		else:
+			var c: String = _pick(_COMMENT_CARRIERS, rng)
+			el = {"tag": "comment", "text": c.replace(KEY_SLOT, label)}
+		els.insert(_insert_pos(els, rng), el)
+
+# Posizione plausibile dove inserire un elemento: dopo il primo (di solito img/h1).
+static func _insert_pos(els: Array, rng: RandomNumberGenerator) -> int:
+	if els.size() <= 1:
+		return els.size()
+	return rng.randi_range(1, els.size())
+
+# Rimuove dalla pagina i link <a> verso ALTRI siti del pool non inclusi nel run
+# (cosi' i collegamenti interni non finiscono in un 404). "start" e i link non-pool
+# (es. il 404 dimostrativo della home) restano.
+static func _prune_links(page: Dictionary, selected: Dictionary, pool_domains: Dictionary) -> void:
+	var els: Array = page.get("elements", [])
+	var kept: Array = []
+	for el in els:
+		if str(el.get("tag", "")) == "a":
+			var href := str(el.get("href", ""))
+			if pool_domains.has(href) and not selected.has(href):
+				continue
+		kept.append(el)
+	page["elements"] = kept
+
 # Voce del pool: impacchetta i metadati (per la home) e la pagina vera e propria.
 static func _site(domain: String, name: String, tagline: String, featured: bool, elements: Array) -> Dictionary:
 	return {
@@ -187,23 +299,31 @@ static func _site(domain: String, name: String, tagline: String, featured: bool,
 		"page": {"title": name, "elements": elements},
 	}
 
-# Costruisce la "Pagina iniziale" a partire dai siti del run: un collegamento per
-# sito (i "featured" tra i piu' visti, gli altri tra i recenti) + il link morto al
-# 404 e il suggerimento sull'Ispeziona elemento.
+# Costruisce la "Pagina iniziale" dai siti del run: un collegamento per sito (i
+# "featured" tra i piu' visti, gli altri tra i recenti) + il link morto al 404 e il
+# suggerimento sull'Ispeziona elemento. Le intestazioni vuote vengono omesse.
 static func _make_start_page(sites: Array) -> Dictionary:
+	var featured: Array = []
+	var recent: Array = []
+	for s in sites:
+		if bool(s.get("featured", false)):
+			featured.append(s)
+		else:
+			recent.append(s)
 	var els: Array = [
 		{"tag": "img", "alt": "Il mio portale", "color": "1a3f8a", "w": 560, "h": 80},
 		{"tag": "h1", "text": "Pagina iniziale"},
-		{"tag": "h2", "text": "Collegamenti piu' visti"},
 	]
-	for s in sites:
-		if bool(s.get("featured", false)):
+	if not featured.is_empty():
+		els.append({"tag": "h2", "text": "Collegamenti piu' visti"})
+		for s in featured:
+			els.append(_home_link(s))
+	if not recent.is_empty():
+		els.append({"tag": "hr"})
+		els.append({"tag": "h2", "text": "Collegamenti recenti"})
+		for s in recent:
 			els.append(_home_link(s))
 	els.append({"tag": "hr"})
-	els.append({"tag": "h2", "text": "Collegamenti recenti"})
-	for s in sites:
-		if not bool(s.get("featured", false)):
-			els.append(_home_link(s))
 	els.append({"tag": "a", "text": "Sito inesistente (prova 404)", "href": "sito-finto.com"})
 	els.append({"tag": "p", "text": "Suggerimento: tasto destro -> Ispeziona elemento per vedere l'HTML."})
 	return {"title": "Pagina iniziale", "elements": els}
@@ -215,37 +335,35 @@ static func _home_link(s: Dictionary) -> Dictionary:
 	var text := name if tagline == "" else "%s - %s" % [name, tagline]
 	return {"tag": "a", "text": text, "href": str(s.get("domain", "start"))}
 
-# ---------------- iniezione delle chiavi ----------------
+# ---------------- utilita' seminate ----------------
 
-# Sostituisce i segnaposto {{KEYn}} con GameManager.key_label(n) ovunque nell'albero
-# (cammina Dictionary/Array e tocca solo le stringhe). Cosi' il contenuto autoriale
-# resta privo di codici e le chiavi del run finiscono nei punti giusti.
-static func _apply_keys(data) -> void:
-	if data is Dictionary:
-		for k in data.keys():
-			var v = data[k]
-			if v is String:
-				data[k] = _fill_keys(v)
-			elif v is Dictionary or v is Array:
-				_apply_keys(v)
-	elif data is Array:
-		for i in range(data.size()):
-			var v = data[i]
-			if v is String:
-				data[i] = _fill_keys(v)
-			elif v is Dictionary or v is Array:
-				_apply_keys(v)
+# RNG seminato dal seme del run (+ salt): riproducibile e indipendente dall'ordine
+# di chiamata. run_seed = 0 (run non avviato) -> contenuto deterministico senza chiavi.
+static func _run_rng(salt: int) -> RandomNumberGenerator:
+	var r := RandomNumberGenerator.new()
+	r.seed = GameManager.run_seed + salt
+	return r
 
-# Riempie i segnaposto di una singola stringa. Un segnaposto la cui chiave non
-# esiste (run non ancora avviato) diventa stringa vuota, come faceva il vecchio _build.
-static func _fill_keys(s: String) -> String:
-	if not s.contains("{{KEY"):
-		return s
-	for i in range(1, GameManager.KEY_COUNT + 1):
-		var token := KEY_TOKEN % i
-		if s.contains(token):
-			s = s.replace(token, GameManager.key_label(i))
-	return s
+# Copia mescolata (Fisher-Yates) con l'RNG dato: NON tocca l'array originale.
+static func _shuffled(arr: Array, rng: RandomNumberGenerator) -> Array:
+	var a := arr.duplicate()
+	for i in range(a.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp = a[i]
+		a[i] = a[j]
+		a[j] = tmp
+	return a
+
+# Elemento a caso dall'array con l'RNG dato.
+static func _pick(arr: Array, rng: RandomNumberGenerator):
+	return arr[rng.randi_range(0, arr.size() - 1)]
+
+# Prima cartella figlia (type "folder") col nome dato; {} se assente.
+static func _find_child(children: Array, name: String) -> Dictionary:
+	for c in children:
+		if c is Dictionary and str(c.get("name", "")) == name and str(c.get("type", "")) == "folder":
+			return c
+	return {}
 
 # ---------------- helper di costruzione nodi VFS ----------------
 
