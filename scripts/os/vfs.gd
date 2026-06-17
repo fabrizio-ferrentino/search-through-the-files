@@ -66,15 +66,6 @@ static func _link_parents(node: Dictionary, parent) -> void:
 	for child in node.get("children", []):
 		_link_parents(child, node)
 
-static func _folder(name: String, icon: String, children: Array) -> Dictionary:
-	return {"name": name, "type": "folder", "icon": icon, "children": children}
-
-static func _text(name: String, content: String) -> Dictionary:
-	return {"name": name, "type": "file", "icon": "text", "filetype": "text", "content": content}
-
-static func _html(name: String, url: String) -> Dictionary:
-	return {"name": name, "type": "file", "icon": "ie", "filetype": "html", "url": url}
-
 # Cartella che rappresenta il Desktop (i file creati sulla scrivania).
 static func get_desktop() -> Dictionary:
 	var d = resolve_node(["Risorse del computer", "Disco locale (C:)", "Desktop"])
@@ -129,36 +120,8 @@ static func _unique_name(folder: Dictionary, wanted: String) -> String:
 		candidate = "%s (%d)%s" % [base, n, ext]
 	return candidate
 
+# L'albero base e' ora DATI nella libreria dei contenuti (OSContent), separato
+# dalla logica del filesystem: qui ci limitiamo a costruirlo (OSContent inietta
+# anche le chiavi del run nei contenuti). Generazione seminata = parte 2 (M3).
 static func _build() -> Dictionary:
-	var k1 := GameManager.key_label(1)   # chiave nascosta dentro un file di testo (con prefisso "1-")
-	var k2 := GameManager.key_label(2)   # chiave nascosta nel NOME di una cartella (con prefisso "2-")
-	return _folder("Risorse del computer", "computer", [
-		_folder("Disco locale (C:)", "folder", [
-			# La cartella protetta vive sul Desktop (compare come icona sulla scrivania).
-			_folder("Desktop", "folder", [
-				{"name": "Documenti", "type": "secret", "icon": "locked"},
-			]),
-			_folder("Documenti", "folder", [
-				_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),
-				_text("password.txt", "NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)"),
-				_text("lista_spesa.txt", "- floppy disk\n- nastro adesivo\n- caffe'\n- una nuova tastiera"),
-			]),
-			_folder("Immagini", "folder", [
-				_text("leggimi.txt", "Le immagini sono andate perse durante l'ultimo riavvio."),
-			]),
-			_folder("Internet", "folder", [
-				_html("Pagina iniziale.url", "start"),
-				_html("Blog segreto.url", "blog.io"),
-			]),
-			_folder("Sistema", "folder", [
-				_text("config.sys", "DEVICE=HIMEM.SYS\nDOS=HIGH,UMB\nFILES=30\nBUFFERS=20"),
-				_text("autoexec.bat", "@ECHO OFF\nPROMPT $P$G\nPATH C:\\DOS\nSET TEMP=C:\\TEMP"),
-				_text("seriale.txt", "Codice di attivazione del prodotto:\n  " + k1 + "\n\nConservare in luogo sicuro. Non divulgare a terzi."),
-			]),
-			# La chiave 2 e' contenuta nel NOME stesso di questa cartella (visibile in Esplora risorse).
-			_folder("Backup " + k2, "folder", [
-				_text("note.txt", "Copia di sicurezza automatica.\nNon eliminare questa cartella."),
-			]),
-		]),
-		_folder("Cestino", "trash", []),
-	])
+	return OSContent.build_filesystem()
