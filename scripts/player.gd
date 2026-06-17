@@ -509,8 +509,24 @@ func _process(delta):
 				or (arrow_down.visible and r_down.grow(m).has_point(mp))
 			if not near_arrow:
 				can_change_pos = true
+	# cursore a POINTING_HAND quando si punta il monitor/case (cliccabile)
+	_update_room_cursor(mp)
 	# Rotazione fluida
 	rotation_degrees.y = lerp(rotation_degrees.y, target_yaw, delta * move_speed)
+
+# Cursore della stanza: POINTING_HAND se il mouse punta il Monitor (schermo
+# o case, entrambi cliccabili guardando il centro), altrimenti freccia normale.
+func _update_room_cursor(mouse_pos: Vector2) -> void:
+	var shape := Input.CURSOR_ARROW
+	if target_yaw == pos_center:
+		var ro := project_ray_origin(mouse_pos)
+		var re := ro + project_ray_normal(mouse_pos) * 2000.0
+		var ss := get_world_3d().direct_space_state
+		var q := PhysicsRayQueryParameters3D.create(ro, re)
+		var hit := ss.intersect_ray(q)
+		if hit and hit.has("collider") and hit.collider != null and hit.collider.name == "Monitor":
+			shape = Input.CURSOR_POINTING_HAND
+	Input.set_default_cursor_shape(shape)
 
 # Collega le frecce e imposta il filtro del mouse a seconda della modalita'.
 func _setup_arrow_input() -> void:

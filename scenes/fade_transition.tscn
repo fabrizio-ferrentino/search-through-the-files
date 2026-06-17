@@ -55,6 +55,7 @@ _data = {
 [node name="ColorRect" type="ColorRect" unique_id=978627174]
 offset_right = 1926.0
 offset_bottom = 1085.0
+mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=2024642201]

@@ -560,7 +560,7 @@ func _pages() -> Dictionary:
 					{"tag": "h1", "text": "Pagina nascosta"},
 					{"tag": "p", "text": "Se stai leggendo questo, hai trovato il collegamento giusto nel computer."},
 					{"tag": "p", "text": "La password e' nascosta in un file di testo dentro Documenti..."},
-					{"tag": "p", "text": "Promemoria personale: il terzo frammento e' " + k3 + ". Gli altri li ho sparsi altrove."},
+					{"tag": "p", "text": "Promemoria personale: " + k3 + ". Gli altri lo sanno."},
 					{"tag": "hr"},
 					{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 				]
