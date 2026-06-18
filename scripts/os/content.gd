@@ -2,29 +2,42 @@ class_name OSContent
 extends RefCounted
 
 # ============================================================
-# Libreria dei contenuti dell'OS — M3 (parti 1+2: contenuto data-driven + generatore).
+# Libreria dei contenuti dell'OS — M3 (parti 1+2+3: data-driven + generatore + foto).
 #
-# Parte 1: i contenuti (albero base del filesystem + pool di siti web) vivono qui
-# come DATI, separati da chi li costruisce/mostra (vfs.gd, app_browser.gd).
+# Parte 1: i contenuti (albero del filesystem + pool di siti web) vivono qui come
+# DATI, separati da chi li costruisce/mostra (vfs.gd, app_browser.gd, image viewer).
 #
-# Parte 2 (generatore seminato): dal seme del run (GameManager.run_seed) decidiamo
-# in modo RIPRODUCIBILE quali ~5 siti del pool entrano nel run e DOVE finiscono le
-# chiavi. Le chiavi non stanno piu' in posizioni fisse:
-#   * chiave in FILE   -> file portatore (nome + testo a caso) in una cartella a caso
-#   * chiave in CARTELLA -> cartella "di backup" (nome a caso) col codice nel nome
-#   * 2 chiavi WEB     -> 2 siti distinti scelti a caso tra quelli del run, ciascuna
-#                          a caso nel TESTO VISIBILE oppure nel SORGENTE HTML (commento)
+# Parte 2 (generatore seminato): dal seme del run (GameManager.run_seed) si decide in
+# modo RIPRODUCIBILE quali ~5 siti del pool entrano nel run e DOVE finiscono le
+# chiavi. Mappa indice->categoria FISSA (vedi KEY_*):
+#   * chiave 1 FILE     -> file portatore (nome + testo a caso) in una cartella a caso
+#   * chiave 2 CARTELLA -> cartella "di backup" (nome a caso) col codice nel nome
+#   * chiave 3 WEB      -> un sito a caso del run, a caso nel TESTO VISIBILE o nel
+#                          SORGENTE HTML (commento)
+#   * chiave 4 IMMAGINE -> nascosta in una foto (parte 3, sotto)
 #
-# Robustezza: ogni funzione di build usa un RandomNumberGenerator PROPRIO, seminato
-# da run_seed + un salt costante. Cosi' il risultato e' riproducibile e NON dipende
-# dall'ordine o dal momento di chiamata (il browser genera le pagine in modo lazy,
-# il VFS al build_run): stesso seme -> stesso contenuto. La mappa indice->categoria
-# e' fissa (1=file, 2=cartella, 3/4=web), cosi' VFS e siti scelgono le proprie
-# chiavi senza doversi coordinare; e' solo la POSIZIONE dentro la categoria a variare.
+# Parte 3 (foto + puzzle di regolazione): la cartella "Immagini" contiene alcune foto.
+# Una porta la chiave 4 come scritta a bassissimo contrasto, leggibile solo regolando
+# l'immagine (luminosita'/contrasto/livelli) nel visualizzatore. Le foto d'autore vanno
+# in PHOTO_DIR: se ci sono, il run le usa; altrimenti make_photo genera placeholder
+# procedurali. In OGNI caso il codice del run NON e' nei pixel del file: lo sovrappone
+# il visualizzatore a runtime (la chiave cambia ogni partita, un file fisso non potrebbe
+# contenerla).
+#
+# Robustezza: ogni build usa un RandomNumberGenerator PROPRIO (run_seed + un salt),
+# quindi e' riproducibile e indipendente dall'ordine/momento di chiamata (il browser
+# genera le pagine in modo lazy). VFS e siti piazzano ognuno le proprie chiavi senza
+# coordinarsi: e' solo la POSIZIONE dentro la categoria a variare.
 # ============================================================
 
 # Segnaposto generico di chiave nei testi portatori: sostituito con key_label(n).
 const KEY_SLOT := "{{KEY}}"
+
+# Mappa indice->categoria (fissa): dove finisce ogni chiave del run.
+const KEY_FILE := 1
+const KEY_FOLDER := 2
+const KEY_WEB := 3
+const KEY_IMAGE := 4
 
 # Quanti siti del pool entrano in un run (il pool ne ha di piu': vedi _site_pool).
 const SITE_COUNT := 5
@@ -32,6 +45,19 @@ const SITE_COUNT := 5
 # Salt distinti per i generatori seminati (cosi' VFS e siti non si correlano).
 const VFS_SALT := 1001
 const SITE_SALT := 2002
+
+# Foto del run.
+const PHOTO_W := 320
+const PHOTO_H := 240
+# Di quanto la scritta-chiave si discosta dal colore di fondo. Volutamente MOLTO
+# basso: all'apertura deve risultare invisibile, emerge solo regolando l'immagine.
+const PHOTO_KEY_DELTA := 0.0018
+# Tinte di base delle foto (toni medi: lasciano spazio a schiarire/scurire).
+const PHOTO_TINTS := ["5a5560", "625a52", "525e58", "5c5c4e", "565c66", "604f52"]
+# Cartella delle foto d'autore (PNG/JPG): se contiene immagini il run le usa al posto
+# dei placeholder procedurali. Il codice del run viene comunque sovrapposto a runtime
+# dal visualizzatore (la chiave cambia ogni partita: un file fisso non puo' contenerla).
+const PHOTO_DIR := "res://assets/textures/photos/"
 
 # Testi portatori della chiave WEB nel TESTO VISIBILE (una riga <p>).
 const _TEXT_CARRIERS := [
@@ -63,25 +89,25 @@ const _FOLDER_NAMES := ["Backup", "Archivio", "Copia", "Vecchi file", "Riserva"]
 
 # ---------------- filesystem (albero base del run) ----------------
 
-# Albero base del filesystem (radice "Risorse del computer"). Il filler e' fisso;
-# le chiavi 1 (file) e 2 (nome cartella) vengono piazzate a caso (seminato) prima di
-# restituire. Lo consuma VFS._build(), che aggiunge poi i back-reference _parent.
+# Albero base del filesystem (radice "Risorse del computer"). Il filler e' fisso; le
+# foto della cartella Immagini e le chiavi 1 (file), 2 (cartella) e 4 (immagine)
+# vengono generate/piazzate a caso (seminato) prima di restituire. Lo consuma
+# VFS._build(), che aggiunge poi i back-reference _parent.
 static func build_filesystem() -> Dictionary:
 	var rng := _run_rng(VFS_SALT)
 	var c_children: Array = [
 		# La cartella protetta vive sul Desktop: l'icona "Documenti" e' un'esca
 		# (sembra normale ma e' la cartella segreta da sbloccare, type "secret").
 		_folder("Desktop", "folder", [
-			{"name": "Documenti", "type": "secret", "icon": "locked"},
+			{"name": "Secret", "type": "secret", "icon": "locked"},
 		]),
 		_folder("Documenti", "folder", [
 			_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),
 			_text("password.txt", "NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)"),
 			_text("lista_spesa.txt", "- floppy disk\n- nastro adesivo\n- caffe'\n- una nuova tastiera"),
 		]),
-		_folder("Immagini", "folder", [
-			_text("leggimi.txt", "Le immagini sono andate perse durante l'ultimo riavvio."),
-		]),
+		# La cartella Immagini contiene le foto del run (una nasconde la chiave 4).
+		_folder("Immagini", "folder", _make_image_folder(rng)),
 		_folder("Internet", "folder", [
 			_html("Pagina iniziale.url", "start"),
 		]),
@@ -100,7 +126,7 @@ static func build_filesystem() -> Dictionary:
 
 # Chiave 1: file portatore (nome + contenuto a caso) in una cartella a caso.
 static func _place_file_key(c_children: Array, rng: RandomNumberGenerator) -> void:
-	var label := GameManager.key_label(1)
+	var label := GameManager.key_label(KEY_FILE)
 	if label == "":
 		return
 	var folder := _find_child(c_children, _pick(_FILE_FOLDERS, rng))
@@ -113,7 +139,7 @@ static func _place_file_key(c_children: Array, rng: RandomNumberGenerator) -> vo
 # Chiave 2: cartella di "backup" (nome a caso) col codice scritto nel nome stesso,
 # inserita in un punto a caso tra i figli di C:.
 static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> void:
-	var label := GameManager.key_label(2)
+	var label := GameManager.key_label(KEY_FOLDER)
 	if label == "":
 		return
 	var base: String = _pick(_FOLDER_NAMES, rng)
@@ -122,11 +148,111 @@ static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> 
 	])
 	c_children.insert(rng.randi_range(0, c_children.size()), folder)
 
-# ---------------- siti web (pool + selezione + chiavi) ----------------
+# ---------------- foto (cartella Immagini + chiave 4) ----------------
+
+# Contenuto della cartella Immagini: un leggimi che suggerisce il puzzle + le foto.
+static func _make_image_folder(rng: RandomNumberGenerator) -> Array:
+	var children: Array = [
+		_text("leggimi.txt", "Alcune di queste foto sono venute male: troppo chiare,\ntroppo scure o slavate. Col visualizzatore puoi regolarle\n(luminosita', contrasto, livelli)."),
+	]
+	children.append_array(_make_photos(rng))
+	return children
+
+# Genera 3-4 foto (nomi tipo IMG_0123.jpg); una a caso nasconde la chiave 4. Usa le
+# foto d'autore in PHOTO_DIR se presenti, altrimenti placeholder procedurali.
+static func _make_photos(rng: RandomNumberGenerator) -> Array:
+	var photos: Array = []
+	var files := _photo_files()
+	var base_id := rng.randi_range(100, 8000)
+	if files.is_empty():
+		var count := rng.randi_range(3, 4)
+		for i in range(count):
+			photos.append(_photo_proc("IMG_%04d.jpg" % (base_id + i), rng.randi(), _pick(PHOTO_TINTS, rng)))
+	else:
+		var pool := _shuffled(files, rng)
+		var count: int = mini(pool.size(), rng.randi_range(3, 4))
+		for i in range(count):
+			photos.append(_photo_file("IMG_%04d.jpg" % (base_id + i), str(pool[i])))
+	var label := GameManager.key_label(KEY_IMAGE)
+	if label != "" and not photos.is_empty():
+		var idx := rng.randi_range(0, photos.size() - 1)
+		photos[idx]["code"] = label
+		photos[idx]["code_seed"] = rng.randi()   # posizione/rotazione della scritta (stabile per run)
+	return photos
+
+# Elenco (ordinato, per riproducibilita') dei file immagine in PHOTO_DIR. Gestisce sia
+# l'editor (xxx.png + xxx.png.import) sia l'export. Vuoto se la cartella non esiste.
+static func _photo_files() -> Array:
+	var out: Array = []
+	var seen := {}
+	var d := DirAccess.open(PHOTO_DIR)
+	if d == null:
+		return out
+	for f in d.get_files():
+		var fname := f
+		if fname.ends_with(".import"):
+			fname = fname.trim_suffix(".import")
+		var low := fname.to_lower()
+		var is_img := low.ends_with(".png") or low.ends_with(".jpg") or low.ends_with(".jpeg") or low.ends_with(".webp") or low.ends_with(".bmp")
+		if is_img and not seen.has(fname):
+			seen[fname] = true
+			out.append(PHOTO_DIR + fname)
+	out.sort()
+	return out
+
+# Nodo foto PROCEDURALE (placeholder): parametri per rigenerarla in make_photo.
+static func _photo_proc(name: String, seed: int, tint: String) -> Dictionary:
+	return {
+		"name": name, "type": "file", "icon": "image", "filetype": "image",
+		"photo_seed": seed, "tint": tint, "code": "",
+	}
+
+# Nodo foto da FILE (foto d'autore): "path" punta all'immagine in PHOTO_DIR.
+static func _photo_file(name: String, path: String) -> Dictionary:
+	return {
+		"name": name, "type": "file", "icon": "image", "filetype": "image",
+		"path": path, "code": "",
+	}
+
+# Texture di una foto. Se il nodo ha un "path" (foto d'autore) carica il file; altrimenti
+# genera un placeholder procedurale (CPU, deterministico per seed: campo tinto, granuloso,
+# vignettato). La scritta-chiave NON sta nei pixel: la sovrappone il visualizzatore come
+# Label che CONDIVIDE lo stesso shader, cosi' la regolazione agisce su foto e scritta insieme.
+static func make_photo(node: Dictionary) -> Texture2D:
+	var path := str(node.get("path", ""))
+	if path != "" and ResourceLoader.exists(path):
+		var res = load(path)
+		if res is Texture2D:
+			return res
+	var r := RandomNumberGenerator.new()
+	r.seed = int(node.get("photo_seed", 0))
+	var tint := Color(str(node.get("tint", "505050")))
+	var w := PHOTO_W
+	var h := PHOTO_H
+	var cx := w * 0.5
+	var cy := h * 0.5
+	var maxd2 := cx * cx + cy * cy
+	var data := PackedByteArray()
+	data.resize(w * h * 3)
+	var i := 0
+	for y in range(h):
+		for x in range(w):
+			var dx := x - cx
+			var dy := y - cy
+			var vig := 1.0 - 0.45 * ((dx * dx + dy * dy) / maxd2)   # piu' scuro ai bordi
+			var n := r.randf_range(-0.03, 0.03)                     # grana
+			data[i] = int(clampf((tint.r + n) * vig, 0.0, 1.0) * 255.0)
+			data[i + 1] = int(clampf((tint.g + n) * vig, 0.0, 1.0) * 255.0)
+			data[i + 2] = int(clampf((tint.b + n) * vig, 0.0, 1.0) * 255.0)
+			i += 3
+	var img := Image.create_from_data(w, h, false, Image.FORMAT_RGB8, data)
+	return ImageTexture.create_from_image(img)
+
+# ---------------- siti web (pool + selezione + chiave) ----------------
 
 # Dizionario di pagine per il browser: { "dominio": pagina, ... }. Sceglie ~SITE_COUNT
 # siti dal pool (seminato), pota i link interni verso siti non inclusi (niente 404
-# dai collegamenti), piazza le 2 chiavi web e genera la "start" dai siti del run.
+# dai collegamenti), piazza la chiave web e genera la "start" dai siti del run.
 # Lo consuma BrowserApp._pages().
 static func build_sites() -> Dictionary:
 	var pool := _site_pool()
@@ -146,8 +272,8 @@ static func build_sites() -> Dictionary:
 	# pota i link verso ALTRI siti del pool non inclusi nel run
 	for s in chosen:
 		_prune_links(s["page"], selected, pool_domains)
-	# colloca le 2 chiavi web (indici 3 e 4) in 2 siti distinti tra quelli scelti
-	_place_web_keys(chosen, rng)
+	# colloca la chiave web (indice 3) in un sito a caso tra quelli scelti
+	_place_web_key(chosen, rng)
 
 	var pages := {}
 	for s in chosen:
@@ -158,7 +284,7 @@ static func build_sites() -> Dictionary:
 # Pool autoriale dei siti (8 oggi: piu' di quanti ne usi un run). Ogni voce:
 # { domain, name, tagline, featured, page }. "featured" -> compare tra i "piu' visti"
 # della home; gli altri tra i "recenti". Le pagine sono SENZA chiave: e' il generatore
-# a iniettarla a runtime nei siti scelti. Aggiungere un sito qui lo rende pescabile.
+# a iniettarla a runtime nel sito scelto. Aggiungere un sito qui lo rende pescabile.
 static func _site_pool() -> Array:
 	return [
 		_site("news.com", "NewsOggi", "Le ultime notizie", true, [
@@ -206,7 +332,7 @@ static func _site_pool() -> Array:
 		_site("blog.io", "Il blog segreto", "il diario di qualcuno", false, [
 			{"tag": "h1", "text": "Pagina nascosta"},
 			{"tag": "p", "text": "Se stai leggendo questo, hai trovato il collegamento giusto nel computer."},
-			{"tag": "p", "text": "La password e' sparsa nei file e nei siti di questo computer..."},
+			{"tag": "p", "text": "La password e' sparsa nei file, nei siti e nelle foto di questo computer..."},
 			{"tag": "hr"},
 			{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 		]),
@@ -247,27 +373,23 @@ static func _site_pool() -> Array:
 		]),
 	]
 
-# Le 2 chiavi web (indici 3 e 4) in 2 siti distinti scelti a caso tra quelli del run,
-# ciascuna a caso nel testo visibile (<p>) oppure nel sorgente HTML (commento).
-static func _place_web_keys(chosen: Array, rng: RandomNumberGenerator) -> void:
-	var hosts := _shuffled(chosen, rng)
-	var web_indices := [3, 4]
-	for n in range(web_indices.size()):
-		if n >= hosts.size():
-			break
-		var label := GameManager.key_label(int(web_indices[n]))
-		if label == "":
-			continue
-		var page: Dictionary = hosts[n]["page"]
-		var els: Array = page.get("elements", [])
-		var el: Dictionary
-		if rng.randf() < 0.5:
-			var t: String = _pick(_TEXT_CARRIERS, rng)
-			el = {"tag": "p", "text": t.replace(KEY_SLOT, label)}
-		else:
-			var c: String = _pick(_COMMENT_CARRIERS, rng)
-			el = {"tag": "comment", "text": c.replace(KEY_SLOT, label)}
-		els.insert(_insert_pos(els, rng), el)
+# La chiave web (indice 3) in un sito a caso tra quelli del run, a caso nel testo
+# visibile (<p>) oppure nel sorgente HTML (commento).
+static func _place_web_key(chosen: Array, rng: RandomNumberGenerator) -> void:
+	var label := GameManager.key_label(KEY_WEB)
+	if label == "" or chosen.is_empty():
+		return
+	var site: Dictionary = _pick(chosen, rng)
+	var page: Dictionary = site["page"]
+	var els: Array = page.get("elements", [])
+	var el: Dictionary
+	if rng.randf() < 0.5:
+		var t: String = _pick(_TEXT_CARRIERS, rng)
+		el = {"tag": "p", "text": t.replace(KEY_SLOT, label)}
+	else:
+		var c: String = _pick(_COMMENT_CARRIERS, rng)
+		el = {"tag": "comment", "text": c.replace(KEY_SLOT, label)}
+	els.insert(_insert_pos(els, rng), el)
 
 # Posizione plausibile dove inserire un elemento: dopo il primo (di solito img/h1).
 static func _insert_pos(els: Array, rng: RandomNumberGenerator) -> int:

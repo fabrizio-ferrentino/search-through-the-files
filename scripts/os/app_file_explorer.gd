@@ -187,10 +187,13 @@ func _on_activated(data: Dictionary) -> void:
 			_folder = data
 			_refresh()
 		"file":
-			if data.get("filetype", "") == "html":
-				os.open_app("browser", data.get("url", "home"))
-			else:
-				os.open_app("notepad", data)
+			match data.get("filetype", ""):
+				"html":
+					os.open_app("browser", data.get("url", "home"))
+				"image":
+					os.open_app("image", data)
+				_:
+					os.open_app("notepad", data)
 		"secret":
 			os.open_secret_folder(data)
 

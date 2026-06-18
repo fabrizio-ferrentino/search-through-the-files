@@ -27,6 +27,8 @@ func _draw() -> void:
 			_ie(w, h)
 		"file", "text":
 			_file(w, h)
+		"image":
+			_image(w, h)
 		"notepad":
 			_notepad(w, h)
 		"trash":
@@ -135,6 +137,20 @@ func _file(w: float, h: float) -> void:
 	for i in range(4):
 		var ly := page.position.y + h * (0.26 + i * 0.13)
 		draw_line(Vector2(page.position.x + 3, ly), Vector2(page.position.x + page.size.x - 3, ly), Color("8a8a8a"), 1.0)
+
+func _image(w: float, h: float) -> void:
+	# foto incorniciata: cielo, sole, una montagnola (icona "file immagine")
+	var frame := Rect2(w * 0.16, h * 0.18, w * 0.68, h * 0.62)
+	draw_rect(frame, Color("ffffff"))
+	var pic := Rect2(frame.position.x + 3, frame.position.y + 3, frame.size.x - 6, frame.size.y - 6)
+	draw_rect(pic, Color("8fc6e8"))   # cielo
+	draw_circle(Vector2(pic.position.x + pic.size.x * 0.74, pic.position.y + pic.size.y * 0.28), w * 0.07, Color("f2d24b"))
+	draw_colored_polygon(PackedVector2Array([   # montagna
+		Vector2(pic.position.x, pic.end.y),
+		Vector2(pic.position.x + pic.size.x * 0.42, pic.position.y + pic.size.y * 0.40),
+		Vector2(pic.end.x, pic.end.y),
+	]), Color("3f7a45"))
+	_outline(frame, Color("404040"))
 
 func _notepad(w: float, h: float) -> void:
 	var page := Rect2(w * 0.20, h * 0.12, w * 0.58, h * 0.76)

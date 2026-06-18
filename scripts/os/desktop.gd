@@ -276,6 +276,15 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			app.window = win
 			app.launch(file)
 			return win
+		"image":
+			var node: Dictionary = arg if arg is Dictionary else {}
+			var win := open_window(str(node.get("name", "Immagine")), Vector2(620, 480), "image")
+			var app := ImageViewerApp.new()
+			win.content_root.add_child(app)
+			app.os = self
+			app.window = win
+			app.launch(node)
+			return win
 	return null
 
 func focus_window(win: OSWindow) -> void:
@@ -349,10 +358,13 @@ func _on_desktop_activated(data: Dictionary) -> void:
 	elif data.get("type", "") == "secret":
 		open_secret_folder(data)
 	elif data.get("type", "") == "file":
-		if data.get("filetype", "") == "html":
-			open_app("browser", data.get("url", "start"))
-		else:
-			open_app("notepad", data)
+		match data.get("filetype", ""):
+			"html":
+				open_app("browser", data.get("url", "start"))
+			"image":
+				open_app("image", data)
+			_:
+				open_app("notepad", data)
 
 func _on_desktop_item_context(item: DesktopItem) -> void:
 	var data: Dictionary = item.data
@@ -463,6 +475,13 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		# ESC: torna alla vista stanza (il PC resta nello stato attuale)
 		exit_requested.emit()
+		return
+
+	# Con un dialogo modale aperto (login / arresto / cartella segreta) il desktop
+	# non reagisce ai click: il modale "blocca" tutto cio' che sta dietro, niente
+	# selezione/focus delle finestre sottostanti (comportamento modale reale).
+	# _input gira prima della GUI, quindi il layer modale da solo non basta a fermarlo.
+	if _modal_layer != null and is_instance_valid(_modal_layer):
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
