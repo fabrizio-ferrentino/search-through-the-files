@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://dhdl8y1nogrc7" path="res://assets/textures/3d/desk/Desk.glb" id="5_tbgi4"]
 [ext_resource type="PackedScene" uid="uid://r55a65e2h78l" path="res://assets/textures/3d/deskLamp/Lamp With Shade.glb" id="6_tefeu"]
 [ext_resource type="PackedScene" uid="uid://ktr5x76xpddl" path="res://assets/textures/3d/bed/Bed.glb" id="7_o6xl0"]
+[ext_resource type="PackedScene" uid="uid://doi56xa6y5f2x" path="res://assets/textures/3d/door/Door.glb" id="9_85g3d"]
+[ext_resource type="PackedScene" uid="uid://0yl7nprafrno" path="res://scenes/corridor.tscn" id="9_corr"]
 [ext_resource type="Script" uid="uid://brc1ca1jykros" path="res://scripts/nav_arrow.gd" id="nav_arrow"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
@@ -28,7 +30,7 @@ size = Vector3(7, 2, 0.5)
 [sub_resource type="Skin" id="Skin_ig7tw"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
-albedo_color = Color(0, 0.23921569, 1, 1)
+albedo_color = Color(0.039215688, 0.039215688, 0.050980393, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_monitor"]
 size = Vector3(46.40619, 43.118484, 20)
@@ -36,8 +38,11 @@ size = Vector3(46.40619, 43.118484, 20)
 [sub_resource type="BoxShape3D" id="BoxShape3D_jyhfs"]
 size = Vector3(22.02628, 44.65423, 43.78023)
 
-[sub_resource type="BoxMesh" id="BoxMesh_lquwl"]
-size = Vector3(1, 0.2, 5)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_85g3d"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_85g3d"]
+material = SubResource("StandardMaterial3D_85g3d")
+size = Vector2(9, 7)
 
 [node name="Main" type="Node3D" unique_id=1043109776]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.221631e-05, 0, 0)
@@ -66,13 +71,13 @@ skin = SubResource("Skin_7dm0k")
 surface_material_override/0 = SubResource("StandardMaterial3D_ig7tw")
 
 [node name="wall" type="MeshInstance3D" parent="." unique_id=97706679]
-transform = Transform3D(1, 0, 0, 0, 0.99985194, 0.017208098, 0, -0.017208098, 0.99985194, 0.9258392, 1.0959406, -2.2526855)
+transform = Transform3D(1, 0, 0, 0, 0.99985194, 0.017208098, 0, -0.017208098, 0.99985194, 0.926, 1.2, -2.2445383)
 mesh = SubResource("BoxMesh_ig7tw")
 skin = SubResource("Skin_ig7tw")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
 
 [node name="wallLeft" type="MeshInstance3D" parent="." unique_id=585122192]
-transform = Transform3D(-0.007539794, -0.017207608, 0.9998235, 1.15732646e-10, 0.99985194, 0.017208098, -0.99997157, 0.00012974546, -0.0075386763, -1.8615155, 1.0959406, 0.94001746)
+transform = Transform3D(-0.007539794, -0.017207608, 0.9998235, 1.15732646e-10, 0.99985194, 0.017208098, -0.99997157, 0.00012974546, -0.0075386763, -1.862, 1.2, 0.94)
 mesh = SubResource("BoxMesh_ig7tw")
 skin = SubResource("Skin_ig7tw")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
@@ -171,7 +176,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.042263, 24.329666, -21.640
 shape = SubResource("BoxShape3D_jyhfs")
 
 [node name="wallBack" type="MeshInstance3D" parent="." unique_id=198318539]
-transform = Transform3D(-0.9999972, 0.0013128931, 0.0019926056, 0.0012881268, 0.99992263, -0.012380946, -0.00200871, -0.012378347, -0.99992144, 0.97240496, 1.1290972, 4.5503745)
+transform = Transform3D(-0.99999714, 0.0019693444, 0.0019926995, 0.0012881268, 1.4998838, -0.012380948, -0.0020088, -0.01856752, -0.9999214, 0.972, 1.2, 4.55)
 mesh = SubResource("BoxMesh_ig7tw")
 skin = SubResource("Skin_ig7tw")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
@@ -179,26 +184,31 @@ surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
 [node name="wallRight" type="Node3D" parent="." unique_id=509803419]
 
 [node name="wallBack2" type="MeshInstance3D" parent="wallRight" unique_id=1968206476]
-transform = Transform3D(-0.016511623, -0.012358003, -0.99978733, 0.0012881269, 0.99992263, -0.0123809455, 0.9998628, -0.0014922803, -0.016494421, 4.237809, 1.1290972, 3.4372745)
+transform = Transform3D(-0.016511623, -0.012358003, -0.99978733, 0.0012881269, 0.99992263, -0.0123809455, 0.9998628, -0.0014922803, -0.016494421, 2.839, 1.2, 3.839)
 mesh = SubResource("BoxMesh_ig7tw")
 skin = SubResource("Skin_ig7tw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="wallRight" unique_id=1667210667]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4158497, 2.0155385, 0)
-mesh = SubResource("BoxMesh_lquwl")
-skeleton = NodePath("../..")
 
 [node name="Fade_transition" parent="." unique_id=978627174 instance=ExtResource("4_jyhfs")]
 
 [node name="fade_timer" type="Timer" parent="Fade_transition" unique_id=1530985540]
 
 [node name="DeskModel" parent="." unique_id=1424267003 instance=ExtResource("5_tbgi4")]
-transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, -0.6388695, -0.007021636, -1.2085266)
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.75, -0.6388695, -0.007021636, -1.3205838)
 
 [node name="DeskLamp" parent="." unique_id=1173508089 instance=ExtResource("6_tefeu")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.88703775, 0.610674, -1.3635969)
 
 [node name="Bed" parent="." unique_id=1823832854 instance=ExtResource("7_o6xl0")]
 transform = Transform3D(-1.1999888, 0, 0.005131242, 0, 1.1999999, 0, -0.005131242, 0, -1.1999888, -0.3901032, -0.108777106, 3.0919957)
+
+[node name="Corridor" parent="." unique_id=1074436095 instance=ExtResource("9_corr")]
+transform = Transform3D(-0.048937187, 0, -0.99880207, 0, 1, 0, 0.99880207, 0, -0.048937187, 2.6834013, 0.13604514, -0.6964999)
+
+[node name="Root Scene" parent="." unique_id=1999624143 instance=ExtResource("9_85g3d")]
+transform = Transform3D(0.440796, 0, 0.23600616, 0, 0.5, 0, -0.23600616, 0, 0.440796, 2.302416, 0.1056658, 0.56304574)
+
+[node name="Soffitto" type="MeshInstance3D" parent="." unique_id=727239062]
+transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, -0.99999994, 0, 0.99999994, -4.3711385e-08, 2.5825639, 2.2429492, 1.0148585)
+mesh = SubResource("QuadMesh_85g3d")

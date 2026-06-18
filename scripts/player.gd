@@ -39,6 +39,9 @@ var _poll_accum := 0.0
 var _home_transform: Transform3D       # posa "a riposo" della telecamera (centro stanza)
 var _home_fov := 75.0
 
+# --- minaccia stanza (M4): regista + corridoio + nemico (Clown) ---
+var _threats = null                    # ThreatDirector (spawnato a runtime)
+
 # --- schermo del monitor nella stanza (mostra il desktop del PC) ---
 @export_group("Schermo monitor")
 @export var screen_w := 0.35                        # larghezza del pannello dello schermo
@@ -67,6 +70,7 @@ func _ready():
 		GameManager.first_time_in_room = false
 	_update_arrows() # Imposta le frecce iniziali
 	_setup_arrow_input()
+	_spawn_threats()                     # M4: corridoio + regista della minaccia
 
 # Crea l'OS in un SubViewport autonomo che gira SEMPRE (anche stando in stanza):
 # cosi' il monitor 3D mostra il PC dal vivo (avvio compreso). La vista a tutto
@@ -122,6 +126,34 @@ func _spawn_computer() -> void:
 	_pc_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pc_layer.add_child(_pc_fade)
 
+# Crea la minaccia "stanza" (M4): spawna il regista (ThreatDirector). Il corridoio
+# con le porte (Marker3D nel gruppo "enemy_spots") e' un'istanza dentro main.tscn,
+# cosi' lo sposti/rifinisci nell'editor: il regista lo trova via gruppo, non gli
+# serve sapere dov'e'. Il regista gira SEMPRE (anche dentro il PC) e, al fallimento,
+# chiama GameManager.game_over("clown").
+func _spawn_threats() -> void:
+	var director = load("res://scripts/threats/threat_director.gd").new()
+	director.name = "ThreatDirector"
+	director.player = self
+	get_parent().add_child(director)
+	_threats = director
+
+# Direzione di sguardo corrente (per il regista delle minacce): "center"/"left"/
+# "right"/"back", dedotta da target_yaw.
+func current_view() -> String:
+	if is_equal_approx(target_yaw, pos_left):
+		return "left"
+	if is_equal_approx(target_yaw, pos_right):
+		return "right"
+	if is_equal_approx(target_yaw, pos_back):
+		return "back"
+	return "center"
+
+# True quando si e' "dentro il PC" (overlay a tutto schermo attivo): il giocatore
+# non vede la stanza, quindi non puo' respingere i nemici (tensione FNAF).
+func is_in_pc() -> bool:
+	return _in_pc
+
 func _input(event):
 	if entering:
 		return
@@ -136,24 +168,23 @@ func _input(event):
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		# Creiamo un raggio che parte dalla punta del mouse
-		var camera = self
 		var mouse_pos = get_viewport().get_mouse_position()
-		var ray_origin = camera.project_ray_origin(mouse_pos)
-		var ray_end = ray_origin + camera.project_ray_normal(mouse_pos) * 2000
+		var ray_origin = project_ray_origin(mouse_pos)
+		var ray_end = ray_origin + project_ray_normal(mouse_pos) * 2000
 		var space_state = get_world_3d().direct_space_state
 		var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
 		var result = space_state.intersect_ray(query)
-		if result:
-			var collider = result.collider
-			print("Ho colpito: ", collider.name)
-			if (collider.name == "Monitor") and target_yaw == pos_center:
-				var part := _hit_part(collider, int(result.get("shape", -1)))
-				if part == "Computer":
-					# pulsante di accensione del case: accende se spento, spegne se acceso
-					_power_button()
-				else:
-					# schermo del monitor: entra nel PC (se spento si vedra' "nessun segnale")
-					_enter_pc()
+		if result and result.collider.name == "Monitor" and target_yaw == pos_center:
+			var part := _hit_part(result.collider, int(result.get("shape", -1)))
+			if part == "Computer":
+				# pulsante di accensione del case: accende se spento, spegne se acceso
+				_power_button()
+			else:
+				# schermo del monitor: entra nel PC (se spento si vedra' "nessun segnale")
+				_enter_pc()
+		elif _threats != null:
+			# click su una porta del corridoio: punta la torcia (scaccia se e' la giusta)
+			_threats.torch_click_at(mouse_pos)
 
 # Ricava il nome del CollisionShape3D colpito (CollisionShape3D = schermo, Computer = case).
 func _hit_part(body, shape_idx: int) -> String:
@@ -244,6 +275,8 @@ func _on_game_won() -> void:
 		return
 	_ending = true
 	entering = true            # blocca input e movimento fino al cambio scena
+	if _threats != null:       # niente jumpscare sopra la schermata di vittoria
+		_threats.stop()
 	if _pc_layer:
 		_pc_layer.visible = false
 	_in_pc = false

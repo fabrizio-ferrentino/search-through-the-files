@@ -18,6 +18,14 @@ const SUBTITLES := [
 	"La stanza non era cosi' vuota.",
 ]
 
+# Battute specifiche del Clown (M4): scelte quando cause == "clown".
+const CLOWN_SUBTITLES := [
+	"Il sorriso era l'ultima cosa che hai visto.",
+	"Non dovevi smettere di guardare il corridoio.",
+	"E' arrivato in fondo mentre tu leggevi.",
+	"Avresti dovuto guardarlo negli occhi.",
+]
+
 var _shake := false
 var _shake_amt := 0.0
 
@@ -153,6 +161,9 @@ func _show_gameover() -> void:
 
 	create_tween().tween_property(vb, "modulate:a", 1.0, 0.6)
 
-# TODO (M4): scegliere il sottotitolo in base al fantasma (cause). Per ora a caso.
-func _pick_subtitle(_cause: String) -> String:
+# Sottotitolo della schermata GAME OVER, scelto in base alla causa (il nemico).
+# Per ora solo il Clown ha battute proprie; le altre cause usano il set generico.
+func _pick_subtitle(cause: String) -> String:
+	if cause == "clown":
+		return CLOWN_SUBTITLES[randi() % CLOWN_SUBTITLES.size()]
 	return SUBTITLES[randi() % SUBTITLES.size()]

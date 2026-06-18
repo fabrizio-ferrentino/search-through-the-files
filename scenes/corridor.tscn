@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://0yl7nprafrno"]
+
+[sub_resource type="StandardMaterial3D" id="m_floor"]
+albedo_color = Color(0.08, 0.08, 0.09, 1)
+
+[sub_resource type="BoxMesh" id="box"]
+
+[sub_resource type="StandardMaterial3D" id="m_wall"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+
+[sub_resource type="StandardMaterial3D" id="m_room"]
+albedo_color = Color(0.04, 0.04, 0.05, 1)
+
+[node name="Corridor" type="Node3D" unique_id=541986947]
+
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=1813885056]
+transform = Transform3D(2.75, 0, 0, 0, 0.125, 0, 0, 0, 5, 0, -0.05, -1.8)
+material_override = SubResource("m_floor")
+mesh = SubResource("box")
+
+[node name="Ceiling" type="MeshInstance3D" parent="." unique_id=1407597964]
+transform = Transform3D(2.2, 0, 0, 0, 0.1, 0, 0, 0, 4, 0, 2.45, -1.8)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")
+
+[node name="BackWall" type="MeshInstance3D" parent="." unique_id=587779812]
+transform = Transform3D(2.2, 0, 0, 0, 2.5, 0, 0, 0, 0.1, 0, 1.25, -3.85)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")
+
+[node name="LeftA" type="MeshInstance3D" parent="." unique_id=1752441789]
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.4, -1.05, 1.2, -0.2)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")
+
+[node name="LeftB" type="MeshInstance3D" parent="." unique_id=965503595]
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 2.45, -1.05, 1.2, -2.625)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")
+
+[node name="RightA" type="MeshInstance3D" parent="." unique_id=1005019157]
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.5, 1.05, 1.2, -0.25)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")
+
+[node name="RightB" type="MeshInstance3D" parent="." unique_id=1415642037]
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.6, 1.05, 1.2, -2.0238807)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")
+
+[node name="RightC" type="MeshInstance3D" parent="." unique_id=2126349759]
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.75, 1.05, 1.2, -3.475)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")
+
+[node name="RoomL1" type="MeshInstance3D" parent="." unique_id=29044227]
+transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, -1.7071065, 1.1, -0.9)
+material_override = SubResource("m_room")
+mesh = SubResource("box")
+
+[node name="RoomR1" type="MeshInstance3D" parent="." unique_id=2099092578]
+transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, 1.7233628, 1.1, -1)
+material_override = SubResource("m_room")
+mesh = SubResource("box")
+
+[node name="RoomR2" type="MeshInstance3D" parent="." unique_id=1407299450]
+transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, -1.684545, 1.1, -2.6)
+material_override = SubResource("m_room")
+mesh = SubResource("box")
+
+[node name="Light1" type="OmniLight3D" parent="." unique_id=1533033649]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -1)
+visible = false
+light_color = Color(0.7, 0.55, 0.45, 1)
+light_energy = 0.12
+
+[node name="Light2" type="OmniLight3D" parent="." unique_id=832991223]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -2.6)
+visible = false
+light_color = Color(0.7, 0.55, 0.45, 1)
+light_energy = 0.12
+
+[node name="SpotL1" type="Marker3D" parent="." unique_id=2087849275 groups=["enemy_spots"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0, -0.9)
+
+[node name="SpotR1" type="Marker3D" parent="." unique_id=733420691 groups=["enemy_spots"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0, -1)
+
+[node name="SpotR2" type="Marker3D" parent="." unique_id=796735030 groups=["enemy_spots"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0213723, 0, -2.9215245)
+
+[node name="RightC2" type="MeshInstance3D" parent="." unique_id=82359547]
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.75, 1.05, 1.2, -2.732115)
+material_override = SubResource("m_wall")
+mesh = SubResource("box")

@@ -1,0 +1,31 @@
+[gd_scene load_steps=7 format=3 uid="uid://b8clown4spook1"]
+
+; Prefab del nemico (M4). Radice = clown.gd (logica affaccio); figlio "Model" = la
+; mesh scaricata (Slender), con un materiale PBR di base (clothing). RIFINISCI QUI:
+; cambia texture/scala/dettagli del Model senza toccare la logica.
+
+[ext_resource type="Script" path="res://scripts/threats/clown.gd" id="1_clown"]
+[ext_resource type="ArrayMesh" uid="uid://ynswrgyqoevk" path="res://assets/textures/3d/clown/repromancer_slender_man_model.obj" id="2_mesh"]
+[ext_resource type="Texture2D" uid="uid://t5p12j68e2eb" path="res://assets/textures/3d/clown/textures/jpg/slender_clothing_basecolor.jpg" id="3_albedo"]
+[ext_resource type="Texture2D" uid="uid://cthgx5bda6xlg" path="res://assets/textures/3d/clown/textures/jpg/slender_clothing_normal.jpg" id="4_normal"]
+[ext_resource type="Texture2D" uid="uid://c5b4muer4mgqa" path="res://assets/textures/3d/clown/textures/jpg/slender_clothing_roughness.jpg" id="5_rough"]
+
+[sub_resource type="StandardMaterial3D" id="mat_clown"]
+albedo_texture = ExtResource("3_albedo")
+normal_enabled = true
+normal_texture = ExtResource("4_normal")
+roughness_texture = ExtResource("5_rough")
+
+[node name="Clown" type="Node3D"]
+script = ExtResource("1_clown")
+
+[node name="Model" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.78, 0, 0, 0, 0.78, 0, 0, 0, 0.78, 0, 0, 0)
+mesh = ExtResource("2_mesh")
+surface_material_override/0 = SubResource("mat_clown")
+
+[node name="Glow" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0.4)
+light_color = Color(0.85, 0.87, 1, 1)
+light_energy = 0.3
+omni_range = 2.5

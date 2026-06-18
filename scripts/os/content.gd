@@ -295,7 +295,6 @@ static func _site_pool() -> Array:
 			{"tag": "p", "text": "Gli esperti: i floppy da 1.44 MB sono il futuro dell'archiviazione."},
 			{"tag": "img", "alt": "foto sgranata", "color": "777777", "w": 320, "h": 180},
 			{"tag": "hr"},
-			{"tag": "a", "text": "Vai a GiocaWeb", "href": "giochi.net"},
 			{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 		]),
 		_site("giochi.net", "GiocaWeb", "Giochi gratis online", true, [
@@ -308,7 +307,6 @@ static func _site_pool() -> Array:
 				"Serpente 2000",
 			]},
 			{"tag": "hr"},
-			{"tag": "a", "text": "Leggi le notizie", "href": "news.com"},
 			{"tag": "a", "text": "Pagina iniziale", "href": "start"},
 		]),
 		_site("meteo.com", "MeteoNow", "Previsioni del tempo", true, [
