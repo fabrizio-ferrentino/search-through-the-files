@@ -202,10 +202,12 @@ func _input(event):
 			else:
 				# schermo del monitor: entra nel PC (se spento si vedra' "nessun segnale")
 				_enter_pc()
-		elif _threats != null:
-			# flash della torcia: illumina il corridoio davanti a te (scaccia il nemico
-			# se ti sei girato verso la sua zona)
-			_threats.torch_flash()
+		elif _threats != null and target_yaw != pos_center:
+			# torcia: solo guardando a destra/sinistra/dietro e cliccando al centro schermo
+			var vp_size := get_viewport().get_visible_rect().size
+			var center_dist := (mouse_pos - vp_size * 0.5).length()
+			if center_dist < vp_size.x * 0.15:
+				_threats.torch_flash()
 
 # Ricava il nome del CollisionShape3D colpito (CollisionShape3D = schermo, Computer = case).
 func _hit_part(body, shape_idx: int) -> String:

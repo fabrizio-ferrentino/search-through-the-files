@@ -88,6 +88,13 @@ func _process(delta: float) -> void:
 		return
 	_update_heat(delta)
 	_update_torch(delta)
+	# Debug: minacce disabilitate (F11): niente affacci, niente game_over.
+	# Torcia e batteria restano attive.
+	if not GameManager.threats_enabled:
+		if _clown != null and _clown.visible:
+			_clown.dismiss()
+		_reset_tell()
+		return
 	if _state == State.GRACE:
 		_timer += delta
 		if _timer >= GRACE_TIME:

@@ -37,6 +37,10 @@ var logged_in := false
 # True mentre l'overlay di morte e' in corso: evita game over multipli sovrapposti.
 var _game_over_active := false
 
+# Debug: toggle minacce (F9). Quando false, il ThreatDirector non genera
+# affacci e non puo' uccidere — utile per testare modifiche in pace.
+var threats_enabled := true
+
 # ---------------- ciclo di vita del run ----------------
 
 # Avvia una nuova partita: fissa il seme, azzera lo stato del PC e ricostruisce
@@ -75,8 +79,12 @@ func restart() -> void:
 # DEV-ONLY (M2): F10 forza il game over per provare jumpscare/flusso. In M4 sara'
 # un nemico a chiamarlo: rimuovere allora questo input di debug.
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F10:
-		game_over("debug")
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F10:
+			game_over("debug")
+		elif event.keycode == KEY_F11:
+			threats_enabled = not threats_enabled
+			print("[GameManager] threats_enabled = ", threats_enabled)
 
 # ---------------- chiavi (M1) ----------------
 

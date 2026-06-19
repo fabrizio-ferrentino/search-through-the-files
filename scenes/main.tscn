@@ -77,7 +77,7 @@ skin = SubResource("Skin_ig7tw")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
 
 [node name="wallLeft" type="MeshInstance3D" parent="." unique_id=585122192]
-transform = Transform3D(-0.007539794, -0.017207608, 0.9998235, 1.15732646e-10, 0.99985194, 0.017208098, -0.99997157, 0.00012974546, -0.0075386763, -1.862, 1.2, 0.94)
+transform = Transform3D(-0.007539794, -0.017207608, 0.9998235, 1.15732646e-10, 0.99985194, 0.017208098, -0.99997157, 0.00012974546, -0.0075386763, -1.862, 1.2, 0.9693164)
 mesh = SubResource("BoxMesh_ig7tw")
 skin = SubResource("Skin_ig7tw")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
@@ -95,7 +95,7 @@ omni_range = 6.0
 omni_shadow_mode = 0
 
 [node name="Light" type="OmniLight3D" parent="." unique_id=704683100]
-transform = Transform3D(0.8471001, 0.0382127, -0.53005785, -0.017572036, 0.99888015, 0.04392848, 0.5311429, -0.027897626, 0.84682286, -0.68470275, 1.1800929, -1.0152187)
+transform = Transform3D(0.8471001, 0.0382127, -0.53005785, -0.017572036, 0.99888015, 0.04392848, 0.5311429, -0.027897626, 0.84682286, -0.68153787, 1.135037, -1.0004395)
 light_color = Color(0.7246083, 0.6956108, 0.3423986, 1)
 light_energy = 0.8
 shadow_enabled = true
@@ -184,7 +184,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
 [node name="wallRight" type="Node3D" parent="." unique_id=509803419]
 
 [node name="wallBack2" type="MeshInstance3D" parent="wallRight" unique_id=1968206476]
-transform = Transform3D(-0.016511623, -0.012358003, -0.99978733, 0.0012881269, 0.99992263, -0.0123809455, 0.9998628, -0.0014922803, -0.016494421, 2.839, 1.2, 3.839)
+transform = Transform3D(-0.016511623, -0.012358003, -0.99978733, 0.0012881269, 0.99992263, -0.0123809455, 0.9998628, -0.0014922803, -0.016494421, 2.839, 1.2, 3.3808367)
 mesh = SubResource("BoxMesh_ig7tw")
 skin = SubResource("Skin_ig7tw")
 skeleton = NodePath("../..")
@@ -207,8 +207,8 @@ transform = Transform3D(-1.1999888, 0, 0.005131242, 0, 1.1999999, 0, -0.00513124
 transform = Transform3D(-0.048937187, 0, -0.99880207, 0, 1, 0, 0.99880207, 0, -0.048937187, 2.6834013, 0.13604514, -0.6964999)
 
 [node name="Root Scene" parent="." unique_id=1999624143 instance=ExtResource("9_85g3d")]
-transform = Transform3D(0.440796, 0, 0.23600616, 0, 0.5, 0, -0.23600616, 0, 0.440796, 2.302416, 0.1056658, 0.56304574)
+transform = Transform3D(0.3940054, 0, 0.30783075, 0, 0.5, 0, -0.30783075, 0, 0.3940054, 2.4120052, 0.10566592, 0.04006964)
 
 [node name="Soffitto" type="MeshInstance3D" parent="." unique_id=727239062]
-transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, -0.99999994, 0, 0.99999994, -4.3711385e-08, 2.5825639, 2.2429492, 1.0148585)
+transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, -0.99999994, 0, 0.99999994, -4.3711385e-08, 2.5825639, 2.2204325, 1.0148585)
 mesh = SubResource("QuadMesh_85g3d")
