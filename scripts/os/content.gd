@@ -49,9 +49,11 @@ const SITE_SALT := 2002
 # Foto del run.
 const PHOTO_W := 320
 const PHOTO_H := 240
-# Di quanto la scritta-chiave si discosta dal colore di fondo. Volutamente MOLTO
-# basso: all'apertura deve risultare invisibile, emerge solo regolando l'immagine.
-const PHOTO_KEY_DELTA := 0.0018
+# Di quanto la scritta-chiave si discosta dal colore di fondo. Basso: all'apertura deve
+# risultare invisibile, emerge solo regolando l'immagine. NB: la scritta e' anche
+# semi-trasparente (ImageViewerApp.CODE_ALPHA), quindi serve un minimo di scarto perche'
+# il segnale sopravviva e resti trovabile regolando contrasto/livelli.
+const PHOTO_KEY_DELTA := 0.006
 # Tinte di base delle foto (toni medi: lasciano spazio a schiarire/scurire).
 const PHOTO_TINTS := ["5a5560", "625a52", "525e58", "5c5c4e", "565c66", "604f52"]
 # Cartella delle foto d'autore (PNG/JPG): se contiene immagini il run le usa al posto

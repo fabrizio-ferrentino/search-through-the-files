@@ -23,9 +23,15 @@ var _react_left := 0.0      # secondi rimasti per reagire durante un PEEK
 var _react_total := 1.0     # durata piena della finestra corrente (per il tell)
 var _seen_left := 0.0       # secondi in cui resta visibile dopo averlo inquadrato
 var _last_spot = null       # ultima porta usata: per non ripeterla due volte di fila
-var _peek_spot = null       # porta dell'affaccio in corso (quella da illuminare)
+var _peek_spot = null       # spot dell'affaccio in corso
+var _peek_zone := "right"   # zona da illuminare per scacciarlo: "right" (corridoio) / "left" (finestra)
 var _torch: SpotLight3D = null   # la torcia: si punta su una porta col click
 var _torch_on := 0.0        # secondi rimasti di torcia accesa
+var _torch_energy := 5.0    # luminosita' "piena" (per il flash debole a batteria scarica)
+var _battery := 100.0       # carica della torcia, 0..BATTERY_MAX
+var _bat_layer: CanvasLayer = null
+var _bat_bg: ColorRect = null
+var _bat_fill: ColorRect = null
 var _rng := RandomNumberGenerator.new()
 
 const CLOWN_SCENE := "res://scenes/enemies/clown.tscn"
@@ -43,10 +49,15 @@ const INTERVAL_HOT := 10.0          # ... a heat 1
 const REACT_CALM := 8.0             # finestra di reazione a heat 0 (s): devi anche
 const REACT_HOT := 4.0              # ... a heat 1   identificare la porta giusta
 const SEEN_LINGER := 1.5            # secondi in cui resta visibile dopo il check
-const VIEW_HALF_DEG := 40.0         # oltre questo angolo una porta e' "non inquadrata"
 # Torcia
-const CLICK_RADIUS := 140.0         # px: quanto vicino alla porta devi cliccare
-const TORCH_ON_TIME := 2.0          # secondi di torcia accesa dopo un click
+const AIM_TOL_DEG := 30.0           # quanto devi essere girato "verso la zona" per illuminarla
+const TORCH_ON_TIME := 2.0          # secondi di torcia accesa dopo un flash
+# Batteria: si scarica a ogni flash, si ricarica quando la torcia e' spenta. A batteria
+# scarica il flash e' debole e NON scaccia (cosi' non puoi spammare / non sprechi flash).
+const BATTERY_MAX := 100.0
+const BATTERY_COST := 16.0          # carica spesa per ogni flash
+const BATTERY_RECHARGE := 6.0       # ricarica al secondo (mentre la torcia e' spenta)
+const WEAK_ENERGY_MUL := 0.22       # luminosita' del flash "scarico"
 
 func _ready() -> void:
 	_rng.seed = GameManager.run_seed + 4242
@@ -68,6 +79,8 @@ func stop() -> void:
 		_clown.dismiss()
 	if _torch != null:
 		_torch.visible = false
+	if _bat_layer != null:
+		_bat_layer.visible = false
 	_reset_tell()
 
 func _process(delta: float) -> void:
@@ -86,7 +99,7 @@ func _process(delta: float) -> void:
 	elif _state == State.PEEK:
 		_react_left -= delta
 		_update_tell()
-		# si scaccia SOLO illuminando la porta giusta con la torcia (torch_click_at);
+		# si scaccia SOLO illuminando con la torcia la zona del nemico (torch_flash);
 		# qui resta solo il fallimento per tempo scaduto.
 		if _react_left <= 0.0:
 			_clown.dismiss()
@@ -121,13 +134,13 @@ func _peek() -> void:
 	var spot: Node3D = _choose_spot()
 	_last_spot = spot
 	_peek_spot = spot
+	_peek_zone = _zone_of(spot)
 	_clown.appear_at(spot.global_position, player.global_transform.origin)
 	_react_total = _react_time()
 	_react_left = _react_total
 	_state = State.PEEK
 
-# Sceglie una porta "furba": mai due volte di fila la stessa e, se possibile, una che
-# NON stai inquadrando ora (cosi' fissare una porta non ti mette al sicuro).
+# Sceglie uno spot a caso (solo per varieta'), mai due volte di fila lo stesso.
 func _choose_spot() -> Node3D:
 	var candidates: Array = []
 	for s in _spots:
@@ -135,72 +148,118 @@ func _choose_spot() -> Node3D:
 			candidates.append(s)
 	if candidates.is_empty():
 		candidates = _spots.duplicate()
-	var unwatched: Array = []
-	for s in candidates:
-		if not _is_spot_in_view(s):
-			unwatched.append(s)
-	var pool: Array = candidates if unwatched.is_empty() else unwatched
-	var chosen: Node3D = pool[_rng.randi() % pool.size()]
+	var chosen: Node3D = candidates[_rng.randi() % candidates.size()]
 	return chosen
 
-# True se la porta e' nel campo visivo attuale (entro ~mezzo FOV dalla direzione di sguardo).
-func _is_spot_in_view(s) -> bool:
-	var cam_o: Vector3 = player.global_transform.origin
-	var fwd: Vector3 = -player.global_transform.basis.z
-	var to: Vector3 = (s.global_position + Vector3.UP) - cam_o
-	if to.length() < 0.01:
-		return true
-	return rad_to_deg(fwd.angle_to(to)) <= VIEW_HALF_DEG
+# Zona da illuminare per scacciarlo. Default "right" (corridoio); uno spot nel gruppo
+# "spot_left" e' la finestra di sinistra (quando la creerai). Il Ghost dietro NON usa la
+# torcia: avra' una gestione propria.
+func _zone_of(spot) -> String:
+	if spot.is_in_group("spot_left"):
+		return "left"
+	return "right"
+
+# True se la camera e' girata verso la zona (corridoio = destra, finestra = sinistra).
+func _facing_zone(zone: String) -> bool:
+	var target: float = player.pos_left if zone == "left" else player.pos_right
+	var yaw: float = player.rotation_degrees.y
+	return absf(yaw - target) <= AIM_TOL_DEG
 
 # --- torcia: la difesa ---
 func _setup_torch() -> void:
+	# Torcia "pulita" stile FNAF 4: un fascio LARGO che illumina tutto il corridoio davanti
+	# a te (non una porta specifica). Regola spot_angle (ampiezza) / light_energy (luce).
 	_torch = SpotLight3D.new()
 	_torch.visible = false
-	_torch.light_energy = 6.0
-	_torch.spot_range = 14.0
-	_torch.spot_angle = 20.0
+	_torch.light_energy = 5.0
+	_torch.spot_range = 18.0
+	_torch.spot_angle = 20.0        # fascio (non troppo largo): illumina dove miri
+	_torch.spot_angle_attenuation = 1.0
+	_torch.shadow_enabled = true    # ombre: il fascio sembra luce VERA (il nemico fa ombra)
 	_torch.light_color = Color(1.0, 0.97, 0.85)
 	add_child(_torch)
+	_torch_energy = _torch.light_energy
+	_setup_battery_ui()
 
 func _update_torch(delta: float) -> void:
 	if _torch_on > 0.0:
 		_torch_on -= delta
 		if _torch_on <= 0.0 and _torch != null:
 			_torch.visible = false
+	else:
+		_battery = minf(BATTERY_MAX, _battery + BATTERY_RECHARGE * delta)   # ricarica
+	_update_battery_ui()
 
-# Click in stanza: trova la porta piu' vicina al mouse, ci punta la torcia e - se e'
-# l'affaccio in corso - scaccia il nemico. La porta sbagliata illumina soltanto (nessun
-# effetto, e il tempo continua a scorrere). Usa la proiezione su schermo dei marker:
-# niente collisioni nel corridoio, le porte restano semplici Marker3D.
-func torch_click_at(mouse_pos: Vector2) -> void:
+# Flash della torcia (click in stanza): illumina LARGO dove guardi. Se c'e' un affaccio
+# nella ZONA che stai illuminando (corridoio a destra, finestra a sinistra), lo scaccia.
+# Non serve mirare la porta esatta: basta essere girato verso quella zona. Batteria
+# scarica -> flash debole, nessun effetto.
+func torch_flash() -> void:
 	if player.is_in_pc():
 		return
-	var best = null
-	var best_d := CLICK_RADIUS
-	for s in _spots:
-		var w: Vector3 = s.global_position + Vector3.UP * 1.0
-		if player.is_position_behind(w):
-			continue
-		var sp: Vector2 = player.unproject_position(w)
-		var d: float = mouse_pos.distance_to(sp)
-		if d < best_d:
-			best_d = d
-			best = s
-	if best == null:
+	if _battery < BATTERY_COST:
+		_flash(true)               # batteria scarica: debole, non scaccia
 		return
-	_aim_torch(best)
-	if _state == State.PEEK and best == _peek_spot:
+	_battery -= BATTERY_COST
+	_flash(false)
+	if _state == State.PEEK and _facing_zone(_peek_zone):
 		_reset_tell()
 		_seen_left = _jit(SEEN_LINGER)
 		_state = State.SEEN
 
-func _aim_torch(door) -> void:
+func _flash(weak: bool) -> void:
 	if _torch == null:
 		return
-	_torch.global_position = player.global_transform.origin
-	_torch.look_at(door.global_position + Vector3.UP * 1.0, Vector3.UP)
+	# Luce VERA, non "stampata": parte dalla MANO (un po' sotto/destra dell'occhio) e punta
+	# ORIZZONTALE in profondita' nel corridoio (all'altezza del nemico, non sul pavimento)
+	# -> il fascio graza pareti/nemico e fa ombre, invece di un cerchio piatto sullo schermo.
+	var cam_t: Transform3D = player.global_transform
+	var fwd: Vector3 = -cam_t.basis.z
+	var flat: Vector3 = Vector3(fwd.x, 0.0, fwd.z)
+	if flat.length() < 0.01:
+		flat = fwd
+	flat = flat.normalized()
+	_torch.global_position = cam_t.origin + cam_t.basis.x * 0.2 - cam_t.basis.y * 0.1
+	var aim: Vector3 = cam_t.origin + flat * 8.0
+	aim.y = cam_t.origin.y - 0.2
+	_torch.look_at(aim, Vector3.UP)
+	_torch.light_energy = _torch_energy * (WEAK_ENERGY_MUL if weak else 1.0)
 	_torch.visible = true
-	_torch_on = TORCH_ON_TIME
+	_torch_on = TORCH_ON_TIME * (0.4 if weak else 1.0)
+
+# --- barra batteria (HUD, visibile solo in stanza) ---
+func _setup_battery_ui() -> void:
+	_bat_layer = CanvasLayer.new()
+	_bat_layer.layer = 14
+	add_child(_bat_layer)
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bat_layer.add_child(root)
+	_bat_bg = ColorRect.new()
+	_bat_bg.color = Color(0, 0, 0, 0.55)
+	_bat_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bat_bg.anchor_top = 1.0
+	_bat_bg.anchor_bottom = 1.0
+	_bat_bg.offset_left = 24
+	_bat_bg.offset_right = 228
+	_bat_bg.offset_top = -52
+	_bat_bg.offset_bottom = -24
+	root.add_child(_bat_bg)
+	_bat_fill = ColorRect.new()
+	_bat_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bat_fill.position = Vector2(2, 2)
+	_bat_fill.size = Vector2(200, 24)
+	_bat_bg.add_child(_bat_fill)
+
+func _update_battery_ui() -> void:
+	if _bat_layer == null:
+		return
+	_bat_layer.visible = not player.is_in_pc()
+	if _bat_fill != null:
+		var f: float = clampf(_battery / BATTERY_MAX, 0.0, 1.0)
+		_bat_fill.size = Vector2(200.0 * f, 24.0)
+		_bat_fill.color = Color(0.85, 0.2, 0.2).lerp(Color(0.3, 0.85, 0.35), f)
 
 # --- heat: aggiornamento e timer derivati ---
 func _update_heat(delta: float) -> void:

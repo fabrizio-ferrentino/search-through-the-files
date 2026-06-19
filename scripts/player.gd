@@ -49,6 +49,10 @@ var _threats = null                    # ThreatDirector (spawnato a runtime)
 @export var screen_push := 0.03                     # sporgenza davanti al vetro bombato del CRT (evita che la bombatura buchi il pannello)
 @export var screen_nudge := Vector3(0.007, 0.0, 0)  # micro-aggiustamento di posizione
 
+# --- buio della stanza (M4): nero PULITO, niente nebbia (stile FNAF 4) ---
+@export_group("Buio")
+@export var ambient_energy := 0.04                   # luce ambientale (bassa = piu' buio)
+
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_home_transform = global_transform   # posa centrale da cui si entra/torna
@@ -70,6 +74,7 @@ func _ready():
 		GameManager.first_time_in_room = false
 	_update_arrows() # Imposta le frecce iniziali
 	_setup_arrow_input()
+	_setup_atmosphere()                  # M4: nebbia atmosferica (buio + fascio torcia)
 	_spawn_threats()                     # M4: corridoio + regista della minaccia
 
 # Crea l'OS in un SubViewport autonomo che gira SEMPRE (anche stando in stanza):
@@ -125,6 +130,21 @@ func _spawn_computer() -> void:
 	_pc_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pc_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pc_layer.add_child(_pc_fade)
+
+# Buio della stanza (M4): una WorldEnvironment creata in codice. NESSUNA nebbia: nero
+# pulito, controllato dalla sola luce ambientale bassa, cosi' la torcia da' un fascio
+# netto (stile FNAF 4). Vale per la stanza (il PC gira in un SubViewport separato).
+func _setup_atmosphere() -> void:
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.01, 0.012, 0.02)   # sfondo quasi nero
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.4, 0.45, 0.55)
+	env.ambient_light_energy = ambient_energy
+	var we := WorldEnvironment.new()
+	we.name = "Atmosphere"
+	we.environment = env
+	get_parent().add_child(we)
 
 # Crea la minaccia "stanza" (M4): spawna il regista (ThreatDirector). Il corridoio
 # con le porte (Marker3D nel gruppo "enemy_spots") e' un'istanza dentro main.tscn,
@@ -183,8 +203,9 @@ func _input(event):
 				# schermo del monitor: entra nel PC (se spento si vedra' "nessun segnale")
 				_enter_pc()
 		elif _threats != null:
-			# click su una porta del corridoio: punta la torcia (scaccia se e' la giusta)
-			_threats.torch_click_at(mouse_pos)
+			# flash della torcia: illumina il corridoio davanti a te (scaccia il nemico
+			# se ti sei girato verso la sua zona)
+			_threats.torch_flash()
 
 # Ricava il nome del CollisionShape3D colpito (CollisionShape3D = schermo, Computer = case).
 func _hit_part(body, shape_idx: int) -> String:

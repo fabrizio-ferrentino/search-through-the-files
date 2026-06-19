@@ -16,6 +16,14 @@ var window
 var _mat: ShaderMaterial
 var _sliders: Array = []   # [{ "node": HSlider, "default": float }]
 
+# --- Aspetto della scritta-chiave (REGOLA QUI) ---
+# Dimensione: frazione dell'altezza della foto. Piu' basso = scritta piu' piccola.
+const CODE_SIZE_FACTOR := 0.08
+# Trasparenza: piu' basso = piu' mimetizzata. Sotto 1 la foto TRASPARE attraverso la
+# scritta, cosi' su foto reali (con dettaglio) non resta una "macchia" piatta opaca.
+# (Troppo basso pero' la rende difficile da trovare anche regolando: 0.6 e' un buon punto.)
+const CODE_ALPHA := 0.6
+
 # Valori di default = identita' dello shader (vedi adjust.gdshader).
 const DEFAULTS := {
 	"brightness": 0.0,
@@ -99,7 +107,7 @@ func launch(node) -> void:
 	col.offset_top = 10
 	col.offset_right = -10
 	col.offset_bottom = -10
-	col.add_theme_constant_override("separation", 8)
+	col.add_theme_constant_override("separation", 25)
 	side.add_child(col)
 
 	var title := Label.new()
@@ -125,24 +133,41 @@ func launch(node) -> void:
 	if window:
 		window.set_title(str(data.get("name", "Visualizzatore immagini")))
 
-# Posiziona la scritta-chiave nel SubViewport: punto e rotazione casuali (seme stabile
-# per run), colore preso DALLA foto in quel punto +/- un piccolo scarto, cosi' si
-# mimetizza e si rivela solo regolando l'immagine.
+# Posiziona la scritta-chiave nel SubViewport. Sceglie la zona piu' LISCIA della foto
+# (minor dettaglio) fra alcuni candidati (seme stabile per run): su un'area piatta la
+# scritta e' invisibile all'apertura E si rivela regolando; su un'area di dettaglio si
+# noterebbe e non si rivelerebbe. Colore = media locale +/- un piccolo scarto, semi-
+# trasparente cosi' la foto traspare.
 func _place_code(vp: SubViewport, photo_tex: Texture2D, data: Dictionary, code: String) -> void:
 	var r := RandomNumberGenerator.new()
 	r.seed = int(data.get("code_seed", 0))
 	var vps := Vector2(vp.size)
-	var fsize: int = maxi(12, int(vps.y * 0.13))
+	var fsize: int = maxi(10, int(vps.y * CODE_SIZE_FACTOR))
 	var font := ThemeDB.fallback_font
 	var tsz := font.get_string_size(code, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize)
 	# margini per non far uscire la scritta (con un extra per la rotazione)
 	var mx: float = minf(0.45, (tsz.x * 0.5) / vps.x * 1.3 + 0.04)
 	var my: float = minf(0.45, (tsz.y * 0.5) / vps.y * 1.3 + 0.06)
-	var u := r.randf_range(mx, 1.0 - mx)
-	var v := r.randf_range(my, 1.0 - my)
-	var base := _sample_color_at(photo_tex, u, v)
+
+	# fra alcuni candidati, scegli quello con meno dettaglio (varianza piu' bassa)
+	var img := _photo_image(photo_tex)
+	var u := 0.5
+	var v := 0.5
+	var base := Color(0.5, 0.5, 0.5)
+	var best_var := INF
+	for _i in range(14):
+		var cu: float = r.randf_range(mx, 1.0 - mx)
+		var cv: float = r.randf_range(my, 1.0 - my)
+		var st := _region_stats(img, cu, cv)
+		if float(st["variance"]) < best_var:
+			best_var = float(st["variance"])
+			u = cu
+			v = cv
+			base = st["avg"]
+
 	var d: float = OSContent.PHOTO_KEY_DELTA * (1.0 if r.randf() < 0.5 else -1.0)
 	var c := Color(clampf(base.r + d, 0, 1), clampf(base.g + d, 0, 1), clampf(base.b + d, 0, 1))
+	c.a = CODE_ALPHA   # semi-trasparente: la foto traspare, niente "macchia" piatta
 
 	var lbl := Label.new()
 	lbl.text = code
@@ -152,7 +177,7 @@ func _place_code(vp: SubViewport, photo_tex: Texture2D, data: Dictionary, code: 
 	lbl.size = tsz
 	lbl.pivot_offset = tsz * 0.5
 	lbl.position = Vector2(u, v) * vps - tsz * 0.5
-	lbl.rotation = deg_to_rad(r.randf_range(-20.0, 20.0))
+	lbl.rotation = deg_to_rad(r.randf_range(-12.0, 12.0))
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vp.add_child(lbl)
 
@@ -164,17 +189,23 @@ func _fit_size(src: Vector2, maxv: Vector2) -> Vector2i:
 	var s: float = minf(1.0, minf(maxv.x / src.x, maxv.y / src.y))
 	return Vector2i(maxi(8, int(src.x * s)), maxi(8, int(src.y * s)))
 
-# Colore medio attorno al punto (u,v) della foto: serve a scegliere un colore di testo
-# che si mimetizzi con lo sfondo locale. Gestisce anche le texture compresse.
-func _sample_color_at(tex: Texture2D, u: float, v: float) -> Color:
+# Decomprime la foto in un Image una volta sola (gestisce le texture compresse).
+func _photo_image(tex: Texture2D) -> Image:
 	if tex == null:
-		return Color(0.5, 0.5, 0.5)
+		return null
 	var img := tex.get_image()
 	if img == null:
-		return Color(0.5, 0.5, 0.5)
+		return null
 	img = img.duplicate() as Image
 	if img.is_compressed() and img.decompress() != OK:
-		return Color(0.5, 0.5, 0.5)
+		return null
+	return img
+
+# Statistiche locali attorno a (u,v): colore medio (per mimetizzare il testo) e varianza
+# di luminanza (quanto e' "dettagliata" la zona: bassa = liscia = buon nascondiglio).
+func _region_stats(img: Image, u: float, v: float) -> Dictionary:
+	if img == null:
+		return {"avg": Color(0.5, 0.5, 0.5), "variance": 0.0}
 	var w := img.get_width()
 	var h := img.get_height()
 	var cxp := int(clampf(u, 0, 1) * (w - 1))
@@ -184,6 +215,8 @@ func _sample_color_at(tex: Texture2D, u: float, v: float) -> Color:
 	var sr := 0.0
 	var sg := 0.0
 	var sb := 0.0
+	var sl := 0.0
+	var sl2 := 0.0
 	var n := 0
 	for y in range(maxi(0, cyp - rad), mini(h, cyp + rad), step):
 		for x in range(maxi(0, cxp - rad), mini(w, cxp + rad), step):
@@ -191,10 +224,14 @@ func _sample_color_at(tex: Texture2D, u: float, v: float) -> Color:
 			sr += col.r
 			sg += col.g
 			sb += col.b
+			var l := (col.r + col.g + col.b) / 3.0
+			sl += l
+			sl2 += l * l
 			n += 1
 	if n == 0:
-		return Color(0.5, 0.5, 0.5)
-	return Color(sr / n, sg / n, sb / n)
+		return {"avg": Color(0.5, 0.5, 0.5), "variance": 0.0}
+	var mean_l := sl / n
+	return {"avg": Color(sr / n, sg / n, sb / n), "variance": maxf(0.0, sl2 / n - mean_l * mean_l)}
 
 # Crea una riga "etichetta + cursore" legata a un uniforme dello shader.
 func _add_slider(parent: VBoxContainer, text: String, param: String, minv: float, maxv: float) -> void:

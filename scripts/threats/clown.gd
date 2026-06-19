@@ -16,6 +16,11 @@ var _shown_pos: Vector3             # posa visibile (sulla porta)
 var _hidden_pos: Vector3            # posa nascosta (di lato, dietro lo stipite)
 var _tween: Tween
 
+# Parte SEMPRE nascosto (il prefab ha visible=true di default): cosi' all'avvio non
+# "scivola" verso l'origine prima di sparire, e dismiss() resta un no-op finche' non appare.
+func _ready() -> void:
+	visible = false
+
 # Compare a uno spot (porta) sgusciando fuori di lato, rivolto verso il giocatore.
 func appear_at(spot_pos: Vector3, look_target: Vector3) -> void:
 	_shown_pos = spot_pos
