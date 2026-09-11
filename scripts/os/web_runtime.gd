@@ -56,8 +56,12 @@ static func build() -> void:
 	if _chosen.size() > SITE_COUNT:
 		_chosen = _chosen.slice(0, SITE_COUNT)
 	_key = GameManager.key_label(OSContent.KEY_WEB)
+	# il portatore e' sempre un SITO d'autore: la wiki generata non puo' esserlo,
+	# cosi' la chiave non finisce mai nell'indice (come in WTTG2)
 	var c: Dictionary = _chosen[rng.randi_range(0, _chosen.size() - 1)]
 	_carrier = str(c["file"])
+	if _carrier == HOME:
+		_carrier = ""
 	_visible = rng.randf() < 0.5
 	if _key == "":
 		_text = ""
@@ -71,9 +75,82 @@ static func _ensure() -> void:
 	if _built_seed != GameManager.run_seed or _chosen.is_empty():
 		build()
 
-# Home (gateway) generata dai 5 siti del run: logo + "I TUOI PREFERITI" (featured) +
-# "[ SITI VISITATI DI RECENTE ]" (gli altri, in Courier) + footer. Stile "legacy" reso
-# dal renderer. I link puntano a "<file>.html" (solo i 5 scelti: niente link morti).
+# ============================================================
+# LA WIKI (home del browser)
+# ------------------------------------------------------------
+# E' il "gateway" da cui il giocatore parte: elenca i 5 siti estratti per questo
+# run e nient'altro. Modellata sul mockup scritto a mano dal proprietario del
+# progetto (web/webnet.html): logo LOCALNET, riquadro bianco al 70% centrato su
+# sfondo grigio, sezione PREFERITI + sezione SITI VISITATI DI RECENTE in Courier,
+# footer dell'ISP.
+#
+# La CHIAVE del run non finisce MAI qui: la wiki e' solo un indice (come in WTTG2).
+# La chiave vive su UNO dei siti elencati — vedi source_html() — e il portatore si
+# sceglie fra i file del pool, mai fra le pagine generate.
+#
+# Il riquadro e' al 70% grazie a <table width="70%">, che il compilatore realizza
+# con una spacer trasparente (vedi HtmlBB._spacer_row): serve che il browser passi
+# ctx["page_width"], cosa che fa da solo.
+# ============================================================
+
+const HOME := "home"          # nome di pagina della wiki (non e' un file)
+
+const _HOME_TEMPLATE := """<html>
+<head><title>Benvenuto su WebNet Gateway v3.1</title></head>
+<body bgcolor="#C0C0C0" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<center>
+  <font face="Arial Black, Arial, Helvetica" size="6" color="#000080"><u>LOCAL<b>NET</b></u> <font size="4" color="#FF0000">GATEWAY</font></font><br>
+  <font face="Verdana" size="1">Il tuo punto d'accesso all'Autostrada dell'Informazione</font>
+</center>
+
+<div align="center">
+<table border="1" bordercolorlight="#FFFFFF" bordercolordark="#808080" cellpadding="8" cellspacing="0" width="70%%" bgcolor="#FFFFFF">
+%s</table>
+</div>
+
+<br>
+
+<center><font face="Arial" size="1">
+<hr width="50%%" size="1">
+Sito registrato presso WebNet ISP &copy; 1998<br>
+Per eventuali problemi contatta il tuo provider
+</font></center>
+
+</body>
+</html>
+"""
+
+# Intestazione di sezione (la barra grigia / blu navy del mockup).
+static func _header_row(testo: String, colore: String) -> String:
+	return "  <tr bgcolor=\"" + colore + "\"><td><font face=\"Arial\" size=\"2\" color=\"#FFFFFF\"><b>" + testo + "</b></font></td></tr>
+"
+
+# Voce dei PREFERITI: nome in grassetto + descrizione grigia.
+static func _fav_row(sito: Dictionary) -> String:
+	var file := str(sito["file"])
+	var r := "  <tr><td>&nbsp;<font face=\"Arial\" size=\"3\"><a href=\"" + file + ".html\"><b>" + str(sito["name"]) + "</b></a></font><br>
+"
+	r += "  &nbsp;<font face=\"Arial\" size=\"2\" color=\"#555555\">" + str(sito.get("desc", "")) + "</font></td></tr>
+"
+	return r
+
+# Voce della CRONOLOGIA: peso finto, nome, indirizzo digitabile, descrizione.
+# L'indirizzo in chiaro serve anche da promemoria: si puo' scrivere nella barra.
+static func _recent_row(sito: Dictionary) -> String:
+	var file := str(sito["file"])
+	var kb := 8 + (file.length() * 7) % 90
+	var r := "  <tr><td><font face=\"Courier New\" size=\"2\">"
+	r += "[" + str(kb) + " KB] &raquo; <a href=\"" + file + ".html\"><b>" + str(sito["name"]) + "</b></a><br>
+"
+	r += "  <font color=\"#555555\">http://" + file + "</font><br>
+"
+	r += "  <font color=\"#333333\">&gt;&gt; " + str(sito.get("desc", "")) + "</font></font></td></tr>
+"
+	return r
+
+# Costruisce la wiki dai 5 siti del run: i "featured" fra i preferiti, gli altri
+# nella cronologia. Niente link morti: si elencano solo i siti estratti.
 static func home_html() -> String:
 	_ensure()
 	var featured: Array = []
@@ -83,28 +160,16 @@ static func home_html() -> String:
 			featured.append(s)
 		else:
 			recent.append(s)
-	var h := "<html><head><title>Benvenuto su WebNet Gateway v3.1</title></head>"
-	h += "<body bgcolor=\"#C0C0C0\" text=\"#000000\" link=\"#0000FF\" vlink=\"#800080\">"
-	h += "<center><font face=\"Arial Black, Arial\" size=\"6\" color=\"#000080\"><u>LOCAL<b>NET</b></u> "
-	h += "<font size=\"4\" color=\"#FF0000\">GATEWAY</font></font><br>"
-	h += "<font face=\"Verdana\" size=\"1\">Il tuo punto d'accesso all'Autostrada dell'Informazione</font><br><br></center>"
-	h += "<div align=\"center\"><table border=\"1\" bordercolorlight=\"#FFFFFF\" bordercolordark=\"#808080\" cellpadding=\"8\" cellspacing=\"0\" width=\"70%\" bgcolor=\"#FFFFFF\">"
+	var righe := ""
 	if not featured.is_empty():
-		h += "<tr bgcolor=\"#808080\"><td><font face=\"Arial\" size=\"2\" color=\"#FFFFFF\"><b>I TUOI PREFERITI:</b></font></td></tr>"
+		righe += _header_row("I TUOI PREFERITI:", "#808080")
 		for s in featured:
-			h += "<tr><td>&nbsp;<font face=\"Arial\" size=\"3\"><a href=\"" + str(s["file"]) + ".html\"><b>" + str(s["name"]) + "</b></a></font><br>"
-			h += "&nbsp;<font face=\"Arial\" size=\"2\" color=\"#555555\">" + str(s.get("desc", "")) + "</font></td></tr>"
+			righe += _fav_row(s)
 	if not recent.is_empty():
-		h += "<tr bgcolor=\"#000080\"><td><font face=\"Arial\" size=\"2\" color=\"#FFFFFF\"><b>[ SITI VISITATI DI RECENTE ]</b></font></td></tr>"
+		righe += _header_row("[ SITI VISITATI DI RECENTE ]", "#000080")
 		for s in recent:
-			var kb := 8 + (str(s["file"]).length() * 7) % 90
-			h += "<tr><td><font face=\"Courier New\" size=\"2\">[" + str(kb) + " KB] &raquo; <a href=\"" + str(s["file"]) + ".html\"><b>" + str(s["name"]) + "</b></a><br>"
-			h += "<font color=\"#333333\">&gt;&gt; " + str(s.get("desc", "")) + "</font></font></td></tr>"
-	h += "</table></div><br>"
-	h += "<center><font face=\"Arial\" size=\"1\"><hr width=\"50%\" size=\"1\">"
-	h += "Sito registrato presso WebNet ISP &copy; 1998<br>Per eventuali problemi contatta il tuo provider</font></center>"
-	h += "</body></html>"
-	return h
+			righe += _recent_row(s)
+	return _HOME_TEMPLATE % righe
 
 # HTML d'autore con la chiave iniettata, SE questa pagina e' il portatore del run. In
 # modalita' "visibile" un paragrafo legacy (reso e selezionabile); altrimenti un commento
@@ -112,8 +177,8 @@ static func home_html() -> String:
 # pagina (commenti rimossi) sia per il sorgente (commenti inclusi).
 static func source_html(page: String, src: String) -> String:
 	_ensure()
-	if page != _carrier or _key == "":
-		return src
+	if page == HOME or page != _carrier or _key == "":
+		return src   # la wiki resta pulita: nessuna chiave, ne' visibile ne' nel sorgente
 	var snippet := ""
 	if _visible:
 		# niente color fisso: eredita il colore testo della pagina (leggibile anche sulle pagine scure)

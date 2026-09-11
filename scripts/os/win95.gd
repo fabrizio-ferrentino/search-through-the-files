@@ -16,6 +16,36 @@ const C_TEXT := Color("000000")
 const C_SELECT := Color("000080")
 const C_LINK := Color("0000ee")
 
+# --- font d'epoca (assets/fonts/, licenza SIL OFL 1.1) ---
+# Arimo = clone metrico di Arial (il sans del web anni '90 e della UI Win95),
+# Cousine = clone metrico di Courier New (le pagine con face="Courier New").
+# Sono gli stessi font per la UI dell'OS e per le pagine del browser: cosi' il
+# finto sistema e il finto web hanno lo stesso sapore d'epoca.
+const FONT_DIR := "res://assets/fonts/"
+const _FONT_FILES := {
+	"sans": "Arimo-Regular.ttf",
+	"sans_b": "Arimo-Bold.ttf",
+	"sans_i": "Arimo-Italic.ttf",
+	"sans_bi": "Arimo-BoldItalic.ttf",
+	"mono": "Cousine-Regular.ttf",
+	"mono_b": "Cousine-Bold.ttf",
+}
+static var _fonts: Dictionary = {}
+
+# Font condiviso per nome (vedi _FONT_FILES). Se il file non c'e' si ripiega sul
+# font di sistema, cosi' il gioco parte comunque.
+static func font(nome := "sans") -> Font:
+	if _fonts.has(nome):
+		return _fonts[nome]
+	var f: Font = ThemeDB.fallback_font
+	var path: String = FONT_DIR + str(_FONT_FILES.get(nome, ""))
+	if ResourceLoader.exists(path):
+		var res = load(path)
+		if res is Font:
+			f = res
+	_fonts[nome] = f
+	return f
+
 # Disegna un bordo 3D in stile Win95 (rilevato o incassato) sul canvas item dato.
 static func bevel_rid(ci: RID, rect: Rect2, raised: bool, double: bool = true) -> void:
 	var x := rect.position.x
@@ -38,7 +68,7 @@ static func bevel_rid(ci: RID, rect: Rect2, raised: bool, double: bool = true) -
 
 # Larghezza adatta per un menu, in base alla voce di testo piu' lunga.
 static func menu_width(labels: Array, min_w := 120.0) -> float:
-	var f := ThemeDB.fallback_font
+	var f := font()
 	var w := min_w
 	for s in labels:
 		w = max(w, f.get_string_size(str(s), HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x + 38.0)
@@ -58,7 +88,7 @@ static func _sb(raised: bool, bg: Color, double: bool, ml: int, mt: int, mr: int
 # Tema globale applicato alla radice dell'OS: i figli ereditano.
 static func make_theme() -> Theme:
 	var t := Theme.new()
-	t.default_font = ThemeDB.fallback_font
+	t.default_font = font()
 	t.default_font_size = 18
 
 	# Button (rilevato; premuto = incassato)
@@ -107,7 +137,18 @@ static func make_theme() -> Theme:
 	# Label / ScrollContainer
 	t.set_color("font_color", "Label", C_TEXT)
 
-	# RichTextLabel (pagine del browser): selezione blu navy con testo bianco
+	# RichTextLabel (pagine del browser): font d'epoca in tutti gli slot, cosi'
+	# <b>/<i> e face="Courier New" (-> [code]) restano nella stessa famiglia.
+	t.set_font("normal_font", "RichTextLabel", font("sans"))
+	t.set_font("bold_font", "RichTextLabel", font("sans_b"))
+	t.set_font("italics_font", "RichTextLabel", font("sans_i"))
+	t.set_font("bold_italics_font", "RichTextLabel", font("sans_bi"))
+	t.set_font("mono_font", "RichTextLabel", font("mono"))
+	# celle attaccate, come cellspacing="0" dell'HTML d'epoca (e cosi' la riga
+	# invisibile che impone la larghezza delle tabelle non lascia un filo grigio)
+	t.set_constant("table_h_separation", "RichTextLabel", 0)
+	t.set_constant("table_v_separation", "RichTextLabel", 0)
+	# selezione blu navy con testo bianco
 	t.set_color("selection_color", "RichTextLabel", C_SELECT)
 	t.set_color("font_selected_color", "RichTextLabel", C_TITLE_TEXT)
 	return t

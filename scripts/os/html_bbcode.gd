@@ -7,20 +7,32 @@ extends RefCounted
 # tutto il documento, i link sono [url] nativi (meta_clicked) e le tabelle sono
 # [table]/[cell] con sfondo/bordo/padding. Usato da BrowserApp._render_html.
 #
-# Sottoinsieme supportato: b/i/u, font(color/size), h1-h6, br, p(align), center,
-# div(align), a(href), hr(width/size/color), ul/ol/li, blockquote, img(src/width/
-# height), input(type/value), table/tr/td/th (border/bgcolor/cellpadding; bgcolor
-# per riga e per cella, align per cella). NON supportati: CSS, colspan/rowspan,
-# width % delle tabelle (la larghezza e' guidata dal CONTENUTO: una cella con
-# testo che va a capo porta la tabella a tutta pagina).
+# Sottoinsieme supportato: b/i/u, font(color/size/face), h1-h6, br, p(align),
+# center, div(align), a(href), hr(width/size/color), ul/ol/li, blockquote,
+# img(src/width/height), input(type/value), table/tr/td/th (border/bgcolor/
+# cellpadding/width/align; bgcolor per riga e per cella, align per cella).
+# NON supportati: CSS, colspan/rowspan.
 #
-# NOTE comportamento RichTextLabel (verificato in tests/selection_ghost.gd):
-# - [cell expand=N] NON allarga la tabella: inutile, non lo emettiamo;
+# NOTE comportamento RichTextLabel (verificato in tests/table_width_probe e
+# tests/selection_ghost.gd):
+# - [cell expand=N] NON allarga la tabella e la larghezza e' guidata dal
+#   CONTENUTO, percio' <table width="N%"> lo realizziamo col trucco d'epoca
+#   della "spacer.gif": una riga finale con un'immagine trasparente larga
+#   esattamente quanto serve (vedi _table). Serve ctx["page_width"] in pixel;
+#   senza quello la larghezza resta quella del contenuto.
+# - [center] INVECE funziona sulle tabelle: <table align="center"> e le tabelle
+#   dentro <center>/<div align="center"> vengono centrate.
 # - la selezione include le celle solo se ATTRAVERSA tutta la tabella;
 # - [hr] e' nativo in Godot 4.6.
+# - face=: "Courier New"/monospace -> [code] (slot mono del tema); gli altri
+#   restano il sans del tema (Arimo ~ Arial), che e' cio' che le pagine chiedono.
 # ============================================================
 
 const IMG_DIR := "res://web/img/"
+
+# Immagine 1x1 trasparente: allarga una tabella a una misura precisa senza
+# comparire (il vecchio trucco dello "spacer.gif" del web anni '90).
+const SPACER_IMG := "res://web/img/spacer.png"
 
 const _ENTITIES := {
 	"&nbsp;": " ", "&copy;": "©", "&raquo;": "»", "&laquo;": "«",
@@ -87,7 +99,11 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 		match nm:
 			"table":
 				var endt := _table_end(html, i)
-				out += _close_all(stack) + "\n" + _table(html.substr(i, endt - i), tag, ctx) + "\n" + _reopen_all(stack)
+				var tbb := _table(html.substr(i, endt - i), tag, ctx)
+				# <table align="center">, o tabella dentro <center>/<div align="center">
+				if _attr(tag, "align").to_lower() == "center" or _has_center(stack):
+					tbb = "[center]" + tbb + "[/center]"
+				out += _close_all(stack) + "\n" + tbb + "\n" + _reopen_all(stack)
 				var close_gt := html.find(">", endt)
 				i = (close_gt + 1) if close_gt >= 0 else n
 			"br":
@@ -137,6 +153,10 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 			"font":
 				var open := ""
 				var close := ""
+				var face := _attr(tag, "face").to_lower()
+				if face.find("courier") >= 0 or face.find("mono") >= 0 or face.find("fixedsys") >= 0:
+					open += "[code]"                     # slot mono del tema
+					close = "[/code]" + close
 				var col := _attr(tag, "color")
 				if col != "":
 					open += "[color=" + _col(col) + "]"
@@ -150,6 +170,14 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 				pass   # tag sconosciuto: il contenuto scorre comunque
 	out += _close_all(stack)
 	return out
+
+# True se nello stack c'e' un contesto centrato (<center> o <div align="center">):
+# le tabelle vengono emesse FUORI dallo stack, quindi la centratura va riapplicata.
+static func _has_center(stack: Array) -> bool:
+	for e in stack:
+		if str(e.get("open", "")).find("[center]") >= 0:
+			return true
+	return false
 
 # ---------------- blocchi ----------------
 
@@ -219,8 +247,41 @@ static func _table(inner: String, tag: String, ctx: Dictionary) -> String:
 				match str(cd.get("align", "")).to_lower():
 					"center": content = "[center]" + content + "[/center]"
 					"right": content = "[right]" + content + "[/right]"
+					_:
+						# come in HTML una <td> e' allineata a sinistra: [left] serve a
+						# non ereditare il [center] di una tabella centrata
+						content = "[left]" + content + "[/left]"
 			bb += "[cell" + opts + "]" + content + "[/cell]"
+	bb += _spacer_row(tag, ncols, pad, tbg, ctx)
 	return bb + "[/table]"
+
+# <table width="70%"> / width="500": la larghezza di una [table] BBCode e' guidata
+# dal CONTENUTO, quindi la imponiamo col trucco d'epoca della "spacer.gif" — una
+# riga finale, senza bordo e alta 1 px, con un'immagine trasparente larga quanto
+# serve. Con piu' colonne la misura viene spartita in parti uguali.
+# Richiede ctx["page_width"] (pixel utili della pagina) per le percentuali.
+static func _spacer_row(tag: String, ncols: int, pad: int, tbg: String, ctx: Dictionary) -> String:
+	var w := _attr(tag, "width").strip_edges()
+	if w == "" or ncols <= 0:
+		return ""
+	var target := 0.0
+	if w.ends_with("%"):
+		ctx["uses_width"] = true          # il browser ricompila quando cambia la larghezza
+		var disponibile := float(ctx.get("page_width", 0.0))
+		if disponibile <= 0.0:
+			return ""                     # larghezza di pagina ancora sconosciuta
+		target = disponibile * clampf(w.trim_suffix("%").to_float(), 1.0, 100.0) / 100.0
+	else:
+		target = w.to_float()
+	if target < 16.0:
+		return ""
+	# la cella ci aggiunge il proprio padding orizzontale piu' un paio di px di bordo
+	var larghezza: int = int(maxf(8.0, target / float(ncols) - float(2 * pad + 2)))
+	var opts := " padding=0,0,0,0"
+	if tbg != "":
+		opts += " bg=" + _col(tbg)
+	var cella := "[cell" + opts + "][img width=%d height=1]%s[/img][/cell]" % [larghezza, SPACER_IMG]
+	return cella.repeat(ncols)
 
 # Indice del "</table>" che chiude la tabella aperta (gestisce l'annidamento).
 static func _table_end(html: String, from: int) -> int:

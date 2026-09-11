@@ -58,6 +58,34 @@ func _ready() -> void:
 	var c := img.get_pixel(720, 700)
 	_check("MISTERI_SCURA", c.r < 0.15 and c.g < 0.15 and c.b < 0.15, "sfondo non scuro: %s" % str(c))
 
+	# --- blog: il banner <table width="92%"> deve arrivare davvero al 92% della
+	# pagina (la larghezza delle [table] BBCode e' guidata dal contenuto: la impone
+	# la "spacer" trasparente di HtmlBB._spacer_row) ---
+	_browser._load("blog")
+	txt = await _snap("web_blog.png")
+	_check("BLOG", txt.find("Jack99") >= 0, "blog.html non renderizzato")
+	await RenderingServer.frame_post_draw
+	var bimg := _sub.get_texture().get_image()
+	var banda := 0
+	for y in range(100, 260):
+		var conta := 0
+		for x in range(0, VP_SIZE.x):
+			var bp := bimg.get_pixel(x, y)
+			if absf(bp.r - 0.188) < 0.07 and absf(bp.g - 0.188) < 0.07 and absf(bp.b - 0.188) < 0.07:
+				conta += 1
+		banda = maxi(banda, conta)
+	_check("TABELLA_LARGHEZZA", banda > 1100, "il banner width=92%% risulta largo %d px su %d" % [banda, VP_SIZE.x])
+
+	# --- la WIKI (home) non deve MAI contenere la chiave del run ---
+	_browser._load("home")
+	for i in range(3):
+		await get_tree().process_frame
+	var kl0: String = GameManager.key_label(OSContent.KEY_WEB)
+	var wiki_txt: String = _browser._rtl.get_parsed_text()
+	var wiki_src: String = _browser._html_text
+	_check("WIKI_SENZA_CHIAVE", kl0 != "" and wiki_txt.find(kl0) < 0 and wiki_src.find(kl0) < 0,
+			"la chiave %s compare nella wiki" % kl0)
+
 	# --- selezione col drag sulla pagina del forum ---
 	_browser._load("forum")
 	for i in range(4):

@@ -28,9 +28,10 @@ var _forward: Array = []
 var _html_text := ""                # sorgente (con chiave iniettata) per "visualizza sorgente"
 
 var _resizing := false               # trascinamento maniglia dell'ispettore
+var _reflow_width := -1.0            # se >= 0: la pagina ha tabelle in % -> ricompila se cambia
 
 const PAGES_DIR := "res://web/pages/"
-var _home := "home"
+var _home := WebRuntime.HOME      # la wiki: pagina generata, non un file
 
 func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -109,6 +110,7 @@ func launch(arg) -> void:
 	_rtl.add_theme_stylebox_override("normal", pad)
 	_rtl.add_theme_font_size_override("normal_font_size", 16)
 	_rtl.meta_clicked.connect(_on_meta)         # UNICO meccanismo di navigazione
+	_rtl.resized.connect(_on_page_resized)
 	page_area.add_child(_rtl)
 
 	_build_inspector(root)
@@ -189,7 +191,23 @@ func _load(name: String) -> void:
 func _render_html(body: String) -> void:
 	_page_bg.color = _body_bg(_html_text)
 	_rtl.add_theme_color_override("default_color", _body_text(_html_text))
-	_rtl.set_page(HtmlBB.compile(body, {"link_color": _body_link(_html_text)}))
+	var ctx := {"link_color": _body_link(_html_text), "page_width": _page_width()}
+	_rtl.set_page(HtmlBB.compile(body, ctx))
+	# le tabelle con width="N%" dipendono dalla larghezza: se la pagina ne ha,
+	# ricompiliamo quando la finestra cambia misura (come il reflow di un browser)
+	_reflow_width = _page_width() if bool(ctx.get("uses_width", false)) else -1.0
+
+# Larghezza utile della pagina in pixel (tolti i margini): serve alle tabelle in %.
+func _page_width() -> float:
+	return maxf(0.0, _rtl.size.x - 2.0 * PageView.PAD)
+
+# Ricompila la pagina alla nuova larghezza (solo se contiene tabelle in %).
+func _on_page_resized() -> void:
+	if _reflow_width < 0.0 or _html_text == "":
+		return
+	if absf(_page_width() - _reflow_width) < 2.0:
+		return
+	_render_html(_strip_comments(_body_inner(_html_text)))
 
 func _on_meta(meta) -> void:
 	_go(_norm(str(meta)))
@@ -384,7 +402,7 @@ func _build_inspector(root: Control) -> void:
 	_inspector_edit.editable = false
 	_inspector_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_inspector_edit.add_theme_font_size_override("font_size", 15)
-	_inspector_edit.add_theme_font_override("font", ThemeDB.fallback_font)
+	_inspector_edit.add_theme_font_override("font", Win95.font("mono"))   # e' codice: monospace
 	_inspector.add_child(_inspector_edit)
 
 # Trascina la maniglia in cima all'ispettore per cambiarne l'altezza.
