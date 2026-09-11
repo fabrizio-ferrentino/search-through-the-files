@@ -1,3 +1,10 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+# Da rimuovere quando raggunto una versione stabile del gioco
+CLAUDE.MD
+README.md
+/docs/
+/assets/textures/3d/clown/
+/assets/textures/photos/
+web/

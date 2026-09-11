@@ -89,11 +89,14 @@ func _process(delta: float) -> void:
 	_update_heat(delta)
 	_update_torch(delta)
 	# Debug: minacce disabilitate (F11): niente affacci, niente game_over.
-	# Torcia e batteria restano attive.
+	# Torcia e batteria restano attive. Si resta in CALM cosi' riattivando si riparte
+	# da una finestra sicura (mai un PEEK "congelato" che ti uccide al riavvio).
 	if not GameManager.threats_enabled:
 		if _clown != null and _clown.visible:
 			_clown.dismiss()
 		_reset_tell()
+		_state = State.CALM
+		_timer = 0.0
 		return
 	if _state == State.GRACE:
 		_timer += delta

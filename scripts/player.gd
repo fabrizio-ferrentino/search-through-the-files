@@ -33,6 +33,7 @@ var _os_viewport: SubViewport = null   # qui vive l'OS, rende sempre (monitor da
 var _os = null                         # OSDesktop
 var _pc_layer: CanvasLayer = null      # overlay a tutto schermo (vista "dentro il PC")
 var _pc_bg: ColorRect = null           # sfondo nero dell'overlay (porta il cursore reale)
+var _os_mouse_in := false              # la SubViewport dell'OS sa che il mouse e' su di lei?
 var _pc_fade: ColorRect = null         # rettangolo nero per le dissolvenze dell'overlay
 var _screen_tex: ImageTexture = null   # texture del monitor 3D (aggiornata dal SubViewport)
 var _poll_accum := 0.0
@@ -228,6 +229,19 @@ func _forward_to_os(event: InputEvent) -> void:
 		ev.position = event.position - Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
 	_os_viewport.push_input(ev, true)
 
+# Una SubViewport che riceve input INOLTRATO non sa che il mouse e' nella sua area:
+# con quel flag a falso il Viewport consegna i movimenti del mouse ai controlli solo
+# mentre un tasto e' premuto, quindi niente hover (evidenziazioni, menu, forma del
+# cursore) muovendo il mouse. Va detto a mano entrando/uscendo dal PC.
+func _set_os_mouse_in(dentro: bool) -> void:
+	if _os_viewport == null or _os_mouse_in == dentro:
+		return
+	_os_mouse_in = dentro
+	if dentro:
+		_os_viewport.notify_mouse_entered()
+	else:
+		_os_viewport.notify_mouse_exited()
+
 # Aggiorna il cursore reale dell'overlay PC chiedendo all'OS la forma per il punto
 # sotto il mouse. Il SubViewport non pilota il cursore reale: lo applichiamo qui sul
 # ColorRect dell'overlay, l'unico Control del viewport principale sotto il mouse.
@@ -277,6 +291,7 @@ func _show_pc_overlay() -> void:
 	_pc_fade.color.a = 0.0
 	_pc_layer.visible = true
 	entering = false
+	_set_os_mouse_in(true)
 
 # Esce dalla vista PC (ESC o "Annulla"): l'OS va al nero, si nasconde l'overlay e
 # la telecamera torna indietro rivelando la stanza. L'OS resta com'e' (acceso/login/desktop).
@@ -284,6 +299,7 @@ func _exit_pc() -> void:
 	if not _in_pc or entering:
 		return
 	entering = true
+	_set_os_mouse_in(false)
 	# l'OS puo' aver lasciato un cursore di resize sull'overlay: torna alla freccia
 	if _pc_bg:
 		_pc_bg.mouse_default_cursor_shape = Control.CURSOR_ARROW
@@ -303,6 +319,7 @@ func _on_game_won() -> void:
 	if _pc_layer:
 		_pc_layer.visible = false
 	_in_pc = false
+	_set_os_mouse_in(false)
 	_show_ending()
 
 # Schermata finale a tutto schermo (sopra ogni cosa), con ritorno al menu.

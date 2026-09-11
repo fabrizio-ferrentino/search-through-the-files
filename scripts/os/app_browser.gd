@@ -1,30 +1,36 @@
 class_name BrowserApp
 extends Control
 
-# Browser finto: barra indirizzi, navigazione tra pagine e "Ispeziona elemento"
-# che mostra il (presunto) codice HTML, generato dalla stessa descrizione della pagina.
+# Browser del gioco: la pagina e' UN SOLO RichTextLabel, compilato dall'HTML
+# "legacy" (web/pages/*.html) in BBCode da HtmlBB (scripts/os/html_bbcode.gd).
+# Cosi' la selezione col mouse e' CONTINUA su tutto il documento (celle di
+# tabella comprese), i link sono [url] nativi (meta_clicked: naviga al rilascio
+# solo se il clic non era un trascinamento — come un browser vero) e la pagina
+# scorre/riflette da sola. La chiave web per-run la inietta WebRuntime al
+# caricamento (testo visibile o commento). Niente motore esterno: leggero.
+
 var os
 var window
 
 var _addr: LineEdit
-var _page_vbox: VBoxContainer
-var _scroll: ScrollContainer
+var _rtl: PageView                  # la pagina: un solo documento BBCode
 var _page_bg: ColorRect
-var _inspector: Control
+var _inspector: VBoxContainer
 var _inspector_edit: TextEdit
-var _resizing := false
 
 var _ctx_layer: Control
 var _ctx_menu: VBoxContainer
-var _ctx_idx := -1
+var _ctx_copy: Button               # voce "Copia" (attiva solo con una selezione)
 
 var _current := ""
 var _back: Array = []
 var _forward: Array = []
-var _html_text := ""
-var _line_map: Dictionary = {}
+var _html_text := ""                # sorgente (con chiave iniettata) per "visualizza sorgente"
 
-static var _pages_cache: Dictionary = {}
+var _resizing := false               # trascinamento maniglia dell'ispettore
+
+const PAGES_DIR := "res://web/pages/"
+var _home := "home"
 
 func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -33,7 +39,7 @@ func launch(arg) -> void:
 	root.add_theme_constant_override("separation", 2)
 	add_child(root)
 
-	# --- barra dei menu ---
+	# --- barra menu ---
 	var menubar := HBoxContainer.new()
 	menubar.add_theme_constant_override("separation", 2)
 	for m in ["File", "Modifica", "Visualizza", "Preferiti", "?"]:
@@ -44,21 +50,21 @@ func launch(arg) -> void:
 		menubar.add_child(mb)
 	root.add_child(menubar)
 
-	# --- barra strumenti (icone) ---
+	# --- barra strumenti ---
 	var toolbar := HBoxContainer.new()
 	toolbar.add_theme_constant_override("separation", 2)
 	root.add_child(toolbar)
-	toolbar.add_child(_icon_btn("back", _go_back))                    # funzionante
-	toolbar.add_child(_icon_btn("fwd", _go_forward))                 # funzionante
-	toolbar.add_child(_icon_btn("stop"))                             # finto
-	toolbar.add_child(_icon_btn("refresh", func(): _load(_current))) # funzionante
-	toolbar.add_child(_icon_btn("home", func(): _go("start")))       # funzionante
+	toolbar.add_child(_icon_btn("back", _go_back))
+	toolbar.add_child(_icon_btn("fwd", _go_forward))
+	toolbar.add_child(_icon_btn("stop"))
+	toolbar.add_child(_icon_btn("refresh", func(): _load(_current)))
+	toolbar.add_child(_icon_btn("home", _go_home))
 	toolbar.add_child(_vsep())
-	toolbar.add_child(_icon_btn("search", func(): _toggle_inspector())) # Ispeziona
-	toolbar.add_child(_icon_btn("star"))                             # finto (Preferiti)
-	toolbar.add_child(_icon_btn("print"))                            # finto
+	toolbar.add_child(_icon_btn("search", _view_source))   # "Visualizza sorgente"
+	toolbar.add_child(_icon_btn("star"))
+	toolbar.add_child(_icon_btn("print"))
 
-	# --- barra indirizzo (stile combo) ---
+	# --- barra indirizzo ---
 	var addrbar := HBoxContainer.new()
 	addrbar.add_theme_constant_override("separation", 6)
 	root.add_child(addrbar)
@@ -74,19 +80,9 @@ func launch(arg) -> void:
 	addrbar.add_child(gicon)
 	_addr = LineEdit.new()
 	_addr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_addr.placeholder_text = "Digita un indirizzo, es. http://news.com"
+	_addr.placeholder_text = "Digita un indirizzo, es. http://news"
 	_addr.text_submitted.connect(_on_addr_submit)
 	addrbar.add_child(_addr)
-	var drop := Button.new()
-	drop.custom_minimum_size = Vector2(20, 24)
-	drop.focus_mode = Control.FOCUS_NONE
-	var di := OSIcon.new()
-	di.kind = "dropdown"
-	di.size = Vector2(16, 16)
-	di.position = Vector2(2, 4)
-	di.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	drop.add_child(di)
-	addrbar.add_child(drop)
 	addrbar.add_child(_text_btn("Vai", func(): _on_addr_submit(_addr.text)))
 
 	# --- area pagina ---
@@ -101,29 +97,420 @@ func launch(arg) -> void:
 	_page_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	page_area.add_child(_page_bg)
 
-	_scroll = ScrollContainer.new()
-	_scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_scroll.gui_input.connect(_on_bg_input)
-	page_area.add_child(_scroll)
+	# La pagina: un PageView (RichTextLabel specializzato, scripts/os/page_view.gd).
+	# Lui gestisce clic vs trascinamento, selezione e forma del cursore: il nodo
+	# nudo, con l'input inoltrato nella SubViewport, selezionava una frase a ogni
+	# clic e mangiava i link. Lo scroll resta quello nativo dell'RTL (rotella +
+	# auto-scroll mentre trascini la selezione oltre il bordo).
+	_rtl = PageView.new()
+	_rtl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var pad := StyleBoxEmpty.new()
+	pad.set_content_margin_all(PageView.PAD)    # margine della pagina
+	_rtl.add_theme_stylebox_override("normal", pad)
+	_rtl.add_theme_font_size_override("normal_font_size", 16)
+	_rtl.meta_clicked.connect(_on_meta)         # UNICO meccanismo di navigazione
+	page_area.add_child(_rtl)
 
-	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for s in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + s, 18)
-	_scroll.add_child(margin)
-
-	_page_vbox = VBoxContainer.new()
-	_page_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_page_vbox.add_theme_constant_override("separation", 12)
-	margin.add_child(_page_vbox)
-
-	# --- inspector (nascosto) ---
 	_build_inspector(root)
-	# --- menu contestuale custom ---
 	_build_ctx_menu()
 
-	_load(arg if arg is String else "start")
+	_load(_norm(arg if arg is String else _home))
+
+# ---------------- navigazione ----------------
+
+# Normalizza href/indirizzo in NOME pagina ("news.html"/"http://news/" -> "news").
+func _norm(s: String) -> String:
+	var u := s.strip_edges().to_lower()
+	u = u.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
+	u = u.get_file()
+	u = u.trim_suffix(".html").trim_suffix(".htm")
+	if u == "" or u == "start" or u == "index":
+		u = _home
+	return u
+
+func _on_addr_submit(text: String) -> void:
+	_go(_norm(text))
+
+func _go(name: String) -> void:
+	if _current != "" and _current != name:
+		_back.append(_current)
+		_forward.clear()
+	_load(name)
+
+func _go_back() -> void:
+	if _back.is_empty():
+		return
+	_forward.append(_current)
+	_load(_back.pop_back())
+
+func _go_forward() -> void:
+	if _forward.is_empty():
+		return
+	_back.append(_current)
+	_load(_forward.pop_back())
+
+func _go_home() -> void:
+	_go(_home)
+
+func _load(name: String) -> void:
+	if name == "":
+		name = _home
+	var raw := ""
+	if name == _home:
+		# la HOME e' GENERATA per-run (5 siti a caso del pool), non un file
+		raw = WebRuntime.home_html()
+	else:
+		var path := PAGES_DIR + name + ".html"
+		if not FileAccess.file_exists(path):
+			if name != "404" and FileAccess.file_exists(PAGES_DIR + "404.html"):
+				name = "404"
+				path = PAGES_DIR + "404.html"
+			else:
+				_current = name
+				_html_text = ""
+				_render_html("<center><font size=\"5\"><b>Errore 404</b></font><br>Pagina non trovata.</center>")
+				return
+		var f := FileAccess.open(path, FileAccess.READ)
+		raw = f.get_as_text() if f != null else ""
+	# inietta la chiave web del run se questa pagina la ospita (visibile o commento)
+	_html_text = WebRuntime.source_html(name, raw)
+	_current = name
+	_addr.text = "" if name == _home else "http://" + name
+	if window:
+		window.set_title(_between(_html_text, "<title>", "</title>"))
+	_render_html(_strip_comments(_body_inner(_html_text)))
+	if _inspector.visible:
+		_inspector_edit.text = _format_html(_html_text)
+
+# Compila il body in BBCode e lo mette nell'RTL. I colori di pagina vengono dal
+# <body>: bgcolor (sfondo), text (testo), link (colore dei link) — cosi' le
+# pagine scure funzionano (<body bgcolor="#000000" text="#BBBBBB" link="#66FF66">).
+# set_page() azzera selezione, scroll e stato di hover del link.
+func _render_html(body: String) -> void:
+	_page_bg.color = _body_bg(_html_text)
+	_rtl.add_theme_color_override("default_color", _body_text(_html_text))
+	_rtl.set_page(HtmlBB.compile(body, {"link_color": _body_link(_html_text)}))
+
+func _on_meta(meta) -> void:
+	_go(_norm(str(meta)))
+
+# Tasto destro = menu contestuale OVUNQUE nell'area pagina (l'RTL e' STOP e si
+# mangia il clic destro; _input gira prima della distribuzione gui, e cosi' la
+# selezione sopravvive al clic destro). Ctrl+C/Ctrl+A: solo quando il focus non
+# e' in un campo di testo (barra indirizzo, ispettore), che si copia da solo.
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if window != null and not window.active:
+			return
+		if _rtl != null and _rtl.get_global_rect().has_point(get_global_mouse_position()):
+			_show_ctx()
+			get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and event.ctrl_pressed:
+		if window != null and not window.active:
+			return
+		var focus := get_viewport().gui_get_focus_owner()
+		if focus is LineEdit or focus is TextEdit:
+			return
+		if event.keycode == KEY_C:
+			_copy()
+		elif event.keycode == KEY_A:
+			_rtl.select_all()
+			get_viewport().set_input_as_handled()
+
+# ---------------- copia ----------------
+
+# "Copia"/Ctrl+C: la selezione se c'e', altrimenti tutta la pagina.
+func _copy() -> void:
+	var txt := _rtl.get_selected_text()
+	if txt.strip_edges() == "":
+		txt = _rtl.get_parsed_text()
+	txt = txt.strip_edges()
+	if txt != "":
+		DisplayServer.clipboard_set(txt)
+
+func _copy_all() -> void:
+	var txt := _rtl.get_parsed_text().strip_edges()
+	if txt != "":
+		DisplayServer.clipboard_set(txt)
+
+# ---------------- estrazione dal sorgente ----------------
+
+const _BLOCK_TAGS := {
+	"html": true, "head": true, "body": true, "title": true,
+	"table": true, "tr": true, "td": true, "th": true, "thead": true, "tbody": true,
+	"ul": true, "ol": true, "li": true, "center": true, "div": true, "p": true,
+	"h1": true, "h2": true, "h3": true, "h4": true, "h5": true, "h6": true,
+	"blockquote": true,
+}
+const _VOID_BLOCK := {"br": true, "hr": true, "img": true}
+
+func _tagname(tag: String) -> String:
+	var t := tag.strip_edges()
+	if t.begins_with("/"):
+		t = t.substr(1)
+	var sp := t.find(" ")
+	if sp >= 0:
+		t = t.substr(0, sp)
+	return t.to_lower()
+
+func _attr(tag: String, name: String) -> String:
+	var low := tag.to_lower()
+	var key := name.to_lower() + "="
+	var i := low.find(key)
+	if i < 0:
+		return ""
+	i += key.length()
+	if i >= tag.length():
+		return ""
+	var q := tag[i]
+	if q == "\"" or q == "'":
+		var j := tag.find(q, i + 1)
+		return tag.substr(i + 1, j - i - 1) if j > i else ""
+	var j2 := i
+	while j2 < tag.length() and tag[j2] != " " and tag[j2] != ">":
+		j2 += 1
+	return tag.substr(i, j2 - i)
+
+func _between(s: String, a: String, b: String) -> String:
+	var i := s.findn(a)
+	if i < 0:
+		return ""
+	i += a.length()
+	var j := s.findn(b, i)
+	return s.substr(i, j - i).strip_edges() if j >= 0 else ""
+
+func _body_inner(html: String) -> String:
+	var bi := html.findn("<body")
+	if bi < 0:
+		return html
+	var gt := html.find(">", bi)
+	if gt < 0:
+		return html
+	var endb := html.findn("</body>")
+	if endb < 0:
+		endb = html.length()
+	return html.substr(gt + 1, endb - gt - 1)
+
+# Attributo del tag <body> ("bgcolor"/"text"/"link"), o "" se assente.
+func _body_attr(html: String, name: String) -> String:
+	var bi := html.findn("<body")
+	if bi >= 0:
+		var gt := html.find(">", bi)
+		if gt > bi:
+			return _attr(html.substr(bi, gt - bi), name)
+	return ""
+
+func _body_bg(html: String) -> Color:
+	var bg := HtmlBB._col(_body_attr(html, "bgcolor"))
+	if bg != "" and Color.html_is_valid(bg):
+		return Color.html(bg)
+	return Color("c0c0c0")
+
+func _body_text(html: String) -> Color:
+	var c := HtmlBB._col(_body_attr(html, "text"))
+	if c != "" and Color.html_is_valid(c):
+		return Color.html(c)
+	return Win95.C_TEXT
+
+func _body_link(html: String) -> String:
+	var c := HtmlBB._col(_body_attr(html, "link"))
+	if c != "" and Color.html_is_valid(c):
+		return c
+	return "#" + Win95.C_LINK.to_html(false)
+
+func _strip_comments(s: String) -> String:
+	while true:
+		var a := s.find("<!--")
+		if a < 0:
+			break
+		var b := s.find("-->", a)
+		if b < 0:
+			s = s.substr(0, a)
+			break
+		s = s.substr(0, a) + s.substr(b + 3)
+	return s
+
+# ---------------- visualizza sorgente ----------------
+
+func _build_inspector(root: Control) -> void:
+	_inspector = VBoxContainer.new()
+	_inspector.custom_minimum_size = Vector2(0, 240)
+	_inspector.visible = false
+	_inspector.add_theme_constant_override("separation", 0)
+	root.add_child(_inspector)
+
+	# maniglia per ridimensionare l'altezza del pannello (trascina su/giu')
+	var grip := Panel.new()
+	grip.custom_minimum_size = Vector2(0, 9)
+	grip.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+	grip.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 0, 0, 0, 0))
+	grip.gui_input.connect(_on_grip_input)
+	var gcenter := CenterContainer.new()
+	gcenter.set_anchors_preset(Control.PRESET_FULL_RECT)
+	gcenter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	grip.add_child(gcenter)
+	var marker := HBoxContainer.new()
+	marker.add_theme_constant_override("separation", 3)
+	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gcenter.add_child(marker)
+	for i in range(2):
+		var dot := ColorRect.new()
+		dot.color = Win95.C_SHADOW
+		dot.custom_minimum_size = Vector2(22, 2)
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		marker.add_child(dot)
+	_inspector.add_child(grip)
+
+	var head := Panel.new()
+	head.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 6, 3, 6, 3))
+	head.custom_minimum_size = Vector2(0, 26)
+	var hb := HBoxContainer.new()
+	hb.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hb.offset_left = 6
+	hb.offset_right = -4
+	head.add_child(hb)
+	var t := Label.new()
+	t.text = "Sorgente della pagina (HTML)"
+	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hb.add_child(t)
+	var x := GlyphButton.new()
+	x.glyph = "close"
+	x.custom_minimum_size = Vector2(22, 20)
+	x.pressed.connect(func(): _inspector.visible = false)
+	hb.add_child(x)
+	_inspector.add_child(head)
+	_inspector_edit = TextEdit.new()
+	_inspector_edit.editable = false
+	_inspector_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_inspector_edit.add_theme_font_size_override("font_size", 15)
+	_inspector_edit.add_theme_font_override("font", ThemeDB.fallback_font)
+	_inspector.add_child(_inspector_edit)
+
+# Trascina la maniglia in cima all'ispettore per cambiarne l'altezza.
+func _on_grip_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_resizing = event.pressed
+	elif event is InputEventMouseMotion and _resizing:
+		var cms := _inspector.custom_minimum_size
+		cms.y = clampf(cms.y - event.relative.y, 90.0, maxf(120.0, size.y - 220.0))
+		_inspector.custom_minimum_size = cms
+
+func _view_source() -> void:
+	if _inspector == null:
+		return
+	if _inspector.visible:
+		_inspector.visible = false
+		return
+	_inspector_edit.text = _format_html(_html_text)
+	_inspector.visible = true
+
+# Indenta l'HTML grezzo per leggibilita': i blocchi vanno a capo, gli inline scorrono.
+func _format_html(html: String) -> String:
+	var out := ""
+	var line := ""
+	var depth := 0
+	var i := 0
+	var n := html.length()
+	while i < n:
+		var lt := html.find("<", i)
+		if lt < 0:
+			line += html.substr(i)
+			break
+		line += html.substr(i, lt - i)
+		var gt := html.find(">", lt)
+		if gt < 0:
+			line += html.substr(lt)
+			break
+		var raw := html.substr(lt, gt - lt + 1).strip_edges()
+		var nm := _tagname(html.substr(lt + 1, gt - lt - 1))
+		var closing := raw.begins_with("</")
+		if _VOID_BLOCK.has(nm):
+			out += _fmt_line(line, depth)
+			line = ""
+			out += "\t".repeat(depth) + raw + "\n"
+		elif _BLOCK_TAGS.has(nm):
+			out += _fmt_line(line, depth)
+			line = ""
+			if closing:
+				depth = maxi(0, depth - 1)
+			out += "\t".repeat(depth) + raw + "\n"
+			if not closing:
+				depth += 1
+		else:
+			line += html.substr(lt, gt - lt + 1)
+		i = gt + 1
+	out += _fmt_line(line, depth)
+	return out
+
+func _fmt_line(line: String, depth: int) -> String:
+	var t := line.strip_edges()
+	return ("\t".repeat(depth) + t + "\n") if t != "" else ""
+
+# ---------------- menu contestuale ----------------
+
+func _build_ctx_menu() -> void:
+	_ctx_layer = Control.new()
+	_ctx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_ctx_layer.visible = false
+	add_child(_ctx_layer)
+	var catcher := Control.new()
+	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
+	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
+	catcher.gui_input.connect(func(e):
+		if e is InputEventMouseButton and e.pressed:
+			_ctx_layer.visible = false)
+	_ctx_layer.add_child(catcher)
+	var panel := Panel.new()
+	panel.name = "Panel"
+	panel.custom_minimum_size = Vector2(210, 0)
+	_ctx_layer.add_child(panel)
+	_ctx_menu = VBoxContainer.new()
+	_ctx_menu.add_theme_constant_override("separation", 0)
+	_ctx_menu.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_ctx_menu.offset_left = 3
+	_ctx_menu.offset_top = 3
+	_ctx_menu.offset_right = -3
+	_ctx_menu.offset_bottom = -3
+	panel.add_child(_ctx_menu)
+	_ctx_copy = _ctx_item("Copia", _copy)
+	_ctx_item("Copia tutto", _copy_all)
+	_ctx_item("Seleziona tutto", func(): _rtl.select_all())
+	_ctx_item("Visualizza sorgente", _view_source)
+	_ctx_item("Indietro", _go_back)
+	_ctx_item("Aggiorna", func(): _load(_current))
+
+func _ctx_item(text: String, cb: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.flat = true
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(0, 26)
+	b.pressed.connect(func():
+		_ctx_layer.visible = false
+		cb.call())
+	_ctx_menu.add_child(b)
+	return b
+
+func _show_ctx() -> void:
+	# "Copia" attiva solo se c'e' una selezione
+	_ctx_copy.disabled = _rtl.get_selected_text() == ""
+	var panel := _ctx_layer.get_node("Panel") as Panel
+	var pos := get_local_mouse_position()
+	var h: float = _ctx_menu.get_combined_minimum_size().y + 6.0
+	pos.x = min(pos.x, size.x - 212)
+	pos.y = min(pos.y, size.y - h - 4.0)
+	panel.position = pos
+	panel.size = Vector2(210, h)
+	_ctx_layer.visible = true
+	_ctx_layer.move_to_front()
+
+# Rigenera lo stato web del run (chiave + portatore). Gancio da GameManager.start_new_run().
+static func reset_pages() -> void:
+	WebRuntime.build()
+
+# ---------------- helper UI ----------------
 
 func _icon_btn(kind: String, cb := Callable()) -> Button:
 	var b := Button.new()
@@ -155,343 +542,3 @@ func _vsep() -> VSeparator:
 	s.add_theme_stylebox_override("separator", sb)
 	s.add_theme_constant_override("separation", 8)
 	return s
-
-func _build_inspector(root: Control) -> void:
-	_inspector = VBoxContainer.new()
-	_inspector.custom_minimum_size = Vector2(0, 230)
-	_inspector.visible = false
-	_inspector.add_theme_constant_override("separation", 0)
-	root.add_child(_inspector)
-
-	# maniglia per ridimensionare l'altezza (trascina su/giu')
-	var grip := Panel.new()
-	grip.custom_minimum_size = Vector2(0, 9)
-	grip.mouse_default_cursor_shape = Control.CURSOR_VSIZE
-	grip.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 0, 0, 0, 0))
-	grip.gui_input.connect(_on_grip_input)
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	grip.add_child(center)
-	var marker := HBoxContainer.new()
-	marker.add_theme_constant_override("separation", 3)
-	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center.add_child(marker)
-	for i in range(2):
-		var dot := ColorRect.new()
-		dot.color = Win95.C_SHADOW
-		dot.custom_minimum_size = Vector2(22, 2)
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		marker.add_child(dot)
-	_inspector.add_child(grip)
-
-	var head := Panel.new()
-	head.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 6, 3, 6, 3))
-	head.custom_minimum_size = Vector2(0, 26)
-	var hb := HBoxContainer.new()
-	hb.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hb.offset_left = 6
-	hb.offset_right = -4
-	head.add_child(hb)
-	var t := Label.new()
-	t.text = "Strumenti di sviluppo  -  Elementi (HTML)"
-	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.add_child(t)
-	var x := GlyphButton.new()
-	x.glyph = "close"
-	x.custom_minimum_size = Vector2(22, 20)
-	x.pressed.connect(func(): _inspector.visible = false)
-	hb.add_child(x)
-	_inspector.add_child(head)
-
-	_inspector_edit = TextEdit.new()
-	_inspector_edit.editable = false
-	_inspector_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_inspector_edit.add_theme_font_size_override("font_size", 16)
-	_inspector_edit.add_theme_font_override("font", ThemeDB.fallback_font)
-	_inspector.add_child(_inspector_edit)
-
-# Trascina la maniglia in cima all'inspector per cambiarne l'altezza.
-func _on_grip_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		_resizing = event.pressed
-	elif event is InputEventMouseMotion and _resizing:
-		var cms := _inspector.custom_minimum_size
-		cms.y = clampf(cms.y - event.relative.y, 90.0, maxf(120.0, size.y - 220.0))
-		_inspector.custom_minimum_size = cms
-
-func _build_ctx_menu() -> void:
-	_ctx_layer = Control.new()
-	_ctx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_ctx_layer.visible = false
-	add_child(_ctx_layer)
-
-	var catcher := Control.new()
-	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
-	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
-	catcher.gui_input.connect(func(e):
-		if e is InputEventMouseButton and e.pressed:
-			_ctx_layer.visible = false)
-	_ctx_layer.add_child(catcher)
-
-	var panel := Panel.new()
-	panel.name = "Panel"
-	panel.custom_minimum_size = Vector2(210, 0)
-	_ctx_layer.add_child(panel)
-
-	_ctx_menu = VBoxContainer.new()
-	_ctx_menu.add_theme_constant_override("separation", 0)
-	_ctx_menu.offset_left = 3
-	_ctx_menu.offset_top = 3
-	_ctx_menu.offset_right = -3
-	_ctx_menu.offset_bottom = -3
-	_ctx_menu.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.add_child(_ctx_menu)
-	_ctx_item("Ispeziona elemento", func(): _open_inspector(_ctx_idx))
-	_ctx_item("Indietro", _go_back)
-	_ctx_item("Aggiorna", func(): _load(_current))
-
-func _ctx_item(text: String, cb: Callable) -> void:
-	var b := Button.new()
-	b.text = text
-	b.flat = true
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(0, 26)
-	b.pressed.connect(func():
-		_ctx_layer.visible = false
-		cb.call())
-	_ctx_menu.add_child(b)
-
-func _show_ctx(idx: int) -> void:
-	_ctx_idx = idx
-	var panel := _ctx_layer.get_node("Panel") as Panel
-	var pos := get_local_mouse_position()
-	pos.x = min(pos.x, size.x - 212)
-	pos.y = min(pos.y, size.y - 120)
-	panel.position = pos
-	panel.size = Vector2(210, _ctx_menu.get_combined_minimum_size().y + 6)
-	_ctx_layer.visible = true
-	_ctx_layer.move_to_front()
-
-# ---------------- navigazione ----------------
-
-func _on_addr_submit(text: String) -> void:
-	var url := text.strip_edges()
-	url = url.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
-	if url == "":
-		url = "start"
-	_go(url)
-
-func _go(url: String) -> void:
-	if _current != "":
-		_back.append(_current)
-	_forward.clear()
-	_load(url)
-
-func _go_back() -> void:
-	if _back.is_empty():
-		return
-	_forward.append(_current)
-	_load(_back.pop_back())
-
-func _go_forward() -> void:
-	if _forward.is_empty():
-		return
-	_back.append(_current)
-	_load(_forward.pop_back())
-
-func _load(url: String) -> void:
-	if url == "":
-		url = "start"
-	_current = url
-	var page: Dictionary = _pages().get(url, _page_404(url))
-	_addr.text = "" if url == "start" else "http://" + url
-	if window:
-		window.set_title(str(page.get("title", url)))
-	var built := _build_html(page)
-	_html_text = built["text"]
-	_line_map = built["map"]
-	_render(page)
-	_scroll.scroll_vertical = 0
-	if _inspector.visible:
-		_inspector_edit.text = _html_text
-
-func _on_bg_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-		_show_ctx(-1)
-
-func _on_el_input(event: InputEvent, idx: int) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-		_show_ctx(idx)
-
-# ---------------- rendering ----------------
-
-func _render(page: Dictionary) -> void:
-	for c in _page_vbox.get_children():
-		c.queue_free()
-	var els: Array = page.get("elements", [])
-	for i in range(els.size()):
-		var ctrl := _make_element(els[i])
-		if ctrl:
-			ctrl.gui_input.connect(_on_el_input.bind(i))
-			_page_vbox.add_child(ctrl)
-
-func _make_element(el: Dictionary) -> Control:
-	match el.get("tag", "p"):
-		"h1":
-			return _text_label(el.get("text", ""), 34, Color("000066"))
-		"h2":
-			return _text_label(el.get("text", ""), 26, Color("003366"))
-		"p":
-			return _text_label(el.get("text", ""), 18, Color.BLACK)
-		"a":
-			var link := LinkButton.new()
-			link.text = el.get("text", "")
-			link.focus_mode = Control.FOCUS_NONE
-			# largo solo quanto il testo (allineato a sx): l'area link/hover non
-			# deve coprire tutta la riga, ma solo la scritta, come un link reale
-			link.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-			link.add_theme_color_override("font_color", Win95.C_LINK)
-			link.add_theme_color_override("font_hover_color", Color("ee0000"))
-			link.add_theme_font_size_override("font_size", 18)
-			var href: String = el.get("href", "start")
-			link.pressed.connect(func(): _go(href))
-			return link
-		"hr":
-			var hr := ColorRect.new()
-			hr.color = Win95.C_SHADOW
-			hr.custom_minimum_size = Vector2(0, 2)
-			return hr
-		"ul":
-			var box := VBoxContainer.new()
-			for it in el.get("items", []):
-				box.add_child(_text_label("•  " + str(it), 18, Color.BLACK))
-			return box
-		"img":
-			return _make_img(el)
-	return null
-
-func _text_label(text: String, fsize: int, color: Color) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.add_theme_font_size_override("font_size", fsize)
-	l.add_theme_color_override("font_color", color)
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return l
-
-func _make_img(el: Dictionary) -> Control:
-	var w: float = el.get("w", 560)
-	var h: float = el.get("h", 100)
-	var holder := Control.new()
-	holder.custom_minimum_size = Vector2(w, h)
-	var rect := ColorRect.new()
-	rect.color = Color(str(el.get("color", "5577aa")))
-	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	holder.add_child(rect)
-	var alt := Label.new()
-	alt.text = "[ " + str(el.get("alt", "immagine")) + " ]"
-	alt.set_anchors_preset(Control.PRESET_FULL_RECT)
-	alt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	alt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	alt.add_theme_color_override("font_color", Color.WHITE)
-	alt.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	holder.add_child(alt)
-	return holder
-
-# ---------------- generazione HTML + inspector ----------------
-
-func _esc(s: String) -> String:
-	return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-func _build_html(page: Dictionary) -> Dictionary:
-	var lines: Array = []
-	var map: Dictionary = {}
-	lines.append("<!DOCTYPE html>")
-	lines.append("<html>")
-	lines.append("<head>")
-	lines.append("    <title>" + _esc(str(page.get("title", ""))) + "</title>")
-	lines.append("</head>")
-	lines.append("<body>")
-	var els: Array = page.get("elements", [])
-	for i in range(els.size()):
-		var start := lines.size()
-		_emit(lines, els[i], "    ")
-		map[i] = [start, lines.size() - 1]
-	lines.append("</body>")
-	lines.append("</html>")
-	return {"text": "\n".join(lines), "map": map}
-
-func _emit(lines: Array, el: Dictionary, indent: String) -> void:
-	var tag: String = el.get("tag", "p")
-	match tag:
-		"h1", "h2", "p":
-			lines.append("%s<%s>%s</%s>" % [indent, tag, _esc(el.get("text", "")), tag])
-		"a":
-			lines.append('%s<a href="%s">%s</a>' % [indent, el.get("href", "#"), _esc(el.get("text", ""))])
-		"hr":
-			lines.append(indent + "<hr>")
-		"img":
-			lines.append('%s<img src="%s.png" alt="%s" width="%d" height="%d">' % [
-				indent, str(el.get("alt", "img")).to_lower().replace(" ", "_"),
-				_esc(el.get("alt", "")), int(el.get("w", 560)), int(el.get("h", 100))])
-		"ul":
-			lines.append(indent + "<ul>")
-			for it in el.get("items", []):
-				lines.append("%s    <li>%s</li>" % [indent, _esc(str(it))])
-			lines.append(indent + "</ul>")
-			# Commento HTML: compare nel sorgente (Ispeziona elemento) ma _make_element
-			# non lo rende a video -> ottimo nascondiglio per una chiave.
-		"comment":
-			lines.append("%s<!-- %s -->" % [indent, str(el.get("text", ""))])
-
-func _toggle_inspector() -> void:
-	if _inspector.visible:
-		_inspector.visible = false
-	else:
-		_open_inspector(-1)
-
-func _open_inspector(idx: int) -> void:
-	_inspector.visible = true
-	_inspector_edit.text = _html_text
-	if idx >= 0 and _line_map.has(idx):
-		var rng: Array = _line_map[idx]
-		var last_len: int = _inspector_edit.get_line(rng[1]).length()
-		_inspector_edit.set_caret_line(rng[1])
-		_inspector_edit.select(rng[0], 0, rng[1], last_len)
-		_inspector_edit.scroll_vertical = max(0, rng[0] - 1)
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and event.keycode == KEY_F12:
-		if window == null or window.active:
-			_toggle_inspector()
-			get_viewport().set_input_as_handled()
-
-# ---------------- contenuti delle pagine ----------------
-
-func _page_404(url: String) -> Dictionary:
-	return {
-		"title": "Pagina non trovata",
-		"elements": [
-			{"tag": "h1", "text": "Errore 404"},
-			{"tag": "p", "text": "Impossibile trovare il sito \"http://" + url + "\"."},
-			{"tag": "p", "text": "Controlla l'indirizzo o la connessione del modem."},
-			{"tag": "hr"},
-			{"tag": "a", "text": "Pagina iniziale", "href": "start"},
-		]
-	}
-
-# Svuota la cache delle pagine: chiamato da GameManager.start_new_run() cosi' le
-# pagine (e le chiavi che contengono) si rigenerano per ogni nuovo run.
-static func reset_pages() -> void:
-	_pages_cache = {}
-
-func _pages() -> Dictionary:
-	# Le pagine (pool di siti autoriale + chiavi del run) vivono ora in OSContent:
-	# il browser si limita a navigarle e renderle. Rigenerate per run da reset_pages().
-	if _pages_cache.is_empty():
-		_pages_cache = OSContent.build_sites()
-	return _pages_cache

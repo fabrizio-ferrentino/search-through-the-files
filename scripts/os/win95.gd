@@ -106,4 +106,8 @@ static func make_theme() -> Theme:
 
 	# Label / ScrollContainer
 	t.set_color("font_color", "Label", C_TEXT)
+
+	# RichTextLabel (pagine del browser): selezione blu navy con testo bianco
+	t.set_color("selection_color", "RichTextLabel", C_SELECT)
+	t.set_color("font_selected_color", "RichTextLabel", C_TITLE_TEXT)
 	return t

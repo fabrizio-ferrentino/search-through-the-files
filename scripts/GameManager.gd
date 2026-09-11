@@ -37,7 +37,7 @@ var logged_in := false
 # True mentre l'overlay di morte e' in corso: evita game over multipli sovrapposti.
 var _game_over_active := false
 
-# Debug: toggle minacce (F9). Quando false, il ThreatDirector non genera
+# Debug: toggle minacce (F11). Quando false, il ThreatDirector non genera
 # affacci e non puo' uccidere — utile per testare modifiche in pace.
 var threats_enabled := true
 
