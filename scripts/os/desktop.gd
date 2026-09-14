@@ -13,6 +13,15 @@ signal game_won         # cartella segreta sbloccata: la stanza mostra il finale
 
 const TASKBAR_H := 40
 
+# Avvio in stile 1995 (vedi _play_boot): durate delle tre fasi. Nomi di fantasia per
+# non usare marchi veri: il BIOS e' "Cetus" (la costellazione della Balena), il
+# sistema e' 52-hz Whale di "Hydrophone Systems".
+const BOOT_RAM_K := 16384        # RAM installata: il POST la conta a blocchi da 1 MB
+const BOOT_MEM_STEP := 0.026     # pausa fra un blocco e l'altro del conteggio
+const BOOT_DOS_TIME := 0.9       # riga "Avvio di ... in corso" su schermo nero
+const BOOT_SPLASH_TIME := 2.3    # splash col nastro che scorre
+const BOOT_WIPE_TIME := 1.15     # una passata del nastro
+
 var window_layer: Control
 var taskbar: Panel
 var tasks_box: HBoxContainer
@@ -31,6 +40,8 @@ var _modal_layer: Control = null     # ultimo dialogo modale aperto (login / arr
 var _ctx_layer: Control
 var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
+var _booting := false                # avvio in corso: l'OS non accetta input
+var _boot_token := 0                 # cresce a ogni avvio/spegnimento: annulla la sequenza vecchia
 var _no_signal_box: Panel = null
 var _no_signal_vel: Vector2 = Vector2.ZERO
 
@@ -480,6 +491,12 @@ func _input(event: InputEvent) -> void:
 		exit_requested.emit()
 		return
 
+	# durante l'avvio non si interagisce e l'avvio NON si salta: si guarda. (ESC,
+	# gestito qui sopra, torna alla stanza senza interromperlo: l'OS continua a
+	# partire dentro il SubViewport e il monitor 3D lo mostra dal vivo.)
+	if _booting:
+		return
+
 	# Con un dialogo modale aperto (login / arresto / cartella segreta) il desktop
 	# non reagisce ai click: il modale "blocca" tutto cio' che sta dietro, niente
 	# selezione/focus delle finestre sottostanti (comportamento modale reale).
@@ -576,6 +593,8 @@ func boot() -> void:
 
 # Spegnimento del case: chiude tutto e mostra "nessun segnale".
 func power_off() -> void:
+	_boot_token += 1           # ferma la sequenza di avvio, se ne stava girando una
+	_booting = false
 	for w in windows.duplicate():
 		if is_instance_valid(w):
 			w.close()
@@ -585,51 +604,226 @@ func power_off() -> void:
 	_update_taskbar()
 	_show_no_signal()
 
-# Animazione di avvio: splash nero con logo e barra di avanzamento, poi il login.
+# Avvio come su un PC del '95, in tre tempi: POST del BIOS (schermo di testo,
+# conteggio della memoria, ricerca dei dischi) -> la riga "Avvio di ... in corso"
+# su nero -> splash col nastro che scorre -> login. Non e' saltabile: l'unica cosa
+# che lo interrompe e' spegnere il case.
 func _play_boot() -> void:
+	_boot_token += 1
+	_booting = true
+	var token: int = _boot_token
+	await _boot_post(token)
+	if not _boot_alive(token):
+		return
+	await _boot_dos(token)
+	if not _boot_alive(token):
+		return
+	await _boot_splash(token)
+	if not _boot_alive(token):
+		return
+	_booting = false
+	_show_login()
+
+# La sequenza e' ancora valida? False se nel frattempo e' arrivato uno spegnimento
+# o un altro avvio: in quel caso gli overlay sono gia' stati liberati e continuare a
+# scriverci dentro darebbe errore.
+func _boot_alive(token: int) -> bool:
+	return token == _boot_token and GameManager.pc_on and is_inside_tree()
+
+# Schermo nero a tutta pagina per le due fasi di testo, col font a larghezza fissa
+# (a corpo 26 il Cousine sta in ~90 colonne: come una schermata VGA 80x25).
+func _boot_text_screen() -> Label:
 	_clear_state()
-	var splash := ColorRect.new()
-	splash.color = Color.BLACK
-	splash.set_anchors_preset(Control.PRESET_FULL_RECT)
-	splash.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(splash)
-	splash.move_to_front()
-	_state_overlay = splash
+	var scr := ColorRect.new()
+	scr.color = Color.BLACK
+	scr.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scr.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(scr)
+	scr.move_to_front()
+	_state_overlay = scr
 
-	var logo := Label.new()
-	logo.text = "52-HZ WHALE"
-	logo.add_theme_color_override("font_color", Win95.C_LIGHT)
-	logo.add_theme_font_size_override("font_size", 64)
-	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	logo.position = Vector2(size.x * 0.5 - 200, size.y * 0.5 - 110)
-	logo.size = Vector2(400, 80)
-	splash.add_child(logo)
+	var lbl := Label.new()
+	lbl.add_theme_font_override("font", Win95.font("mono"))
+	lbl.add_theme_font_size_override("font_size", 26)
+	lbl.add_theme_color_override("font_color", Color(0.80, 0.82, 0.80))
+	lbl.position = Vector2(34, 26)
+	lbl.size = Vector2(size.x - 68, size.y - 120)
+	scr.add_child(lbl)
+	return lbl
 
-	var sub := Label.new()
-	sub.text = "Avvio del sistema in corso..."
-	sub.add_theme_color_override("font_color", Win95.C_HILIGHT)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.position = Vector2(size.x * 0.5 - 200, size.y * 0.5 + 12)
-	sub.size = Vector2(400, 24)
-	splash.add_child(sub)
+# 1) POST del BIOS: le righe compaiono una alla volta e la memoria si conta da sola
+# (era l'animazione tipica dell'accensione). Il BIOS parla inglese anche sui PC
+# italiani dell'epoca: e' voluto, il sistema che parte dopo e' in italiano.
+func _boot_post(token: int) -> void:
+	var lbl := _boot_text_screen()
+	var righe: Array = []          # Array, non PackedStringArray: le lambda lo modificano
+	var scrivi := func(s: String) -> void:
+		righe.append(s)
+		lbl.text = "\n".join(PackedStringArray(righe))
+	var riscrivi := func(s: String) -> void:
+		righe[righe.size() - 1] = s
+		lbl.text = "\n".join(PackedStringArray(righe))
 
-	var bar_w := 300.0
-	var track := Panel.new()
-	track.add_theme_stylebox_override("panel", Win95._sb(false, Win95.C_LIGHT, true, 2, 2, 2, 2))
-	track.position = Vector2(size.x * 0.5 - bar_w * 0.5, size.y * 0.5 + 52)
-	track.size = Vector2(bar_w, 22)
-	splash.add_child(track)
-	var fill := ColorRect.new()
-	fill.color = Win95.C_TITLE
-	fill.position = Vector2(3, 3)
-	fill.size = Vector2(0, 16)
-	track.add_child(fill)
+	# in fondo allo schermo, fisse: la riga del SETUP e il codice del BIOS
+	var piede := Label.new()
+	piede.add_theme_font_override("font", Win95.font("mono"))
+	piede.add_theme_font_size_override("font_size", 26)
+	piede.add_theme_color_override("font_color", Color(0.80, 0.82, 0.80))
+	piede.text = "Press DEL to enter SETUP\n15/06/95-CETUS-2A4X5H01C-00"
+	piede.position = Vector2(34, size.y - 100)
+	piede.size = Vector2(size.x - 68, 80)
+	_state_overlay.add_child(piede)
 
-	var tw := create_tween()
-	tw.tween_property(fill, "size:x", bar_w - 6.0, 1.3)
-	tw.tween_callback(func():
-		if GameManager.pc_on:
-			_show_login())
+	# [riga, pausa dopo]
+	var testa: Array = [
+		["CETUS BIOS  v2.04a   (C) 1994-1995 Cetus Microsystems, Inc.", 0.14],
+		["", 0.26],
+		["Main Processor      : 80486DX2  66 MHz", 0.20],
+	]
+	for p in testa:
+		scrivi.call(str(p[0]))
+		await get_tree().create_timer(float(p[1])).timeout
+		if not _boot_alive(token):
+			return
+
+	scrivi.call("Memory Test         :        0K")
+	var k := 0
+	while k < BOOT_RAM_K:
+		k = mini(k + 1024, BOOT_RAM_K)
+		riscrivi.call("Memory Test         : %8dK" % k)
+		await get_tree().create_timer(BOOT_MEM_STEP).timeout
+		if not _boot_alive(token):
+			return
+	riscrivi.call("Memory Test         : %8dK  OK" % BOOT_RAM_K)
+
+	# i BIOS dell'epoca chiudevano il POST con la tabella del riepilogo, che si
+	# disegnava riga per riga: e' quella che riempiva lo schermo prima dell'avvio
+	var coda: Array = [
+		["", 0.20],
+		["Detecting HDD Primary Master   ... CETUS DA-541  (516MB)", 0.18],
+		["Detecting HDD Primary Slave    ... None", 0.15],
+		["Detecting CD-ROM Secondary     ... SONAR CD-400A", 0.18],
+		["Floppy Disk(s)                 : 1.44M, 3.5 in.", 0.24],
+		["", 0.02],
+		["                        System Configuration", 0.02],
+		["------------------------------------------------------------------", 0.02],
+		[" CPU Type          : 80486DX2       Base Memory Size :    640K", 0.02],
+		[" Co-Processor      : Installed      Ext. Memory Size :  15360K", 0.02],
+		[" CPU Clock         : 66 MHz         Cache Memory     :    256K", 0.02],
+		[" Diskette Drive A  : 1.44M, 3.5in.  Display Type     : EGA/VGA", 0.02],
+		[" Diskette Drive B  : None           Serial Port(s)   : 3F8 2F8", 0.02],
+		[" Pri. Master Disk  : LBA,   516MB   Parallel Port(s) : 378", 0.02],
+		[" Pri. Slave  Disk  : None", 0.02],
+		[" Sec. Master Disk  : CD-ROM, Mode 4", 0.02],
+		["------------------------------------------------------------------", 0.26],
+		["", 0.02],
+		["Verifying DMI Pool Data ...", 0.32],
+	]
+	for p in coda:
+		scrivi.call(str(p[0]))
+		await get_tree().create_timer(float(p[1])).timeout
+		if not _boot_alive(token):
+			return
+
+# 2) Una riga di testo su schermo nero: il passaggio dal DOS al sistema.
+func _boot_dos(_token: int) -> void:
+	var lbl := _boot_text_screen()
+	lbl.text = "Avvio di 52-hz Whale in corso..."
+	await get_tree().create_timer(BOOT_DOS_TIME).timeout
+
+# 3) Splash: cielo sfumato, marchio con l'ombra portata e il nastro in basso. Nel
+# '95 non era una barra che si riempie ma un blocco che passa e ripassa: e' quello
+# che distingue uno splash dell'epoca da una barra di caricamento moderna.
+func _boot_splash(_token: int) -> void:
+	_clear_state()
+	var scr := Control.new()
+	scr.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scr.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(scr)
+	scr.move_to_front()
+	_state_overlay = scr
+
+	# cielo: sfumatura verticale generata, nessun file da importare
+	var grad := Gradient.new()
+	grad.set_color(0, Color("00081e"))
+	grad.set_color(1, Color("1d5fa8"))
+	grad.add_point(0.55, Color("0b2a63"))
+	var gtex := GradientTexture2D.new()
+	gtex.gradient = grad
+	gtex.width = 4
+	gtex.height = 256
+	gtex.fill_from = Vector2(0.0, 0.0)
+	gtex.fill_to = Vector2(0.0, 1.0)
+	var cielo := TextureRect.new()
+	cielo.texture = gtex
+	cielo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	cielo.stretch_mode = TextureRect.STRETCH_SCALE
+	cielo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cielo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	scr.add_child(cielo)
+
+	# marchio: prima l'ombra portata, poi il bianco spostato di 5 px
+	var marchio_y: float = size.y * 0.36
+	for ombra in [true, false]:
+		var l := Label.new()
+		l.text = "52-HZ WHALE"
+		l.add_theme_font_override("font", Win95.font("sans_b"))
+		l.add_theme_font_size_override("font_size", 96)
+		l.add_theme_color_override("font_color", Color(0.0, 0.0, 0.06, 0.5) if ombra else Color.WHITE)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.size = Vector2(size.x, 120)
+		l.position = Vector2(5.0 if ombra else 0.0, marchio_y + (5.0 if ombra else 0.0))
+		scr.add_child(l)
+
+	var ver := Label.new()
+	ver.text = "Versione 4.02"
+	ver.add_theme_font_size_override("font_size", 32)
+	ver.add_theme_color_override("font_color", Color(0.78, 0.86, 1.0))
+	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ver.position = Vector2(0.0, marchio_y + 126.0)
+	ver.size = Vector2(size.x, 40)
+	scr.add_child(ver)
+
+	var cp := Label.new()
+	cp.text = "(C) 1981-1995 Hydrophone Systems, Inc."
+	cp.add_theme_font_size_override("font_size", 22)
+	cp.add_theme_color_override("font_color", Color(0.72, 0.80, 0.95))
+	cp.position = Vector2(34.0, size.y - 54.0)
+	cp.size = Vector2(size.x - 68, 30)
+	scr.add_child(cp)
+
+	# la pista incassata (bordo 3D Win95) col nastro che la attraversa
+	var pista_w: float = size.x * 0.62
+	var pista := Panel.new()
+	pista.add_theme_stylebox_override("panel", Win95._sb(false, Color(0.0, 0.02, 0.10, 0.5), true, 0, 0, 0, 0))
+	pista.size = Vector2(pista_w, 26)
+	pista.position = Vector2(floorf((size.x - pista_w) * 0.5), size.y - 136.0)
+	pista.clip_contents = true         # il nastro non deve sbordare dalla pista
+	pista.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	scr.add_child(pista)
+
+	var gw := Gradient.new()
+	gw.set_color(0, Color(0.40, 0.78, 1.0, 0.0))
+	gw.set_color(1, Color(0.40, 0.78, 1.0, 0.0))
+	gw.add_point(0.5, Color(0.70, 0.92, 1.0, 0.95))
+	var gwt := GradientTexture2D.new()
+	gwt.gradient = gw
+	gwt.width = 256
+	gwt.height = 4
+	var nastro := TextureRect.new()
+	nastro.texture = gwt
+	nastro.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	nastro.stretch_mode = TextureRect.STRETCH_SCALE
+	nastro.size = Vector2(pista_w * 0.40, 20.0)
+	nastro.position = Vector2(-nastro.size.x, 3.0)
+	nastro.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pista.add_child(nastro)
+
+	# bind_node: il ciclo del nastro muore con lo splash, niente tween appesi
+	var tw := create_tween().bind_node(pista).set_loops()
+	tw.tween_property(nastro, "position:x", pista_w, BOOT_WIPE_TIME).from(-nastro.size.x)
+
+	await get_tree().create_timer(BOOT_SPLASH_TIME).timeout
 
 # ---------------- finestre modali ----------------
 
