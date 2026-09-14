@@ -35,8 +35,10 @@ func _draw() -> void:
 			_trash(w, h)
 		"trash_full":
 			_trash(w, h, true)
-		"win":
-			_winflag(w, h)
+		"whale", "win":
+			_whale(w, h)
+		"whale_pale":
+			_whale(w, h, true)
 		"globe":
 			_ie(w, h)
 		"back":
@@ -324,12 +326,65 @@ func _search(w: float, h: float) -> void:
 	draw_arc(c, r, 0, TAU, 18, col, 2.5)
 	draw_line(c + Vector2(r * 0.7, r * 0.7), Vector2(w * 0.82, h * 0.82), col, 3.0)
 
-func _winflag(w: float, h: float) -> void:
+# Il logo del sistema: la balena di "52-hz Whale". (Prima era una bandiera a
+# quattro riquadri, cioe' quella di Windows: il tema dell'OS e' un'altra cosa.)
+# Deve leggersi anche a 18 px nella taskbar, quindi e' fatta di pochi pezzi grossi
+# e senza contorni, che a quella misura chiuderebbero la figura. Quello che la
+# distingue da un pesce sono tre cose, e vanno tenute: corpo lungo con la testa
+# enorme e la linea della bocca, NIENTE pinna dorsale, e la coda attaccata da un
+# peduncolo sottile. Piu' lo sbuffo, che la dichiara da lontano.
+# pallida = la stessa balena per fondi scuri (la striscia del menu Start): con i
+# colori normali, blu su blu, la sagoma non si vedrebbe.
+func _whale(w: float, h: float, pallida := false) -> void:
 	var s: float = min(w, h)
 	var o := Vector2((w - s) * 0.5, (h - s) * 0.5)
-	var c := s * 0.42
-	var g := s * 0.06
-	draw_rect(Rect2(o + Vector2(s * 0.08, s * 0.10), Vector2(c, c)), Color("d83b3b"))
-	draw_rect(Rect2(o + Vector2(s * 0.08 + c + g, s * 0.10), Vector2(c, c)), Color("3fae4a"))
-	draw_rect(Rect2(o + Vector2(s * 0.08, s * 0.10 + c + g), Vector2(c, c)), Color("2f7fd8"))
-	draw_rect(Rect2(o + Vector2(s * 0.08 + c + g, s * 0.10 + c + g), Vector2(c, c)), Color("efc63c"))
+	var corpo := Color("bfe2fa") if pallida else Color("14539e")
+	var ombra := Color("7fbde8") if pallida else Color("0d3c75")
+	var chiaro := Color("4b93cf") if pallida else Color("8fd0f2")
+	# coda: un remo largo con l'incavo, i lobi spazzati in alto (e' una pinna
+	# ORIZZONTALE vista di sbieco: se fosse una V simmetrica sarebbe un pesce)
+	draw_colored_polygon(_poly(o, s, [
+		0.72, 0.505, 0.86, 0.425, 0.99, 0.285, 0.93, 0.455,
+		0.99, 0.545, 0.90, 0.585, 0.78, 0.545,
+	]), corpo)
+	# corpo: muso smussato a sinistra, groppa lunga, poi il peduncolo sottile
+	draw_colored_polygon(_poly(o, s, [
+		0.035, 0.545,
+		0.035, 0.49, 0.065, 0.435, 0.135, 0.395, 0.25, 0.37, 0.40, 0.375,
+		0.55, 0.405, 0.66, 0.455, 0.745, 0.495,
+		0.745, 0.535, 0.65, 0.555,
+		0.52, 0.605, 0.36, 0.645, 0.20, 0.645, 0.09, 0.605,
+	]), corpo)
+	# pinna pettorale: piccola e bassa
+	draw_colored_polygon(_poly(o, s, [0.25, 0.625, 0.375, 0.64, 0.275, 0.765]), ombra)
+	# pancia chiara lungo il bordo di sotto
+	draw_colored_polygon(_poly(o, s, [
+		0.06, 0.575, 0.17, 0.635, 0.35, 0.635, 0.51, 0.59, 0.645, 0.545,
+		0.62, 0.515, 0.49, 0.56, 0.34, 0.595, 0.18, 0.595, 0.08, 0.545,
+	]), chiaro)
+	# bocca e occhio solo da 24 px in su: sotto quella misura sono due macchie
+	# che sporcano il muso invece di descriverlo
+	if s >= 24.0:
+		draw_line(o + Vector2(s * 0.04, s * 0.535), o + Vector2(s * 0.225, s * 0.60),
+				ombra, maxf(s * 0.028, 1.0))
+		draw_circle(o + Vector2(s * 0.125, s * 0.50), maxf(s * 0.024, 0.7),
+				Color("1b4f8c") if pallida else Color("eaf5ff"))
+	# sbuffo dallo sfiatatoio: da grande tre getti, da piccolo due piu' spessi
+	# (tre righe da un pixel attaccate diventano una macchia sola)
+	var getto: float = maxf(s * 0.045, 2.0)
+	var sfiato := o + Vector2(s * 0.19, s * 0.385)
+	var getti := [Vector2(0.125, 0.175), Vector2(0.195, 0.125), Vector2(0.275, 0.185)]
+	if s < 30.0:
+		getti = [Vector2(0.11, 0.165), Vector2(0.30, 0.165)]
+	for punta in getti:
+		draw_line(sfiato, o + Vector2(s * punta.x, s * punta.y), chiaro, getto)
+
+# Da coppie x,y in 0..1 ai punti veri dentro il quadrato dell'icona: le sagome
+# restano scritte a misura unitaria e reggono qualsiasi dimensione.
+func _poly(o: Vector2, s: float, xy: Array) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var k := 0
+	while k < xy.size():
+		pts.append(o + Vector2(s * float(xy[k]), s * float(xy[k + 1])))
+		k += 2
+	return pts

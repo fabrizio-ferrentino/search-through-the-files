@@ -141,7 +141,11 @@ func _build_taskbar() -> void:
 	hb.add_theme_constant_override("separation", 4)
 	taskbar.add_child(hb)
 
-	start_btn = _icon_button("Start", "win", TASKBAR_H - 8)
+	# "Avvio" col logo della balena: il pulsante "Start" con la bandiera era l'ultimo
+	# pezzo preso in prestito da Windows, e il resto dell'OS e' in italiano. L'icona
+	# e' piu' grande del solito (26 invece di 18) perche' la balena ha una sagoma da
+	# leggere, e da qui passa anche al monitor 3D, dove si rimpicciolisce.
+	start_btn = _icon_button("Avvio", "whale", TASKBAR_H - 8, 26)
 	start_btn.custom_minimum_size.x = 96
 	start_btn.toggle_mode = true
 	start_btn.pressed.connect(_toggle_start_menu)
@@ -179,7 +183,7 @@ func _build_start_menu() -> void:
 		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "start")},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
 		{"sep": true},
-		{"name": "Spegni il PC", "icon": "win", "open": func(): _show_shutdown()},
+		{"name": "Spegni il PC", "icon": "whale", "open": func(): _show_shutdown()},
 	]
 	var menu_w := 250
 	var stripe_w := 34
@@ -199,11 +203,25 @@ func _build_start_menu() -> void:
 	stripe.position = Vector2(3, 3)
 	stripe.size = Vector2(stripe_w, menu_h - 6)
 	start_menu.add_child(stripe)
+	# striscia: il nome del sistema scritto di lato, come sui menu dell'epoca, col
+	# logo in fondo. Qui la balena va nella versione pallida: sul blu scuro quella
+	# normale sarebbe blu su blu.
 	var flag := OSIcon.new()
-	flag.kind = "win"
-	flag.size = Vector2(26, 26)
-	flag.position = Vector2(4, menu_h - 36)
+	flag.kind = "whale_pale"
+	flag.size = Vector2(30, 30)
+	flag.position = Vector2(2, menu_h - 40)
 	stripe.add_child(flag)
+	var nome := Label.new()
+	nome.text = "52-hz whale"
+	nome.add_theme_font_override("font", Win95.font("sans_b"))
+	nome.add_theme_font_size_override("font_size", 18)
+	nome.add_theme_color_override("font_color", Color("9ecdf0"))
+	# ruotata di -90 gradi: l'asse x locale punta in alto, quindi la si posiziona
+	# in basso a sinistra e il testo sale
+	nome.rotation = -PI / 2.0
+	nome.size = Vector2(menu_h - 58, 26)
+	nome.position = Vector2(5, menu_h - 48)
+	stripe.add_child(nome)
 
 	var vb := VBoxContainer.new()
 	vb.position = Vector2(3 + stripe_w, 3)
@@ -227,13 +245,13 @@ func _build_start_menu() -> void:
 			cb.call())
 		vb.add_child(b)
 
-func _icon_button(text: String, kind: String, h: int) -> Button:
+func _icon_button(text: String, kind: String, h: int, icona := 0) -> Button:
 	var b := Button.new()
 	b.text = "      " + text
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.custom_minimum_size = Vector2(0, h)
 	b.focus_mode = Control.FOCUS_NONE
-	var icon_s := h - 14
+	var icon_s := icona if icona > 0 else h - 14
 	var ic := OSIcon.new()
 	ic.kind = kind
 	ic.size = Vector2(icon_s, icon_s)
