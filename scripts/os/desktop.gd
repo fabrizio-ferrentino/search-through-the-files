@@ -278,7 +278,10 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			return win
 		"image":
 			var node: Dictionary = arg if arg is Dictionary else {}
-			var win := open_window(str(node.get("name", "Immagine")), Vector2(620, 480), "image")
+			# grande abbastanza da mostrare la foto SENZA rimpicciolirla: la composizione
+			# arriva a 640x480 e il pannello dei cursori si mangia 210 px. Rimpicciolire
+			# cancellerebbe la scritta-chiave, che vale pochi livelli di colore.
+			var win := open_window(str(node.get("name", "Immagine")), Vector2(910, 590), "image")
 			var app := ImageViewerApp.new()
 			win.content_root.add_child(app)
 			app.os = self

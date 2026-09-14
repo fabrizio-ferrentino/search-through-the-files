@@ -16,13 +16,9 @@ var window
 var _mat: ShaderMaterial
 var _sliders: Array = []   # [{ "node": HSlider, "default": float }]
 
-# --- Aspetto della scritta-chiave (REGOLA QUI) ---
-# Dimensione: frazione dell'altezza della foto. Piu' basso = scritta piu' piccola.
-const CODE_SIZE_FACTOR := 0.08
-# Trasparenza: piu' basso = piu' mimetizzata. Sotto 1 la foto TRASPARE attraverso la
-# scritta, cosi' su foto reali (con dettaglio) non resta una "macchia" piatta opaca.
-# (Troppo basso pero' la rende difficile da trovare anche regolando: 0.6 e' un buon punto.)
-const CODE_ALPHA := 0.6
+# Aspetto della scritta-chiave: le costanti stanno in OSContent, perche' servono anche
+# alla preparazione del nascondiglio (che deve sapere quanto sara' grande la scritta).
+# Regolare li': CODE_SIZE_FACTOR (dimensione), CODE_ALPHA (trasparenza), CODE_TILT.
 
 # Valori di default = identita' dello shader (vedi adjust.gdshader).
 const DEFAULTS := {
@@ -31,6 +27,7 @@ const DEFAULTS := {
 	"saturation": 1.0,
 	"black_point": 0.0,
 	"white_point": 1.0,
+	"detail": 0.0,
 }
 
 func launch(node) -> void:
@@ -85,7 +82,7 @@ func launch(node) -> void:
 
 	var code := str(data.get("code", ""))
 	if code != "":
-		_place_code(vp, photo_tex, data, code)
+		_place_code(vp, data, code)
 
 	var view := TextureRect.new()
 	view.texture = vp.get_texture()
@@ -93,6 +90,10 @@ func launch(node) -> void:
 	view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	view.material = _mat
+	# Prelievi esatti per il passa-banda: niente pre-miscelatura dovuta al leggero
+	# ingrandimento, e niente lettura oltre il bordo.
+	view.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	view.texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	display.add_child(view)
 
@@ -107,7 +108,7 @@ func launch(node) -> void:
 	col.offset_top = 10
 	col.offset_right = -10
 	col.offset_bottom = -10
-	col.add_theme_constant_override("separation", 25)
+	col.add_theme_constant_override("separation", 18)   # 6 cursori nella finestra
 	side.add_child(col)
 
 	var title := Label.new()
@@ -119,6 +120,10 @@ func launch(node) -> void:
 	_add_slider(col, "Saturazione", "saturation", 0.0, 3.0)
 	_add_slider(col, "Punto nero", "black_point", 0.0, 0.95)
 	_add_slider(col, "Punto bianco", "white_point", 0.05, 1.0)
+	# Il passa-banda: separa la scritta dal dettaglio della foto per DIMENSIONE, non per
+	# intensita' (vedi adjust.gdshader). E' lo strumento che rende la chiave trovabile su
+	# qualsiasi foto, senza doverla ritoccare.
+	_add_slider(col, "Nitidezza", "detail", 0.0, 1.0)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -134,40 +139,44 @@ func launch(node) -> void:
 		window.set_title(str(data.get("name", "Visualizzatore immagini")))
 
 # Posiziona la scritta-chiave nel SubViewport. Sceglie la zona piu' LISCIA della foto
-# (minor dettaglio) fra alcuni candidati (seme stabile per run): su un'area piatta la
-# scritta e' invisibile all'apertura E si rivela regolando; su un'area di dettaglio si
-# noterebbe e non si rivelerebbe. Colore = media locale +/- un piccolo scarto, semi-
-# trasparente cosi' la foto traspare.
-func _place_code(vp: SubViewport, photo_tex: Texture2D, data: Dictionary, code: String) -> void:
+# Sovrappone la scritta-chiave alla foto, DENTRO il SubViewport di composizione (foto +
+# scritta insieme), cosi' i cursori agiscono su entrambe e il codice emerge solo
+# regolando: non e' un livello separabile.
+#
+# Il NASCONDIGLIO non lo decide questa funzione: lo ha scelto OSContent._best_hiding_spot
+# quando il run e' stato generato (la zona piu' liscia della foto, col colore medio e lo
+# scarto scalato sul rumore di quella zona). Qui si disegna soltanto. Il motivo: i cursori
+# amplificano scritta E dettaglio della foto nella stessa misura, quindi se lo scarto e'
+# piu' debole del dettaglio locale la scritta non emerge a nessun valore.
+func _place_code(vp: SubViewport, data: Dictionary, code: String) -> void:
 	var r := RandomNumberGenerator.new()
 	r.seed = int(data.get("code_seed", 0))
 	var vps := Vector2(vp.size)
-	var fsize: int = maxi(10, int(vps.y * CODE_SIZE_FACTOR))
-	var font := ThemeDB.fallback_font
+	var fsize: int = maxi(10, int(vps.y * OSContent.CODE_SIZE_FACTOR))
+	var font := Win95.font("sans")
 	var tsz := font.get_string_size(code, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize)
-	# margini per non far uscire la scritta (con un extra per la rotazione)
-	var mx: float = minf(0.45, (tsz.x * 0.5) / vps.x * 1.3 + 0.04)
-	var my: float = minf(0.45, (tsz.y * 0.5) / vps.y * 1.3 + 0.06)
 
-	# fra alcuni candidati, scegli quello con meno dettaglio (varianza piu' bassa)
-	var img := _photo_image(photo_tex)
-	var u := 0.5
-	var v := 0.5
-	var base := Color(0.5, 0.5, 0.5)
-	var best_var := INF
-	for _i in range(14):
-		var cu: float = r.randf_range(mx, 1.0 - mx)
-		var cv: float = r.randf_range(my, 1.0 - my)
-		var st := _region_stats(img, cu, cv)
-		if float(st["variance"]) < best_var:
-			best_var = float(st["variance"])
-			u = cu
-			v = cv
-			base = st["avg"]
-
-	var d: float = OSContent.PHOTO_KEY_DELTA * (1.0 if r.randf() < 0.5 else -1.0)
+	var base: Color = data.get("code_base", Color(0.5, 0.5, 0.5))
+	var delta: float = float(data.get("code_delta", OSContent.CODE_DELTA_MIN))
+	# Verso dello scarto: si schiarisce sui fondi scuri, si scurisce su quelli chiari
+	# (altrimenti a caso, stabile per run). Diviso per l'opacita': quello che conta e'
+	# lo scarto del risultato COMPOSTO, e la Label e' semi-trasparente.
+	var lum: float = (base.r + base.g + base.b) / 3.0
+	var segno := 1.0
+	if lum > 0.75:
+		segno = -1.0
+	elif lum >= 0.25 and r.randf() < 0.5:
+		segno = -1.0
+	var d: float = segno * delta / maxf(0.05, OSContent.CODE_ALPHA)
 	var c := Color(clampf(base.r + d, 0, 1), clampf(base.g + d, 0, 1), clampf(base.b + d, 0, 1))
-	c.a = CODE_ALPHA   # semi-trasparente: la foto traspare, niente "macchia" piatta
+	c.a = OSContent.CODE_ALPHA   # semi-trasparente: la foto traspare, niente "macchia" piatta
+
+	# posizione scelta in fase di generazione, tenuta dentro i bordi della foto
+	var uv: Vector2 = data.get("code_uv", Vector2(0.5, 0.5))
+	var mx: float = minf(0.45, (tsz.x * 0.5) / maxf(1.0, vps.x) + 0.03)
+	var my: float = minf(0.45, (tsz.y * 0.5) / maxf(1.0, vps.y) + 0.04)
+	uv.x = clampf(uv.x, mx, 1.0 - mx)
+	uv.y = clampf(uv.y, my, 1.0 - my)
 
 	var lbl := Label.new()
 	lbl.text = code
@@ -176,8 +185,8 @@ func _place_code(vp: SubViewport, photo_tex: Texture2D, data: Dictionary, code: 
 	lbl.add_theme_color_override("font_color", c)
 	lbl.size = tsz
 	lbl.pivot_offset = tsz * 0.5
-	lbl.position = Vector2(u, v) * vps - tsz * 0.5
-	lbl.rotation = deg_to_rad(r.randf_range(-12.0, 12.0))
+	lbl.position = uv * vps - tsz * 0.5
+	lbl.rotation = deg_to_rad(r.randf_range(-OSContent.CODE_TILT, OSContent.CODE_TILT))
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vp.add_child(lbl)
 
@@ -189,51 +198,6 @@ func _fit_size(src: Vector2, maxv: Vector2) -> Vector2i:
 	var s: float = minf(1.0, minf(maxv.x / src.x, maxv.y / src.y))
 	return Vector2i(maxi(8, int(src.x * s)), maxi(8, int(src.y * s)))
 
-# Decomprime la foto in un Image una volta sola (gestisce le texture compresse).
-func _photo_image(tex: Texture2D) -> Image:
-	if tex == null:
-		return null
-	var img := tex.get_image()
-	if img == null:
-		return null
-	img = img.duplicate() as Image
-	if img.is_compressed() and img.decompress() != OK:
-		return null
-	return img
-
-# Statistiche locali attorno a (u,v): colore medio (per mimetizzare il testo) e varianza
-# di luminanza (quanto e' "dettagliata" la zona: bassa = liscia = buon nascondiglio).
-func _region_stats(img: Image, u: float, v: float) -> Dictionary:
-	if img == null:
-		return {"avg": Color(0.5, 0.5, 0.5), "variance": 0.0}
-	var w := img.get_width()
-	var h := img.get_height()
-	var cxp := int(clampf(u, 0, 1) * (w - 1))
-	var cyp := int(clampf(v, 0, 1) * (h - 1))
-	var rad: int = maxi(2, int(min(w, h) * 0.06))
-	var step: int = maxi(1, (rad * 2) / 24)
-	var sr := 0.0
-	var sg := 0.0
-	var sb := 0.0
-	var sl := 0.0
-	var sl2 := 0.0
-	var n := 0
-	for y in range(maxi(0, cyp - rad), mini(h, cyp + rad), step):
-		for x in range(maxi(0, cxp - rad), mini(w, cxp + rad), step):
-			var col := img.get_pixel(x, y)
-			sr += col.r
-			sg += col.g
-			sb += col.b
-			var l := (col.r + col.g + col.b) / 3.0
-			sl += l
-			sl2 += l * l
-			n += 1
-	if n == 0:
-		return {"avg": Color(0.5, 0.5, 0.5), "variance": 0.0}
-	var mean_l := sl / n
-	return {"avg": Color(sr / n, sg / n, sb / n), "variance": maxf(0.0, sl2 / n - mean_l * mean_l)}
-
-# Crea una riga "etichetta + cursore" legata a un uniforme dello shader.
 func _add_slider(parent: VBoxContainer, text: String, param: String, minv: float, maxv: float) -> void:
 	var lbl := Label.new()
 	lbl.text = text

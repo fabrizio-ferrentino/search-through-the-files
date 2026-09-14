@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/photo_look_check.gd" id="1_lk"]
+
+[node name="PhotoLook" type="Node"]
+script = ExtResource("1_lk")

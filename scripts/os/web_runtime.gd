@@ -70,6 +70,9 @@ static func build() -> void:
 	else:
 		_text = _COMMENT[rng.randi_range(0, _COMMENT.size() - 1)] % _key
 	_built_seed = GameManager.run_seed
+	if _key != "" and _carrier != "":
+		GameManager.note_key(OSContent.KEY_WEB, "http://%s - %s" % [_carrier,
+				"visibile nella pagina" if _visible else "solo nel sorgente"])
 
 static func _ensure() -> void:
 	if _built_seed != GameManager.run_seed or _chosen.is_empty():

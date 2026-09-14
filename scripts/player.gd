@@ -313,6 +313,7 @@ func _on_game_won() -> void:
 	if _ending:
 		return
 	_ending = true
+	GameManager.finish_run()   # fine partita: via il pannello di debug, tasti disattivati
 	entering = true            # blocca input e movimento fino al cambio scena
 	if _threats != null:       # niente jumpscare sopra la schermata di vittoria
 		_threats.stop()

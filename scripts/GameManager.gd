@@ -37,9 +37,21 @@ var logged_in := false
 # True mentre l'overlay di morte e' in corso: evita game over multipli sovrapposti.
 var _game_over_active := false
 
+# True da "Inizia" fino alla morte o alla vittoria. Serve ai tasti di debug: nel menu
+# non c'e' nessuna partita, quindi non hanno senso (e il pannello F12 mostrerebbe i dati
+# della partita precedente, dato che vive sulla radice e sopravvive al cambio di scena).
+var run_active := false
+
 # Debug: toggle minacce (F11). Quando false, il ThreatDirector non genera
 # affacci e non puo' uccidere — utile per testare modifiche in pace.
 var threats_enabled := true
+
+# DEV-ONLY. Dove e' finita ogni chiave: lo riempiono i generatori dei contenuti
+# mentre le piazzano (content.gd, web_runtime.gd) chiamando note_key(). Serve al
+# pannello di debug F12: senza, provare una partita vuol dire cercare alla cieca.
+var key_hints: Dictionary = {}
+var _keys_panel: CanvasLayer = null
+var _keys_label: Label = null
 
 # ---------------- ciclo di vita del run ----------------
 
@@ -50,12 +62,15 @@ func start_new_run(new_seed: int = 0) -> void:
 	run_seed = new_seed if new_seed != 0 else randi()
 	rng.seed = run_seed
 	_generate_keys()          # genera le chiavi PRIMA di costruire i contenuti che le ospitano
+	key_hints.clear()         # le posizioni le riannotano i generatori qui sotto
 	first_time_in_room = true
 	pc_on = false
 	logged_in = false
 	_game_over_active = false
 	VFS.build_run(run_seed)    # filesystem fresco: "perdere -> run nuovo" riparte pulito
 	BrowserApp.reset_pages()   # pagine web rigenerate per il nuovo run (con le nuove chiavi)
+	run_active = true
+	_refresh_keys_panel()      # se il pannello di debug e' aperto, mostra la partita NUOVA
 
 # Fine partita: lo chiameranno i nemici (M4), dalla stanza o dal PC. Mostra
 # l'overlay di morte (jumpscare -> schermata GAME OVER -> menu), sopra a tutto.
@@ -64,6 +79,7 @@ func game_over(cause := "") -> void:
 	if _game_over_active:
 		return
 	_game_over_active = true
+	finish_run()               # niente pannello di debug appeso sopra la morte e il menu
 	print("[GameManager] game_over(", cause, ")")
 	var ds = load("res://scripts/death_screen.gd").new()
 	ds.cause = cause
@@ -71,20 +87,33 @@ func game_over(cause := "") -> void:
 	# sicuro anche se game_over scatta mentre l'albero sta costruendo dei nodi.
 	get_tree().root.add_child.call_deferred(ds)
 
+# Fine della partita (morte o vittoria): da qui in poi non c'e' piu' nulla da mostrare,
+# quindi si chiude il pannello di debug e i tasti di debug si disattivano. La chiamano
+# game_over() e player._on_game_won().
+func finish_run() -> void:
+	run_active = false
+	close_keys_panel()
+
 # Ricomincia da capo: nuovo seme, filesystem ricostruito, stato azzerato.
 # (Non usato dal flusso di morte, che torna al menu; resta come hook per M4 / "Riprova".)
 func restart() -> void:
 	start_new_run()
 
-# DEV-ONLY (M2): F10 forza il game over per provare jumpscare/flusso. In M4 sara'
-# un nemico a chiamarlo: rimuovere allora questo input di debug.
+# DEV-ONLY: F12 mostra chiavi e nascondigli, F10 forza il game over (per provare
+# jumpscare/flusso), F11 spegne le minacce. Da togliere prima del rilascio.
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_F10:
-			game_over("debug")
+		if event.keycode == KEY_F12:
+			toggle_keys_panel()
+		elif event.keycode == KEY_F10:
+			if run_active:
+				game_over("debug")
+			else:
+				print("[GameManager] F10 ignorato: nessuna partita in corso")
 		elif event.keycode == KEY_F11:
 			threats_enabled = not threats_enabled
 			print("[GameManager] threats_enabled = ", threats_enabled)
+			_refresh_keys_panel()
 
 # ---------------- chiavi (M1) ----------------
 
@@ -126,3 +155,76 @@ func check_keys(rows: Array) -> bool:
 		if got != str(k.get("code", "")).to_upper():
 			return false
 	return true
+
+# ---------------- DEV-ONLY: chiavi e nascondigli (F12) ----------------
+
+# Annota dove e' stata piazzata una chiave (lo chiamano i generatori dei contenuti).
+func note_key(index: int, dove: String) -> void:
+	key_hints[index] = dove
+
+# Rapporto sintetico: intestazione con seme e stato delle minacce, poi una riga
+# per chiave (codice, tipo, dove sta).
+func keys_report() -> String:
+	var tipi := {1: "FILE", 2: "CART", 3: "WEB", 4: "FOTO"}
+	var out := "CHIAVI  seme %d  -  minacce %s
+" % [run_seed, "ON" if threats_enabled else "OFF"]
+	for i in range(1, KEY_COUNT + 1):
+		out += "%-8s %-5s %s
+" % [key_label(i), str(tipi.get(i, "?")), str(key_hints.get(i, "-"))]
+	return out.strip_edges()
+
+# Mostra/nasconde il pannello di debug con le chiavi; stampa lo stesso in console.
+# CanvasLayer alla radice: si vede sia in stanza sia dentro il PC.
+func toggle_keys_panel() -> void:
+	if _keys_panel != null and is_instance_valid(_keys_panel):
+		close_keys_panel()
+		return
+	if not run_active:
+		# nel menu non c'e' niente da mostrare: aprirlo farebbe vedere i dati del run
+		# precedente (il pannello sta sulla radice e sopravvive al cambio di scena)
+		print("[GameManager] F12 ignorato: nessuna partita in corso")
+		return
+	print("
+" + keys_report())
+	var layer := CanvasLayer.new()
+	layer.name = "DebugKeysLayer"
+	layer.layer = 30                      # sopra vista PC (10) e schermata di morte (20)
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	var box := PanelContainer.new()
+	# in alto a DESTRA: a sinistra ci sono le icone del desktop
+	box.set_anchors_preset(Control.PRESET_TOP_RIGHT, true)
+	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	box.offset_top = 16
+	box.offset_right = -16
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.04, 0.04, 0.06, 0.88)
+	sb.border_color = Color(0.9, 0.8, 0.2)
+	sb.set_border_width_all(2)
+	sb.set_content_margin_all(9)
+	box.add_theme_stylebox_override("panel", sb)
+	var lbl := Label.new()
+	lbl.add_theme_font_override("font", Win95.font("mono"))
+	lbl.add_theme_font_size_override("font_size", 17)
+	lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 0.8))
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(lbl)
+	layer.add_child(box)
+	get_tree().root.add_child(layer)
+	_keys_panel = layer
+	_keys_label = lbl
+	_refresh_keys_panel()
+
+# Chiude il pannello di debug, se aperto.
+func close_keys_panel() -> void:
+	if _keys_panel != null and is_instance_valid(_keys_panel):
+		_keys_panel.queue_free()
+	_keys_panel = null
+	_keys_label = null
+
+# Riscrive il testo del pannello (se aperto): lo usa anche F11, cosi' lo stato
+# delle minacce si vede cambiare sul momento.
+func _refresh_keys_panel() -> void:
+	if _keys_label != null and is_instance_valid(_keys_label):
+		_keys_label.text = keys_report() + "
+F12 chiudi  F10 morte  F11 minacce"
