@@ -453,6 +453,39 @@ static func _reopen_all(stack: Array) -> String:
 		out += str(t["open"])
 	return out
 
+# ---------------- documento: body e commenti ----------------
+# Funzioni pure che stanno QUI e non nel browser perche' i test headless devono
+# poter rifare la stessa pipeline di rendering della pagina senza istanziare
+# BrowserApp (vedi tests/html_bb_test.gd).
+
+# Il contenuto fra <body ...> e </body>. Se i tag mancano, tutto il documento.
+static func body_inner(html: String) -> String:
+	var bi := html.findn("<body")
+	if bi < 0:
+		return html
+	var gt := html.find(">", bi)
+	if gt < 0:
+		return html
+	var endb := html.findn("</body>")
+	if endb < 0:
+		endb = html.length()
+	return html.substr(gt + 1, endb - gt - 1)
+
+# Via i commenti <!-- ... -->. Va fatto PRIMA di compile(): e' quello che rende
+# invisibile a schermo la chiave nascosta nel sorgente (resta nel "visualizza
+# sorgente", che usa l'HTML non ripulito).
+static func strip_comments(s: String) -> String:
+	while true:
+		var a := s.find("<!--")
+		if a < 0:
+			break
+		var b := s.find("-->", a)
+		if b < 0:
+			s = s.substr(0, a)
+			break
+		s = s.substr(0, a) + s.substr(b + 3)
+	return s
+
 # ---------------- helper parsing ----------------
 
 static func _tagname(tag: String) -> String:

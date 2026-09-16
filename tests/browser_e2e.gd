@@ -119,25 +119,75 @@ func _ready() -> void:
 	_check("DRAG_SELEZIONE", sel.length() > 20, "selezione vuota o troppo corta: '%s'" % sel.substr(0, 60))
 	await _snap("web_forum_selezione.png")
 
-	# --- chiave web del run: su UNA pagina, visibile o solo nel sorgente ---
+	# --- chiave web del run: su UNA pagina sola, e NELLA MODALITA' DICHIARATA ---
+	# La modalita' la si chiede a WebRuntime invece di dedurla da dove si trova la
+	# stringa: dedurla nascondeva un buco -- una frase visibile finita in un punto
+	# morto (dentro una tabella ma fuori dalle celle non viene resa) passava per
+	# "solo sorgente" e il test restava verde con la chiave introvabile in partita.
 	var kl: String = GameManager.key_label(OSContent.KEY_WEB)
-	_check("CHIAVE_GENERATA", kl != "", "key_label vuota")
-	var visibile := 0
-	var solo_sorgente := 0
+	var portatore := WebRuntime.carrier()
+	var visibile := WebRuntime.is_visible()
+	var ancora := WebRuntime.anchor_info()
+	_check("CHIAVE_GENERATA", kl != "" and portatore != "", "key_label o portatore vuoti")
+	print("chiave %s su '%s' -- %s (%s)" % [kl, portatore,
+			"visibile" if visibile else "solo sorgente", str(ancora["nota"])])
+	var trovate := 0
 	for f in ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri"]:
 		_browser._load(f)
 		for i in range(2):
 			await get_tree().process_frame
 		var parsed: String = _browser._rtl.get_parsed_text()
 		var src: String = _browser._html_text
-		if parsed.find(kl) >= 0:
-			visibile += 1
-			print("chiave VISIBILE su '%s'" % f)
+		if src.find(kl) >= 0:
+			trovate += 1
+		if f != portatore:
+			continue
+		# il portatore: titolo intatto, modalita' rispettata, e in modalita'
+		# sorgente la chiave deve comparire nel "visualizza sorgente"
+		_check("TITOLO_INTATTO",
+				_browser.window == null or str(_browser.window.win_title) == _titolo_pulito(f),
+				"il titolo della finestra e' cambiato: '%s'" % (str(_browser.window.win_title) if _browser.window else ""))
+		if visibile:
+			_check("CHIAVE_VISIBILE_A_SCHERMO", parsed.find(kl) >= 0,
+					"modalita' visibile ma a schermo non c'e' (%s)" % str(ancora["tipo"]))
 			await _snap("web_chiave.png")
-		elif src.find(kl) >= 0:
-			solo_sorgente += 1
-			print("chiave nel SORGENTE di '%s' (commento)" % f)
-	_check("CHIAVE_SU_UNA_PAGINA", visibile + solo_sorgente == 1, "portatori trovati: %d visibili + %d sorgente" % [visibile, solo_sorgente])
+		else:
+			_check("CHIAVE_NON_VISIBILE", parsed.find(kl) < 0,
+					"modalita' sorgente ma la chiave si legge a schermo (%s)" % str(ancora["tipo"]))
+			_browser._view_source()
+			for i in range(3):
+				await get_tree().process_frame
+			_check("SORGENTE_MOSTRA_CHIAVE", _browser._inspector_edit.text.find(kl) >= 0,
+					"il 'visualizza sorgente' non mostra la chiave (%s)" % str(ancora["tipo"]))
+			await _snap("web_chiave_sorgente.png")
+			_browser._view_source()
+	_check("CHIAVE_SU_UNA_PAGINA", trovate == 1, "pagine col codice nel sorgente: %d" % trovate)
+
+	# --- e la modalita' SORGENTE, che col seme fisso qui sopra non capita mai ---
+	# Due semi scelti perche' nascondono la chiave in un attributo e in un commento
+	# a meta' del markup: sono i due modi nuovi, e vanno visti col browser vero.
+	for seme in [4242, 1]:
+		GameManager.start_new_run(seme)
+		var k2: String = GameManager.key_label(OSContent.KEY_WEB)
+		var p2 := WebRuntime.carrier()
+		var a2 := WebRuntime.anchor_info()
+		if WebRuntime.is_visible():
+			print("[diag] il seme %d non e' piu' in modalita' sorgente: controllo saltato" % seme)
+			continue
+		_browser._load(p2)
+		for i in range(3):
+			await get_tree().process_frame
+		var suffisso := "%s_%d" % [str(a2["tipo"]).to_lower(), seme]
+		_check("SORGENTE_INVISIBILE_" + suffisso, _browser._rtl.get_parsed_text().find(k2) < 0,
+				"la chiave si legge a schermo (%s su %s)" % [str(a2["tipo"]), p2])
+		_browser._view_source()
+		for i in range(3):
+			await get_tree().process_frame
+		_check("SORGENTE_MOSTRA_" + suffisso, _browser._inspector_edit.text.find(k2) >= 0,
+				"il 'visualizza sorgente' non mostra %s (%s su %s)" % [k2, str(a2["tipo"]), p2])
+		print("   %s: %s -- %s" % [p2, k2, str(a2["nota"])])
+		await _snap("web_sorgente_%s.png" % suffisso)
+		_browser._view_source()
 
 	# --- esito ---
 	if _fails.is_empty():
@@ -145,6 +195,14 @@ func _ready() -> void:
 	else:
 		print("RISULTATO: FAIL -> " + ", ".join(_fails))
 	get_tree().quit(0 if _fails.is_empty() else 1)
+
+# Il titolo del file d'autore, senza passare da WebRuntime: serve a provare che
+# l'iniezione non ha toccato <title> (finirebbe nella barra della finestra).
+func _titolo_pulito(pagina: String) -> String:
+	var raw := BrowserApp.read_page(pagina)
+	var a := raw.findn("<title>")
+	var b := raw.findn("</title>")
+	return raw.substr(a + 7, b - a - 7).strip_edges() if a >= 0 and b > a else ""
 
 # Attende il rendering, salva lo screenshot e ritorna il testo della pagina.
 func _snap(fname: String) -> String:

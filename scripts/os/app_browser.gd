@@ -154,6 +154,16 @@ func _go_forward() -> void:
 func _go_home() -> void:
 	_go(_home)
 
+# Legge il file di una pagina d'autore ("" se non c'e'). Statica perche' serve
+# anche a reset_pages(), che risolve la posizione della chiave senza istanza:
+# WebRuntime non fa IO su file (vedi il suo commento in testa).
+static func read_page(name: String) -> String:
+	var path := PAGES_DIR + name + ".html"
+	if not FileAccess.file_exists(path):
+		return ""
+	var f := FileAccess.open(path, FileAccess.READ)
+	return f.get_as_text() if f != null else ""
+
 func _load(name: String) -> void:
 	if name == "":
 		name = _home
@@ -162,25 +172,23 @@ func _load(name: String) -> void:
 		# la HOME e' GENERATA per-run (5 siti a caso del pool), non un file
 		raw = WebRuntime.home_html()
 	else:
-		var path := PAGES_DIR + name + ".html"
-		if not FileAccess.file_exists(path):
+		raw = read_page(name)
+		if raw == "":
 			if name != "404" and FileAccess.file_exists(PAGES_DIR + "404.html"):
 				name = "404"
-				path = PAGES_DIR + "404.html"
+				raw = read_page(name)
 			else:
 				_current = name
 				_html_text = ""
 				_render_html("<center><font size=\"5\"><b>Errore 404</b></font><br>Pagina non trovata.</center>")
 				return
-		var f := FileAccess.open(path, FileAccess.READ)
-		raw = f.get_as_text() if f != null else ""
 	# inietta la chiave web del run se questa pagina la ospita (visibile o commento)
 	_html_text = WebRuntime.source_html(name, raw)
 	_current = name
 	_addr.text = "" if name == _home else "http://" + name
 	if window:
 		window.set_title(_between(_html_text, "<title>", "</title>"))
-	_render_html(_strip_comments(_body_inner(_html_text)))
+	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
 	if _inspector.visible:
 		_inspector_edit.text = _format_html(_html_text)
 
@@ -207,7 +215,7 @@ func _on_page_resized() -> void:
 		return
 	if absf(_page_width() - _reflow_width) < 2.0:
 		return
-	_render_html(_strip_comments(_body_inner(_html_text)))
+	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
 
 func _on_meta(meta) -> void:
 	_go(_norm(str(meta)))
@@ -297,18 +305,6 @@ func _between(s: String, a: String, b: String) -> String:
 	var j := s.findn(b, i)
 	return s.substr(i, j - i).strip_edges() if j >= 0 else ""
 
-func _body_inner(html: String) -> String:
-	var bi := html.findn("<body")
-	if bi < 0:
-		return html
-	var gt := html.find(">", bi)
-	if gt < 0:
-		return html
-	var endb := html.findn("</body>")
-	if endb < 0:
-		endb = html.length()
-	return html.substr(gt + 1, endb - gt - 1)
-
 # Attributo del tag <body> ("bgcolor"/"text"/"link"), o "" se assente.
 func _body_attr(html: String, name: String) -> String:
 	var bi := html.findn("<body")
@@ -336,17 +332,6 @@ func _body_link(html: String) -> String:
 		return c
 	return "#" + Win95.C_LINK.to_html(false)
 
-func _strip_comments(s: String) -> String:
-	while true:
-		var a := s.find("<!--")
-		if a < 0:
-			break
-		var b := s.find("-->", a)
-		if b < 0:
-			s = s.substr(0, a)
-			break
-		s = s.substr(0, a) + s.substr(b + 3)
-	return s
 
 # ---------------- visualizza sorgente ----------------
 
@@ -527,6 +512,11 @@ func _show_ctx() -> void:
 # Rigenera lo stato web del run (chiave + portatore). Gancio da GameManager.start_new_run().
 static func reset_pages() -> void:
 	WebRuntime.build()
+	# risolve SUBITO dove finisce la chiave: il pannello F12 deve poterlo dire
+	# prima che il giocatore apra la pagina, e WebRuntime non legge file da solo
+	var c := WebRuntime.carrier()
+	if c != "":
+		WebRuntime.source_html(c, read_page(c))
 
 # ---------------- helper UI ----------------
 

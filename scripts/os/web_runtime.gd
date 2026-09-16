@@ -46,6 +46,12 @@ static var _visible := false
 static var _text := ""               # frase/commento col codice gia' inserito
 static var _key := ""
 static var _built_seed := -9999
+# DOVE finisce la chiave. Si sorteggiano due frazioni (0..1) e non una posizione,
+# perche' qui l'HTML del portatore non c'e' ancora: diventano un punto preciso in
+# source_html(), che e' la prima a vedere la pagina. Vedi web_anchor.gd.
+static var _frac_tipo := 0.0
+static var _frac_fessura := 0.0
+static var _ancora: Dictionary = {}     # memo: { html, tipo, nota, pos, reso, hash }
 
 # Sceglie i 5 siti del run + portatore/modalita'/chiave dal seme. La chiama
 # BrowserApp.reset_pages() (da GameManager.start_new_run); _ensure() la rifa' se serve.
@@ -69,10 +75,15 @@ static func build() -> void:
 		_text = _VISIBLE[rng.randi_range(0, _VISIBLE.size() - 1)] % _key
 	else:
 		_text = _COMMENT[rng.randi_range(0, _COMMENT.size() - 1)] % _key
+	# NB: questi due sorteggi stanno IN CODA di proposito. Metterli piu' su
+	# cambierebbe la sequenza dell'RNG, e con essa portatore/modalita'/frase di
+	# tutti i semi giocati finora.
+	_frac_tipo = rng.randf()
+	_frac_fessura = rng.randf()
+	_ancora = {}
 	_built_seed = GameManager.run_seed
 	if _key != "" and _carrier != "":
-		GameManager.note_key(OSContent.KEY_WEB, "http://%s - %s" % [_carrier,
-				"visibile nella pagina" if _visible else "solo nel sorgente"])
+		GameManager.note_key(OSContent.KEY_WEB, _hint())
 
 static func _ensure() -> void:
 	if _built_seed != GameManager.run_seed or _chosen.is_empty():
@@ -174,22 +185,58 @@ static func home_html() -> String:
 			righe += _recent_row(s)
 	return _HOME_TEMPLATE % righe
 
-# HTML d'autore con la chiave iniettata, SE questa pagina e' il portatore del run. In
-# modalita' "visibile" un paragrafo legacy (reso e selezionabile); altrimenti un commento
-# (non reso, ma visibile in "visualizza sorgente"). Il browser lo usa sia per mostrare la
+# HTML d'autore con la chiave iniettata, SE questa pagina e' il portatore del run.
+# Il punto esatto lo sceglie WebAnchor fra tutti quelli sicuri della pagina (riga a
+# se', in mezzo a una frase, in coda a un paragrafo, voce di elenco, cella chiara;
+# in modalita' sorgente: commento o attributo) -- prima finiva sempre in fondo e si
+# riconosceva a vista. Il browser usa questa stessa stringa sia per mostrare la
 # pagina (commenti rimossi) sia per il sorgente (commenti inclusi).
 static func source_html(page: String, src: String) -> String:
 	_ensure()
 	if page == HOME or page != _carrier or _key == "":
 		return src   # la wiki resta pulita: nessuna chiave, ne' visibile ne' nel sorgente
-	var snippet := ""
-	if _visible:
-		# niente color fisso: eredita il colore testo della pagina (leggibile anche sulle pagine scure)
-		snippet = "\n<p><font face=\"Arial\" size=\"2\">" + _text + "</font></p>\n"
-	else:
-		snippet = "\n<!-- " + _text + " -->\n"
-	var pos := src.findn("</body>")
-	return (src.substr(0, pos) + snippet + src.substr(pos)) if pos >= 0 else (src + snippet)
+	return str(_risolvi(src)["html"])
+
+# Dove va la chiave in QUESTA pagina. Il risultato si tiene da parte (memo
+# sull'hash del sorgente): source_html() viene chiamata a ogni caricamento e anche
+# per il "visualizza sorgente", e deve dare sempre lo stesso HTML -- altrimenti la
+# chiave ballerebbe da un punto all'altro durante la partita.
+static func _risolvi(src: String) -> Dictionary:
+	var h := src.hash()
+	if not _ancora.has("html") or int(_ancora.get("hash", 0)) != h:
+		_ancora = WebAnchor.inietta(src, _text, _key, _visible, _frac_tipo, _frac_fessura)
+		_ancora["hash"] = h
+		GameManager.note_key(OSContent.KEY_WEB, _hint())
+	return _ancora
+
+# La riga del pannello di debug (F12): sito, modalita' e DOVE sta la chiave.
+static func _hint() -> String:
+	var modo := "visibile" if _visible else "sorgente"
+	return "http://%s - %s - %s" % [_carrier, modo,
+			str(_ancora.get("nota", "posizione da risolvere"))]
+
+# ---------------- stato del run (serve ai test) ----------------
+
+static func carrier() -> String:
+	_ensure()
+	return _carrier
+
+static func is_visible() -> bool:
+	_ensure()
+	return _visible
+
+# La frase (o il commento) col codice dentro, come viene inserita.
+static func key_text() -> String:
+	_ensure()
+	return _text
+
+# { tipo, nota, pos, reso } dell'ancora scelta. "reso" e' cio' che deve comparire
+# a schermo ("" se la chiave sta solo nel sorgente). Vuoto se non ancora risolta.
+static func anchor_info() -> Dictionary:
+	return {
+		"tipo": str(_ancora.get("tipo", "")), "nota": str(_ancora.get("nota", "")),
+		"pos": int(_ancora.get("pos", -1)), "reso": str(_ancora.get("reso", "")),
+	}
 
 # Copia mescolata (Fisher-Yates) con l'RNG dato; non tocca l'originale.
 static func _shuffled(arr: Array, rng: RandomNumberGenerator) -> Array:
