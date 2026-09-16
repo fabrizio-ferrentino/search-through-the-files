@@ -34,6 +34,33 @@ var _reflow_width := -1.0            # se >= 0: la pagina ha tabelle in % -> ric
 const PAGES_DIR := "res://web/pages/"
 var _home := WebRuntime.HOME      # la wiki: pagina generata, non un file
 
+# ---- caricamento della pagina (il modem non e' istantaneo) ----
+# In WTTG2 aprire un sito richiede un attimo, e quell'attimo e' tensione: le
+# minacce continuano a girare mentre aspetti. Qui l'attesa e' breve e dipende dal
+# "peso" finto della pagina, lo stesso numero di KB che la wiki elenca nella
+# cronologia (WebRuntime.fake_kb): il conto nella barra di stato combacia.
+const CARICA_MIN := 0.40         # attesa minima, secondi
+const CARICA_MAX := 2            # attesa massima: non deve annoiare
+const CARICA_PER_KB := 0.018     # quanto pesa un KB finto
+const CARICA_JITTER := 0.12      # sporcatura casuale, cosi' non e' mai identica
+const CARICA_BLOCCHI := 14       # blocchetti della barra di avanzamento (stile Win95)
+const BLOCCO_W := 8              # larghezza di un blocchetto
+const BLOCCO_SEP := 2            # stacco fra due blocchetti
+const INCAVO_BORDO := 2          # margine interno dell'incavo (vedi Win95._sb sotto)
+
+# I test la abbassano (~0.05): il percorso resta lo stesso -- velo, barra di stato,
+# segnale, interruzione -- ma senza aspettare secondi a ogni pagina.
+static var attesa_scala := 1.0
+
+signal load_finished(page: String)
+
+var _velo: ColorRect = null            # copre la pagina mentre "arriva"
+var _stato_lbl: Label = null
+var _blocchi: Array = []               # i quadratini della barra di avanzamento
+var _globo: OSIcon = null              # l'icona accanto all'indirizzo: lampeggia
+var _tw_carica: Tween = null
+var _tw_globo: Tween = null
+
 func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var root := VBoxContainer.new()
@@ -58,7 +85,7 @@ func launch(arg) -> void:
 	root.add_child(toolbar)
 	toolbar.add_child(_icon_btn("back", _go_back))
 	toolbar.add_child(_icon_btn("fwd", _go_forward))
-	toolbar.add_child(_icon_btn("stop"))
+	toolbar.add_child(_icon_btn("stop", _interrompi))
 	toolbar.add_child(_icon_btn("refresh", func(): _load(_current)))
 	toolbar.add_child(_icon_btn("home", _go_home))
 	toolbar.add_child(_vsep())
@@ -74,12 +101,12 @@ func launch(arg) -> void:
 	lbl.text = "Indirizzo:"
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	addrbar.add_child(lbl)
-	var gicon := OSIcon.new()
-	gicon.kind = "ie"
-	gicon.custom_minimum_size = Vector2(18, 18)
-	gicon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	gicon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	addrbar.add_child(gicon)
+	_globo = OSIcon.new()
+	_globo.kind = "ie"
+	_globo.custom_minimum_size = Vector2(18, 18)
+	_globo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_globo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	addrbar.add_child(_globo)
 	_addr = LineEdit.new()
 	_addr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_addr.placeholder_text = "Digita un indirizzo, es. http://www.sito.it"
@@ -114,7 +141,18 @@ func launch(arg) -> void:
 	_rtl.resized.connect(_on_page_resized)
 	page_area.add_child(_rtl)
 
+	# Il VELO: mentre la pagina "arriva" non si deve poter leggere ne' cliccare
+	# niente. Sta sopra al PageView (aggiunto dopo = disegnato dopo) ed e' STOP,
+	# cosi' i clic non passano alla pagina sotto.
+	_velo = ColorRect.new()
+	_velo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_velo.color = Color.WHITE
+	_velo.mouse_filter = Control.MOUSE_FILTER_STOP
+	_velo.visible = false
+	page_area.add_child(_velo)
+
 	_build_inspector(root)
+	_costruisci_barra_stato(root)
 	_build_ctx_menu()
 
 	_load(_norm(arg if arg is String else _home))
@@ -210,6 +248,9 @@ func _load(name: String) -> void:
 	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
 	if _inspector.visible:
 		_inspector_edit.text = _format_html(_html_text)
+	# la pagina e' pronta dentro, ma il modem se la prende con calma: il velo la
+	# tiene coperta per un attimo (vedi _avvia_caricamento)
+	_avvia_caricamento(name)
 
 # Compila il body in BBCode e lo mette nell'RTL. I colori di pagina vengono dal
 # <body>: bgcolor (sfondo), text (testo), link (colore dei link) — cosi' le
@@ -537,6 +578,140 @@ static func reset_pages() -> void:
 	var c := WebRuntime.carrier()
 	if c != "":
 		WebRuntime.source_html(c, read_page(c))
+
+# ---------------- caricamento della pagina ----------------
+
+# La barra di stato in fondo alla finestra: a sinistra cosa sta facendo il modem,
+# a destra l'avanzamento a blocchetti come nei programmi dell'epoca.
+func _costruisci_barra_stato(root: Control) -> void:
+	var barra := Panel.new()
+	barra.add_theme_stylebox_override("panel", Win95._sb(false, Win95.C_FACE, true, 6, 3, 6, 3))
+	barra.custom_minimum_size = Vector2(0, 26)
+	root.add_child(barra)
+	var hb := HBoxContainer.new()
+	hb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hb.add_theme_constant_override("separation", 6)
+	barra.add_child(hb)
+
+	_stato_lbl = Label.new()
+	_stato_lbl.text = "Pronto"
+	_stato_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_stato_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_stato_lbl.clip_text = true
+	hb.add_child(_stato_lbl)
+
+	# incavo con i blocchetti dentro
+	# La larghezza dell'incavo si RICAVA dai blocchetti, non si scrive a mano: con
+	# un numero tondo (150) restavano 8 px liberi a destra, cioe' un quadratino
+	# vuoto anche a caricamento finito -- sembrava non completarsi mai.
+	var largh_riga := CARICA_BLOCCHI * BLOCCO_W + (CARICA_BLOCCHI - 1) * BLOCCO_SEP
+	var incavo := Panel.new()
+	incavo.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true,
+			INCAVO_BORDO, INCAVO_BORDO, INCAVO_BORDO, INCAVO_BORDO))
+	incavo.custom_minimum_size = Vector2(largh_riga + INCAVO_BORDO * 2, 18)
+	incavo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hb.add_child(incavo)
+	# NB: gli ancoraggi non sanno niente dei margini dello stylebox, quindi la fila
+	# va rientrata a mano -- altrimenti si stende su tutto il pannello (bordo
+	# compreso) e in fondo a destra resta lo spazio di un quadratino, come se la
+	# barra non si completasse mai.
+	var riga := HBoxContainer.new()
+	riga.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	riga.offset_left = INCAVO_BORDO
+	riga.offset_top = INCAVO_BORDO
+	riga.offset_right = -INCAVO_BORDO
+	riga.offset_bottom = -INCAVO_BORDO
+	riga.add_theme_constant_override("separation", BLOCCO_SEP)
+	incavo.add_child(riga)
+	_blocchi.clear()
+	for i in range(CARICA_BLOCCHI):
+		var b := ColorRect.new()
+		b.color = Win95.C_TITLE
+		# larghezza FISSA, non EXPAND_FILL: i blocchetti spenti sono nascosti, e un
+		# solo blocchetto elastico si allargherebbe su tutta la barra (visto)
+		b.custom_minimum_size = Vector2(BLOCCO_W, 0)
+		b.size_flags_vertical = Control.SIZE_FILL
+		b.visible = false
+		riga.add_child(b)
+		_blocchi.append(b)
+
+# Vero mentre la pagina sta "arrivando". I test lo usano per aspettare.
+func is_loading() -> bool:
+	return _velo != null and _velo.visible
+
+# Aspetta la fine del caricamento in corso (ritorna subito se non ce n'e' uno).
+func attendi_caricamento() -> void:
+	if is_loading():
+		await load_finished
+
+# Copre la pagina e fa scorrere la barra di stato per un tempo breve, che dipende
+# dal peso finto della pagina. Un Tween e non una coroutine: muore col nodo, si
+# ferma con la pausa del gioco, e ricaricare o interrompere basta ucciderlo.
+func _avvia_caricamento(page: String) -> void:
+	if _velo == null:
+		return
+	if _tw_carica != null and _tw_carica.is_valid():
+		_tw_carica.kill()
+	var kb := WebRuntime.fake_kb(page)
+	var durata: float = clampf(float(kb) * CARICA_PER_KB, CARICA_MIN, CARICA_MAX)
+	durata = maxf((durata + randf_range(-CARICA_JITTER, CARICA_JITTER)) * attesa_scala, 0.0)
+	_velo.color = _page_bg.color        # come se la pagina non fosse ancora arrivata
+	_velo.visible = true
+	_rtl.deselect()
+	_passo_caricamento(0.0, page)
+	_globo_acceso(true)
+	_tw_carica = create_tween()
+	_tw_carica.tween_method(_passo_caricamento.bind(page), 0.0, 1.0, durata)
+	_tw_carica.tween_callback(_fine_caricamento.bind(page))
+
+# Un passo dell'attesa: prima la connessione, poi i dati che arrivano.
+func _passo_caricamento(t: float, page: String) -> void:
+	var kb := WebRuntime.fake_kb(page)
+	if t < 0.35:
+		_stato_lbl.text = "Connessione a %s in corso..." % WebRuntime.host_of(page)
+	else:
+		var quanti: int = int(float(kb) * (t - 0.35) / 0.65)
+		_stato_lbl.text = "Ricezione dati: %d KB di %d KB" % [mini(quanti, kb), kb]
+	_avanzamento(t)
+
+func _fine_caricamento(page: String) -> void:
+	_velo.visible = false
+	_globo_acceso(false)
+	_avanzamento(1.0)
+	_stato_lbl.text = "Completato: %s" % WebRuntime.host_of(page)
+	load_finished.emit(page)
+
+# Il pulsante "interrompi" della barra strumenti: la pagina si vede subito.
+func _interrompi() -> void:
+	if not is_loading():
+		return
+	if _tw_carica != null and _tw_carica.is_valid():
+		_tw_carica.kill()
+	_velo.visible = false
+	_globo_acceso(false)
+	_avanzamento(0.0)
+	_stato_lbl.text = "Interrotto"
+	load_finished.emit(_current)
+
+# Quanti blocchetti accesi.
+func _avanzamento(t: float) -> void:
+	var acceso: int = int(round(clampf(t, 0.0, 1.0) * float(_blocchi.size())))
+	for i in range(_blocchi.size()):
+		(_blocchi[i] as ColorRect).visible = i < acceso
+
+# Il globo accanto all'indirizzo lampeggia mentre si carica: e' il "throbber" dei
+# browser dell'epoca, l'unica cosa che diceva che il modem stava ancora lavorando.
+func _globo_acceso(attivo: bool) -> void:
+	if _globo == null:
+		return
+	if _tw_globo != null and _tw_globo.is_valid():
+		_tw_globo.kill()
+	if not attivo:
+		_globo.modulate.a = 1.0
+		return
+	_tw_globo = create_tween().set_loops()
+	_tw_globo.tween_property(_globo, "modulate:a", 0.35, 0.22)
+	_tw_globo.tween_property(_globo, "modulate:a", 1.0, 0.22)
 
 # ---------------- helper UI ----------------
 

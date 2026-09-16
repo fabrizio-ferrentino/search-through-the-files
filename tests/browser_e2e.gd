@@ -20,6 +20,9 @@ var _fails: Array = []
 func _ready() -> void:
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)   # seme fisso: run riproducibile
+	# caricamento quasi istantaneo: il percorso e' lo stesso, l'attesa no
+	# (l'attesa vera la prova page_load_test)
+	BrowserApp.attesa_scala = 0.05
 
 	_sub = SubViewport.new()
 	_sub.size = VP_SIZE
@@ -36,20 +39,28 @@ func _ready() -> void:
 
 	# --- home ---
 	var txt := await _snap("web_home.png")
-	_check("HOME", txt.find("LOCALNET") >= 0 or txt.find("GATEWAY") >= 0, "la home generata non contiene il logo del gateway")
+	# marchio ED etichetta, in AND: con l'"or" il controllo passava anche col
+	# marchio sbagliato (il template diceva LOCALNET mentre il mockup d'autore e il
+	# dominio dicono WEBNET), ed e' per questo che rinominarlo sembrava non fare
+	# effetto. Nel template la scritta e' spezzata dai tag: vedi docs/WEB_SITES.md.
+	_check("HOME", txt.find("WEBNET") >= 0 and txt.find("GATEWAY") >= 0,
+			"la home generata non porta il marchio WEBNET GATEWAY: '%s'" % txt.substr(0, 60))
 
 	# --- forum (vetrina complessa) ---
 	_browser._load("forum")
+	await _browser.attendi_caricamento()
 	txt = await _snap("web_forum.png")
 	_check("FORUM", txt.find("RetroForum") >= 0 and txt.find("floppy graffiato") >= 0, "forum.html non renderizzato")
 
 	# --- pagina thread (avatar <img> + blockquote) ---
 	_browser._load("forum_thread")
+	await _browser.attendi_caricamento()
 	txt = await _snap("web_thread.png")
 	_check("THREAD", txt.find("mario_64") >= 0 and txt.find("DISKCOPY") >= 0, "forum_thread.html non renderizzato")
 
 	# --- misteri (vetrina scura minimale) ---
 	_browser._load("misteri")
+	await _browser.attendi_caricamento()
 	txt = await _snap("web_misteri.png")
 	_check("MISTERI", txt.find("LORO GUARDANO") >= 0, "misteri.html non renderizzato")
 	# lo sfondo pagina deve essere nero (body bgcolor)
@@ -62,6 +73,7 @@ func _ready() -> void:
 	# pagina (la larghezza delle [table] BBCode e' guidata dal contenuto: la impone
 	# la "spacer" trasparente di HtmlBB._spacer_row) ---
 	_browser._load("blog")
+	await _browser.attendi_caricamento()
 	txt = await _snap("web_blog.png")
 	_check("BLOG", txt.find("Jack99") >= 0, "blog.html non renderizzato")
 	await RenderingServer.frame_post_draw
@@ -78,6 +90,7 @@ func _ready() -> void:
 
 	# --- la WIKI (home) non deve MAI contenere la chiave del run ---
 	_browser._load("home")
+	await _browser.attendi_caricamento()
 	for i in range(3):
 		await get_tree().process_frame
 	var kl0: String = GameManager.key_label(OSContent.KEY_WEB)
@@ -88,6 +101,7 @@ func _ready() -> void:
 
 	# --- selezione col drag sulla pagina del forum ---
 	_browser._load("forum")
+	await _browser.attendi_caricamento()
 	for i in range(4):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
@@ -134,6 +148,7 @@ func _ready() -> void:
 	var trovate := 0
 	for f in ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri"]:
 		_browser._load(f)
+		await _browser.attendi_caricamento()
 		for i in range(2):
 			await get_tree().process_frame
 		var parsed: String = _browser._rtl.get_parsed_text()
@@ -175,6 +190,7 @@ func _ready() -> void:
 			print("[diag] il seme %d non e' piu' in modalita' sorgente: controllo saltato" % seme)
 			continue
 		_browser._load(p2)
+		await _browser.attendi_caricamento()
 		for i in range(3):
 			await get_tree().process_frame
 		var suffisso := "%s_%d" % [str(a2["tipo"]).to_lower(), seme]
@@ -202,6 +218,7 @@ func _ready() -> void:
 			malfatti.append("%s -> %s" % [f, url])
 		# quello che il giocatore legge nella barra, digitato, deve riportarlo qui
 		_browser._on_addr_submit(url)
+		await _browser.attendi_caricamento()
 		for i in range(2):
 			await get_tree().process_frame
 		if _browser._current != f or _browser._addr.text != url:
@@ -224,6 +241,7 @@ func _ready() -> void:
 
 	# la wiki elenca gli indirizzi dei 5 siti del run (link assoluti)
 	_browser._load(WebRuntime.HOME)
+	await _browser.attendi_caricamento()
 	for i in range(3):
 		await get_tree().process_frame
 	var wiki: String = _browser._html_text
@@ -239,6 +257,7 @@ func _ready() -> void:
 
 	# indirizzo inesistente: 404, e la barra tiene quello che si e' digitato
 	_browser._on_addr_submit("http://www.nonesiste.it")
+	await _browser.attendi_caricamento()
 	for i in range(3):
 		await get_tree().process_frame
 	_check("INDIRIZZO_SBAGLIATO", _browser._current == "404"
@@ -249,6 +268,7 @@ func _ready() -> void:
 	# link MORTO (il "thread rimosso" del forum): 404, e la barra mostra
 	# l'indirizzo chiesto, non quello della pagina d'errore
 	_browser._on_meta("thread_rimosso.html")
+	await _browser.attendi_caricamento()
 	for i in range(3):
 		await get_tree().process_frame
 	_check("LINK_MORTO", _browser._current == "404"

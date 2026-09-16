@@ -40,6 +40,9 @@ func _ready() -> void:
 	get_tree().create_timer(90.0).timeout.connect(_timeout)   # salvagente
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)
+	# il caricamento della pagina resta (velo, barra di stato, segnale) ma quasi
+	# istantaneo: qui si provano i clic, non l'attesa (quella e' page_load_test)
+	BrowserApp.attesa_scala = 0.05
 
 	_sub = SubViewport.new()
 	_sub.size = VP_SIZE
@@ -181,6 +184,7 @@ func _timeout() -> void:
 func _reset(pagina: String) -> void:
 	_meta.clear()
 	_browser._load(pagina)
+	await _browser.attendi_caricamento()
 	for i in range(4):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

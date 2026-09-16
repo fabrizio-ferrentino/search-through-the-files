@@ -1,0 +1,197 @@
+extends Node
+
+# Test del CARICAMENTO di una pagina nel browser (BrowserApp._avvia_caricamento).
+#
+# Come in WTTG2 aprire un sito non e' istantaneo: c'e' un attimo di attesa, e
+# quell'attimo e' tensione (le minacce girano mentre aspetti). Qui si pretende che:
+#   1 subito dopo il caricamento la pagina sia COPERTA e non cliccabile (il velo
+#     sta sopra al PageView ed e' lui a prendersi il mouse);
+#   2 la barra di stato racconti la cosa giusta: prima "Connessione a <dominio>",
+#     poi i KB che arrivano -- e il numero di KB deve essere lo STESSO che la wiki
+#     elenca nella cronologia (WebRuntime.fake_kb), o si noterebbe la bugia;
+#   3 la barra di avanzamento si riempia e finisca piena;
+#   4 l'attesa sia BREVE e dentro i limiti dichiarati, e CASUALE (due aperture
+#     della stessa pagina non durano uguale);
+#   5 il pulsante "interrompi" mostri subito la pagina;
+#   6 aprire un'altra pagina mentre la prima carica annulli la prima, senza
+#     lasciare il velo appeso.
+#
+# Va eseguito come SCENA (serve l'autoload GameManager). Headless va bene: qui non
+# si guardano pixel, e i Tween girano comunque.
+#   & $godot --headless --path $proj res://tests/page_load_test.tscn
+# ============================================================
+
+const VP_SIZE := Vector2i(1440, 1080)
+const OUT := "user://caricamento/"
+const LIMITE := 6.0        # se un caricamento non finisce entro tanto, e' un guasto
+
+var _sub: SubViewport
+var _browser: BrowserApp
+var _fails: Array = []
+
+func _ready() -> void:
+	get_tree().create_timer(120.0).timeout.connect(func(): print("RISULTATO: FAIL -> timeout"); get_tree().quit(1))
+	await get_tree().process_frame
+	GameManager.start_new_run(12345)
+	BrowserApp.attesa_scala = 1.0        # qui l'attesa vera E' l'oggetto del test
+
+	_sub = SubViewport.new()
+	_sub.size = VP_SIZE
+	_sub.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(_sub)
+	# grande come una finestra del browser in partita, non a tutto schermo: la barra
+	# di stato va guardata nelle proporzioni vere
+	var host := Control.new()
+	host.theme = Win95.make_theme()
+	host.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	host.size = Vector2(820, 560)
+	_sub.add_child(host)
+	_browser = BrowserApp.new()
+	host.add_child(_browser)
+	_browser.launch(null)
+	_sub.notify_mouse_entered()          # senza questo il viewport non crede di avere il mouse
+	await _browser.attendi_caricamento()
+	await get_tree().process_frame
+
+	# ---------- 1) appena aperta, la pagina e' coperta ----------
+	_browser._load("forum")
+	_check("CARICA_SUBITO", _browser.is_loading(), "il caricamento non parte nemmeno")
+	_check("VELO_SOPRA", _browser._velo.visible
+			and _browser._velo.get_index() > _browser._rtl.get_index()
+			and _browser._velo.mouse_filter == Control.MOUSE_FILTER_STOP,
+			"il velo non copre la pagina (visibile=%s, filtro=%d)"
+			% [str(_browser._velo.visible), _browser._velo.mouse_filter])
+	_check("VELO_COLORE_PAGINA", _browser._velo.color == _browser._page_bg.color,
+			"il velo non ha il colore di fondo della pagina")
+
+	await _foto("caricamento")   # com'e' fatta la barra di stato mentre lavora
+
+	# il mouse, mentre si carica, deve finire sul VELO e non sulla pagina
+	_muovi(Vector2(400, 300))
+	await get_tree().process_frame
+	var sopra := _sub.gui_get_hovered_control()
+	_check("CLIC_NON_PASSA", sopra == _browser._velo,
+			"sotto il mouse c'e' %s invece del velo" % str(sopra))
+
+	# ---------- 2) cosa dice la barra di stato ----------
+	var kb := WebRuntime.fake_kb("forum")
+	_check("KB_COERENTI", str(WebRuntime._recent_row({"file": "forum", "name": "x", "desc": ""})).find("[%d KB]" % kb) >= 0,
+			"i KB della barra di stato non sono quelli che elenca la wiki")
+	_check("STATO_CONNESSIONE", _browser._stato_lbl.text.find(WebRuntime.host_of("forum")) >= 0
+			and _browser._stato_lbl.text.find("onnessione") >= 0,
+			"all'inizio la barra dice: '%s'" % _browser._stato_lbl.text)
+	var visto_kb := false
+	var visto_blocchi := false
+	var t0 := Time.get_ticks_msec()
+	while _browser.is_loading() and (Time.get_ticks_msec() - t0) < int(LIMITE * 1000.0):
+		if _browser._stato_lbl.text.find("%d KB" % kb) >= 0:
+			visto_kb = true
+		if _accesi() > 0:
+			visto_blocchi = true
+		await get_tree().process_frame
+	var durata := float(Time.get_ticks_msec() - t0) / 1000.0
+	_check("STATO_RICEZIONE", visto_kb,
+			"la barra non ha mai mostrato i KB della pagina (%d KB)" % kb)
+	_check("AVANZAMENTO", visto_blocchi, "la barra di avanzamento non si e' mai riempita")
+	_check("FINISCE_DA_SOLA", not _browser.is_loading(), "il caricamento non finisce")
+	_check("AVANZAMENTO_PIENO", _accesi() == _browser._blocchi.size(),
+			"alla fine i blocchetti accesi sono %d su %d"
+			% [_accesi(), _browser._blocchi.size()])
+	_check("PAGINA_SCOPERTA", not _browser._velo.visible, "il velo resta sopra la pagina")
+	# ...e i blocchetti devono arrivare in FONDO all'incavo: con l'incavo piu' largo
+	# della fila restava un quadratino vuoto a destra e sembrava non completarsi
+	await get_tree().process_frame
+	var riga: Control = (_browser._blocchi[0] as Control).get_parent()
+	var ultimo: Control = _browser._blocchi[_browser._blocchi.size() - 1]
+	var avanzo: float = riga.size.x - (ultimo.position.x + ultimo.size.x)
+	_check("AVANZAMENTO_SENZA_BUCHI", absf(avanzo) <= 1.0,
+			"a barra piena restano %.0f px vuoti a destra" % avanzo)
+	await _foto("completato")
+
+	# ---------- 3) l'attesa e' breve, e casuale ----------
+	print("   durata del caricamento di forum: %.2f s (%d KB)" % [durata, kb])
+	var massimo: float = BrowserApp.CARICA_MAX + BrowserApp.CARICA_JITTER + 0.35
+	_check("ATTESA_BREVE", durata <= massimo, "%.2f s: troppo (limite %.2f)" % [durata, massimo])
+	_check("ATTESA_NON_NULLA", durata >= BrowserApp.CARICA_MIN - BrowserApp.CARICA_JITTER - 0.1,
+			"%.2f s: praticamente istantaneo" % durata)
+	var durate: Array = []
+	for i in range(4):
+		var d := await _carica_e_cronometra("misteri")
+		durate.append(snappedf(d, 0.01))
+	var diverse: Dictionary = {}
+	for d in durate:
+		diverse[d] = true
+	print("   quattro aperture di misteri: %s" % str(durate))
+	_check("ATTESA_CASUALE", diverse.size() >= 2,
+			"sempre la stessa durata: %s" % str(durate))
+
+	# ---------- 4) il pulsante interrompi ----------
+	_browser._load("news")
+	_check("INTERROMPI_PARTE", _browser.is_loading(), "non sta caricando: la prova non vale")
+	_browser._interrompi()
+	_check("INTERROMPI", not _browser.is_loading() and not _browser._velo.visible,
+			"dopo interrompi la pagina resta coperta")
+	_check("INTERROMPI_LO_DICE", _browser._stato_lbl.text.find("nterrot") >= 0,
+			"la barra di stato dice: '%s'" % _browser._stato_lbl.text)
+
+	# ---------- 5) cambiare pagina durante il caricamento ----------
+	_browser._load("meteo")
+	await get_tree().process_frame
+	_browser._load("giochi")
+	_check("CAMBIO_A_META", _browser.is_loading(), "il secondo caricamento non parte")
+	var fine := Time.get_ticks_msec() + int(LIMITE * 1000.0)
+	while _browser.is_loading() and Time.get_ticks_msec() < fine:
+		await get_tree().process_frame
+	_check("CAMBIO_ARRIVA", not _browser._velo.visible and _browser._current == "giochi",
+			"pagina=%s velo=%s" % [_browser._current, str(_browser._velo.visible)])
+
+	if _fails.is_empty():
+		print("RISULTATO: PASS (il caricamento c'e', e' breve, casuale e si interrompe)")
+	else:
+		print("RISULTATO: FAIL -> " + ", ".join(_fails))
+	get_tree().quit(0 if _fails.is_empty() else 1)
+
+# Foto della finestra, solo quando si gira CON la finestra: headless non disegna
+# e frame_post_draw non arriva mai -- aspettarlo qui bloccava il test (visto: il
+# test passava a finestra e andava in timeout headless).
+func _foto(nome: String) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var img := _sub.get_texture().get_image()
+	if img == null or img.is_empty():
+		return
+	DirAccess.make_dir_recursive_absolute(OUT)
+	img.get_region(Rect2i(0, 0, 820, 560)).save_png(OUT + nome + ".png")
+	print("   foto: ", ProjectSettings.globalize_path(OUT + nome + ".png"))
+
+# Carica una pagina e ritorna quanto e' durata l'attesa.
+func _carica_e_cronometra(pagina: String) -> float:
+	var t0 := Time.get_ticks_msec()
+	_browser._load(pagina)
+	var fine := t0 + int(LIMITE * 1000.0)
+	while _browser.is_loading() and Time.get_ticks_msec() < fine:
+		await get_tree().process_frame
+	return float(Time.get_ticks_msec() - t0) / 1000.0
+
+# Quanti blocchetti della barra di avanzamento sono accesi.
+func _accesi() -> int:
+	var n := 0
+	for b in _browser._blocchi:
+		if (b as ColorRect).visible:
+			n += 1
+	return n
+
+func _muovi(pos: Vector2) -> void:
+	var ev := InputEventMouseMotion.new()
+	ev.position = pos
+	ev.global_position = pos
+	_sub.push_input(ev, true)
+
+func _check(nome: String, ok: bool, perche: String) -> void:
+	if ok:
+		print("PASS  " + nome)
+	else:
+		print("FAIL  " + nome + " --- " + perche)
+		_fails.append(nome)

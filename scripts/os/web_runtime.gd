@@ -94,7 +94,7 @@ static func _ensure() -> void:
 # ------------------------------------------------------------
 # E' il "gateway" da cui il giocatore parte: elenca i 5 siti estratti per questo
 # run e nient'altro. Modellata sul mockup scritto a mano dal proprietario del
-# progetto (web/webnet.html): logo LOCALNET, riquadro bianco al 70% centrato su
+# progetto (web/webnet.html): logo WEBNET, riquadro bianco al 70% centrato su
 # sfondo grigio, sezione PREFERITI + sezione SITI VISITATI DI RECENTE in Courier,
 # footer dell'ISP.
 #
@@ -171,7 +171,7 @@ const _HOME_TEMPLATE := """<html>
 <body bgcolor="#C0C0C0" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
 
 <center>
-  <font face="Arial Black, Arial, Helvetica" size="6" color="#000080"><u>LOCAL<b>NET</b></u> <font size="4" color="#FF0000">GATEWAY</font></font><br>
+  <font face="Arial Black, Arial, Helvetica" size="6" color="#000080"><u>WEB<b>NET</b></u> <font size="4" color="#FF0000">GATEWAY</font></font><br>
   <font face="Verdana" size="1">Il tuo punto d'accesso all'Autostrada dell'Informazione</font>
 </center>
 
@@ -192,6 +192,10 @@ Per eventuali problemi contatta il tuo provider
 </html>
 """
 
+# NB per chi cerca: nel template il marchio e' scritto SPEZZATO dai tag
+# (<u>WEB<b>NET</b></u>), percio' cercare "WEBNET" nel progetto non lo trova.
+# Vale per tutte le scritte del template: vedi docs/WEB_SITES.md.
+
 # Intestazione di sezione (la barra grigia / blu navy del mockup).
 static func _header_row(testo: String, colore: String) -> String:
 	return "  <tr bgcolor=\"" + colore + "\"><td><font face=\"Arial\" size=\"2\" color=\"#FFFFFF\"><b>" + testo + "</b></font></td></tr>
@@ -207,11 +211,17 @@ static func _fav_row(sito: Dictionary) -> String:
 "
 	return r
 
+# Il "peso" della pagina in KB. E' finto ma DETERMINISTICO dal nome, perche' lo
+# usano in due: la wiki lo elenca nella cronologia, e la barra di stato del browser
+# lo conta mentre carica. Se fossero due numeri diversi si noterebbe subito.
+static func fake_kb(page: String) -> int:
+	return 8 + (page.length() * 7) % 90
+
 # Voce della CRONOLOGIA: peso finto, nome, indirizzo digitabile, descrizione.
 # L'indirizzo in chiaro serve anche da promemoria: si puo' scrivere nella barra.
 static func _recent_row(sito: Dictionary) -> String:
 	var file := str(sito["file"])
-	var kb := 8 + (file.length() * 7) % 90
+	var kb := fake_kb(file)
 	var r := "  <tr><td><font face=\"Courier New\" size=\"2\">"
 	r += "[" + str(kb) + " KB] &raquo; <a href=\"" + display_url(file) + "\"><b>" + str(sito["name"]) + "</b></a><br>
 "
