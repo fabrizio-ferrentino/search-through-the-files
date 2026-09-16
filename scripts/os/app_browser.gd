@@ -13,6 +13,7 @@ var os
 var window
 
 var _addr: LineEdit
+var _digitato := ""                    # ultimo indirizzo scritto a mano (vedi _load)
 var _rtl: PageView                  # la pagina: un solo documento BBCode
 var _page_bg: ColorRect
 var _inspector: VBoxContainer
@@ -81,7 +82,7 @@ func launch(arg) -> void:
 	addrbar.add_child(gicon)
 	_addr = LineEdit.new()
 	_addr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_addr.placeholder_text = "Digita un indirizzo, es. http://news"
+	_addr.placeholder_text = "Digita un indirizzo, es. http://www.sito.it"
 	_addr.text_submitted.connect(_on_addr_submit)
 	addrbar.add_child(_addr)
 	addrbar.add_child(_text_btn("Vai", func(): _on_addr_submit(_addr.text)))
@@ -120,8 +121,14 @@ func launch(arg) -> void:
 
 # ---------------- navigazione ----------------
 
-# Normalizza href/indirizzo in NOME pagina ("news.html"/"http://news/" -> "news").
+# Normalizza href/indirizzo in NOME pagina. Due strade, in quest'ordine:
+#   1 un INDIRIZZO vero ("http://www.newsoggi.it") -> WebRuntime.page_of;
+#   2 un link relativo fra pagine dello stesso sito ("forum_thread.html"), che e'
+#     come sono scritti gli href dentro le pagine d'autore.
 func _norm(s: String) -> String:
+	var dominio := WebRuntime.page_of(s)
+	if dominio != "":
+		return dominio
 	var u := s.strip_edges().to_lower()
 	u = u.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
 	u = u.get_file()
@@ -131,6 +138,10 @@ func _norm(s: String) -> String:
 	return u
 
 func _on_addr_submit(text: String) -> void:
+	# si ricorda il testo digitato: se non porta a nessuna pagina, la barra lo
+	# tiene invece di mostrare l'indirizzo della 404
+	var t := text.strip_edges()
+	_digitato = t if t.begins_with("http://") else ("http://" + t)
 	_go(_norm(text))
 
 func _go(name: String) -> void:
@@ -167,6 +178,7 @@ static func read_page(name: String) -> String:
 func _load(name: String) -> void:
 	if name == "":
 		name = _home
+	var chiesto := name        # quello che si voleva aprire: serve alla barra se e' una 404
 	var raw := ""
 	if name == _home:
 		# la HOME e' GENERATA per-run (5 siti a caso del pool), non un file
@@ -185,7 +197,14 @@ func _load(name: String) -> void:
 	# inietta la chiave web del run se questa pagina la ospita (visibile o commento)
 	_html_text = WebRuntime.source_html(name, raw)
 	_current = name
-	_addr.text = "" if name == _home else "http://" + name
+	# la barra mostra l'INDIRIZZO, non il nome del file. Su una pagina che non
+	# esiste resta scritto l'indirizzo CHIESTO -- quello digitato, o quello del link
+	# morto (il "thread rimosso" del forum) -- come in un browser vero; mostrare
+	# "http://404" sarebbe l'indirizzo della pagina d'errore, non della richiesta.
+	if name == "404" and chiesto != "404":
+		_addr.text = _digitato if _digitato != "" else WebRuntime.display_url(chiesto)
+	else:
+		_addr.text = WebRuntime.display_url(name)
 	if window:
 		window.set_title(_between(_html_text, "<title>", "</title>"))
 	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
@@ -218,6 +237,7 @@ func _on_page_resized() -> void:
 	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
 
 func _on_meta(meta) -> void:
+	_digitato = ""          # si e' cliccato un link: non c'e' niente di digitato
 	_go(_norm(str(meta)))
 
 # Tasto destro = menu contestuale OVUNQUE nell'area pagina (l'RTL e' STOP e si

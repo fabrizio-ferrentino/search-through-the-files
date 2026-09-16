@@ -178,6 +178,14 @@ func is_in_pc() -> bool:
 func _input(event):
 	if entering:
 		return
+	# PAUSA (azione "pause" = P in project.godot). Va PRIMA del blocco della vista
+	# PC: la' dentro ogni tasto viene inoltrato all'OS e non tornerebbe mai qui.
+	# Ma se nell'OS il fuoco e' su un campo di testo la "p" e' una lettera che il
+	# giocatore sta scrivendo, non un comando: si lascia passare.
+	if event.is_action_pressed("pause") and not _ending:
+		if not (_in_pc and _os != null and _os.typing()):
+			_pausa()
+			return
 	if _in_pc:
 		# in vista PC: ESC esce, tutto il resto va inoltrato all'OS nel SubViewport
 		if event.is_action_pressed("ui_cancel"):
@@ -309,6 +317,17 @@ func _exit_pc() -> void:
 	tw.tween_callback(_finish_exit)
 
 # --- vittoria: cartella segreta sbloccata (segnale dall'OS) ---
+# Apre la schermata di pausa (una sola alla volta). Sta sulla RADICE, non sotto la
+# camera, cosi' copre stanza e vista PC e sopravvive a tutto; a riprendere ci
+# pensa lei (mentre l'albero e' in pausa questo script non riceve piu' input).
+func _pausa() -> void:
+	var root := get_tree().root
+	if root.has_node("PauseScreen"):
+		return
+	var ps: CanvasLayer = load("res://scripts/pause_screen.gd").new()
+	ps.name = "PauseScreen"
+	root.add_child(ps)
+
 func _on_game_won() -> void:
 	if _ending:
 		return

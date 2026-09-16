@@ -227,4 +227,4 @@ func close_keys_panel() -> void:
 func _refresh_keys_panel() -> void:
 	if _keys_label != null and is_instance_valid(_keys_label):
 		_keys_label.text = keys_report() + "
-F12 chiudi  F10 morte  F11 minacce"
+F10 morte  F11 minacce F12 chiudi"

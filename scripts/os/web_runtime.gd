@@ -109,6 +109,63 @@ static func _ensure() -> void:
 
 const HOME := "home"          # nome di pagina della wiki (non e' un file)
 
+# ============================================================
+# INDIRIZZI. Unica fonte di verita': nome interno della pagina -> dominio da
+# mostrare. Prima la barra diceva "http://news", cioe' il nome del file: niente
+# suffisso, niente che somigliasse a un indirizzo vero. Qui i domini sono quelli
+# della rete di fine anni '90 -- .it per i siti italiani, .com per il negozio e i
+# giochi, .net per il sito di misteri, la pagina personale ospitata dall'ISP sotto
+# ~utente (era la norma: Geocities, Tripod, il "webspace" del provider) e la
+# webmail su un sottodominio del provider.
+# La HOME e' il portale dell'ISP (quello del footer della wiki), percio' ha un
+# indirizzo anche lei.
+# AGGIUNGERE UN SITO = una riga qui + una in _pool() + il file in web/pages/.
+const SITI := {
+	HOME: "www.webnet.it",
+	"news": "www.newsoggi.it",
+	"meteo": "www.meteonow.it",
+	"giochi": "www.giocaweb.com",
+	"blog": "www.webnet.it/~jack99",
+	"forum": "www.retroforum.it",
+	"shop": "www.compratutto.com",
+	"mail": "webmail.webnet.it",
+	"misteri": "www.misteri.net",
+	# pagine non del pool, raggiungibili solo dai link interni
+	"forum_thread": "www.retroforum.it/discussione.html",
+	"thread_rimosso": "www.retroforum.it/rimosso.html",
+}
+
+# L'indirizzo da mostrare nella barra per quella pagina.
+static func display_url(page: String) -> String:
+	return "http://" + str(SITI.get(page, page))
+
+# Solo il dominio (senza "http://"), per scriverlo dentro le pagine.
+static func host_of(page: String) -> String:
+	return str(SITI.get(page, page))
+
+# Da un indirizzo digitato o cliccato al nome della pagina ("" se non e' dei
+# nostri). Tollerante come i browser dell'epoca: "http://www.newsoggi.it/",
+# "www.newsoggi.it", "newsoggi.it" e "newsoggi" portano tutti allo stesso posto,
+# e resta valido anche il vecchio nome interno ("news").
+static func page_of(url: String) -> String:
+	var u := url.strip_edges().to_lower()
+	u = u.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
+	if u == "":
+		return ""
+	if SITI.has(u):
+		return u                      # il nome interno, per compatibilita'
+	for p in SITI:
+		var host := str(SITI[p]).to_lower()
+		if u == host or u == host.trim_prefix("www.") or u == "www." + host:
+			return str(p)
+		# "newsoggi" da solo: solo per i domini senza percorso, o "webnet"
+		# porterebbe alla pagina personale invece che al portale
+		if host.find("/") < 0:
+			var nudo := host.trim_prefix("www.")
+			if u == nudo.get_slice(".", 0):
+				return str(p)
+	return ""
+
 const _HOME_TEMPLATE := """<html>
 <head><title>Benvenuto su WebNet Gateway v3.1</title></head>
 <body bgcolor="#C0C0C0" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
@@ -143,7 +200,8 @@ static func _header_row(testo: String, colore: String) -> String:
 # Voce dei PREFERITI: nome in grassetto + descrizione grigia.
 static func _fav_row(sito: Dictionary) -> String:
 	var file := str(sito["file"])
-	var r := "  <tr><td>&nbsp;<font face=\"Arial\" size=\"3\"><a href=\"" + file + ".html\"><b>" + str(sito["name"]) + "</b></a></font><br>
+	# link ASSOLUTO: la wiki e' un indice di SITI, non pagine dello stesso sito
+	var r := "  <tr><td>&nbsp;<font face=\"Arial\" size=\"3\"><a href=\"" + display_url(file) + "\"><b>" + str(sito["name"]) + "</b></a></font><br>
 "
 	r += "  &nbsp;<font face=\"Arial\" size=\"2\" color=\"#555555\">" + str(sito.get("desc", "")) + "</font></td></tr>
 "
@@ -155,9 +213,9 @@ static func _recent_row(sito: Dictionary) -> String:
 	var file := str(sito["file"])
 	var kb := 8 + (file.length() * 7) % 90
 	var r := "  <tr><td><font face=\"Courier New\" size=\"2\">"
-	r += "[" + str(kb) + " KB] &raquo; <a href=\"" + file + ".html\"><b>" + str(sito["name"]) + "</b></a><br>
+	r += "[" + str(kb) + " KB] &raquo; <a href=\"" + display_url(file) + "\"><b>" + str(sito["name"]) + "</b></a><br>
 "
-	r += "  <font color=\"#555555\">http://" + file + "</font><br>
+	r += "  <font color=\"#555555\">" + display_url(file) + "</font><br>
 "
 	r += "  <font color=\"#333333\">&gt;&gt; " + str(sito.get("desc", "")) + "</font></font></td></tr>
 "
@@ -212,7 +270,7 @@ static func _risolvi(src: String) -> Dictionary:
 # La riga del pannello di debug (F12): sito, modalita' e DOVE sta la chiave.
 static func _hint() -> String:
 	var modo := "visibile" if _visible else "sorgente"
-	return "http://%s - %s - %s" % [_carrier, modo,
+	return "%s - %s - %s" % [display_url(_carrier), modo,
 			str(_ancora.get("nota", "posizione da risolvere"))]
 
 # ---------------- stato del run (serve ai test) ----------------

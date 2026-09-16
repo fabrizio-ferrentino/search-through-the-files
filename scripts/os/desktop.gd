@@ -545,6 +545,15 @@ func _focus_under_mouse(mp: Vector2) -> void:
 				window_layer.move_child(w, -1)
 			return
 
+# Si sta scrivendo dentro l'OS? Chi ascolta i tasti globali della stanza (la
+# PAUSA, tasto P) deve stare zitto mentre il fuoco e' su un campo di testo: nel
+# blocco note, nella barra dell'indirizzo o nei campi della cartella protetta la
+# "p" e' una lettera, non un comando. get_viewport() qui e' il SubViewport dell'OS,
+# quindi il fuoco che conta e' il suo.
+func typing() -> bool:
+	var f := get_viewport().gui_get_focus_owner()
+	return f is LineEdit or f is TextEdit
+
 # Forma del cursore per un punto in coordinate del desktop. La stanza la usa per
 # pilotare il cursore reale sull'overlay del PC: il SubViewport non lo fa da solo.
 # Copre il ridimensionamento delle finestre e il cursore del controllo sotto il

@@ -119,7 +119,7 @@ func _prova(seme: int) -> void:
 
 	# il pannello F12 deve dire sito, modalita' e posizione
 	var hint := str(GameManager.key_hints.get(OSContent.KEY_WEB, ""))
-	if hint.find("http://" + port) < 0 or hint.find(str(info["nota"])) < 0:
+	if hint.find(WebRuntime.display_url(port)) < 0 or hint.find(str(info["nota"])) < 0:
 		_ko(seme, "il suggerimento F12 non dice dove: '%s'" % hint)
 
 	_tipi[tipo] = int(_tipi.get(tipo, 0)) + 1

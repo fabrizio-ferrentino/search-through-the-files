@@ -189,6 +189,72 @@ func _ready() -> void:
 		await _snap("web_sorgente_%s.png" % suffisso)
 		_browser._view_source()
 
+	# --- INDIRIZZI: dominio d'epoca, e quello che si legge si puo' anche digitare ---
+	# Prima la barra diceva "http://news" (il nome del file): nessun suffisso, e
+	# scriverlo era l'unico modo di raggiungere il sito.
+	var tld := ["it", "com", "net", "org"]
+	var malfatti: Array = []
+	var giro: Array = []
+	for f in ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri", WebRuntime.HOME]:
+		var url := WebRuntime.display_url(f)
+		var dominio := url.trim_prefix("http://").get_slice("/", 0)
+		if dominio.find(".") < 0 or not tld.has(dominio.get_extension()):
+			malfatti.append("%s -> %s" % [f, url])
+		# quello che il giocatore legge nella barra, digitato, deve riportarlo qui
+		_browser._on_addr_submit(url)
+		for i in range(2):
+			await get_tree().process_frame
+		if _browser._current != f or _browser._addr.text != url:
+			giro.append("%s: digitando %s finisce su '%s' con barra '%s'"
+					% [f, url, _browser._current, _browser._addr.text])
+	_check("INDIRIZZI_CON_DOMINIO", malfatti.is_empty(), "indirizzi senza suffisso: %s" % str(malfatti))
+	_check("INDIRIZZO_DIGITABILE", giro.is_empty(), str(giro))
+
+	# forme tolleranti: senza http://, senza www., solo il nome
+	var alias: Array = []
+	for s in ["www.newsoggi.it", "newsoggi.it", "newsoggi", "http://www.newsoggi.it/"]:
+		if WebRuntime.page_of(s) != "news":
+			alias.append(s)
+	_check("INDIRIZZI_TOLLERANTI", alias.is_empty(), "forme non riconosciute: %s" % str(alias))
+
+	# i link relativi DENTRO le pagine d'autore devono continuare a funzionare
+	_check("LINK_RELATIVI", _browser._norm("forum_thread.html") == "forum_thread"
+			and _browser._norm("home.html") == WebRuntime.HOME,
+			"i link interni non si risolvono piu'")
+
+	# la wiki elenca gli indirizzi dei 5 siti del run (link assoluti)
+	_browser._load(WebRuntime.HOME)
+	for i in range(3):
+		await get_tree().process_frame
+	var wiki: String = _browser._html_text
+	var wiki_txt2: String = _browser._rtl.get_parsed_text()
+	var mancanti: Array = []
+	for s in WebRuntime._chosen:
+		var u := WebRuntime.display_url(str(s["file"]))
+		if wiki.find(u) < 0:
+			mancanti.append(u)
+	_check("WIKI_CON_INDIRIZZI", mancanti.is_empty(), "la wiki non elenca: %s" % str(mancanti))
+	_check("WIKI_NIENTE_NOMI_FILE", wiki_txt2.find("http://news") < 0 and wiki_txt2.find("http://forum") < 0,
+			"nella wiki si leggono ancora i nomi dei file come indirizzi")
+
+	# indirizzo inesistente: 404, e la barra tiene quello che si e' digitato
+	_browser._on_addr_submit("http://www.nonesiste.it")
+	for i in range(3):
+		await get_tree().process_frame
+	_check("INDIRIZZO_SBAGLIATO", _browser._current == "404"
+			and _browser._addr.text == "http://www.nonesiste.it",
+			"pagina=%s barra=%s" % [_browser._current, _browser._addr.text])
+	await _snap("web_indirizzo.png")
+
+	# link MORTO (il "thread rimosso" del forum): 404, e la barra mostra
+	# l'indirizzo chiesto, non quello della pagina d'errore
+	_browser._on_meta("thread_rimosso.html")
+	for i in range(3):
+		await get_tree().process_frame
+	_check("LINK_MORTO", _browser._current == "404"
+			and _browser._addr.text == WebRuntime.display_url("thread_rimosso"),
+			"pagina=%s barra=%s" % [_browser._current, _browser._addr.text])
+
 	# --- esito ---
 	if _fails.is_empty():
 		print("RISULTATO: PASS (browser end-to-end ok)")
