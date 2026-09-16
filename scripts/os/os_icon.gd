@@ -23,8 +23,8 @@ func _draw() -> void:
 			_locked(w, h)
 		"computer":
 			_computer(w, h)
-		"ie":
-			_ie(w, h)
+		"web", "ie":
+			_rete(w, h)
 		"file", "text":
 			_file(w, h)
 		"image":
@@ -40,7 +40,7 @@ func _draw() -> void:
 		"whale_pale":
 			_whale(w, h, true)
 		"globe":
-			_ie(w, h)
+			_rete(w, h)
 		"back":
 			_arrow_left(w, h)
 		"up":
@@ -112,17 +112,58 @@ func _computer(w: float, h: float) -> void:
 	draw_rect(kb, Color("d6d5c6"))
 	_outline(kb, Color("5a5a50"))
 
-func _ie(w: float, h: float) -> void:
-	var c := Vector2(w * 0.5, h * 0.5)
-	var r: float = min(w, h) * 0.34
-	draw_circle(c, r, Color("cfe2ff"))
-	draw_circle(c, r, Color("1a4fa0"), false, 2.0)
-	var f := ThemeDB.fallback_font
-	var fs := int(min(w, h) * 0.55)
-	var ts := f.get_string_size("e", HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
-	draw_string(f, c + Vector2(-ts.x * 0.5, ts.y * 0.32), "e", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color("12386f"))
-	# anello giallo "in orbita"
-	draw_arc(c, r * 1.05, deg_to_rad(20), deg_to_rad(200), 24, Color("efc63c"), 3.0)
+# L'icona della RETE (desktop, menu Avvio, finestra del browser, file .html e il
+# globo che lampeggia accanto all'indirizzo). Prima era una "e" azzurra con
+# l'anello giallo in orbita, cioe' il logo di Internet Explorer: lo stesso
+# problema della bandiera di Windows sul pulsante Avvio.
+#
+# Adesso e' il simbolo d'epoca della rete -- un GLOBO coi meridiani, quello che
+# usavano i programmi prima che ogni browser mettesse la sua lettera -- nei colori
+# di questo sistema (gli stessi della balena, vedi _whale), appoggiato su due righe
+# d'acqua: il mare e' il tema dell'OS, e a 18 px resta una palla blu con una fascia
+# chiara, che si legge.
+func _rete(w: float, h: float) -> void:
+	var s: float = min(w, h)
+	var o := Vector2((w - s) * 0.5, (h - s) * 0.5)
+	var corpo := Color("14539e")
+	var chiaro := Color("8fd0f2")
+	var scuro := Color("0d3c75")
+	var c := o + Vector2(s * 0.5, s * 0.44)
+	# raggio generoso: accanto a cartella e monitor un globo piccolo sembrava
+	# un'icona di un'altra serie
+	var r: float = s * 0.36
+	var sp: float = maxf(s * 0.045, 1.0)
+
+	# la sfera, col bordo scuro (senza bordo, sul grigio della taskbar sfuma)
+	draw_circle(c, r, corpo)
+	draw_circle(c, r, scuro, false, sp)
+	# riflesso in alto a sinistra: fa sembrare una palla e non un disco
+	if s >= 32.0:
+		draw_circle(c + Vector2(-r * 0.36, -r * 0.42), r * 0.20, Color("3f86c8"))
+
+	# equatore e meridiano: due ellissi bastano a dire "globo". Il meridiano sotto
+	# i 20 px diventa una riga verticale e sporca, quindi sparisce.
+	draw_polyline(_ellisse(c, r * 0.95, r * 0.30), chiaro, sp)
+	if s >= 20.0:
+		draw_polyline(_ellisse(c, r * 0.34, r * 0.95), chiaro, sp)
+
+	# l'acqua: il globo ci GALLEGGIA dentro, quindi la riga lo ATTRAVERSA e sborda
+	# di lato -- messa sotto la sfera sembrava una sottolineatura staccata. Sotto i
+	# 24 px resta solo il globo: due righe pallide a quella misura sono una macchia.
+	if s >= 24.0:
+		draw_line(Vector2(c.x - r * 1.22, c.y + r * 0.70),
+				Vector2(c.x + r * 1.22, c.y + r * 0.70), chiaro, sp)
+		draw_line(Vector2(c.x - r * 0.72, c.y + r * 1.16),
+				Vector2(c.x + r * 0.72, c.y + r * 1.16), chiaro, sp)
+
+# Punti di un'ellisse chiusa: draw_arc fa solo cerchi, e un globo senza ellissi
+# non si legge.
+func _ellisse(c: Vector2, rx: float, ry: float, passi := 28) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in range(passi + 1):
+		var a: float = TAU * float(i) / float(passi)
+		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
+	return pts
 
 func _file(w: float, h: float) -> void:
 	var page := Rect2(w * 0.22, h * 0.12, w * 0.50, h * 0.76)

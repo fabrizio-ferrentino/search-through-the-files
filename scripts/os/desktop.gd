@@ -100,7 +100,7 @@ func _refresh_icons() -> void:
 	var defs := [
 		{"name": "Risorse del computer", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
-		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "start")},
+		{"name": "Web", "icon": "web", "open": func(): open_app("browser", "start")},
 		{"name": "Cestino", "icon": trash_icon, "open": func(): open_app("explorer", _folder_path(["Cestino"]))},
 	]
 	var y := 24.0
@@ -180,7 +180,7 @@ func _build_start_menu() -> void:
 	var item_h := 42
 	var items := [
 		{"name": "Esplora risorse", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
-		{"name": "Web", "icon": "ie", "open": func(): open_app("browser", "start")},
+		{"name": "Web", "icon": "web", "open": func(): open_app("browser", "start")},
 		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
 		{"sep": true},
 		{"name": "Spegni il PC", "icon": "whale", "open": func(): _show_shutdown()},
@@ -289,7 +289,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			app.launch(folder)
 			return win
 		"browser":
-			var win := open_window("Web", Vector2(900, 640), "ie")
+			var win := open_window("Web", Vector2(900, 640), "web")
 			var app := BrowserApp.new()
 			win.content_root.add_child(app)
 			app.os = self

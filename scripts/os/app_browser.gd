@@ -102,7 +102,7 @@ func launch(arg) -> void:
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	addrbar.add_child(lbl)
 	_globo = OSIcon.new()
-	_globo.kind = "ie"
+	_globo.kind = "web"
 	_globo.custom_minimum_size = Vector2(18, 18)
 	_globo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_globo.mouse_filter = Control.MOUSE_FILTER_IGNORE

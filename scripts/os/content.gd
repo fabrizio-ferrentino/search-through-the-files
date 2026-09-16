@@ -679,4 +679,4 @@ static func _text(name: String, content: String) -> Dictionary:
 	return {"name": name, "type": "file", "icon": "text", "filetype": "text", "content": content}
 
 static func _html(name: String, url: String) -> Dictionary:
-	return {"name": name, "type": "file", "icon": "ie", "filetype": "html", "url": url}
+	return {"name": name, "type": "file", "icon": "web", "filetype": "html", "url": url}
