@@ -134,6 +134,31 @@ static func make_theme() -> Theme:
 	t.set_color("font_hover_color", "PopupMenu", C_TITLE_TEXT)
 	t.set_color("font_separator_color", "PopupMenu", C_SHADOW)
 
+	# BARRE DI SCORRIMENTO. Non erano tematizzate affatto (18/09/2026): su una pagina lunga,
+	# in Blocco note e nel "visualizza sorgente" compariva la barra scura e arrotondata di
+	# Godot, che e' la cosa che rompe di piu' l'illusione -- si nota prima di qualsiasi
+	# dettaglio dei pulsanti.
+	# In Win95 il canale e' un incavo e il cursore un pulsante in rilievo. Il canale vero era
+	# una scacchiera 1x1 di bianco e grigio; qui si usa il suo tono MEDIO e non la scacchiera,
+	# perche' lo schermo dell'OS viene rimpicciolito a ~2/3 e passato dal CRT, dove un
+	# reticolo da un pixel diventa un moire sporco invece di una texture.
+	# Lo SPESSORE viene dai margini interni dello stylebox (ScrollBar non ha una costante per
+	# quello), quindi serve uno stylebox PER ASSE: sulla verticale i margini larghi danno la
+	# larghezza, sull'orizzontale quelli alti danno l'altezza. Con un unico stylebox a
+	# margini zero la barra veniva spessa due pixel.
+	# 20 px: sono i 16 di allora riportati alla scala dell'OS, che gira a 1440x1080.
+	var mezzo := 10
+	t.set_stylebox("scroll", "VScrollBar", _sb(false, Color("e0e0e0"), false, mezzo, 0, mezzo, 0))
+	t.set_stylebox("scroll_focus", "VScrollBar", _sb(false, Color("e0e0e0"), false, mezzo, 0, mezzo, 0))
+	t.set_stylebox("grabber", "VScrollBar", _sb(true, C_FACE, true, mezzo, 12, mezzo, 12))
+	t.set_stylebox("grabber_highlight", "VScrollBar", _sb(true, C_FACE, true, mezzo, 12, mezzo, 12))
+	t.set_stylebox("grabber_pressed", "VScrollBar", _sb(false, C_FACE, true, mezzo, 12, mezzo, 12))
+	t.set_stylebox("scroll", "HScrollBar", _sb(false, Color("e0e0e0"), false, 0, mezzo, 0, mezzo))
+	t.set_stylebox("scroll_focus", "HScrollBar", _sb(false, Color("e0e0e0"), false, 0, mezzo, 0, mezzo))
+	t.set_stylebox("grabber", "HScrollBar", _sb(true, C_FACE, true, 12, mezzo, 12, mezzo))
+	t.set_stylebox("grabber_highlight", "HScrollBar", _sb(true, C_FACE, true, 12, mezzo, 12, mezzo))
+	t.set_stylebox("grabber_pressed", "HScrollBar", _sb(false, C_FACE, true, 12, mezzo, 12, mezzo))
+
 	# Label / ScrollContainer
 	t.set_color("font_color", "Label", C_TEXT)
 

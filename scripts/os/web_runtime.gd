@@ -28,16 +28,27 @@ static func _pool() -> Array:
 
 # Frasi portatrici della chiave: in chiaro (mostrata sulla pagina) o nel sorgente (commento).
 const _VISIBLE := [
+	"%s",
+	"%s",
+	"%s",
+	"you want this %s",
 	"Promemoria personale: %s. Non perderlo.",
 	"Nota a margine: il codice e' %s.",
 	"P.S. ho segnato %s per non scordarlo.",
 	"Per accedere ricordarsi di: %s.",
 ]
 const _COMMENT := [
+	"%s",
+	"%s",
+	"%s",
 	"build-key=%s",
-	"TODO rimuovere prima del rilascio: %s",
+	"TODO remove before release: %s",
 	"debug %s",
-	"chiave temporanea %s",
+	"temporary-key=%s",
+	"why are u doing this %s",
+	"you shouldn't have done that %s",
+	"why i can find this happines %s",
+	"%s i just want to be happy", 
 ]
 
 static var _chosen: Array = []       # i 5 siti del run (dizionari del pool)
@@ -284,6 +295,13 @@ static func _hint() -> String:
 			str(_ancora.get("nota", "posizione da risolvere"))]
 
 # ---------------- stato del run (serve ai test) ----------------
+
+# I 5 siti del run (dizionari del pool: file, name, desc, featured). Li usa il menu
+# "Preferiti" del browser, che elenca esattamente quelli che la wiki elenca: un menu
+# Preferiti con dentro siti non raggiungibili sarebbe una bugia visibile.
+static func sites() -> Array:
+	_ensure()
+	return _chosen.duplicate()
 
 static func carrier() -> String:
 	_ensure()

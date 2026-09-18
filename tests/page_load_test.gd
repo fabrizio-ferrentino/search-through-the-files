@@ -12,9 +12,14 @@ extends Node
 #   3 la barra di avanzamento si riempia e finisca piena;
 #   4 l'attesa sia BREVE e dentro i limiti dichiarati, e CASUALE (due aperture
 #     della stessa pagina non durano uguale);
-#   5 il pulsante "interrompi" mostri subito la pagina;
-#   6 aprire un'altra pagina mentre la prima carica annulli la prima, senza
-#     lasciare il velo appeso.
+#   5 la pagina si scopra DALL'ALTO man mano che arriva, come col modem;
+#   6 il pulsante "interrompi" FERMI l'arrivo e lasci la pagina a meta' -- non deve
+#     regalare il resto, o diventa il modo per saltare l'attesa (e l'attesa e' tensione:
+#     le minacce nella stanza girano mentre guardi la barra);
+#   7 aprire un'altra pagina mentre la prima carica annulli la prima, senza
+#     lasciare il velo appeso;
+#   8 i due interruttori (BrowserApp.ATTESA_ATTIVA e SCOPERTA_GRADUALE) facciano davvero
+#     quello che dicono: spegnendoli il comportamento cambia, non solo la costante.
 #
 # Va eseguito come SCENA (serve l'autoload GameManager). Headless va bene: qui non
 # si guardano pixel, e i Tween girano comunque.
@@ -54,6 +59,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	# ---------- 1) appena aperta, la pagina e' coperta ----------
+	var t_inizio := Time.get_ticks_msec()
 	_browser._load("forum")
 	_check("CARICA_SUBITO", _browser.is_loading(), "il caricamento non parte nemmeno")
 	_check("VELO_SOPRA", _browser._velo.visible
@@ -82,7 +88,11 @@ func _ready() -> void:
 			"all'inizio la barra dice: '%s'" % _browser._stato_lbl.text)
 	var visto_kb := false
 	var visto_blocchi := false
-	var t0 := Time.get_ticks_msec()
+	# La durata si misura da quando e' partito il caricamento, NON da qui: in mezzo ci sono
+	# uno screenshot e i controlli sul mouse, e quanto ci mettono cambia da una macchina
+	# all'altra -- misurando da qui la durata risultava piu' corta del minimo e il test
+	# saltava a caso.
+	var t0 := t_inizio
 	while _browser.is_loading() and (Time.get_ticks_msec() - t0) < int(LIMITE * 1000.0):
 		if _browser._stato_lbl.text.find("%d KB" % kb) >= 0:
 			visto_kb = true
@@ -125,16 +135,58 @@ func _ready() -> void:
 	_check("ATTESA_CASUALE", diverse.size() >= 2,
 			"sempre la stessa durata: %s" % str(durate))
 
-	# ---------- 4) il pulsante interrompi ----------
+	# ---------- 4) la pagina si scopre DALL'ALTO man mano che arriva ----------
+	# Non e' un vezzo: e' quello che rende onesto il pulsante "interrompi" (sotto).
 	_browser._load("news")
+	var scoperto: Array = []
+	var t1 := Time.get_ticks_msec()
+	while _browser.is_loading() and (Time.get_ticks_msec() - t1) < int(LIMITE * 1000.0):
+		scoperto.append(_browser._velo.anchor_top)
+		await get_tree().process_frame
+	var cresce := false
+	for i in range(1, scoperto.size()):
+		if float(scoperto[i]) > float(scoperto[i - 1]) + 0.001:
+			cresce = true
+			break
+	_check("SCOPRE_DALL_ALTO", cresce and not scoperto.is_empty()
+			and float(scoperto[0]) <= 0.02,
+			"il velo non si ritira progressivamente (da %.2f a %.2f in %d passi)" % [
+			(float(scoperto[0]) if not scoperto.is_empty() else -1.0),
+			(float(scoperto[scoperto.size() - 1]) if not scoperto.is_empty() else -1.0),
+			scoperto.size()])
+
+	# ---------- 5) il pulsante interrompi: lascia la pagina A META' ----------
+	# Prima scopriva tutta la pagina di colpo: bastava premerlo per saltare l'attesa, e
+	# l'attesa non e' un fastidio da saltare -- e' tensione, perche' le minacce nella stanza
+	# continuano a girare mentre guardi la barra. Qui si pretende che NON regali il resto.
+	_browser._load("forum")
 	_check("INTERROMPI_PARTE", _browser.is_loading(), "non sta caricando: la prova non vale")
+	# si aspetta che sia arrivato un pezzo, altrimenti la prova non distingue niente
+	var t2 := Time.get_ticks_msec()
+	while _browser.is_loading() and _browser._velo.anchor_top < 0.25 \
+			and (Time.get_ticks_msec() - t2) < int(LIMITE * 1000.0):
+		await get_tree().process_frame
+	var prima: float = _browser._velo.anchor_top
 	_browser._interrompi()
-	_check("INTERROMPI", not _browser.is_loading() and not _browser._velo.visible,
-			"dopo interrompi la pagina resta coperta")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check("INTERROMPI_FERMA", not _browser.is_loading(),
+			"dopo interrompi sta ancora caricando")
+	_check("INTERROMPI_NON_REGALA", _browser._velo.visible and _browser._velo.anchor_top < 0.98,
+			"dopo interrompi la pagina si vede tutta (velo visibile=%s, scoperto %.2f): il pulsante diventa un modo per saltare l'attesa"
+			% [str(_browser._velo.visible), _browser._velo.anchor_top])
+	_check("INTERROMPI_CONGELA", absf(_browser._velo.anchor_top - prima) <= 0.03,
+			"il velo si e' mosso dopo l'interruzione: da %.2f a %.2f" % [prima, _browser._velo.anchor_top])
 	_check("INTERROMPI_LO_DICE", _browser._stato_lbl.text.find("nterrot") >= 0,
 			"la barra di stato dice: '%s'" % _browser._stato_lbl.text)
+	# ...e ricaricando si deve poter avere la pagina intera: interrompere non blocca il gioco
+	_browser._load("forum")
+	await _browser.attendi_caricamento()
+	await get_tree().process_frame
+	_check("RICARICA_DOPO_INTERROMPI", not _browser._velo.visible,
+			"dopo aver ricaricato la pagina resta coperta")
 
-	# ---------- 5) cambiare pagina durante il caricamento ----------
+	# ---------- 6) cambiare pagina durante il caricamento ----------
 	_browser._load("meteo")
 	await get_tree().process_frame
 	_browser._load("giochi")
@@ -145,11 +197,46 @@ func _ready() -> void:
 	_check("CAMBIO_ARRIVA", not _browser._velo.visible and _browser._current == "giochi",
 			"pagina=%s velo=%s" % [_browser._current, str(_browser._velo.visible)])
 
+	# ---------- 7) i due interruttori ----------
+	await _prova_interruttori()
+
 	if _fails.is_empty():
 		print("RISULTATO: PASS (il caricamento c'e', e' breve, casuale e si interrompe)")
 	else:
 		print("RISULTATO: FAIL -> " + ", ".join(_fails))
 	get_tree().quit(0 if _fails.is_empty() else 1)
+
+# I due interruttori di BrowserApp (chiesti dal proprietario per fare delle prove).
+# Si verificano DAVVERO spegnendoli, non leggendo la costante: un interruttore che non e'
+# collegato a niente e' peggio che non averlo.
+func _prova_interruttori() -> void:
+	# --- ATTESA_ATTIVA = false: le pagine si aprono istantanee ---
+	BrowserApp.ATTESA_ATTIVA = false
+	_browser._load("news")
+	_check("SENZA_ATTESA_ISTANTANEA", not _browser.is_loading(),
+			"con ATTESA_ATTIVA spento la pagina carica comunque")
+	_check("SENZA_ATTESA_NIENTE_VELO", not _browser._velo.visible,
+			"con ATTESA_ATTIVA spento il velo copre ancora la pagina")
+	_check("SENZA_ATTESA_STOP_GRIGIO", _browser._btn_stop.disabled,
+			"con ATTESA_ATTIVA spento 'interrompi' e' ancora attivo")
+	await get_tree().process_frame
+	BrowserApp.ATTESA_ATTIVA = true
+
+	# --- SCOPERTA_GRADUALE = false: il velo copre tutto fino alla fine ---
+	BrowserApp.SCOPERTA_GRADUALE = false
+	_browser._load("forum")
+	var sempre_coperto := true
+	var t := Time.get_ticks_msec()
+	while _browser.is_loading() and (Time.get_ticks_msec() - t) < int(LIMITE * 1000.0):
+		if _browser._velo.anchor_top > 0.001:
+			sempre_coperto = false
+		await get_tree().process_frame
+	_check("SENZA_SCOPERTA_COPRE_TUTTO", sempre_coperto,
+			"con SCOPERTA_GRADUALE spento il velo si ritira comunque")
+	await get_tree().process_frame
+	_check("SENZA_SCOPERTA_POI_SCOPRE", not _browser._velo.visible,
+			"con SCOPERTA_GRADUALE spento la pagina resta coperta anche alla fine")
+	BrowserApp.SCOPERTA_GRADUALE = true
 
 # Foto della finestra, solo quando si gira CON la finestra: headless non disegna
 # e frame_post_draw non arriva mai -- aspettarlo qui bloccava il test (visto: il

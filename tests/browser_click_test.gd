@@ -64,7 +64,7 @@ func _ready() -> void:
 
 	var link_pt := await _trova(TABELLE, true)
 	var cella_pt := await _trova(TABELLE, false)
-	var para_pt := await _trova(PARAGRAFI, false, 300)   # sotto l'intestazione
+	var para_pt := await _trova(PARAGRAFI, false, 40)    # 40 px dentro la pagina: sotto il titolo
 	print("[punti] link=", link_pt, " cella=", cella_pt, " paragrafo=", para_pt)
 	if link_pt.x < 0 or cella_pt.x < 0 or para_pt.x < 0:
 		print("RISULTATO: FAIL -> non ho trovato glifi da cliccare")
@@ -219,12 +219,19 @@ func _doppio_clic(pos: Vector2, pagina: String) -> String:
 # barra del titolo del forum) tutto differisce dal fondo della pagina, e un punto
 # scelto cosi' cadeva sullo sfondo della cella invece che su una lettera -- il
 # controllo del cursore sarebbe una prova finta.
-func _trova(pagina: String, cerca_link: bool, y_da := 120) -> Vector2:
+# "salta" e' quanti pixel scendere DENTRO la pagina prima di cercare (per esempio per
+# saltare l'intestazione), non una coordinata dello schermo: la cornice del browser e'
+# cresciuta due volte e ogni altezza scritta a mano si e' rotta -- una volta la scansione
+# partiva dentro il banner, un'altra il punto "sotto l'intestazione" cadeva nel vuoto.
+func _trova(pagina: String, cerca_link: bool, salta := 0) -> Vector2:
 	await _reset(pagina)
 	var img := _sub.get_texture().get_image()
 	var sfondo: Color = _browser._page_bg.color
-	for y in range(y_da, 1000, 2):
+	var da: int = int(_pagina.get_global_rect().position.y) + 4 + salta
+	for y in range(da, 1000, 2):
 		var xs: Array = []
+		var forza_max := -1.0
+		var x_forte := -1
 		for x in range(40, 1300, 2):
 			var c := img.get_pixel(x, y)
 			var ok := false
@@ -232,13 +239,55 @@ func _trova(pagina: String, cerca_link: bool, y_da := 120) -> Vector2:
 				var diverso: bool = absf(c.r - sfondo.r) + absf(c.g - sfondo.g) + absf(c.b - sfondo.b) > 0.45
 				ok = c.b > 0.45 and c.r < 0.30 and c.g < 0.30 and diverso
 			else:
-				ok = _tratto(img, x, y)
+				# Il testo cercato deve essere NEUTRO: i link sono blu, e un punto su un link
+				# manda il primo clic a navigare, quindi il secondo non seleziona piu' nulla
+				# (visto: il doppio clic finiva su "Torna al portale" e tornava stringa vuota).
+				var sat: float = maxf(maxf(c.r, c.g), c.b) - minf(minf(c.r, c.g), c.b)
+				ok = sat < 0.15 and _tratto(img, x, y)
 			if ok:
 				xs.append(x)
+				if not cerca_link:
+					# Si tiene il pixel col contrasto PIU' FORTE della riga, cioe' il centro
+					# di un tratto. Prendendo la mediana si finiva a 1-2 px di fianco a una
+					# lettera: il cursore era giustamente la I (la maschera del testo ha un
+					# margine) ma il doppio clic non trovava nessuna parola.
+					var f: float = _forza(img, x, y)
+					if f > forza_max:
+						forza_max = f
+						x_forte = x
 		var soglia := 6 if cerca_link else 12
-		if xs.size() >= soglia:
-			return Vector2(float(xs[xs.size() / 2]), float(y))
+		# Il TESTO va distinto da un BORDO: una riga che attraversa il bordo di una cella o
+		# di un banner ha contrasto locale su ogni pixel, quindi passava il controllo e il
+		# punto "sul testo" cadeva su una linea -- dove il cursore e' giustamente una freccia.
+		# Le lettere invece danno tanti gruppetti separati da spazi: se ne servono almeno 3.
+		if xs.size() >= soglia and (cerca_link or _gruppi(xs) >= 3):
+			if cerca_link or x_forte < 0:
+				return Vector2(float(xs[xs.size() / 2]), float(y))
+			return Vector2(float(x_forte), float(y))
 	return Vector2(-1, -1)
+
+# Quanto un pixel si stacca da quello che ha attorno: al centro di un tratto e' massimo.
+func _forza(img: Image, x: int, y: int) -> float:
+	var qui := img.get_pixel(x, y)
+	var l0: float = qui.r * 0.3 + qui.g * 0.6 + qui.b * 0.1
+	var peggio := 0.0
+	for d in [-4, 4]:
+		for asse in range(2):
+			var xx: int = clampi(x + (d if asse == 0 else 0), 0, VP_SIZE.x - 1)
+			var yy: int = clampi(y + (0 if asse == 0 else d), 0, VP_SIZE.y - 1)
+			var c := img.get_pixel(xx, yy)
+			peggio = maxf(peggio, absf(l0 - (c.r * 0.3 + c.g * 0.6 + c.b * 0.1)))
+	return peggio
+
+# Quanti tratti separati (distanti piu' di 3 px) ci sono in una riga di ascisse.
+func _gruppi(xs: Array) -> int:
+	if xs.is_empty():
+		return 0
+	var n := 1
+	for i in range(1, xs.size()):
+		if int(xs[i]) - int(xs[i - 1]) > 3:
+			n += 1
+	return n
 
 # Vero se il pixel fa parte di un tratto: molto piu' scuro o piu' chiaro di quello
 # che ha attorno a 4 px (le lettere), non un fondo pieno (le celle colorate).

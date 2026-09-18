@@ -21,7 +21,12 @@ var _inspector_edit: TextEdit
 
 var _ctx_layer: Control
 var _ctx_menu: VBoxContainer
-var _ctx_copy: Button               # voce "Copia" (attiva solo con una selezione)
+var _ctx_panel: Panel
+var _menu_aperto: Button = null      # voce di menu premuta (resta "giu'" mentre e' aperta)
+var _btn_back: Button
+var _btn_fwd: Button
+var _btn_stop: Button
+var _btn_pref: Button
 
 var _current := ""
 var _back: Array = []
@@ -39,8 +44,8 @@ var _home := WebRuntime.HOME      # la wiki: pagina generata, non un file
 # minacce continuano a girare mentre aspetti. Qui l'attesa e' breve e dipende dal
 # "peso" finto della pagina, lo stesso numero di KB che la wiki elenca nella
 # cronologia (WebRuntime.fake_kb): il conto nella barra di stato combacia.
-const CARICA_MIN := 0.40         # attesa minima, secondi
-const CARICA_MAX := 2            # attesa massima: non deve annoiare
+const CARICA_MIN := 1        	 # attesa minima, secondi
+const CARICA_MAX := 3            # attesa massima: non deve annoiare
 const CARICA_PER_KB := 0.018     # quanto pesa un KB finto
 const CARICA_JITTER := 0.12      # sporcatura casuale, cosi' non e' mai identica
 const CARICA_BLOCCHI := 14       # blocchetti della barra di avanzamento (stile Win95)
@@ -52,12 +57,28 @@ const INCAVO_BORDO := 2          # margine interno dell'incavo (vedi Win95._sb s
 # segnale, interruzione -- ma senza aspettare secondi a ogni pagina.
 static var attesa_scala := 1.0
 
+# ATTESA_ATTIVA = false  ->  le pagine si aprono ISTANTANEE. Niente velo, niente barra
+#   che conta i KB, niente globo che lampeggia; "interrompi" resta sempre grigio perche'
+#   non c'e' niente da interrompere. E' il browser come era prima del 16/09.
+#   Attenzione a cosa si perde: l'attesa non e' solo estetica, e' tensione -- le minacce
+#   della stanza continuano a girare mentre guardi la barra, e senza attesa il web diventa
+#   un posto sicuro dove stare.
+#
+# SCOPERTA_GRADUALE = false  ->  l'attesa resta, ma il velo copre TUTTA la pagina fino
+#   alla fine e poi sparisce di colpo (com'era prima del 18/09), invece di ritirarsi
+#   dall'alto seguendo i dati. Con questo spento "interrompi" ti lascia la pagina VUOTA
+#   invece che a meta': e' comunque onesto (una pagina che non e' arrivata e' bianca, ed
+#   e' quello che si vedeva premendo Stop durante la connessione) ma si capisce meno.
+static var ATTESA_ATTIVA := true
+static var SCOPERTA_GRADUALE := false
+
 signal load_finished(page: String)
 
 var _velo: ColorRect = null            # copre la pagina mentre "arriva"
 var _stato_lbl: Label = null
 var _blocchi: Array = []               # i quadratini della barra di avanzamento
 var _globo: OSIcon = null              # l'icona accanto all'indirizzo: lampeggia
+var _in_carica := false                # sta arrivando qualcosa (vedi is_loading)
 var _tw_carica: Tween = null
 var _tw_globo: Tween = null
 
@@ -69,44 +90,95 @@ func launch(arg) -> void:
 	add_child(root)
 
 	# --- barra menu ---
-	var menubar := HBoxContainer.new()
-	menubar.add_theme_constant_override("separation", 2)
-	for m in ["File", "Modifica", "Visualizza", "Preferiti", "?"]:
+	# Sta su una STRISCIA in rilievo che attraversa la finestra, come in Win95: prima erano
+	# pulsanti piatti appoggiati sul fondo della finestra, e senza la striscia non si
+	# leggevano come una barra dei menu ma come una riga di etichette. Le voci aprono
+	# tendine vere (_apri_menu): erano tutte morte.
+	var menubar := _striscia(root, 30)
+	var mb_box := HBoxContainer.new()
+	mb_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mb_box.offset_left = 3
+	mb_box.offset_top = 2
+	mb_box.offset_bottom = -2
+	mb_box.add_theme_constant_override("separation", 0)
+	menubar.add_child(mb_box)
+	for m in [["File", _voci_file], ["Modifica", _voci_modifica], ["Visualizza", _voci_visualizza],
+			["Preferiti", Callable()], ["?", _voci_aiuto]]:
 		var mb := Button.new()
-		mb.text = m
+		mb.text = str(m[0])
 		mb.flat = true
 		mb.focus_mode = Control.FOCUS_NONE
-		menubar.add_child(mb)
-	root.add_child(menubar)
+		mb.custom_minimum_size = Vector2(0, 0)
+		var f: Callable = m[1]
+		if f.is_valid():
+			mb.pressed.connect(func(): _apri_menu(f.call(), mb))
+		else:
+			# "Preferiti" e' grigio: vedi la nota sulla barra strumenti qui sotto.
+			mb.disabled = true
+		mb_box.add_child(mb)
 
 	# --- barra strumenti ---
-	var toolbar := HBoxContainer.new()
-	toolbar.add_theme_constant_override("separation", 2)
-	root.add_child(toolbar)
-	toolbar.add_child(_icon_btn("back", _go_back))
-	toolbar.add_child(_icon_btn("fwd", _go_forward))
-	toolbar.add_child(_icon_btn("stop", _interrompi))
-	toolbar.add_child(_icon_btn("refresh", func(): _load(_current)))
-	toolbar.add_child(_icon_btn("home", _go_home))
-	toolbar.add_child(_vsep())
-	toolbar.add_child(_icon_btn("search", _view_source))   # "Visualizza sorgente"
-	toolbar.add_child(_icon_btn("star"))
-	toolbar.add_child(_icon_btn("print"))
+	var toolbar := _striscia(root, TB_ALTA + 8)
+	var tb_box := HBoxContainer.new()
+	tb_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tb_box.offset_left = 2
+	tb_box.offset_top = 3
+	tb_box.offset_bottom = -3
+	tb_box.offset_right = -4
+	tb_box.add_theme_constant_override("separation", 1)
+	toolbar.add_child(tb_box)
+	tb_box.add_child(_maniglia())        # il "grip" a puntini: dettaglio d'epoca
+	_btn_back = _icon_btn("back", "Indietro", _go_back)
+	_btn_fwd = _icon_btn("fwd", "Avanti", _go_forward)
+	_btn_stop = _icon_btn("stop", "Interrompi", _interrompi)
+	tb_box.add_child(_btn_back)
+	tb_box.add_child(_btn_fwd)
+	tb_box.add_child(_vsep())
+	tb_box.add_child(_btn_stop)
+	tb_box.add_child(_icon_btn("refresh", "Aggiorna", func(): _load(_current)))
+	tb_box.add_child(_icon_btn("home", "Pagina iniziale", _go_home))
+	tb_box.add_child(_vsep())
+	tb_box.add_child(_icon_btn("search", "Origine", _view_source))
+	# PREFERITI: disabilitato per scelta di gioco (18/09/2026). Funzionava ed elencava i siti
+	# del run, ma un elenco cliccabile di tutti i siti rende la navigazione troppo comoda:
+	# il giocatore deve girare fra le pagine, non saltarci da un menu. Il pulsante e la voce
+	# restano al loro posto, grigi, perche' un browser dell'epoca senza Preferiti non e'
+	# credibile. WebRuntime.sites() resta: e' l'elenco che la wiki usa comunque.
+	_btn_pref = _icon_btn("star", "Preferiti", Callable(), false)
+	tb_box.add_child(_btn_pref)
+	# Stampa: non c'e' una stampante e non ci sara'. Resta al suo posto perche' un browser
+	# del '98 senza il pulsante stampa non e' credibile, ma DISABILITATO -- l'unica cosa
+	# onesta: un pulsante che non fa niente e sembra attivo e' peggio che non averlo.
+	tb_box.add_child(_icon_btn("print", "Stampa", Callable(), false))
+	# il "throbber" va in fondo a DESTRA della barra strumenti, come nei browser dell'epoca
+	# (il logo animato di Netscape / il globo di IE): prima stava infilato fra l'etichetta
+	# "Indirizzo:" e il campo, dove non e' mai stato in nessun browser
+	var molla := Control.new()
+	molla.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tb_box.add_child(molla)
+	_globo = OSIcon.new()
+	_globo.kind = "web"
+	_globo.custom_minimum_size = Vector2(28, 28)
+	_globo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_globo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tb_box.add_child(_globo)
 
 	# --- barra indirizzo ---
+	# Anche questa su una striscia in rilievo: le tre barre (menu, strumenti, indirizzo)
+	# devono leggersi come tre bande dello stesso mobile, non come righe sospese.
+	var addrstrip := _striscia(root, 36)
 	var addrbar := HBoxContainer.new()
+	addrbar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	addrbar.offset_left = 4
+	addrbar.offset_top = 3
+	addrbar.offset_bottom = -3
+	addrbar.offset_right = -4
 	addrbar.add_theme_constant_override("separation", 6)
-	root.add_child(addrbar)
+	addrstrip.add_child(addrbar)
 	var lbl := Label.new()
 	lbl.text = "Indirizzo:"
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	addrbar.add_child(lbl)
-	_globo = OSIcon.new()
-	_globo.kind = "web"
-	_globo.custom_minimum_size = Vector2(18, 18)
-	_globo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_globo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	addrbar.add_child(_globo)
 	_addr = LineEdit.new()
 	_addr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_addr.placeholder_text = "Digita un indirizzo, es. http://www.sito.it"
@@ -251,6 +323,7 @@ func _load(name: String) -> void:
 	# la pagina e' pronta dentro, ma il modem se la prende con calma: il velo la
 	# tiene coperta per un attimo (vedi _avvia_caricamento)
 	_avvia_caricamento(name)
+	_aggiorna_pulsanti()
 
 # Compila il body in BBCode e lo mette nell'RTL. I colori di pagina vengono dal
 # <body>: bgcolor (sfondo), text (testo), link (colore dei link) — cosi' le
@@ -513,6 +586,9 @@ func _fmt_line(line: String, depth: int) -> String:
 
 # ---------------- menu contestuale ----------------
 
+# Lo STRATO dei menu: lo usano sia il menu di destra sulla pagina sia le tendine della
+# barra dei menu (_apri_menu). Le voci non si creano qui: si rifanno a ogni apertura in
+# _riempi_menu, perche' cosa e' attivo dipende dal momento.
 func _build_ctx_menu() -> void:
 	_ctx_layer = Control.new()
 	_ctx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -523,12 +599,12 @@ func _build_ctx_menu() -> void:
 	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
 	catcher.gui_input.connect(func(e):
 		if e is InputEventMouseButton and e.pressed:
-			_ctx_layer.visible = false)
+			_chiudi_menu())
 	_ctx_layer.add_child(catcher)
-	var panel := Panel.new()
-	panel.name = "Panel"
-	panel.custom_minimum_size = Vector2(210, 0)
-	_ctx_layer.add_child(panel)
+	_ctx_panel = Panel.new()
+	_ctx_panel.name = "Panel"
+	_ctx_panel.custom_minimum_size = Vector2(210, 0)
+	_ctx_layer.add_child(_ctx_panel)
 	_ctx_menu = VBoxContainer.new()
 	_ctx_menu.add_theme_constant_override("separation", 0)
 	_ctx_menu.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -536,39 +612,24 @@ func _build_ctx_menu() -> void:
 	_ctx_menu.offset_top = 3
 	_ctx_menu.offset_right = -3
 	_ctx_menu.offset_bottom = -3
-	panel.add_child(_ctx_menu)
-	_ctx_copy = _ctx_item("Copia", _copy)
-	_ctx_item("Copia tutto", _copy_all)
-	_ctx_item("Seleziona tutto", func(): _rtl.select_all())
-	_ctx_item("Visualizza sorgente", _view_source)
-	_ctx_item("Indietro", _go_back)
-	_ctx_item("Aggiorna", func(): _load(_current))
+	_ctx_panel.add_child(_ctx_menu)
 
-func _ctx_item(text: String, cb: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.flat = true
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(0, 26)
-	b.pressed.connect(func():
-		_ctx_layer.visible = false
-		cb.call())
-	_ctx_menu.add_child(b)
-	return b
-
+# Il menu del tasto destro sulla pagina. "Copia" e "Indietro" ci sono solo quando hanno
+# senso: col tasto destro su una pagina appena aperta, in Win95, "Indietro" era grigio.
 func _show_ctx() -> void:
-	# "Copia" attiva solo se c'e' una selezione
-	_ctx_copy.disabled = _rtl.get_selected_text() == ""
-	var panel := _ctx_layer.get_node("Panel") as Panel
-	var pos := get_local_mouse_position()
-	var h: float = _ctx_menu.get_combined_minimum_size().y + 6.0
-	pos.x = min(pos.x, size.x - 212)
-	pos.y = min(pos.y, size.y - h - 4.0)
-	panel.position = pos
-	panel.size = Vector2(210, h)
-	_ctx_layer.visible = true
-	_ctx_layer.move_to_front()
+	var sel: bool = _rtl.get_selected_text() != ""
+	_riempi_menu([
+		["Indietro", _go_back if not _back.is_empty() else Callable()],
+		["Avanti", _go_forward if not _forward.is_empty() else Callable()],
+		["Aggiorna", func(): _load(_current)],
+		["-"],
+		["Copia", _copy if sel else Callable()],
+		["Copia tutto", _copy_all],
+		["Seleziona tutto", func(): _rtl.select_all()],
+		["-"],
+		["Visualizza sorgente", _view_source],
+	])
+	_mostra_menu(get_local_mouse_position())
 
 # Rigenera lo stato web del run (chiave + portatore). Gancio da GameManager.start_new_run().
 static func reset_pages() -> void:
@@ -636,8 +697,10 @@ func _costruisci_barra_stato(root: Control) -> void:
 		_blocchi.append(b)
 
 # Vero mentre la pagina sta "arrivando". I test lo usano per aspettare.
+# NON si deduce piu' dal velo: dopo un'interruzione il velo RESTA (copre la parte che non e'
+# arrivata) ma il caricamento e' finito.
 func is_loading() -> bool:
-	return _velo != null and _velo.visible
+	return _in_carica
 
 # Aspetta la fine del caricamento in corso (ritorna subito se non ce n'e' uno).
 func attendi_caricamento() -> void:
@@ -652,11 +715,20 @@ func _avvia_caricamento(page: String) -> void:
 		return
 	if _tw_carica != null and _tw_carica.is_valid():
 		_tw_carica.kill()
+	# interruttore spento: la pagina e' gia' pronta, si passa direttamente alla fine cosi'
+	# barra di stato, pulsanti e segnale load_finished restano coerenti
+	if not ATTESA_ATTIVA:
+		_in_carica = false
+		_velo.visible = false
+		_scopri(0.0)
+		_fine_caricamento(page)
+		return
 	var kb := WebRuntime.fake_kb(page)
 	var durata: float = clampf(float(kb) * CARICA_PER_KB, CARICA_MIN, CARICA_MAX)
 	durata = maxf((durata + randf_range(-CARICA_JITTER, CARICA_JITTER)) * attesa_scala, 0.0)
 	_velo.color = _page_bg.color        # come se la pagina non fosse ancora arrivata
 	_velo.visible = true
+	_in_carica = true
 	_rtl.deselect()
 	_passo_caricamento(0.0, page)
 	_globo_acceso(true)
@@ -665,6 +737,9 @@ func _avvia_caricamento(page: String) -> void:
 	_tw_carica.tween_callback(_fine_caricamento.bind(page))
 
 # Un passo dell'attesa: prima la connessione, poi i dati che arrivano.
+# Il VELO si ritira DALL'ALTO seguendo i dati ricevuti, cioe' la pagina si scopre dall'alto
+# verso il basso come faceva davvero un browser col modem. Prima copriva tutto o niente, e
+# quello rendeva "Interrompi" un imbroglio (vedi _interrompi).
 func _passo_caricamento(t: float, page: String) -> void:
 	var kb := WebRuntime.fake_kb(page)
 	if t < 0.35:
@@ -672,25 +747,47 @@ func _passo_caricamento(t: float, page: String) -> void:
 	else:
 		var quanti: int = int(float(kb) * (t - 0.35) / 0.65)
 		_stato_lbl.text = "Ricezione dati: %d KB di %d KB" % [mini(quanti, kb), kb]
+	# la parte scoperta segue i DATI, non la connessione: finche' si connette non arriva
+	# niente, ed e' lo stesso conto che mostra i KB qui sopra
+	_scopri(clampf((t - 0.35) / 0.65, 0.0, 1.0))
 	_avanzamento(t)
 
+# Scopre la pagina dall'alto: "quanto" 0 = tutta coperta, 1 = tutta scoperta. Il velo e'
+# ancorato in basso e si alza il suo bordo superiore, cosi' la parte arrivata e' leggibile
+# E cliccabile (anche quello era vero: si poteva seguire un link prima della fine).
+func _scopri(quanto: float) -> void:
+	if _velo == null:
+		return
+	# interruttore spento: il velo copre tutto fino alla fine (vedi SCOPERTA_GRADUALE)
+	_velo.anchor_top = clampf(quanto, 0.0, 1.0) if SCOPERTA_GRADUALE else 0.0
+	_velo.offset_top = 0.0
+
 func _fine_caricamento(page: String) -> void:
+	_in_carica = false
 	_velo.visible = false
+	_scopri(0.0)                        # pronto per il prossimo caricamento
 	_globo_acceso(false)
 	_avanzamento(1.0)
 	_stato_lbl.text = "Completato: %s" % WebRuntime.host_of(page)
+	_aggiorna_pulsanti()
 	load_finished.emit(page)
 
-# Il pulsante "interrompi" della barra strumenti: la pagina si vede subito.
+# Il pulsante "interrompi": FERMA l'arrivo dei dati e lascia la pagina A META'.
+# Prima scopriva tutta la pagina di colpo, ed era un imbroglio: bastava premerlo per
+# saltare l'attesa. E l'attesa non e' un fastidio da poter saltare -- e' tensione, perche'
+# le minacce nella stanza continuano a girare mentre stai li' a guardare la barra.
+# Adesso il velo resta dov'e' arrivato: leggi la parte di sopra, il resto no, e per averlo
+# devi ricaricare e aspettare da capo. E' anche quello che facevano i browser dell'epoca:
+# Stop ti lasciava una pagina tronca, spesso senza le immagini.
 func _interrompi() -> void:
 	if not is_loading():
 		return
 	if _tw_carica != null and _tw_carica.is_valid():
 		_tw_carica.kill()
-	_velo.visible = false
+	_in_carica = false
 	_globo_acceso(false)
-	_avanzamento(0.0)
 	_stato_lbl.text = "Interrotto"
+	_aggiorna_pulsanti()
 	load_finished.emit(_current)
 
 # Quanti blocchetti accesi.
@@ -715,19 +812,238 @@ func _globo_acceso(attivo: bool) -> void:
 
 # ---------------- helper UI ----------------
 
-func _icon_btn(kind: String, cb := Callable()) -> Button:
+# Pulsante della barra strumenti: ICONA SOPRA, NOME SOTTO. Nei browser dell'epoca su Win95
+# la barra non era di sole icone -- ogni pulsante aveva la sua didascalia, ed e' anche il
+# motivo per cui quelle barre erano cosi' alte. Le icone da sole, oltretutto, qui non si
+# leggevano: lo schermo dell'OS viene rimpicciolito a ~2/3 e passato dal CRT.
+# Il contenuto sta in un VBox figlio (un Button non impagina i figli da solo), che e' anche
+# comodo per lo stato disabilitato: sbiadendo il VBox si spengono insieme icona e nome.
+# La larghezza la decide il NOME, misurato col font vero: a larghezza fissa "Interrompi" e
+# "Pagina iniziale" venivano tagliati.
+const TB_ICONA := 24
+const TB_CAPTION := 14        # la didascalia e' piu' piccola del testo dei menu, come allora
+const TB_ALTA := 54
+
+func _icon_btn(kind: String, testo := "", cb := Callable(), attivo := true) -> Button:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(30, 28)
+	var larga: float = 40.0
+	if testo != "":
+		larga = maxf(larga, Win95.font("sans").get_string_size(
+				testo, HORIZONTAL_ALIGNMENT_LEFT, -1, TB_CAPTION).x + 12.0)
+	b.custom_minimum_size = Vector2(larga, TB_ALTA)
 	b.focus_mode = Control.FOCUS_NONE
+	var box := VBoxContainer.new()
+	box.name = "Contenuto"
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_top = 3
+	box.offset_bottom = -2
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_theme_constant_override("separation", 1)
+	b.add_child(box)
 	var ic := OSIcon.new()
 	ic.kind = kind
-	ic.size = Vector2(20, 20)
-	ic.position = Vector2(5, 4)
+	ic.custom_minimum_size = Vector2(TB_ICONA, TB_ICONA)
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(ic)
+	box.add_child(ic)
+	if testo != "":
+		var lb := Label.new()
+		lb.text = testo
+		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lb.add_theme_font_size_override("font_size", TB_CAPTION)
+		lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(lb)
 	if cb.is_valid():
 		b.pressed.connect(cb)
+	if not attivo:
+		b.disabled = true
+	_pallido(b, not attivo)
 	return b
+
+# Sbiadisce (o riaccende) il contenuto di un pulsante, per accompagnare lo stato
+# disabilitato. Serve perche' il tema colora di grigio solo il testo DEL BUTTON, e qui
+# icona e didascalia sono nodi figli: a colori pieni un pulsante spento sembra attivo.
+func _pallido(b: Button, spento: bool) -> void:
+	var box := b.get_node_or_null("Contenuto") as Control
+	if box != null:
+		box.modulate = Color(1, 1, 1, 0.38) if spento else Color(1, 1, 1, 1)
+
+# Una striscia in rilievo che attraversa la finestra: e' il contenitore delle barre in
+# Win95, e senza di lei i pulsanti sembrano appoggiati sul niente.
+func _striscia(parent: Control, alta: int) -> Panel:
+	var p := Panel.new()
+	p.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, false, 0, 0, 0, 0))
+	p.custom_minimum_size = Vector2(0, alta)
+	parent.add_child(p)
+	return p
+
+# La "maniglia" a due righe verticali all'inizio della barra: nei programmi dell'epoca
+# diceva che la barra si poteva staccare e trascinare. Qui non si stacca (non serve), ma
+# senza di lei la barra non si riconosce.
+func _maniglia() -> Control:
+	var c := Control.new()
+	c.custom_minimum_size = Vector2(9, 0)
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.draw.connect(func():
+		var h: float = c.size.y
+		for i in range(2):
+			var x: float = 2.0 + float(i) * 4.0
+			c.draw_line(Vector2(x, 2.0), Vector2(x, h - 2.0), Win95.C_LIGHT, 1.0)
+			c.draw_line(Vector2(x + 1.0, 2.0), Vector2(x + 1.0, h - 2.0), Win95.C_SHADOW, 1.0))
+	return c
+
+# Aggiorna lo stato dei pulsanti che DIPENDONO da dove siamo: indietro/avanti secondo la
+# cronologia, interrompi solo mentre si carica. E' il "disabilitato" piu' importante di
+# tutti, perche' e' informazione vera: appena aperto il browser, "indietro" non ha dove
+# andare e in Win95 era grigio.
+func _aggiorna_pulsanti() -> void:
+	if _btn_back != null:
+		_btn_back.disabled = _back.is_empty()
+		_pallido(_btn_back, _btn_back.disabled)
+	if _btn_fwd != null:
+		_btn_fwd.disabled = _forward.is_empty()
+		_pallido(_btn_fwd, _btn_fwd.disabled)
+	if _btn_stop != null:
+		_btn_stop.disabled = not is_loading()
+		_pallido(_btn_stop, _btn_stop.disabled)
+
+# ---------------- le tendine della barra dei menu ----------------
+# Formato di una voce: ["testo", Callable] attiva, ["testo", Callable()] DISABILITATA
+# (callable non valido), ["-"] separatore.
+
+func _voci_file() -> Array:
+	return [
+		["Nuovo", Callable()],
+		["Apri...", Callable()],
+		["-"],
+		["Salva con nome...", Callable()],
+		["Stampa...", Callable()],
+		["-"],
+		["Chiudi", func(): if window != null: window.close()],
+	]
+
+func _voci_modifica() -> Array:
+	var sel: bool = _rtl != null and _rtl.get_selected_text() != ""
+	return [
+		["Taglia", Callable()],
+		["Copia", _copy if sel else Callable()],
+		["Incolla", Callable()],
+		["-"],
+		["Seleziona tutto", func(): _rtl.select_all()],
+		["Trova in questa pagina...", Callable()],
+	]
+
+func _voci_visualizza() -> Array:
+	return [
+		["Interrompi", _interrompi if is_loading() else Callable()],
+		["Aggiorna", func(): _load(_current)],
+		["-"],
+		["Carattere", Callable()],
+		["Origine", _view_source],
+	]
+
+# Cosa CI SAREBBE nei Preferiti. Non e' piu' agganciata a niente (il menu e il pulsante
+# sono disabilitati per scelta di gioco: saltare fra i siti da un elenco toglie il senso di
+# girare per le pagine), ma resta qui perche' e' la sola cosa che cambierebbe se un giorno
+# si volesse riattivarla -- e perche' il test la usa per verificare che sia davvero spenta.
+# Se la si riattiva: le voci devono navigare con _go e non con _load, o la visita non entra
+# nella cronologia e "indietro" resta grigio.
+func _voci_preferiti() -> Array:
+	var v: Array = [["Aggiungi a Preferiti", Callable()], ["-"]]
+	for sito in WebRuntime.sites():
+		var f := str(sito.get("file", ""))
+		if f == "":
+			continue
+		v.append([str(sito.get("name", f)), func(): _go(f)])
+	if v.size() == 2:
+		v.append(["(nessun sito)", Callable()])
+	return v
+
+func _voci_aiuto() -> Array:
+	return [
+		["Argomenti della Guida", Callable()],
+		["-"],
+		["Informazioni su WebNet Explorer", _informazioni],
+	]
+
+# Apre una tendina sotto il pulsante che l'ha chiesta. Riusa lo strato del menu
+# contestuale: e' la stessa cosa, cambia solo dove si posiziona.
+func _apri_menu(voci: Array, sotto: Control) -> void:
+	_riempi_menu(voci)
+	var giu: Vector2 = sotto.get_global_transform().origin - get_global_transform().origin
+	giu.y += sotto.size.y
+	_mostra_menu(giu)
+	_menu_aperto = sotto as Button
+	if _menu_aperto != null:
+		_menu_aperto.toggle_mode = true
+		_menu_aperto.set_pressed_no_signal(true)
+
+func _chiudi_menu() -> void:
+	_ctx_layer.visible = false
+	if _menu_aperto != null:
+		_menu_aperto.set_pressed_no_signal(false)
+		_menu_aperto.toggle_mode = false
+		_menu_aperto = null
+
+# Ricostruisce le voci: si fa a ogni apertura perche' cosa e' attivo dipende dal momento
+# (c'e' una selezione? si sta caricando? quali siti esistono in questo run?).
+func _riempi_menu(voci: Array) -> void:
+	for c in _ctx_menu.get_children():
+		c.queue_free()
+		_ctx_menu.remove_child(c)
+	var larga := 150.0
+	for v in voci:
+		var testo := str(v[0])
+		if testo == "-":
+			var sep := Control.new()
+			sep.custom_minimum_size = Vector2(0, 7)
+			sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			sep.draw.connect(func():
+				var y: float = 3.0
+				sep.draw_line(Vector2(2, y), Vector2(sep.size.x - 2, y), Win95.C_SHADOW, 1.0)
+				sep.draw_line(Vector2(2, y + 1), Vector2(sep.size.x - 2, y + 1), Win95.C_LIGHT, 1.0))
+			_ctx_menu.add_child(sep)
+			continue
+		var cb: Callable = v[1] if v.size() > 1 else Callable()
+		var b := Button.new()
+		b.text = testo
+		b.flat = true
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(0, 26)
+		if cb.is_valid():
+			b.pressed.connect(func():
+				_chiudi_menu()
+				cb.call())
+		else:
+			b.disabled = true
+		_ctx_menu.add_child(b)
+		larga = maxf(larga, b.get_combined_minimum_size().x + 24.0)
+	_ctx_panel.custom_minimum_size.x = larga
+
+func _mostra_menu(pos: Vector2) -> void:
+	var larga: float = maxf(_ctx_panel.custom_minimum_size.x, 150.0)
+	var h: float = _ctx_menu.get_combined_minimum_size().y + 6.0
+	pos.x = minf(pos.x, size.x - larga - 2.0)
+	pos.y = minf(pos.y, size.y - h - 4.0)
+	_ctx_panel.position = pos
+	_ctx_panel.size = Vector2(larga, h)
+	_ctx_layer.visible = true
+	_ctx_layer.move_to_front()
+
+# La finestrella "Informazioni su": un About d'epoca, e l'unica voce del menu "?" che fa
+# qualcosa. Nomi inventati, come in tutto il resto dell'OS.
+func _informazioni() -> void:
+	_riempi_menu([
+		["WebNet Explorer 2.0", Callable()],
+		["-"],
+		["Versione 2.0 (build 412)", Callable()],
+		["(c) 1998 WebNet Servizi Telematici", Callable()],
+		["-"],
+		["Chiudi", func(): pass],
+	])
+	_mostra_menu(Vector2(size.x * 0.5 - 150.0, size.y * 0.35))
 
 func _text_btn(text: String, cb: Callable) -> Button:
 	var b := Button.new()
