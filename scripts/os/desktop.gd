@@ -12,6 +12,14 @@ signal exit_requested   # ESC o "Annulla": torna alla vista stanza (senza spegne
 signal game_won         # cartella segreta sbloccata: la stanza mostra il finale
 
 const TASKBAR_H := 40
+# LARGHEZZA DEI PULSANTI DELLA BARRA, alla Win95 (19/09/2026).
+# Prima erano SIZE_EXPAND_FILL, quindi con una sola finestra aperta il pulsante si prendeva
+# tutta la barra -- cosa che su Win95 non succedeva mai: i pulsanti hanno una larghezza
+# MASSIMA, e si stringono solo quando ce ne sono tanti, fino a un minimo sotto il quale non
+# si legge piu' niente. Arrivati la', compaiono le due frecce per scorrerli.
+const TASK_MAX_W := 250      # da solo, un pulsante non passa di qui
+const TASK_MIN_W := 96       # sotto questo il titolo non si legge: meglio scorrere
+const TASK_SPIN_W := 22      # colonnina delle due frecce
 
 # Avvio in stile 1995 (vedi _play_boot): durate delle tre fasi. Nomi di fantasia per
 # non usare marchi veri: il BIOS e' "Cetus" (la costellazione della Balena), il
@@ -25,6 +33,11 @@ const BOOT_WIPE_TIME := 1.15     # una passata del nastro
 var window_layer: Control
 var taskbar: Panel
 var tasks_box: HBoxContainer
+var _task_spin: Control = null       # le due frecce, visibili solo quando serve scorrere
+var _task_primo := 0                 # indice del primo pulsante mostrato
+# Guardia di rientro: _disponi_barra cambia le larghezze, il che rifa' il layout, il che
+# rilancia "resized" -- senza questa si richiama all'infinito e il gioco si pianta.
+var _in_disposizione := false
 var start_btn: Button
 var start_menu: Panel
 var clock_label: Label
@@ -157,7 +170,19 @@ func _build_taskbar() -> void:
 	tasks_box = HBoxContainer.new()
 	tasks_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tasks_box.add_theme_constant_override("separation", 3)
+	tasks_box.clip_contents = true
+	tasks_box.resized.connect(_disponi_barra)
 	hb.add_child(tasks_box)
+
+	# Le due frecce d'epoca: su e giu', una sopra l'altra in una colonnina stretta. Compaiono
+	# solo quando i pulsanti sono arrivati alla larghezza minima e non ci stanno piu' tutti.
+	_task_spin = VBoxContainer.new()
+	_task_spin.add_theme_constant_override("separation", 1)
+	_task_spin.custom_minimum_size = Vector2(TASK_SPIN_W, 0)
+	_task_spin.visible = false
+	hb.add_child(_task_spin)
+	_task_spin.add_child(_freccia_barra(true))
+	_task_spin.add_child(_freccia_barra(false))
 
 	var clock_panel := Panel.new()
 	clock_panel.add_theme_stylebox_override("panel", Win95._sb(false, Win95.C_FACE, true, 8, 2, 8, 2))
@@ -350,12 +375,16 @@ func _attiva_finestra_sotto() -> void:
 func _add_taskbar_button(win: OSWindow) -> void:
 	var b := _icon_button(win.win_title, win.icon_kind, TASKBAR_H - 8)
 	b.toggle_mode = true
-	b.custom_minimum_size.x = 150
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.size_flags_stretch_ratio = 0.0
+	# NIENTE expand: la larghezza la decide _disponi_barra, come su Win95. Il titolo che non
+	# ci sta viene troncato coi puntini invece di allargare il pulsante.
+	b.size_flags_horizontal = Control.SIZE_FILL
+	b.clip_text = true
+	b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.pressed.connect(_on_taskbar_pressed.bind(win))
 	tasks_box.add_child(b)
 	taskbar_buttons[win] = b
+	_disponi_barra()
 
 func _on_taskbar_pressed(win: OSWindow) -> void:
 	if not win.visible:
@@ -400,6 +429,98 @@ func _update_taskbar() -> void:
 		var b: Button = taskbar_buttons[win]
 		b.button_pressed = (win == active_window and win.visible)
 		b.text = "      " + win.win_title
+	_disponi_barra()
+
+# Distribuisce i pulsanti come faceva Win95:
+#   - tutti larghi uguale, fra TASK_MIN_W e TASK_MAX_W;
+#   - con poche finestre restano larghi al massimo e la barra resta mezza vuota (NON si
+#     allargano a riempirla: un pulsante solo largo tutto lo schermo e' la cosa che
+#     tradiva di piu' il tema);
+#   - quando non ci stanno piu' nemmeno alla larghezza minima, compaiono le due frecce e
+#     se ne mostra una finestra alla volta.
+func _disponi_barra() -> void:
+	if tasks_box == null or _task_spin == null or _in_disposizione:
+		return
+	_in_disposizione = true
+	_disponi_barra_ora()
+	_in_disposizione = false
+
+func _disponi_barra_ora() -> void:
+	var bottoni: Array = []
+	for c in tasks_box.get_children():
+		if c is Button:
+			bottoni.append(c)
+	var n := bottoni.size()
+	if n == 0:
+		_task_spin.visible = false
+		_task_primo = 0
+		return
+
+	var sep: int = tasks_box.get_theme_constant("separation")
+	# Larghezza REALE a disposizione: quella di tasks_box piu' la colonnina delle frecce se
+	# in questo momento e' visibile. Senza questo si innescherebbe un'oscillazione -- mostrare
+	# le frecce stringe tasks_box, che potrebbe far sparire le frecce, che lo riallarga...
+	var tot: float = tasks_box.size.x
+	if _task_spin.visible:
+		tot += TASK_SPIN_W + 4.0
+	if tot <= 0.0:
+		return
+
+	# ci stanno tutti senza scorrere?
+	var serve_min: float = TASK_MIN_W * float(n) + float(sep * (n - 1))
+	var scorre: bool = serve_min > tot
+	_task_spin.visible = scorre
+	var utile: float = tot - (TASK_SPIN_W + 4.0 if scorre else 0.0)
+
+	var quanti := n
+	if scorre:
+		quanti = maxi(1, int((utile + float(sep)) / (TASK_MIN_W + float(sep))))
+	_task_primo = clampi(_task_primo, 0, maxi(0, n - quanti))
+
+	var per: float = clampf((utile - float(sep * (quanti - 1))) / float(quanti),
+			TASK_MIN_W, TASK_MAX_W)
+	for i in range(n):
+		var b: Button = bottoni[i]
+		b.visible = i >= _task_primo and i < _task_primo + quanti
+		b.custom_minimum_size.x = per
+		b.size_flags_horizontal = Control.SIZE_FILL
+
+# Una delle due frecce della colonnina. Disegnata, come tutto il resto della chrome.
+func _freccia_barra(su: bool) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	b.add_theme_stylebox_override("normal", Win95._sb(true, Win95.C_FACE, true, 0, 0, 0, 0))
+	b.add_theme_stylebox_override("hover", Win95._sb(true, Win95.C_FACE, true, 0, 0, 0, 0))
+	b.add_theme_stylebox_override("pressed", Win95._sb(false, Win95.C_FACE, true, 1, 1, 0, 0))
+	var tri := Control.new()
+	tri.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tri.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tri.draw.connect(func():
+		var w: float = tri.size.x
+		var h: float = tri.size.y
+		var cx: float = w * 0.5
+		var cy: float = h * 0.5
+		var r: float = minf(w, h) * 0.30
+		var p := PackedVector2Array()
+		if su:
+			p.append(Vector2(cx, cy - r))
+			p.append(Vector2(cx + r, cy + r))
+			p.append(Vector2(cx - r, cy + r))
+		else:
+			p.append(Vector2(cx, cy + r))
+			p.append(Vector2(cx - r, cy - r))
+			p.append(Vector2(cx + r, cy - r))
+		tri.draw_colored_polygon(p, Win95.C_TEXT))
+	b.add_child(tri)
+	b.pressed.connect(func(): _scorri_barra(-1 if su else 1))
+	return b
+
+# Scorre di un pulsante. Le frecce si spengono ai capi: e' il "disabilitato" che dice
+# quanto manca, come per indietro/avanti nel browser.
+func _scorri_barra(d: int) -> void:
+	_task_primo = maxi(0, _task_primo + d)
+	_disponi_barra()
 
 # ---------------- desktop icons ----------------
 
