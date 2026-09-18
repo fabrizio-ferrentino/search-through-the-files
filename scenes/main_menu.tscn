@@ -62,7 +62,6 @@ offset_top = 521.0
 offset_right = 1766.0
 offset_bottom = 726.0
 theme_override_font_sizes/font_size = 60
-disabled = true
 text = "Option"
 
 [node name="Quit" type="Button" parent="button_manager" unique_id=452922375]

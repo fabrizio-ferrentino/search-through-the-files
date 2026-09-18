@@ -24,7 +24,7 @@ func _ready() -> void:
 	# (web/pages/<lingua>/), percio' senza fissare la lingua andrebbe rosso quando
 	# cambia la lingua del gioco invece che quando si rompe il renderer. Che ogni
 	# lingua sia completa e coerente lo prova web_locale_test.
-	GameManager.set_lingua(GameManager.LINGUA_BASE)
+	GameManager.set_lingua(GameManager.LINGUA_BASE, false)
 	GameManager.start_new_run(12345)   # seme fisso: run riproducibile
 	# caricamento quasi istantaneo: il percorso e' lo stesso, l'attesa no
 	# (l'attesa vera la prova page_load_test)

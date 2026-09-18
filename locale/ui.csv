@@ -164,3 +164,6 @@ WK_V_8,To log on remember: %s.,Per accedere ricordarsi di: %s.
 UI_START,Start,Avvia
 UI_OPTIONS,Options,Opzioni
 UI_QUIT,Quit,Esci
+UI_OPTIONS_TITLE,OPTIONS,OPZIONI
+UI_LANGUAGE,Language,Lingua
+UI_BACK,Back,Indietro

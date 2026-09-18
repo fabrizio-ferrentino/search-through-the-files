@@ -41,8 +41,10 @@ func _ready() -> void:
 		_prova_lingua(str(l))
 	_confronta_lingue()
 
-	# si torna alla lingua base: un test non deve lasciare il gioco in un'altra
-	GameManager.set_lingua(GameManager.LINGUA_BASE)
+	# si torna alla lingua base: un test non deve lasciare il gioco in un'altra.
+	# salva = false in tutto il test: la lingua scelta nelle Opzioni e' di chi gioca,
+	# e una prova non deve riscrivergliela.
+	GameManager.set_lingua(GameManager.LINGUA_BASE, false)
 
 	if _fails.is_empty():
 		print("RISULTATO: PASS (il web e' tradotto e coerente in ogni lingua)")
@@ -53,7 +55,7 @@ func _ready() -> void:
 # ---------------- una lingua ----------------
 
 func _prova_lingua(loc: String) -> void:
-	GameManager.set_lingua(loc)
+	GameManager.set_lingua(loc, false)
 	GameManager.start_new_run(4242)
 	print("\n=== lingua %s ===" % loc)
 	_check("LINGUA_" + loc, WebRuntime.lingua() == loc,

@@ -53,11 +53,6 @@ var key_hints: Dictionary = {}
 var _keys_panel: CanvasLayer = null
 var _keys_label: Label = null
 
-# ---------------- ciclo di vita del run ----------------
-
-# Avvia una nuova partita: fissa il seme, azzera lo stato del PC e ricostruisce
-# il filesystem da zero. Lo chiama il menu allo "Start" (e restart()).
-# new_seed = 0 -> ne genera uno casuale (run normale); un seme esplicito = debug.
 # ---------------- lingua ----------------
 # L'INGLESE e' la lingua base del gioco (scelta del proprietario, 19/09/2026), e va imposto
 # a mano: Godot parte dalla lingua del SISTEMA, quindi su una macchina italiana il gioco
@@ -66,21 +61,61 @@ var _keys_label: Label = null
 # manca viene mostrata COM'E' (tutta maiuscola), quindi un buco si vede subito a schermo.
 const LINGUA_BASE := "en"
 const LINGUE := ["en", "it"]         # quelle che il CSV contiene davvero
+# Il nome di una lingua si scrive NELLA lingua stessa (endonimo): in un elenco di lingue
+# "Italiano" non va tradotto in "Italian", o chi cerca la propria non la riconosce. Percio'
+# questi nomi NON stanno in locale/ui.csv.
+const NOMI_LINGUA := {"en": "English", "it": "Italiano"}
+# La scelta di chi gioca sopravvive alla chiusura del gioco. Un file di impostazioni a se',
+# non lo stato del run: questo non si azzera a ogni partita.
+const FILE_IMPOSTAZIONI := "user://impostazioni.cfg"
+
 var lingua := LINGUA_BASE
 
 func _ready() -> void:
-	set_lingua(lingua)
+	# la lingua scelta nelle Opzioni, o l'inglese la prima volta. salva = false: qui si
+	# sta RILEGGENDO una scelta, non facendone una nuova.
+	set_lingua(_lingua_salvata(), false)
+
+# Il nome da mostrare per un codice lingua ("it" -> "Italiano").
+func nome_lingua(codice: String) -> String:
+	return str(NOMI_LINGUA.get(codice, codice))
 
 # Cambia lingua a gioco avviato: la chiamera' il menu Opzioni (M6).
 # Quello che passa da tr() si aggiorna quando l'interfaccia viene ricostruita -- e nell'OS
 # succede a ogni apertura di finestra, quindi in pratica basta riaprire quello che si sta
 # guardando. Il testo DENTRO il gioco (pagine web, nomi dei file) segue la lingua dalla
 # generazione del run: cambiarla a metta' partita non riscrive il PC, ed e' giusto cosi'.
-func set_lingua(codice: String) -> void:
+# salva = false quando la lingua la cambia il CODICE e non chi gioca (i test, che girano
+# le due lingue e poi rimettono quella base): un test non deve riscrivere l'impostazione
+# di chi gioca.
+func set_lingua(codice: String, salva := true) -> void:
 	if not LINGUE.has(codice):
 		codice = LINGUA_BASE
 	lingua = codice
 	TranslationServer.set_locale(codice)
+	if salva:
+		_salva_lingua(codice)
+
+func _lingua_salvata() -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load(FILE_IMPOSTAZIONI) != OK:
+		return LINGUA_BASE           # nessun file: prima partita
+	var c := str(cfg.get_value("gioco", "lingua", LINGUA_BASE))
+	return c if LINGUE.has(c) else LINGUA_BASE
+
+func _salva_lingua(codice: String) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(FILE_IMPOSTAZIONI)      # rilegge prima di scrivere: le altre impostazioni restano
+	cfg.set_value("gioco", "lingua", codice)
+	var err := cfg.save(FILE_IMPOSTAZIONI)
+	if err != OK:
+		push_warning("impostazioni non salvate (errore %d)" % err)
+
+# ---------------- ciclo di vita del run ----------------
+
+# Avvia una nuova partita: fissa il seme, azzera lo stato del PC e ricostruisce
+# il filesystem da zero. Lo chiama il menu allo "Start" (e restart()).
+# new_seed = 0 -> ne genera uno casuale (run normale); un seme esplicito = debug.
 
 func start_new_run(new_seed: int = 0) -> void:
 	run_seed = new_seed if new_seed != 0 else randi()
