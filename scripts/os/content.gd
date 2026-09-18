@@ -72,7 +72,33 @@ const CODE_TILT := 12.0                 # rotazione massima della scritta, in gr
 const CODE_BOX := Vector2(0.22, 0.16)   # ingombro di scorta, se non si misura col font
 const CODE_DELTA_K := 4.5               # scarto = K x rumore PASSA-BANDA locale
 const CODE_DELTA_MIN := 0.012           # ~3 livelli su 255: basta dove il fondo e' piatto
-const CODE_DELTA_MAX := 0.070           # ~18 livelli: tetto assoluto, oltre e' una scritta
+const CODE_DELTA_MAX := 0.058           # ~15 livelli: tetto assoluto, oltre e' una scritta
+# (16/09/2026, scelta del proprietario: era 0.070 = 18 livelli, e le foto MOSSE ci
+# restavano incollate -- misurate a schermo 24-25 livelli, cioe' una filigrana che
+# si nota senza toccare i cursori: troppo facile. Abbassato il TETTO e non K: K
+# comanda il rapporto nella banda (rapporto = K x 0.65), e ridurlo avrebbe tolto
+# margine alla foto piu' debole.
+#
+# MISURATO abbassando il tetto (photo_key_test, livelli a schermo A RIPOSO):
+#   tetto    beautiful_horse   her    sun_person   foto sfocate
+#   0.070          9.1         24.5      25.4         2 su 6
+#   0.058          9.1         23.3      23.8         2 su 6   <- adesso
+#   0.045          9.1         21.4      14.1         4 su 6
+# Il calo e' MENO che proporzionale perche' il sistema compensa: se il tetto piu'
+# basso porta il rapporto sotto CODE_BP_RATIO_MIN, la generazione sfoca un po' la
+# zona, il rumore nella banda scende e lo scarto torna a essere comandato da K.
+#
+# AGGIORNAMENTO 17/09/2026, e va letto prima di toccare queste costanti: misurando nella
+# banda VERA dello shader (banda_box, non la piramide) il "rapporto = K x 0.65" si e'
+# rivelato una stima 2-3 volte ottimista -- dove dice 2.3-2.9 ce n'e' 0.85-1.8 -- e la
+# risposta vera del filtro ai tratti e' 0.33, non 0.65. Soprattutto: perche' il codice sia
+# insieme NASCOSTO a riposo e RIVELABILE col cursore serve che la struttura mascherante sia
+# almeno ~6.8 volte il rumore alla scala dei tratti, e sulle foto vere il meglio ottenibile
+# e' 0.4-0.9. Cioe' nessuna taratura di queste costanti puo' ottenere entrambe le cose su
+# contenuto fotografico: quello che si regola qui e' solo QUANTO si vede la filigrana.
+# La via d'uscita non e' una costante, e' una seconda strada per la chiave (il codice nel
+# FILE dell'immagine, alla 95/98) -- vedi tests/photo_reveal_test e tests/photo_banda_scan
+# per i numeri, e CLAUDE.md per la storia.
 # SCELTA DI GIOCO (14/09/2026, del proprietario): il codice deve poter essere RIVELATO su
 # QUALSIASI foto, al prezzo di una filigrana appena percepibile guardando bene a riposo. Le
 # misure dicono che le due cose non stanno insieme su foto con trama fitta: nessun filtro
@@ -93,6 +119,10 @@ const CODE_SCAN := Vector2i(640, 480)
 # abbassa proprio il rumore della banda lasciando stare i toni larghi, quindi si nota molto
 # meno del vecchio "velo" (che sbiadiva la zona verso il colore medio: era l'alone pallido).
 const CODE_BLUR_STEPS := [2, 3, 4]
+# Quante volte su 1 la chiave della foto va nei BYTE del file invece che nei pixel. Meta' e
+# meta': i pixel restano perche' piacciono come idea e su una foto adatta sono la versione
+# piu' bella, i byte perche' funzionano sempre.
+const CODE_QUOTA_FILE := 0.5
 # A parita' di quiete si preferisce una zona SCURA: li' la scritta si nota meno.
 const CODE_DARK_BONUS := 0.006
 # La macchia e' grande il doppio del testo: cosi' la scritta sta tutta dentro la parte
@@ -225,12 +255,29 @@ static func _make_photos(rng: RandomNumberGenerator) -> Array:
 	# perche' il nascondiglio non va piu' ammorbidito (lo rivela il cursore "Nitidezza"),
 	# quindi ogni foto va bene; e costa un'analisi sola invece di quattro.
 	var idx := rng.randi_range(0, photos.size() - 1)
-	photos[idx]["code"] = label
 	photos[idx]["code_seed"] = rng.randi()   # rotazione della scritta (stabile per run)
-	var spot: Dictionary = _prepare_hiding_spot(photos[idx])
-	var dove := str(photos[idx]["name"])
+	# DUE MODI di nascondere la chiave in una foto, sorteggiati dal seme (17/09/2026).
+	# Il primo era l'unico e ha un limite MISURATO: perche' la scritta sia insieme invisibile
+	# a riposo e rivelabile col cursore serve che la struttura che la maschera sia ~6.8 volte
+	# il rumore alla scala dei tratti, e sulle foto vere il meglio ottenibile e' 0.4-0.9
+	# (tests/photo_banda_scan). Su molte foto quindi o si vede subito o non si legge mai.
+	# Il secondo modo non ha quel limite e funziona su QUALSIASI foto, perche' non tocca i
+	# pixel: il codice sta nei BYTE del file, come un commento JPEG, e si trova aprendo
+	# l'immagine col Blocco note -- che e' il gioco promesso dal titolo, ed e' d'epoca (i
+	# commenti nei JPEG esistevano, e aprire un'immagine in un editor di testo per trovarci
+	# stringhe leggibili era un passatempo comune).
+	var nel_file: bool = rng.randf() < CODE_QUOTA_FILE
 	var sorgente := str(photos[idx].get("path", "")).get_file()
+	var dove := str(photos[idx]["name"])
 	dove += " = %s" % (sorgente if sorgente != "" else "generata")
+	if nel_file:
+		photos[idx]["code_commento"] = _commento_file(label, rng)
+		dove += " - NEL FILE (Blocco note)"
+		GameManager.note_key(KEY_IMAGE, dove)
+		return photos
+
+	photos[idx]["code"] = label
+	var spot: Dictionary = _prepare_hiding_spot(photos[idx])
 	if not spot.is_empty():
 		photos[idx]["code_uv"] = spot["uv"]
 		photos[idx]["code_base"] = spot["avg"]
@@ -239,11 +286,74 @@ static func _make_photos(rng: RandomNumberGenerator) -> Array:
 			photos[idx]["blur_rect"] = spot["blur_rect"]
 			photos[idx]["blur_target"] = spot["blur_target"]
 		var uv: Vector2 = spot["uv"]
-		dove += " a %d%%,%d%%" % [int(uv.x * 100.0), int(uv.y * 100.0)]
+		dove += " - nei pixel a %d%%,%d%%" % [int(uv.x * 100.0), int(uv.y * 100.0)]
 		dove += " (rapporto %.1f%s)" % [float(spot.get("rapporto", 0.0)),
 				", sfocata" if spot.has("blur_rect") else ""]
 	GameManager.note_key(KEY_IMAGE, dove)
 	return photos
+
+# Il testo del commento dentro il file: una nota che un utente del '98 avrebbe lasciato col
+# suo programma di fotoritocco, col codice dentro. Non si dice mai "codice" o "chiave": chi
+# legge deve riconoscerlo da solo.
+static func _commento_file(label: String, rng: RandomNumberGenerator) -> String:
+	var modelli := [
+		"foto vacanze - archivio %s",
+		"scansione %s - non cancellare",
+		"copia di sicurezza %s",
+		"%s - rullino 3",
+		"provino %s, da stampare",
+		"archivio personale %s",
+	]
+	return (str(_pick(modelli, rng)) % label)
+
+# Come si VEDE un'immagine aperta col Blocco note: l'intestazione JFIF, poi byte illeggibili,
+# col commento in chiaro in mezzo. Non e' un vero JPEG (le foto del run sono generate a
+# runtime) ma ha la forma giusta, ed e' quella che conta: il giocatore scorre la sbrodolata e
+# trova la riga leggibile. Deterministico dal nome del file, cosi' riaprirlo da' lo stesso.
+static func byte_dump(node: Dictionary) -> String:
+	var nome := str(node.get("name", "IMG.jpg"))
+	var commento := str(node.get("code_commento", ""))
+	var r := RandomNumberGenerator.new()
+	r.seed = hash(nome)
+	var out := PackedStringArray()
+	# intestazione JFIF come si vedeva davvero. I byte si costruiscono con _bytes() e non con
+	# gli escape nel sorgente: un \u0000 dentro una stringa GDScript fa fallire il tokenizer
+	# ("Unexpected NUL character"), e i NUL veri diventano spazi perche' e' cosi' che li
+	# mostrava un editor di testo.
+	out.append(_bytes([255, 216, 255, 224, 0, 16]) + "JFIF" + _bytes([0, 1, 1, 0, 0, 1, 0, 1, 0, 0]))
+	out.append(_riga_binaria(r, 62))
+	out.append(_riga_binaria(r, 58) + _bytes([255, 219, 0, 67, 0]))
+	for i in range(3):
+		out.append(_riga_binaria(r, 64))
+	# il commento: marcatore COM (ff fe), lunghezza, poi il testo IN CHIARO
+	if commento != "":
+		out.append(_riga_binaria(r, 12) + _bytes([255, 254, 0, commento.length() + 2])
+				+ commento + _riga_binaria(r, 10))
+	out.append(_bytes([255, 192, 0, 17, 8]) + _riga_binaria(r, 44))
+	for i in range(22):
+		out.append(_riga_binaria(r, 64))
+	out.append(_riga_binaria(r, 37) + _bytes([255, 217]))
+	return "\n".join(out)
+
+# Byte espliciti come caratteri. I NUL diventano spazi: un NUL vero dentro una String di
+# Godot la troncherebbe, e a schermo non si vedrebbe comunque nulla.
+static func _bytes(v: Array) -> String:
+	var s := ""
+	for b in v:
+		var n: int = int(b) & 0xFF
+		s += " " if n == 0 else char(n)
+	return s
+
+# Una riga di byte "illeggibili": si evitano NUL e caratteri di controllo, che manderebbero a
+# capo o che non si disegnerebbero, cosi' la sbrodolata resta compatta come nella realta'.
+static func _riga_binaria(r: RandomNumberGenerator, quanti: int) -> String:
+	var s := ""
+	for i in range(quanti):
+		var c := r.randi_range(33, 255)
+		if c == 127 or (c >= 128 and c <= 160):
+			c = 46
+		s += char(c)
+	return s
 
 # ---------------- il nascondiglio della scritta ----------------
 
@@ -452,6 +562,97 @@ static func _bp_pair(node: Dictionary) -> Array:
 	var coppia := _bp_pair_img(img)
 	_bp_cache[chiave] = coppia
 	return coppia
+
+# ---------------- gemello esatto del passa-banda DELLO SHADER ----------------
+# La piramide qui sopra (_bp_pair_img) e il filtro di adjust.gdshader NON sono lo stesso
+# filtro: la piramide parte da mezza risoluzione, quindi la sua banda sta a ~2-8 px e
+# MEDIA VIA la grana e i bordi dei blocchi JPEG fra 1 e 4 px; lo shader invece li vede in
+# pieno. Misurato il 17/09/2026: dove la piramide stima un rapporto di 2.3-2.9, nella banda
+# vera ce n'e' 0.85-1.8, ed e' per questo che il cursore non tirava fuori il codice.
+# Serve ai TEST per misurare la cosa giusta (tests/photo_reveal_test, photo_banda_scan).
+# Raggi e pesi vanno tenuti IDENTICI a adjust.gdshader: se si cambiano la', si cambiano qui.
+const BP_RAGGI := [
+	Vector2(1.0, 0.0), Vector2(0.7071, 0.7071), Vector2(0.0, 1.0), Vector2(-0.7071, 0.7071),
+	Vector2(-1.0, 0.0), Vector2(-0.7071, -0.7071), Vector2(0.0, -1.0), Vector2(0.7071, -0.7071)]
+const BP_ANELLI := [1.8, 3.8, 6.8]
+const BP_PESI := [0.02879, 0.04283, 0.02838]
+# Griglia con cui si misura il rumore dentro il riquadro del testo: una colonna per glifo
+# (il codice e' "0-WWWW", 6 caratteri) e due righe. Coi quadranti un glifo capitato su una
+# striscia mossa restava sepolto mentre la media del quadrante diceva che andava bene.
+const BANDA_COL := 6
+const BANDA_RIGHE := 2
+# Percentile del rumore dentro una cella: la zona morta del cursore va battuta dal PICCO,
+# non dalla media.
+const BANDA_PERC := 0.98
+
+# Mappa di luminanza come la vede lo shader: pesi Rec.601 e la stessa gamma di luma_at.
+static func bp_luma(img: Image) -> PackedFloat32Array:
+	var w := img.get_width()
+	var h := img.get_height()
+	var out := PackedFloat32Array()
+	out.resize(w * h)
+	for y in range(h):
+		for x in range(w):
+			var c := img.get_pixel(x, y)
+			var l: float = maxf(c.r * 0.299 + c.g * 0.587 + c.b * 0.114, 0.0)
+			out[y * w + x] = pow(l, 1.0 / 2.2)
+	return out
+
+static func _bp_tap(l: PackedFloat32Array, w: int, h: int, x: float, y: float) -> float:
+	# il TextureRect campiona NEAREST e clampa alle UV di bordo: identico qui
+	var xi: int = clampi(int(round(x)), 0, w - 1)
+	var yi: int = clampi(int(round(y)), 0, h - 1)
+	return l[yi * w + xi]
+
+# Valore della banda (fine - larga) in un punto, col kernel dello shader.
+static func bp_shader_at(l: PackedFloat32Array, w: int, h: int, x: int, y: int) -> float:
+	var fx := float(x)
+	var fy := float(y)
+	var fine: float = _bp_tap(l, w, h, fx, fy) * 0.5
+	for i in [0, 2, 4, 6]:
+		var d: Vector2 = BP_RAGGI[i]
+		fine += _bp_tap(l, w, h, fx + d.x, fy + d.y) * 0.125
+	var larga: float = fine * 0.2
+	for i in range(8):
+		var dir: Vector2 = BP_RAGGI[i]
+		for k in range(BP_ANELLI.size()):
+			var r: float = float(BP_ANELLI[k])
+			larga += _bp_tap(l, w, h, fx + dir.x * r, fy + dir.y * r) * float(BP_PESI[k])
+	return fine - larga
+
+# Rumore nella banda VERA dentro un riquadro, sul ritaglio allargato del raggio massimo del
+# kernel (la mappa di luminanza costa una pow() per pixel: su tutta la foto sarebbero
+# 300.000 a ogni misura). Griglia che segue i glifi, e si tiene la cella PEGGIORE.
+static func banda_box(img: Image, box: Rect2i, passo := 2) -> float:
+	var bordo: int = int(ceil(float(BP_ANELLI[BP_ANELLI.size() - 1]))) + 2
+	var largo := box.grow(bordo).intersection(Rect2i(Vector2i.ZERO, img.get_size()))
+	if largo.size.x < 4 or largo.size.y < 4:
+		return 0.0
+	var reg := img.get_region(largo)
+	var rw := reg.get_width()
+	var rh := reg.get_height()
+	var l := bp_luma(reg)
+	var off := box.position - largo.position
+	var n := BANDA_COL * BANDA_RIGHE
+	# Array di Array e non di PackedFloat32Array: un Packed* dentro un Array si copia PER
+	# VALORE, quindi gli append finirebbero in una copia buttata via.
+	var celle: Array = []
+	for i in range(n):
+		celle.append([])
+	for y in range(0, box.size.y, passo):
+		var qy: int = clampi(y * BANDA_RIGHE / maxi(1, box.size.y), 0, BANDA_RIGHE - 1)
+		for x in range(0, box.size.x, passo):
+			var b := bp_shader_at(l, rw, rh, off.x + x, off.y + y)
+			var qx: int = clampi(x * BANDA_COL / maxi(1, box.size.x), 0, BANDA_COL - 1)
+			(celle[qy * BANDA_COL + qx] as Array).append(absf(b))
+	var peggio := 0.0
+	for q in range(n):
+		var a: Array = celle[q]
+		if a.size() < 4:
+			continue
+		a.sort()
+		peggio = maxf(peggio, float(a[clampi(int(float(a.size()) * BANDA_PERC), 0, a.size() - 1)]))
+	return peggio
 
 # Come sopra ma su un'immagine qualsiasi (serve per rimisurare una copia sfocata).
 static func _bp_pair_img(img: Image) -> Array:

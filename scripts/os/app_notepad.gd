@@ -42,10 +42,20 @@ func launch(arg) -> void:
 
 	_edit = TextEdit.new()
 	_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_edit.text = file.get("content", "")
+	# Un'IMMAGINE aperta col Blocco note mostra i suoi byte, non un errore: e' quello che
+	# faceva davvero, ed e' una delle strade per trovare una chiave (OSContent.byte_dump
+	# mette il commento del file in chiaro in mezzo alla sbrodolata). Non e' modificabile:
+	# riscrivere byte a caso in un'immagine non deve poter cambiare il contenuto del gioco.
+	var e_immagine: bool = str(file.get("filetype", "")) == "image"
+	if e_immagine:
+		_edit.text = OSContent.byte_dump(file)
+		_edit.editable = false
+	else:
+		_edit.text = file.get("content", "")
 	# il testo iniziale e' la base: senza questo, "Annulla" lo cancellerebbe tutto
 	_edit.clear_undo_history()
-	_edit.editable = true
+	if not e_immagine:
+		_edit.editable = true
 	_edit.context_menu_enabled = false   # usiamo il nostro menu personalizzato
 	_edit.add_theme_font_size_override("font_size", 18)
 	_edit.gui_input.connect(_on_edit_input)
@@ -53,7 +63,8 @@ func launch(arg) -> void:
 
 	_build_menu()
 	# da qui in poi le modifiche dell'utente segnano il file come "non salvato"
-	_edit.text_changed.connect(_on_text_changed)
+	if not e_immagine:
+		_edit.text_changed.connect(_on_text_changed)
 
 func _on_text_changed() -> void:
 	_modified = true

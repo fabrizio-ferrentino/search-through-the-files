@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/photo_file_key_test.gd" id="1_fk"]
+
+[node name="PhotoFileKey" type="Node"]
+script = ExtResource("1_fk")

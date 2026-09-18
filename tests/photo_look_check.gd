@@ -5,8 +5,11 @@ extends Node
 #                              salvo il raro ripiego con la sfocatura)
 #   *_2_default.png            ritaglio attorno al codice, senza regolazioni: qui il codice
 #                              NON si deve vedere
-#   *_3_nitidezza.png          lo stesso ritaglio col PASSA-BANDA (gemello su CPU del
-#                              cursore "Nitidezza"): qui il codice si deve leggere
+#   *_3_nitidezza_020..100.png lo stesso ritaglio col PASSA-BANDA a cinque posizioni del
+#                              cursore "Nitidezza" (gemello su CPU, stesso kernel e stessa
+#                              legge dello shader): in UNA di queste il codice si deve
+#                              leggere. Il punto giusto cambia da foto a foto -- il cursore
+#                              si accorda, non si tira al massimo.
 # Serve a giudicare a occhio le due cose che i numeri non dicono: se il ritocco si nota e
 # se il codice e' leggibile.
 #
@@ -15,7 +18,12 @@ extends Node
 # ============================================================
 
 const OUT := "C:/Users/ffria/AppData/Local/Temp/claude/z--Progetti-Search-Through-the-Files/1536785d-988b-4eed-baf2-48564844db2c/scratchpad/confronti/"
-const GUADAGNO := 14.0     # come il cursore Nitidezza al massimo (adjust.gdshader)
+# Guadagno del cursore "Nitidezza": IDENTICO a adjust.gdshader (detail * 60). Prima qui
+# c'era un 14 fisso, cioe' le immagini che si guardavano erano ~4 volte piu' gentili del
+# gioco: si giudicava a occhio una cosa che il giocatore non vedeva mai.
+const GUADAGNO_MAX := 60.0
+# Un solo valore del cursore non dice niente: si salva una STRISCIA.
+const NITIDEZZE := [0.2, 0.4, 0.6, 0.8, 1.0]
 
 func _ready() -> void:
 	get_tree().create_timer(240.0).timeout.connect(func(): print("TIMEOUT"); get_tree().quit(1))
@@ -93,9 +101,11 @@ func _confronta(path: String, codice: String) -> void:
 	var riposo := composta.get_region(taglio)
 	riposo.resize(cw * 2, ch * 2, Image.INTERPOLATE_NEAREST)
 	riposo.save_png(OUT + path.get_file().get_basename() + "_2_default.png")
-	var nitida := _passa_banda(composta).get_region(taglio)
-	nitida.resize(cw * 2, ch * 2, Image.INTERPOLATE_NEAREST)
-	nitida.save_png(OUT + path.get_file().get_basename() + "_3_nitidezza.png")
+	for d in NITIDEZZE:
+		var nitida := _passa_banda(composta, float(d)).get_region(taglio)
+		nitida.resize(cw * 2, ch * 2, Image.INTERPOLATE_NEAREST)
+		nitida.save_png(OUT + path.get_file().get_basename()
+				+ "_3_nitidezza_%03d.png" % int(round(float(d) * 100.0)))
 	# l'altra via: finestra dei livelli stretta attorno al colore medio della zona
 	var livelli := _livelli(composta, spot["avg"]).get_region(taglio)
 	livelli.resize(cw * 2, ch * 2, Image.INTERPOLATE_NEAREST)
@@ -109,16 +119,19 @@ func _confronta(path: String, codice: String) -> void:
 	host_vp.queue_free()
 	await get_tree().process_frame
 
-# Gemello su CPU del cursore "Nitidezza": differenza fra sfocatura fine e larga, amplificata.
-func _passa_banda(img: Image) -> Image:
-	var coppia := OSContent._bp_pair_img(img)
-	var out := Image.create(img.get_width(), img.get_height(), false, Image.FORMAT_RGBA8)
-	for y in range(img.get_height()):
-		for x in range(img.get_width()):
-			var a: Color = coppia[0].get_pixel(x, y)
-			var b: Color = coppia[1].get_pixel(x, y)
-			var d: float = ((a.r + a.g + a.b) - (b.r + b.g + b.b)) / 3.0
-			var v: float = clampf(0.5 + d * GUADAGNO, 0.0, 1.0)
+# Gemello su CPU del cursore "Nitidezza", con lo STESSO kernel (OSContent.bp_shader_at, che
+# replica i prelievi di adjust.gdshader) e la STESSA legge di uscita (0.5 + banda x
+# guadagno). Quello che si vede qui e' quello che si vede in partita.
+func _passa_banda(img: Image, detail: float) -> Image:
+	var w := img.get_width()
+	var h := img.get_height()
+	var l := OSContent.bp_luma(img)
+	var g: float = detail * GUADAGNO_MAX
+	var out := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for y in range(h):
+		for x in range(w):
+			var b := OSContent.bp_shader_at(l, w, h, x, y)
+			var v: float = clampf(0.5 + b * g, 0.0, 1.0)
 			out.set_pixel(x, y, Color(v, v, v))
 	return out
 

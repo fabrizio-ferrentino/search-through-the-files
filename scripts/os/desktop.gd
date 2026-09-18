@@ -400,10 +400,11 @@ func _on_desktop_activated(data: Dictionary) -> void:
 
 func _on_desktop_item_context(item: DesktopItem) -> void:
 	var data: Dictionary = item.data
-	_show_desktop_menu([
-		["Apri", func(): _on_desktop_activated(data)],
-		["Elimina", func(): _delete_desktop_file(data)],
-	])
+	var voci: Array = [["Apri", func(): _on_desktop_activated(data)]]
+	if str(data.get("filetype", "")) == "image":
+		voci.append(["Apri con Blocco note", func(): open_app("notepad", data)])
+	voci.append(["Elimina", func(): _delete_desktop_file(data)])
+	_show_desktop_menu(voci)
 
 func _deselect_desktop() -> void:
 	if _desk_sel:

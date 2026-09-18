@@ -28,6 +28,16 @@ vec3 srgb_to_lin(vec3 c) {
 	return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c));
 }
 
+// MISURATO (17/09/2026): i valori che si leggono dal SubViewport di composizione stanno
+// nello STESSO spazio dei byte del file -- scostamento 0.0000-0.0069 di luminanza sulle 6
+// foto (le due con scarto sono quelle che la generazione sfoca, quindi lo scarto E' la
+// sfocatura). L'ipotesi "lineare" sbagliava di 0.20-0.29, cioe' e' esclusa. Quindi un
+// gemello su CPU del passa-banda NON deve applicare gamma extra, e le costanti che
+// confrontano misure sul file con misure sulla composizione sono nello stesso spazio.
+// Misurati anche i LIVELLI DISTINTI della scritta dentro i tratti: 14 su 13.7 livelli, 21
+// su 20.7, 26 su 25.7 -- circa uno per livello, quindi il bersaglio a 8 bit non perde
+// nulla e use_hdr_2d non serve.
+
 // Direzioni per i prelievi in cerchio (8 raggi).
 const vec2 RAGGI[8] = vec2[8](
 	vec2(1.0, 0.0), vec2(0.7071, 0.7071), vec2(0.0, 1.0), vec2(-0.7071, 0.7071),
@@ -62,10 +72,18 @@ void fragment() {
 		for (int i = 0; i < 8; i += 2) {
 			fine += luma_at(TEXTURE, UV + RAGGI[i] * px, px) * 0.125;
 		}
+		// TRE anelli e non due: con soli 3.5 e 7 px la sfocatura larga aveva peso ZERO fra
+		// 1 e 3.5 px, cioe' un buco proprio dove stanno i tratti (larghi 2.2-2.5 px di
+		// composizione -- misurati col font vero, il commento sopra diceva 3-5 px e
+		// sbagliava), e la sua risposta in frequenza non era monotona. I pesi sono
+		// r*exp(-r^2/2*sigma^2) con sigma ~4 px, normalizzati a 0.8 cosi' col 0.2 di "fine"
+		// il totale fa 1. Il gemello su CPU di questo kernel sta in OSContent.bp_shader_at:
+		// se si cambiano raggi o pesi qui, si cambiano ANCHE la'.
 		float larga = fine * 0.2;
 		for (int i = 0; i < 8; i++) {
-			larga += (luma_at(TEXTURE, UV + RAGGI[i] * 3.5 * px, px)
-					+ luma_at(TEXTURE, UV + RAGGI[i] * 7.0 * px, px)) * 0.05;
+			larga += luma_at(TEXTURE, UV + RAGGI[i] * 1.8 * px, px) * 0.02879
+					+ luma_at(TEXTURE, UV + RAGGI[i] * 3.8 * px, px) * 0.04283
+					+ luma_at(TEXTURE, UV + RAGGI[i] * 6.8 * px, px) * 0.02838;
 		}
 		float banda = (fine - larga) * (detail * 60.0);
 		c = mix(c, vec3(0.5 + banda), smoothstep(0.0, 0.25, detail));

@@ -222,10 +222,14 @@ func _on_empty_input(event: InputEvent) -> void:
 
 func _on_item_context(item: DesktopItem) -> void:
 	var data: Dictionary = item.data
-	_show_menu([
-		["Apri", func(): _on_activated(data)],
-		["Elimina", func(): _delete_item(data)],
-	])
+	var voci: Array = [["Apri", func(): _on_activated(data)]]
+	# "Apri con Blocco note" su un'immagine: mostra i BYTE del file. C'e' perche' e' d'epoca
+	# (era il modo di sbirciare dentro un file senza strumenti) e perche' una delle chiavi
+	# del run puo' stare proprio la', nel commento del file, invece che nei pixel.
+	if str(data.get("filetype", "")) == "image":
+		voci.append(["Apri con Blocco note", func(): os.open_app("notepad", data)])
+	voci.append(["Elimina", func(): _delete_item(data)])
+	_show_menu(voci)
 
 func _name_exists(n: String) -> bool:
 	for c in _folder.get("children", []):

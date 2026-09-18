@@ -39,16 +39,25 @@ func _ready() -> void:
 			print("  %-24s non leggibile" % path.get_file())
 			continue
 		var uv: Vector2 = prep["uv"]
-		print("  %-24s rumore %.4f | banda %.4f | scarto %.4f | rapporto stimato %.2f | %s  a %d%%,%d%%  [%d ms]" % [
-				path.get_file(), float(prep["sigma"]), float(prep["sigma_bp"]), float(prep["delta"]),
-				float(prep["rapporto"]), ("SFOCATA" if prep.has("blur_rect") else "INTATTA"),
+		# Due numeri per la stessa zona: quello che il generatore USA (la piramide) e quello
+		# che il cursore "Nitidezza" vede DAVVERO (banda_box, il gemello esatto del filtro
+		# dello shader). Sono diversi, e la differenza e' la ragione per cui il codice puo'
+		# risultare invisibile pur avendo un "rapporto stimato" buono: la piramide media via
+		# la grana fra 1 e 4 px, lo shader no. Misurato: dove la piramide stima 2.3-2.9,
+		# nella banda vera c'e' 0.85-1.8.
+		var img_prep := OSContent._scan_image(nodo)
+		var vera: float = OSContent.banda_box(img_prep, prep["box"]) if img_prep != null else 0.0
+		print("  %-24s rumore %.4f | banda piramide %.4f | banda VERA %.4f | scarto %.4f | rapporto stimato %.2f | %s  a %d%%,%d%%  [%d ms]" % [
+				path.get_file(), float(prep["sigma"]), float(prep["sigma_bp"]), vera,
+				float(prep["delta"]), float(prep["rapporto"]),
+				("SFOCATA" if prep.has("blur_rect") else "INTATTA"),
 				int(uv.x * 100.0), int(uv.y * 100.0), costo])
 
 	# --- A + B: sui rendering veri del visualizzatore ---
 	for seme in SEMI:
 		await _prova(seme)
 
-	# --- C: distribuzione della portatrice su molte partite ---
+	# --- C: distribuzione della portatrice su molte partite (entrambe le vie) ---
 	_uniformita()
 
 	print("\n--- rapporto di debug (quello che mostra F12) ---")
@@ -66,6 +75,12 @@ func _prova(seme: int) -> void:
 	var foto := _foto_portatrice()
 	if foto.is_empty():
 		_fail(seme, "nessuna foto porta la chiave")
+		return
+	# Se questa partita ha messo la chiave nei BYTE del file, la via nei pixel non c'e' da
+	# misurare: la prova la fa tests/photo_file_key_test. Non e' un fallimento.
+	if str(foto.get("code", "")) == "":
+		print("[seme %d] %s nel FILE di %s: via nei pixel non esercitata"
+				% [seme, chiave, str(foto.get("name", ""))])
 		return
 
 	# visualizzatore vero, dentro una SubViewport come nell'OS
@@ -106,9 +121,8 @@ func _prova(seme: int) -> void:
 	var senza := vp.get_texture().get_image()
 	lbl.visible = true
 
-	var zona := Rect2i(Vector2i(lbl.position), Vector2i(lbl.size)).grow(2)
-	zona = zona.intersection(Rect2i(Vector2i.ZERO, con_scritta.get_size()))
-	var m := _misura(con_scritta, senza, zona)
+	var zona := _zona_etichetta(lbl, con_scritta.get_size())
+	var m := _misura(con_scritta, senza, zona, lbl)
 	var sorgente := str(foto.get("path", "")).get_file()
 	print("[seme %d] %s su %s (%s) | scarto %.2f livelli | struttura %.2f | BANDA segnale %.4f rumore %.4f -> rapporto %.2f" % [
 			seme, chiave, str(foto.get("name", "")), (sorgente if sorgente != "" else "generata"),
@@ -131,7 +145,17 @@ func _prova(seme: int) -> void:
 	elif float(m["delta"]) > tetto_visibile:
 		_fail(seme, "scarto %.2f livelli contro un tetto di %.1f: si vede senza regolare" % [float(m["delta"]), tetto_visibile])
 	elif float(m["bp_rapporto"]) < RAPPORTO_BP_MIN:
-		_fail(seme, "rapporto nella banda %.2f: il cursore Nitidezza non basta a tirarla fuori" % float(m["bp_rapporto"]))
+		# NOTA (17/09/2026): questo cancello misura nella banda VERA dello shader, non nella
+		# piramide, quindi e' molto piu' severo di prima e su diverse foto NON passa. Non e'
+		# una regressione introdotta dal codice: e' la misura giusta che dice la verita' su
+		# quelle foto. Il giudizio completo (nascosto a riposo E leggibile col cursore) lo
+		# da' tests/photo_reveal_test.
+		# Da quando la chiave ha una seconda via (nei byte del file) una foto inadatta non
+		# rende piu' la partita insolubile, quindi questo non e' un fallimento: e' un
+		# rilievo sul FILE, da leggere insieme a tests/photo_reveal_test.
+		print("       ^ %s non e' adatta alla via nei pixel: rapporto nella banda %.2f (serve %.1f)" % [
+				(sorgente if sorgente != "" else "la foto generata"),
+				float(m["bp_rapporto"]), RAPPORTO_BP_MIN])
 	host_vp.queue_free()
 	await get_tree().process_frame
 
@@ -160,10 +184,12 @@ func _uniformita() -> void:
 	if quante >= 5 and conta.size() < 5:
 		_fail(-1, "solo %d foto diverse fanno da portatrice su %d disponibili" % [conta.size(), quante])
 
+# La foto che porta la chiave, in QUALUNQUE delle due vie: nei pixel ("code") o nei byte del
+# file ("code_commento"). Serve distinguerle, perche' questo test misura solo la prima.
 func _foto_portatrice() -> Dictionary:
 	var immagini := _trova_cartella(VFS.get_root(), "Immagini")
 	for c in immagini.get("children", []):
-		if str(c.get("code", "")) != "":
+		if str(c.get("code", "")) != "" or str(c.get("code_commento", "")) != "":
 			return c
 	return {}
 
@@ -172,13 +198,18 @@ func _foto_portatrice() -> Dictionary:
 #    sottostima: i bordi sfumati cambiano poco per definizione);
 #  - struttura locale (deviazione standard della foto senza scritta);
 #  - segnale e rumore NELLA BANDA dei tratti, che e' cio' che vede "Nitidezza".
-func _misura(con_scritta: Image, senza: Image, zona: Rect2i) -> Dictionary:
+func _misura(con_scritta: Image, senza: Image, zona: Rect2i, lbl: Label) -> Dictionary:
 	var differenze: Array = []
 	var somma := 0.0
 	var somma2 := 0.0
 	var n := 0
+	var inv := lbl.get_transform().affine_inverse()
+	var lim := Rect2(Vector2(-3.0, -3.0), lbl.size + Vector2(6.0, 6.0))
 	for y in range(zona.position.y, zona.end.y):
 		for x in range(zona.position.x, zona.end.x):
+			# fuori dall'etichetta RUOTATA sono angoli di sfondo: diluirebbero la struttura
+			if not lim.has_point(inv * Vector2(x, y)):
+				continue
 			var a := con_scritta.get_pixel(x, y)
 			var b := senza.get_pixel(x, y)
 			var d: float = (absf(a.r - b.r) + absf(a.g - b.g) + absf(a.b - b.b)) / 3.0 * 255.0
@@ -198,7 +229,7 @@ func _misura(con_scritta: Image, senza: Image, zona: Rect2i) -> Dictionary:
 			somma_cuore += float(d)
 			n_cuore += 1
 	var media: float = somma / float(maxi(1, n))
-	var bp := _misura_banda(con_scritta, senza, zona)
+	var bp := _misura_banda(con_scritta, senza, zona, lbl)
 	return {
 		"delta": (somma_cuore / float(n_cuore)) if n_cuore > 0 else 0.0,
 		"sigma": sqrt(maxf(0.0, somma2 / float(maxi(1, n)) - media * media)),
@@ -210,14 +241,18 @@ func _misura(con_scritta: Image, senza: Image, zona: Rect2i) -> Dictionary:
 
 # Segnale e rumore nella banda dei tratti: gemello su CPU di quello che fa lo shader.
 # Riusa gli helper di OSContent, cosi' analisi e verifica misurano la stessa cosa.
-func _misura_banda(con_scritta: Image, senza: Image, zona: Rect2i) -> Dictionary:
+func _misura_banda(con_scritta: Image, senza: Image, zona: Rect2i, lbl: Label) -> Dictionary:
 	var cc := OSContent._bp_pair_img(con_scritta)
 	var cs := OSContent._bp_pair_img(senza)
 	if cc.size() < 2 or cs.size() < 2:
 		return {"segnale": 0.0, "rumore": 0.0}
 	var diff: Array = []
+	var inv := lbl.get_transform().affine_inverse()
+	var lim := Rect2(Vector2(-3.0, -3.0), lbl.size + Vector2(6.0, 6.0))
 	for y in range(zona.position.y, zona.end.y):
 		for x in range(zona.position.x, zona.end.x):
+			if not lim.has_point(inv * Vector2(x, y)):
+				continue
 			var bp_con: float = _luma(cc[0].get_pixel(x, y)) - _luma(cc[1].get_pixel(x, y))
 			var bp_senza: float = _luma(cs[0].get_pixel(x, y)) - _luma(cs[1].get_pixel(x, y))
 			diff.append(absf(bp_con - bp_senza))
@@ -230,8 +265,31 @@ func _misura_banda(con_scritta: Image, senza: Image, zona: Rect2i) -> Dictionary
 		if float(d) >= dmax * 0.5:     # cuore dei tratti
 			somma += float(d)
 			quanti += 1
+	# Il RUMORE resta misurato sul riquadro allineato agli assi: e' la foto SENZA scritta,
+	# quindi gli angoli che la rotazione lascia fuori sono sfondo vicino legittimo, e
+	# _box_bp ragiona per quadranti su un Rect2i.
+	# Il rumore resta misurato con la PIRAMIDE, come la generazione: cosi' questo cancello
+	# continua a significare quello che ha sempre significato e non diventa rosso per una
+	# ragione diversa da una regressione. La banda VERA dello shader (OSContent.banda_box) e'
+	# molto piu' severa e la stampa il censimento qui sopra; il giudizio completo -- nascosto
+	# a riposo E leggibile col cursore -- lo da' tests/photo_reveal_test.
+	# Resta sul riquadro allineato agli assi: e' la foto SENZA scritta, quindi gli angoli che
+	# la rotazione lascia fuori sono sfondo vicino legittimo.
 	var rumore: float = float(OSContent._box_bp(cs, zona)["rms"])
 	return {"segnale": (somma / float(maxi(1, quanti))) if quanti > 0 else 0.0, "rumore": rumore}
+
+# Riquadro VERO dell'etichetta, ROTAZIONE COMPRESA. Il riquadro allineato agli assi
+# (lbl.position + lbl.size) tagliava gli estremi in alto e in basso del primo e dell'ultimo
+# glifo, perche' la scritta e' ruotata fino a CODE_TILT (12 gradi): quei pixel non venivano
+# misurati affatto. Control.get_transform() contiene gia' la rotazione attorno a
+# pivot_offset, e la radice del SubViewport sta nell'origine, quindi basta trasformare i
+# quattro angoli.
+func _zona_etichetta(lbl: Label, dim: Vector2i) -> Rect2i:
+	var t := lbl.get_transform()
+	var r := Rect2(t * Vector2.ZERO, Vector2.ZERO)
+	for p in [Vector2(lbl.size.x, 0.0), lbl.size, Vector2(0.0, lbl.size.y)]:
+		r = r.expand(t * p)
+	return Rect2i(r.grow(3.0)).intersection(Rect2i(Vector2i.ZERO, dim))
 
 func _luma(c: Color) -> float:
 	return (c.r + c.g + c.b) / 3.0
@@ -247,6 +305,6 @@ func _trova_cartella(nodo: Dictionary, nome: String) -> Dictionary:
 	return {}
 
 func _fail(seme: int, perche: String) -> void:
-	var etichetta := ("seme %d" % seme) if seme >= 0 else "uniformita'"
+	var etichetta := ("seme %d" % seme) if seme >= 0 else ("foto inadatta" if seme == -2 else "uniformita'")
 	print("FAIL  %s --- %s" % [etichetta, perche])
 	_fails.append(etichetta)

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/photo_banda_scan.gd" id="1_bs"]
+
+[node name="BandaScan" type="Node"]
+script = ExtResource("1_bs")

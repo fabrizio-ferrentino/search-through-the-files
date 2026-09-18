@@ -86,7 +86,12 @@ func _ready() -> void:
 			"la finestra rimpicciolisce la foto (scala %.2f): la scritta si perde" % scala)
 
 	# --- quanto sopravvive lungo la catena ---
-	var zona := Rect2(lbl.position, lbl.size).grow(2.0)
+	# riquadro VERO della scritta, rotazione compresa (fino a CODE_TILT): quello allineato
+	# agli assi tagliava via gli estremi del primo e dell'ultimo glifo
+	var zona := Rect2(lbl.get_transform() * Vector2.ZERO, Vector2.ZERO)
+	for p in [Vector2(lbl.size.x, 0.0), lbl.size, Vector2(0.0, lbl.size.y)]:
+		zona = zona.expand(lbl.get_transform() * p)
+	zona = zona.grow(3.0)
 	var con_comp := vp.get_texture().get_image()
 	var con_win := get_viewport().get_texture().get_image()
 	lbl.visible = false
