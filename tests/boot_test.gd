@@ -51,7 +51,7 @@ func _ready() -> void:
 			"il POST non arriva in fondo: %s" % _riga_unica())
 	await _foto("2_post_completo")
 
-	_check("RIGA_AVVIO", await _aspetta(func(): return _testo().find("Avvio di") >= 0),
+	_check("RIGA_AVVIO", await _aspetta(func(): return _testo().find(tr("BOOT_STARTING").substr(0, 12)) >= 0),
 			"non compare la riga di avvio su schermo nero: %s" % _riga_unica())
 	await _foto("3_riga_avvio")
 

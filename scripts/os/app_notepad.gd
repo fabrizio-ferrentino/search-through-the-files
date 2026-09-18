@@ -30,13 +30,13 @@ func launch(arg) -> void:
 	# barra dei menu (File / Modifica con tendina)
 	var menubar := HBoxContainer.new()
 	menubar.add_theme_constant_override("separation", 2)
-	var mb_file := _menubar_btn("File")
+	var mb_file := _menubar_btn(tr("MENU_FILE"))
 	mb_file.pressed.connect(func(): _open_file_menu(mb_file))
 	menubar.add_child(mb_file)
-	var mb_mod := _menubar_btn("Modifica")
+	var mb_mod := _menubar_btn(tr("MENU_EDIT"))
 	mb_mod.pressed.connect(func(): _open_edit_menu(_below(mb_mod)))
 	menubar.add_child(mb_mod)
-	menubar.add_child(_menubar_btn("Cerca"))
+	menubar.add_child(_menubar_btn(tr("MENU_SEARCH")))
 	menubar.add_child(_menubar_btn("?"))
 	root.add_child(menubar)
 
@@ -108,22 +108,22 @@ func _close() -> void:
 
 func _open_file_menu(btn: Control) -> void:
 	_open_menu([
-		["Salva", func(): _save(), _file_dict == null],
+		[tr("NP_SAVE"), func(): _save(), _file_dict == null],
 		["sep"],
-		["Chiudi", func(): _close()],
+		[tr("NP_CLOSE"), func(): _close()],
 	], _below(btn))
 
 func _open_edit_menu(at: Vector2) -> void:
 	var has_sel := _edit.has_selection()
 	_open_menu([
-		["Annulla", func(): _edit.undo(), not _edit.has_undo()],
+		[tr("NP_UNDO"), func(): _edit.undo(), not _edit.has_undo()],
 		["sep"],
-		["Taglia", func(): _edit.cut(), not has_sel],
-		["Copia", func(): _edit.copy(), not has_sel],
-		["Incolla", func(): _edit.paste(), not DisplayServer.clipboard_has()],
-		["Elimina", func(): _edit.delete_selection(), not has_sel],
+		[tr("NP_CUT"), func(): _edit.cut(), not has_sel],
+		[tr("NP_COPY"), func(): _edit.copy(), not has_sel],
+		[tr("NP_PASTE"), func(): _edit.paste(), not DisplayServer.clipboard_has()],
+		[tr("NP_DELETE"), func(): _edit.delete_selection(), not has_sel],
 		["sep"],
-		["Seleziona tutto", func(): _edit.select_all(), _edit.text.is_empty()],
+		[tr("NP_SELECT_ALL"), func(): _edit.select_all(), _edit.text.is_empty()],
 	], at)
 
 func _build_menu() -> void:

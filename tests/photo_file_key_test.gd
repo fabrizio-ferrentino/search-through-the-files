@@ -83,7 +83,8 @@ func _prova(seme: int) -> void:
 			_ko(seme, "il commento non contiene il codice")
 		# il commento non deve dire "codice"/"chiave": chi legge lo riconosce da solo
 		var basso := str(portatrice.get("code_commento", "")).to_lower()
-		if basso.find("codice") >= 0 or basso.find("chiave") >= 0:
+		# in ENTRAMBE le lingue: il commento non deve autodenunciarsi
+		if basso.find("codice") >= 0 or basso.find("chiave") >= 0 or basso.find("code") >= 0 or basso.find("key") >= 0:
 			_ko(seme, "il commento si autodenuncia: '%s'" % str(portatrice.get("code_commento", "")))
 	else:
 		_quanti_pixel += 1
@@ -115,7 +116,9 @@ func _prova(seme: int) -> void:
 		_ko(seme, "il suggerimento F12 non dice la via ('%s', atteso '%s')" % [hint, atteso])
 
 func _foto_del_run() -> Array:
-	var cart := _trova(VFS.get_root(), "Immagini")
+	# Il nome della cartella e' TRADOTTO (locale/ui.csv): cercarlo scritto in italiano
+	# funzionava solo finche' il gioco era in italiano. La chiave invece non cambia.
+	var cart := _trova(VFS.get_root(), OSContent._t("VFS_PICTURES"))
 	var out: Array = []
 	for c in cart.get("children", []):
 		if c is Dictionary and str(c.get("filetype", "")) == "image":

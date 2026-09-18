@@ -102,8 +102,9 @@ func launch(arg) -> void:
 	mb_box.offset_bottom = -2
 	mb_box.add_theme_constant_override("separation", 0)
 	menubar.add_child(mb_box)
-	for m in [["File", _voci_file], ["Modifica", _voci_modifica], ["Visualizza", _voci_visualizza],
-			["Preferiti", Callable()], ["?", _voci_aiuto]]:
+	for m in [[tr("MENU_FILE"), _voci_file], [tr("MENU_EDIT"), _voci_modifica],
+			[tr("MENU_VIEW"), _voci_visualizza], [tr("MENU_FAVORITES"), Callable()],
+			["?", _voci_aiuto]]:
 		var mb := Button.new()
 		mb.text = str(m[0])
 		mb.flat = true
@@ -128,28 +129,28 @@ func launch(arg) -> void:
 	tb_box.add_theme_constant_override("separation", 1)
 	toolbar.add_child(tb_box)
 	tb_box.add_child(_maniglia())        # il "grip" a puntini: dettaglio d'epoca
-	_btn_back = _icon_btn("back", "Indietro", _go_back)
-	_btn_fwd = _icon_btn("fwd", "Avanti", _go_forward)
-	_btn_stop = _icon_btn("stop", "Interrompi", _interrompi)
+	_btn_back = _icon_btn("back", tr("BR_BACK"), _go_back)
+	_btn_fwd = _icon_btn("fwd", tr("BR_FORWARD"), _go_forward)
+	_btn_stop = _icon_btn("stop", tr("BR_STOP"), _interrompi)
 	tb_box.add_child(_btn_back)
 	tb_box.add_child(_btn_fwd)
 	tb_box.add_child(_vsep())
 	tb_box.add_child(_btn_stop)
-	tb_box.add_child(_icon_btn("refresh", "Aggiorna", func(): _load(_current)))
-	tb_box.add_child(_icon_btn("home", "Pagina iniziale", _go_home))
+	tb_box.add_child(_icon_btn("refresh", tr("BR_REFRESH"), func(): _load(_current)))
+	tb_box.add_child(_icon_btn("home", tr("BR_HOME"), _go_home))
 	tb_box.add_child(_vsep())
-	tb_box.add_child(_icon_btn("search", "Origine", _view_source))
+	tb_box.add_child(_icon_btn("search", tr("BR_SOURCE"), _view_source))
 	# PREFERITI: disabilitato per scelta di gioco (18/09/2026). Funzionava ed elencava i siti
 	# del run, ma un elenco cliccabile di tutti i siti rende la navigazione troppo comoda:
 	# il giocatore deve girare fra le pagine, non saltarci da un menu. Il pulsante e la voce
 	# restano al loro posto, grigi, perche' un browser dell'epoca senza Preferiti non e'
 	# credibile. WebRuntime.sites() resta: e' l'elenco che la wiki usa comunque.
-	_btn_pref = _icon_btn("star", "Preferiti", Callable(), false)
+	_btn_pref = _icon_btn("star", tr("MENU_FAVORITES"), Callable(), false)
 	tb_box.add_child(_btn_pref)
 	# Stampa: non c'e' una stampante e non ci sara'. Resta al suo posto perche' un browser
 	# del '98 senza il pulsante stampa non e' credibile, ma DISABILITATO -- l'unica cosa
 	# onesta: un pulsante che non fa niente e sembra attivo e' peggio che non averlo.
-	tb_box.add_child(_icon_btn("print", "Stampa", Callable(), false))
+	tb_box.add_child(_icon_btn("print", tr("BR_PRINT"), Callable(), false))
 	# il "throbber" va in fondo a DESTRA della barra strumenti, come nei browser dell'epoca
 	# (il logo animato di Netscape / il globo di IE): prima stava infilato fra l'etichetta
 	# "Indirizzo:" e il campo, dove non e' mai stato in nessun browser
@@ -176,15 +177,15 @@ func launch(arg) -> void:
 	addrbar.add_theme_constant_override("separation", 6)
 	addrstrip.add_child(addrbar)
 	var lbl := Label.new()
-	lbl.text = "Indirizzo:"
+	lbl.text = tr("EX_ADDRESS")
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	addrbar.add_child(lbl)
 	_addr = LineEdit.new()
 	_addr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_addr.placeholder_text = "Digita un indirizzo, es. http://www.sito.it"
+	_addr.placeholder_text = tr("BR_ADDR_HINT")
 	_addr.text_submitted.connect(_on_addr_submit)
 	addrbar.add_child(_addr)
-	addrbar.add_child(_text_btn("Vai", func(): _on_addr_submit(_addr.text)))
+	addrbar.add_child(_text_btn(tr("BR_GO"), func(): _on_addr_submit(_addr.text)))
 
 	# --- area pagina ---
 	var page_area := Control.new()
@@ -278,12 +279,18 @@ func _go_home() -> void:
 # Legge il file di una pagina d'autore ("" se non c'e'). Statica perche' serve
 # anche a reset_pages(), che risolve la posizione della chiave senza istanza:
 # WebRuntime non fa IO su file (vedi il suo commento in testa).
+# Le pagine sono TRADOTTE: stanno in web/pages/<lingua>/ e il nome della pagina e'
+# un identificatore che non cambia (cambia il contenuto del file). Se una lingua non
+# ha quella pagina si ripiega sull'inglese, la lingua base, e in ultimo sulla vecchia
+# cartella piatta: una pagina che manca non deve sparire dal gioco, solo dalla lingua.
 static func read_page(name: String) -> String:
-	var path := PAGES_DIR + name + ".html"
-	if not FileAccess.file_exists(path):
-		return ""
-	var f := FileAccess.open(path, FileAccess.READ)
-	return f.get_as_text() if f != null else ""
+	for path in [PAGES_DIR + WebRuntime.lingua() + "/" + name + ".html",
+			PAGES_DIR + "en/" + name + ".html", PAGES_DIR + name + ".html"]:
+		if FileAccess.file_exists(path):
+			var f := FileAccess.open(path, FileAccess.READ)
+			if f != null:
+				return f.get_as_text()
+	return ""
 
 func _load(name: String) -> void:
 	if name == "":
@@ -296,9 +303,10 @@ func _load(name: String) -> void:
 	else:
 		raw = read_page(name)
 		if raw == "":
-			if name != "404" and FileAccess.file_exists(PAGES_DIR + "404.html"):
+			var e404 := read_page("404") if name != "404" else ""
+			if e404 != "":
 				name = "404"
-				raw = read_page(name)
+				raw = e404
 			else:
 				_current = name
 				_html_text = ""
@@ -540,7 +548,7 @@ func _build_inspector(root: Control) -> void:
 	hb.offset_right = -4
 	head.add_child(hb)
 	var t := Label.new()
-	t.text = "Sorgente della pagina (HTML)"
+	t.text = tr("BR_SOURCE_TITLE")
 	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(t)
@@ -652,15 +660,15 @@ func _build_ctx_menu() -> void:
 func _show_ctx() -> void:
 	var sel: bool = _rtl.get_selected_text() != ""
 	_riempi_menu([
-		["Indietro", _go_back if not _back.is_empty() else Callable()],
-		["Avanti", _go_forward if not _forward.is_empty() else Callable()],
-		["Aggiorna", func(): _load(_current)],
+		[tr("BR_BACK"), _go_back if not _back.is_empty() else Callable()],
+		[tr("BR_FORWARD"), _go_forward if not _forward.is_empty() else Callable()],
+		[tr("BR_REFRESH"), func(): _load(_current)],
 		["-"],
-		["Copia", _copy if sel else Callable()],
-		["Copia tutto", _copy_all],
-		["Seleziona tutto", func(): _rtl.select_all()],
+		[tr("NP_COPY"), _copy if sel else Callable()],
+		[tr("BR_COPY_ALL"), _copy_all],
+		[tr("NP_SELECT_ALL"), func(): _rtl.select_all()],
 		["-"],
-		["Visualizza sorgente", _view_source],
+		[tr("BR_VIEW_SOURCE"), _view_source],
 	])
 	_mostra_menu(get_local_mouse_position())
 
@@ -688,7 +696,7 @@ func _costruisci_barra_stato(root: Control) -> void:
 	barra.add_child(hb)
 
 	_stato_lbl = Label.new()
-	_stato_lbl.text = "Pronto"
+	_stato_lbl.text = tr("BR_READY")
 	_stato_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_stato_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_stato_lbl.clip_text = true
@@ -776,10 +784,10 @@ func _avvia_caricamento(page: String) -> void:
 func _passo_caricamento(t: float, page: String) -> void:
 	var kb := WebRuntime.fake_kb(page)
 	if t < 0.35:
-		_stato_lbl.text = "Connessione a %s in corso..." % WebRuntime.host_of(page)
+		_stato_lbl.text = tr("BR_CONNECTING") % WebRuntime.host_of(page)
 	else:
 		var quanti: int = int(float(kb) * (t - 0.35) / 0.65)
-		_stato_lbl.text = "Ricezione dati: %d KB di %d KB" % [mini(quanti, kb), kb]
+		_stato_lbl.text = tr("BR_RECEIVING") % [mini(quanti, kb), kb]
 	# la parte scoperta segue i DATI, non la connessione: finche' si connette non arriva
 	# niente, ed e' lo stesso conto che mostra i KB qui sopra
 	_scopri(clampf((t - 0.35) / 0.65, 0.0, 1.0))
@@ -801,7 +809,7 @@ func _fine_caricamento(page: String) -> void:
 	_scopri(0.0)                        # pronto per il prossimo caricamento
 	_globo_acceso(false)
 	_avanzamento(1.0)
-	_stato_lbl.text = "Completato: %s" % WebRuntime.host_of(page)
+	_stato_lbl.text = tr("BR_DONE") % WebRuntime.host_of(page)
 	_aggiorna_pulsanti()
 	load_finished.emit(page)
 
@@ -819,7 +827,7 @@ func _interrompi() -> void:
 		_tw_carica.kill()
 	_in_carica = false
 	_globo_acceso(false)
-	_stato_lbl.text = "Interrotto"
+	_stato_lbl.text = tr("BR_STOPPED")
 	_aggiorna_pulsanti()
 	load_finished.emit(_current)
 
@@ -947,33 +955,33 @@ func _aggiorna_pulsanti() -> void:
 
 func _voci_file() -> Array:
 	return [
-		["Nuovo", Callable()],
-		["Apri...", Callable()],
+		[tr("BR_NEW"), Callable()],
+		[tr("BR_OPEN"), Callable()],
 		["-"],
-		["Salva con nome...", Callable()],
-		["Stampa...", Callable()],
+		[tr("BR_SAVE_AS"), Callable()],
+		[tr("BR_PRINT_DOTS"), Callable()],
 		["-"],
-		["Chiudi", func(): if window != null: window.close()],
+		[tr("NP_CLOSE"), func(): if window != null: window.close()],
 	]
 
 func _voci_modifica() -> Array:
 	var sel: bool = _rtl != null and _rtl.get_selected_text() != ""
 	return [
-		["Taglia", Callable()],
-		["Copia", _copy if sel else Callable()],
-		["Incolla", Callable()],
+		[tr("NP_CUT"), Callable()],
+		[tr("NP_COPY"), _copy if sel else Callable()],
+		[tr("NP_PASTE"), Callable()],
 		["-"],
-		["Seleziona tutto", func(): _rtl.select_all()],
-		["Trova in questa pagina...", Callable()],
+		[tr("NP_SELECT_ALL"), func(): _rtl.select_all()],
+		[tr("BR_FIND"), Callable()],
 	]
 
 func _voci_visualizza() -> Array:
 	return [
-		["Interrompi", _interrompi if is_loading() else Callable()],
-		["Aggiorna", func(): _load(_current)],
+		[tr("BR_STOP"), _interrompi if is_loading() else Callable()],
+		[tr("BR_REFRESH"), func(): _load(_current)],
 		["-"],
-		["Carattere", Callable()],
-		["Origine", _view_source],
+		[tr("BR_FONT"), Callable()],
+		[tr("BR_SOURCE"), _view_source],
 	]
 
 # Cosa CI SAREBBE nei Preferiti. Non e' piu' agganciata a niente (il menu e il pulsante
@@ -983,21 +991,21 @@ func _voci_visualizza() -> Array:
 # Se la si riattiva: le voci devono navigare con _go e non con _load, o la visita non entra
 # nella cronologia e "indietro" resta grigio.
 func _voci_preferiti() -> Array:
-	var v: Array = [["Aggiungi a Preferiti", Callable()], ["-"]]
+	var v: Array = [[tr("BR_ADD_FAVORITE"), Callable()], ["-"]]
 	for sito in WebRuntime.sites():
 		var f := str(sito.get("file", ""))
 		if f == "":
 			continue
 		v.append([str(sito.get("name", f)), func(): _go(f)])
 	if v.size() == 2:
-		v.append(["(nessun sito)", Callable()])
+		v.append([tr("BR_NO_SITES"), Callable()])
 	return v
 
 func _voci_aiuto() -> Array:
 	return [
-		["Argomenti della Guida", Callable()],
+		[tr("BR_HELP_TOPICS"), Callable()],
 		["-"],
-		["Informazioni su WebNet Explorer", _informazioni],
+		[tr("BR_ABOUT"), _informazioni],
 	]
 
 # Apre una tendina sotto il pulsante che l'ha chiesta. Riusa lo strato del menu
@@ -1069,12 +1077,12 @@ func _mostra_menu(pos: Vector2) -> void:
 # qualcosa. Nomi inventati, come in tutto il resto dell'OS.
 func _informazioni() -> void:
 	_riempi_menu([
-		["WebNet Explorer 2.0", Callable()],
+		[tr("BR_ABOUT_NAME"), Callable()],
 		["-"],
-		["Versione 2.0 (build 412)", Callable()],
-		["(c) 1998 WebNet Servizi Telematici", Callable()],
+		[tr("BR_ABOUT_VER"), Callable()],
+		[tr("BR_ABOUT_COPY"), Callable()],
 		["-"],
-		["Chiudi", func(): pass],
+		[tr("NP_CLOSE"), func(): pass],
 	])
 	_mostra_menu(Vector2(size.x * 0.5 - 150.0, size.y * 0.35))
 

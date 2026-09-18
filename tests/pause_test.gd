@@ -56,11 +56,16 @@ func _ready() -> void:
 		_check("OVERLAY_GIRA_IN_PAUSA", ps.process_mode == Node.PROCESS_MODE_ALWAYS,
 				"l'overlay e' in pausa anche lui: i pulsanti non risponderebbero")
 		_check("OVERLAY_SOPRA_TUTTO", int(ps.layer) >= 60, "layer troppo basso: %d" % int(ps.layer))
+		# Il testo si confronta con la TRADUZIONE della chiave, non con una parola italiana:
+		# il gioco parte in inglese e un test che cerca "PAUSA" fallirebbe per la lingua
+		# invece che per un guasto. I nomi dei nodi invece non si traducono mai.
 		var titolo := ps.find_child("Titolo", true, false)
-		_check("TITOLO", titolo != null and str(titolo.text).find("PAUSA") >= 0,
-				"manca la scritta di pausa")
+		_check("TITOLO", titolo != null and str(titolo.text) == tr("UI_PAUSED_TITLE")
+				and str(titolo.text) != "UI_PAUSED_TITLE",
+				"la scritta di pausa e' '%s' invece di '%s'"
+				% [(str(titolo.text) if titolo != null else "<manca>"), tr("UI_PAUSED_TITLE")])
 		var manca: Array = []
-		for nome in ["Riprendi", "Torna al menu", "Chiudi il gioco"]:
+		for nome in ["Riprendi", "AlMenu", "Chiudi"]:
 			var b := ps.find_child(nome, true, false)
 			if b == null or b.pressed.get_connections().is_empty():
 				manca.append(nome)

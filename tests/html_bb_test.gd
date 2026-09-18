@@ -144,7 +144,7 @@ func _prova_ancore() -> void:
 			continue
 		var vis: Array = WA.ancore(raw, true)
 		var src: Array = WA.ancore(raw, false)
-		print("   %-14s visibili %2d %-42s sorgente %2d %s"
+		print("   %-18s visibili %2d %-42s sorgente %2d %s"
 				% [nome, vis.size(), _conta(vis), src.size(), _conta(src)])
 		# ogni pagina deve offrire scelta, in entrambe le modalita'
 		_ge("ancore_visibili_" + nome, vis.size(), 3)
@@ -249,14 +249,22 @@ func _fondo_di(raw: String, pos: int) -> String:
 			return bg
 	return ""
 
+# Le pagine d'autore stanno in web/pages/<lingua>/: il censimento le passa in
+# rassegna TUTTE, in ogni lingua. Una pagina tradotta che non offre piu' nascondigli
+# (o che ha perso una tabella per strada) e' un difetto che si vedrebbe solo giocando
+# in quella lingua, cioe' mai da qui.
 func _pagine() -> Array:
 	var out: Array = []
-	var d := DirAccess.open(PAGINE)
-	if d == null:
+	var radice := DirAccess.open(PAGINE)
+	if radice == null:
 		return out
-	for f in d.get_files():
-		if f.ends_with(".html"):
-			out.append(f.substr(0, f.length() - 5))
+	for d in radice.get_directories():
+		var dir := DirAccess.open(PAGINE + d)
+		if dir == null:
+			continue
+		for f in dir.get_files():
+			if f.ends_with(".html"):
+				out.append(d + "/" + f.substr(0, f.length() - 5))
 	out.sort()
 	return out
 

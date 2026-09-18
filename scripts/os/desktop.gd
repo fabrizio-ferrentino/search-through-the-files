@@ -92,7 +92,7 @@ func _build_wallpaper() -> void:
 	wp.gui_input.connect(func(e):
 		if e is InputEventMouseButton and e.pressed:
 			if e.button_index == MOUSE_BUTTON_RIGHT:
-				_show_desktop_menu([["Nuovo documento di testo", _new_desktop_file]])
+				_show_desktop_menu([[tr("EX_NEW_TEXT"), _new_desktop_file]])
 			else:
 				_deselect_desktop())
 	add_child(wp)
@@ -111,10 +111,10 @@ func _refresh_icons() -> void:
 	# icona del Cestino "pieno" quando contiene qualcosa
 	var trash_icon := "trash_full" if not VFS.get_trash().get("children", []).is_empty() else "trash"
 	var defs := [
-		{"name": "Risorse del computer", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
-		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
+		{"name": tr("VFS_MY_COMPUTER"), "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
+		{"name": tr("VFS_DOCUMENTS"), "icon": "folder", "open": func(): open_app("explorer", _folder_path([tr("VFS_C_DRIVE"), tr("VFS_DOCUMENTS")]))},
 		{"name": "Web", "icon": "web", "open": func(): open_app("browser", "start")},
-		{"name": "Cestino", "icon": trash_icon, "open": func(): open_app("explorer", _folder_path(["Cestino"]))},
+		{"name": tr("VFS_TRASH"), "icon": trash_icon, "open": func(): open_app("explorer", _folder_path([tr("VFS_TRASH")]))},
 	]
 	var y := 24.0
 	for d in defs:
@@ -158,7 +158,7 @@ func _build_taskbar() -> void:
 	# pezzo preso in prestito da Windows, e il resto dell'OS e' in italiano. L'icona
 	# e' piu' grande del solito (26 invece di 18) perche' la balena ha una sagoma da
 	# leggere, e da qui passa anche al monitor 3D, dove si rimpicciolisce.
-	start_btn = _icon_button("Avvio", "whale", TASKBAR_H - 8, 26)
+	start_btn = _icon_button(tr("SHELL_START"), "whale", TASKBAR_H - 8, 26)
 	start_btn.custom_minimum_size.x = 96
 	start_btn.toggle_mode = true
 	start_btn.pressed.connect(_toggle_start_menu)
@@ -204,11 +204,11 @@ func _build_taskbar() -> void:
 func _build_start_menu() -> void:
 	var item_h := 42
 	var items := [
-		{"name": "Esplora risorse", "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
+		{"name": tr("SHELL_EXPLORER"), "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
 		{"name": "Web", "icon": "web", "open": func(): open_app("browser", "start")},
-		{"name": "Documenti", "icon": "folder", "open": func(): open_app("explorer", _folder_path(["Disco locale (C:)", "Documenti"]))},
+		{"name": tr("VFS_DOCUMENTS"), "icon": "folder", "open": func(): open_app("explorer", _folder_path([tr("VFS_C_DRIVE"), tr("VFS_DOCUMENTS")]))},
 		{"sep": true},
-		{"name": "Spegni il PC", "icon": "whale", "open": func(): _show_shutdown()},
+		{"name": tr("SHELL_SHUTDOWN"), "icon": "whale", "open": func(): _show_shutdown()},
 	]
 	var menu_w := 250
 	var stripe_w := 34
@@ -306,7 +306,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 	match kind:
 		"explorer":
 			var folder: Dictionary = arg if arg is Dictionary else VFS.get_root()
-			var win := open_window(folder.get("name", "Esplora risorse"), Vector2(740, 520), "folder")
+			var win := open_window(folder.get("name", tr("SHELL_EXPLORER")), Vector2(740, 520), "folder")
 			var app := FileExplorerApp.new()
 			win.content_root.add_child(app)
 			app.os = self
@@ -323,7 +323,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			return win
 		"notepad":
 			var file: Dictionary = arg if arg is Dictionary else {}
-			var win := open_window(str(file.get("name", "Senza nome")), Vector2(560, 460), "notepad")
+			var win := open_window(str(file.get("name", tr("NP_UNTITLED"))), Vector2(560, 460), "notepad")
 			var app := NotepadApp.new()
 			win.content_root.add_child(app)
 			app.os = self
@@ -335,7 +335,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			# grande abbastanza da mostrare la foto SENZA rimpicciolirla: la composizione
 			# arriva a 640x480 e il pannello dei cursori si mangia 210 px. Rimpicciolire
 			# cancellerebbe la scritta-chiave, che vale pochi livelli di colore.
-			var win := open_window(str(node.get("name", "Immagine")), Vector2(910, 590), "image")
+			var win := open_window(str(node.get("name", tr("IV_WINDOW"))), Vector2(910, 590), "image")
 			var app := ImageViewerApp.new()
 			win.content_root.add_child(app)
 			app.os = self
@@ -548,10 +548,10 @@ func _on_desktop_activated(data: Dictionary) -> void:
 
 func _on_desktop_item_context(item: DesktopItem) -> void:
 	var data: Dictionary = item.data
-	var voci: Array = [["Apri", func(): _on_desktop_activated(data)]]
+	var voci: Array = [[tr("EX_OPEN"), func(): _on_desktop_activated(data)]]
 	if str(data.get("filetype", "")) == "image":
-		voci.append(["Apri con Blocco note", func(): open_app("notepad", data)])
-	voci.append(["Elimina", func(): _delete_desktop_file(data)])
+		voci.append([tr("EX_OPEN_NOTEPAD"), func(): open_app("notepad", data)])
+	voci.append([tr("EX_DELETE"), func(): _delete_desktop_file(data)])
 	_show_desktop_menu(voci)
 
 func _deselect_desktop() -> void:
@@ -563,7 +563,7 @@ func _deselect_desktop() -> void:
 
 func _new_desktop_file() -> void:
 	var df := VFS.get_desktop()
-	var base := "Nuovo documento"
+	var base := tr("VFS_NEW_DOC")
 	var fname := base + ".txt"
 	var n := 1
 	while _desktop_name_exists(df, fname):
@@ -917,7 +917,7 @@ func _boot_post(token: int) -> void:
 # 2) Una riga di testo su schermo nero: il passaggio dal DOS al sistema.
 func _boot_dos(_token: int) -> void:
 	var lbl := _boot_text_screen()
-	lbl.text = "Avvio di 52-hz Whale in corso..."
+	lbl.text = tr("BOOT_STARTING")
 	await get_tree().create_timer(BOOT_DOS_TIME).timeout
 
 # 3) Splash: cielo sfumato, marchio con l'ombra portata e il nastro in basso. Nel
@@ -965,7 +965,7 @@ func _boot_splash(_token: int) -> void:
 		scr.add_child(l)
 
 	var ver := Label.new()
-	ver.text = "Versione 4.02"
+	ver.text = tr("BOOT_VERSION")
 	ver.add_theme_font_size_override("font_size", 32)
 	ver.add_theme_color_override("font_color", Color(0.78, 0.86, 1.0))
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1054,18 +1054,18 @@ func _make_modal(title: String, dlg_size: Vector2, bg: Color) -> Dictionary:
 # Schermata di login: chiede la password (per ora "123") prima di mostrare il desktop.
 func _show_login() -> void:
 	_clear_state()
-	var dlg := _make_modal("Accesso a 52-hz Whale", Vector2(380, 196), Win95.C_DESKTOP)
+	var dlg := _make_modal(tr("LOGIN_TITLE"), Vector2(380, 196), Win95.C_DESKTOP)
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 	_state_overlay = layer
 
 	var msg := Label.new()
-	msg.text = "Digitare la password per accedere."
+	msg.text = tr("LOGIN_MSG")
 	msg.position = Vector2(16, 42)
 	panel.add_child(msg)
 
 	var cap := Label.new()
-	cap.text = "Password:"
+	cap.text = tr("LOGIN_PASSWORD")
 	cap.position = Vector2(16, 80)
 	panel.add_child(cap)
 
@@ -1092,7 +1092,7 @@ func _show_login() -> void:
 			GameManager.logged_in = true
 			_clear_state()   # rimuove il login -> compare il desktop
 		else:
-			err.text = "Password non corretta. Riprovare."
+			err.text = tr("LOGIN_WRONG")
 			pw.clear()
 			pw.grab_focus()
 	ok.pressed.connect(attempt)
@@ -1119,7 +1119,7 @@ func open_secret_folder(_node: Dictionary) -> void:
 	var field_w: float = dlg_w - pad * 2.0
 	var dlg_h: float = rows_top + n * (field_h + row_gap) + 86.0
 
-	var dlg := _make_modal("ACCESSO NEGATO", Vector2(dlg_w, dlg_h), Color(0, 0, 0, 0.55))
+	var dlg := _make_modal(tr("SECRET_TITLE"), Vector2(dlg_w, dlg_h), Color(0, 0, 0, 0.55))
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 
@@ -1150,13 +1150,13 @@ func open_secret_folder(_node: Dictionary) -> void:
 
 	var by: float = dlg_h - 48.0
 	var unlock := Button.new()
-	unlock.text = "Sblocca"
+	unlock.text = tr("SECRET_UNLOCK")
 	unlock.position = Vector2(dlg_w - 232.0, by)
 	unlock.size = Vector2(104, 36)
 	panel.add_child(unlock)
 
 	var cancel := Button.new()
-	cancel.text = "Annulla"
+	cancel.text = tr("UI_CANCEL")
 	cancel.position = Vector2(dlg_w - 120.0, by)
 	cancel.size = Vector2(104, 36)
 	panel.add_child(cancel)
@@ -1207,7 +1207,7 @@ func open_secret_folder(_node: Dictionary) -> void:
 
 # Conferma di spegnimento (stile classico: solo Sì / No).
 func _show_shutdown() -> void:
-	var dlg := _make_modal("Spegnimento", Vector2(380, 170), Color(0, 0, 0, 0.35))
+	var dlg := _make_modal(tr("SHUTDOWN_TITLE"), Vector2(380, 170), Color(0, 0, 0, 0.35))
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 
@@ -1223,20 +1223,20 @@ func _show_shutdown() -> void:
 		warn.draw_string(ThemeDB.fallback_font, Vector2(14, 28), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.BLACK))
 
 	var lbl := Label.new()
-	lbl.text = "Sei sicuro di voler spegnere il PC?"
+	lbl.text = tr("SHUTDOWN_MSG")
 	lbl.position = Vector2(72, 52)
 	lbl.size = Vector2(panel.size.x - 90, 40)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel.add_child(lbl)
 
 	var yes := Button.new()
-	yes.text = "Sì"
+	yes.text = tr("UI_YES")
 	yes.position = Vector2(panel.size.x * 0.5 - 104, 118)
 	yes.size = Vector2(96, 32)
 	panel.add_child(yes)
 
 	var no := Button.new()
-	no.text = "No"
+	no.text = tr("UI_NO")
 	no.position = Vector2(panel.size.x * 0.5 + 8, 118)
 	no.size = Vector2(96, 32)
 	panel.add_child(no)
@@ -1267,7 +1267,7 @@ func _show_no_signal() -> void:
 	ov.add_child(box)
 
 	var title := Label.new()
-	title.text = "NESSUN SEGNALE"
+	title.text = tr("NOSIGNAL_TITLE")
 	title.add_theme_color_override("font_color", Color(0.92, 0.92, 0.95))
 	title.add_theme_font_size_override("font_size", 30)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1276,7 +1276,7 @@ func _show_no_signal() -> void:
 	box.add_child(title)
 
 	var sub := Label.new()
-	sub.text = "Controllare il cavo del segnale"
+	sub.text = tr("NOSIGNAL_SUB")
 	sub.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.position = Vector2(0, 70)

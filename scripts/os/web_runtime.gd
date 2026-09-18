@@ -16,27 +16,38 @@ const SITE_COUNT := 5
 # sito: crea web/pages/<file>.html e aggiungi una riga qui.
 static func _pool() -> Array:
 	return [
-		{"file": "news", "name": "NewsOggi", "desc": "Cronaca e tecnologia, aggiornate ogni giorno.", "featured": true},
-		{"file": "meteo", "name": "MeteoNow", "desc": "Previsioni del tempo ora per ora.", "featured": true},
-		{"file": "giochi", "name": "GiocaWeb", "desc": "Giochi shareware da scaricare col modem.", "featured": true},
-		{"file": "blog", "name": "Il blog segreto di Jack99", "desc": "Pagina personale. Teorie e appunti sparsi.", "featured": false},
-		{"file": "forum", "name": "RetroForum - Bacheca", "desc": "Floppy, modem 56k e altre nostalgie.", "featured": false},
-		{"file": "shop", "name": "CompraTutto - Offerte", "desc": "Acquisti per corrispondenza a prezzi shock.", "featured": false},
-		{"file": "mail", "name": "WebMail", "desc": "La tua casella di posta. Spazio quasi esaurito.", "featured": false},
-		{"file": "misteri", "name": "Misteri.NET", "desc": "Verita' che non vogliono farti sapere.", "featured": false},
+		{"file": "news", "name": _t("WS_NEWS"), "desc": _t("WS_NEWS_D"), "featured": true},
+		{"file": "meteo", "name": _t("WS_WEATHER"), "desc": _t("WS_WEATHER_D"), "featured": true},
+		{"file": "giochi", "name": _t("WS_GAMES"), "desc": _t("WS_GAMES_D"), "featured": true},
+		{"file": "blog", "name": _t("WS_BLOG"), "desc": _t("WS_BLOG_D"), "featured": false},
+		{"file": "forum", "name": _t("WS_FORUM"), "desc": _t("WS_FORUM_D"), "featured": false},
+		{"file": "shop", "name": _t("WS_SHOP"), "desc": _t("WS_SHOP_D"), "featured": false},
+		{"file": "mail", "name": _t("WS_MAIL"), "desc": _t("WS_MAIL_D"), "featured": false},
+		{"file": "misteri", "name": _t("WS_MYST"), "desc": _t("WS_MYST_D"), "featured": false},
 	]
 
-# Frasi portatrici della chiave: in chiaro (mostrata sulla pagina) o nel sorgente (commento).
+# ---------------- lingua ----------------
+# Il codice a due lettere della lingua in corso ("en", "it"): il locale di sistema
+# puo' essere "it_IT", qui conta solo la prima parte. Le pagine d'autore stanno in
+# web/pages/<lingua>/ e i NOMI delle pagine sono identificatori, non testo: non
+# cambiano da una lingua all'altra, cambia il contenuto dei file.
+static func lingua() -> String:
+	return TranslationServer.get_locale().get_slice("_", 0).get_slice("-", 0)
+
+# Scorciatoia: tr() e' un metodo di Object, qui e' tutto statico.
+static func _t(chiave: String) -> String:
+	return TranslationServer.translate(chiave)
+
+# Frasi portatrici della chiave, in chiaro sulla pagina: CHIAVI di traduzione, non
+# testo. L'ordine e il numero non si toccano -- il seme sceglie per indice, e
+# spostarle cambierebbe la frase di tutti i semi giocati finora.
 const _VISIBLE := [
-	"%s",
-	"%s",
-	"%s",
-	"you want this %s",
-	"Promemoria personale: %s. Non perderlo.",
-	"Nota a margine: il codice e' %s.",
-	"P.S. ho segnato %s per non scordarlo.",
-	"Per accedere ricordarsi di: %s.",
+	"WK_V_1", "WK_V_2", "WK_V_3", "WK_V_4",
+	"WK_V_5", "WK_V_6", "WK_V_7", "WK_V_8",
 ]
+# I commenti nel sorgente NON si traducono: nel codice di allora i commenti erano
+# in inglese in qualunque paese, e questi (lasciati dal proprietario) sono voluti
+# cosi'. Tradurli suonerebbe falso proprio dove il giocatore fruga.
 const _COMMENT := [
 	"%s",
 	"%s",
@@ -83,7 +94,7 @@ static func build() -> void:
 	if _key == "":
 		_text = ""
 	elif _visible:
-		_text = _VISIBLE[rng.randi_range(0, _VISIBLE.size() - 1)] % _key
+		_text = _frase(_VISIBLE[rng.randi_range(0, _VISIBLE.size() - 1)], _key)
 	else:
 		_text = _COMMENT[rng.randi_range(0, _COMMENT.size() - 1)] % _key
 	# NB: questi due sorteggi stanno IN CODA di proposito. Metterli piu' su
@@ -95,6 +106,15 @@ static func build() -> void:
 	_built_seed = GameManager.run_seed
 	if _key != "" and _carrier != "":
 		GameManager.note_key(OSContent.KEY_WEB, _hint())
+
+# La frase tradotta col codice dentro. Se la traduzione manca, tr() restituisce la
+# chiave: senza "%s" l'operatore % darebbe errore e la chiave resterebbe fuori dalla
+# pagina, cioe' introvabile. In quel caso si mette il codice nudo.
+static func _frase(chiave: String, codice: String) -> String:
+	var f := _t(chiave)
+	if f.find("%s") < 0:
+		f = "%s"
+	return f % codice
 
 static func _ensure() -> void:
 	if _built_seed != GameManager.run_seed or _chosen.is_empty():
@@ -131,7 +151,23 @@ const HOME := "home"          # nome di pagina della wiki (non e' un file)
 # La HOME e' il portale dell'ISP (quello del footer della wiki), percio' ha un
 # indirizzo anche lei.
 # AGGIUNGERE UN SITO = una riga qui + una in _pool() + il file in web/pages/.
-const SITI := {
+# I domini seguono la LINGUA: un sito inglese su un .it (o viceversa) si nota
+# subito, ed e' l'indirizzo la prima cosa che il giocatore legge nella barra.
+const SITI_EN := {
+	HOME: "www.webnet.com",
+	"news": "www.newstoday.com",
+	"meteo": "www.weathernow.com",
+	"giochi": "www.playweb.com",
+	"blog": "www.webnet.com/~jack99",
+	"forum": "www.retroforum.com",
+	"shop": "www.buyitall.com",
+	"mail": "webmail.webnet.com",
+	"misteri": "www.mysteries.net",
+	# pagine non del pool, raggiungibili solo dai link interni
+	"forum_thread": "www.retroforum.com/thread.html",
+	"removed": "www.retroforum.com/removed.html",
+}
+const SITI_IT := {
 	HOME: "www.webnet.it",
 	"news": "www.newsoggi.it",
 	"meteo": "www.meteonow.it",
@@ -146,13 +182,18 @@ const SITI := {
 	"thread_rimosso": "www.retroforum.it/rimosso.html",
 }
 
+# La tabella della lingua in corso. Le pagine d'autore (e quindi i link relativi
+# dentro di loro) cambiano con la lingua, gli indirizzi devono seguirle.
+static func siti() -> Dictionary:
+	return SITI_IT if lingua() == "it" else SITI_EN
+
 # L'indirizzo da mostrare nella barra per quella pagina.
 static func display_url(page: String) -> String:
-	return "http://" + str(SITI.get(page, page))
+	return "http://" + str(siti().get(page, page))
 
 # Solo il dominio (senza "http://"), per scriverlo dentro le pagine.
 static func host_of(page: String) -> String:
-	return str(SITI.get(page, page))
+	return str(siti().get(page, page))
 
 # Da un indirizzo digitato o cliccato al nome della pagina ("" se non e' dei
 # nostri). Tollerante come i browser dell'epoca: "http://www.newsoggi.it/",
@@ -163,10 +204,19 @@ static func page_of(url: String) -> String:
 	u = u.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
 	if u == "":
 		return ""
-	if SITI.has(u):
+	# prima la lingua in corso, poi le altre: un indirizzo dell'altra lingua non
+	# deve dare 404 (e' tolleranza, non una scorciatoia: porta alla stessa pagina)
+	for tabella in [siti(), SITI_EN, SITI_IT]:
+		var p := _cerca(tabella, u)
+		if p != "":
+			return p
+	return ""
+
+static func _cerca(tabella: Dictionary, u: String) -> String:
+	if tabella.has(u):
 		return u                      # il nome interno, per compatibilita'
-	for p in SITI:
-		var host := str(SITI[p]).to_lower()
+	for p in tabella:
+		var host := str(tabella[p]).to_lower()
 		if u == host or u == host.trim_prefix("www.") or u == "www." + host:
 			return str(p)
 		# "newsoggi" da solo: solo per i domini senza percorso, o "webnet"
@@ -177,26 +227,28 @@ static func page_of(url: String) -> String:
 				return str(p)
 	return ""
 
+# Le scritte sono TRADOTTE e il template usa {segnaposto} con String.format, non
+# l'operatore % (che qui obbligherebbe a raddoppiare ogni "%" delle larghezze).
 const _HOME_TEMPLATE := """<html>
-<head><title>Benvenuto su WebNet Gateway v3.1</title></head>
+<head><title>{title}</title></head>
 <body bgcolor="#C0C0C0" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
 
 <center>
   <font face="Arial Black, Arial, Helvetica" size="6" color="#000080"><u>WEB<b>NET</b></u> <font size="4" color="#FF0000">GATEWAY</font></font><br>
-  <font face="Verdana" size="1">Il tuo punto d'accesso all'Autostrada dell'Informazione</font>
+  <font face="Verdana" size="1">{tagline}</font>
 </center>
 
 <div align="center">
-<table border="1" bordercolorlight="#FFFFFF" bordercolordark="#808080" cellpadding="8" cellspacing="0" width="70%%" bgcolor="#FFFFFF">
-%s</table>
+<table border="1" bordercolorlight="#FFFFFF" bordercolordark="#808080" cellpadding="8" cellspacing="0" width="70%" bgcolor="#FFFFFF">
+{rows}</table>
 </div>
 
 <br>
 
 <center><font face="Arial" size="1">
-<hr width="50%%" size="1">
-Sito registrato presso WebNet ISP &copy; 1998<br>
-Per eventuali problemi contatta il tuo provider
+<hr width="50%" size="1">
+{footer1} &copy; 1998<br>
+{footer2}
 </font></center>
 
 </body>
@@ -255,14 +307,17 @@ static func home_html() -> String:
 			recent.append(s)
 	var righe := ""
 	if not featured.is_empty():
-		righe += _header_row("I TUOI PREFERITI:", "#808080")
+		righe += _header_row(_t("WEB_HOME_FAVS"), "#808080")
 		for s in featured:
 			righe += _fav_row(s)
 	if not recent.is_empty():
-		righe += _header_row("[ SITI VISITATI DI RECENTE ]", "#000080")
+		righe += _header_row(_t("WEB_HOME_RECENT"), "#000080")
 		for s in recent:
 			righe += _recent_row(s)
-	return _HOME_TEMPLATE % righe
+	return _HOME_TEMPLATE.format({
+		"title": _t("WEB_HOME_TITLE"), "tagline": _t("WEB_HOME_TAGLINE"),
+		"rows": righe, "footer1": _t("WEB_HOME_FOOT1"), "footer2": _t("WEB_HOME_FOOT2"),
+	})
 
 # HTML d'autore con la chiave iniettata, SE questa pagina e' il portatore del run.
 # Il punto esatto lo sceglie WebAnchor fra tutti quelli sicuri della pagina (riga a

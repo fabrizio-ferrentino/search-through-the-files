@@ -19,6 +19,12 @@ var _fails: Array = []
 
 func _ready() -> void:
 	await get_tree().process_frame
+	# LINGUA FISSA, come il seme: questo test controlla che le pagine si RENDANO,
+	# e lo fa cercando il testo che ci deve comparire. Le pagine sono tradotte
+	# (web/pages/<lingua>/), percio' senza fissare la lingua andrebbe rosso quando
+	# cambia la lingua del gioco invece che quando si rompe il renderer. Che ogni
+	# lingua sia completa e coerente lo prova web_locale_test.
+	GameManager.set_lingua(GameManager.LINGUA_BASE)
 	GameManager.start_new_run(12345)   # seme fisso: run riproducibile
 	# caricamento quasi istantaneo: il percorso e' lo stesso, l'attesa no
 	# (l'attesa vera la prova page_load_test)
@@ -50,7 +56,7 @@ func _ready() -> void:
 	_browser._load("forum")
 	await _browser.attendi_caricamento()
 	txt = await _snap("web_forum.png")
-	_check("FORUM", txt.find("RetroForum") >= 0 and txt.find("floppy graffiato") >= 0, "forum.html non renderizzato")
+	_check("FORUM", txt.find("RetroForum") >= 0 and txt.find("scratched floppy") >= 0, "forum.html non renderizzato")
 
 	# --- pagina thread (avatar <img> + blockquote) ---
 	_browser._load("forum_thread")
@@ -62,7 +68,7 @@ func _ready() -> void:
 	_browser._load("misteri")
 	await _browser.attendi_caricamento()
 	txt = await _snap("web_misteri.png")
-	_check("MISTERI", txt.find("LORO GUARDANO") >= 0, "misteri.html non renderizzato")
+	_check("MISTERI", txt.find("THEY ARE WATCHING") >= 0, "misteri.html non renderizzato")
 	# lo sfondo pagina deve essere nero (body bgcolor)
 	await RenderingServer.frame_post_draw
 	var img := _sub.get_texture().get_image()

@@ -58,6 +58,30 @@ var _keys_label: Label = null
 # Avvia una nuova partita: fissa il seme, azzera lo stato del PC e ricostruisce
 # il filesystem da zero. Lo chiama il menu allo "Start" (e restart()).
 # new_seed = 0 -> ne genera uno casuale (run normale); un seme esplicito = debug.
+# ---------------- lingua ----------------
+# L'INGLESE e' la lingua base del gioco (scelta del proprietario, 19/09/2026), e va imposto
+# a mano: Godot parte dalla lingua del SISTEMA, quindi su una macchina italiana il gioco
+# usciva in italiano senza che nessuno l'avesse chiesto (verificato: il locale iniziale era
+# it_IT). Le traduzioni stanno in locale/ui.csv, una colonna per lingua; una chiave che
+# manca viene mostrata COM'E' (tutta maiuscola), quindi un buco si vede subito a schermo.
+const LINGUA_BASE := "en"
+const LINGUE := ["en", "it"]         # quelle che il CSV contiene davvero
+var lingua := LINGUA_BASE
+
+func _ready() -> void:
+	set_lingua(lingua)
+
+# Cambia lingua a gioco avviato: la chiamera' il menu Opzioni (M6).
+# Quello che passa da tr() si aggiorna quando l'interfaccia viene ricostruita -- e nell'OS
+# succede a ogni apertura di finestra, quindi in pratica basta riaprire quello che si sta
+# guardando. Il testo DENTRO il gioco (pagine web, nomi dei file) segue la lingua dalla
+# generazione del run: cambiarla a metta' partita non riscrive il PC, ed e' giusto cosi'.
+func set_lingua(codice: String) -> void:
+	if not LINGUE.has(codice):
+		codice = LINGUA_BASE
+	lingua = codice
+	TranslationServer.set_locale(codice)
+
 func start_new_run(new_seed: int = 0) -> void:
 	run_seed = new_seed if new_seed != 0 else randi()
 	rng.seed = run_seed

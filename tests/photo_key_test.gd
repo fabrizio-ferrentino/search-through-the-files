@@ -187,7 +187,9 @@ func _uniformita() -> void:
 # La foto che porta la chiave, in QUALUNQUE delle due vie: nei pixel ("code") o nei byte del
 # file ("code_commento"). Serve distinguerle, perche' questo test misura solo la prima.
 func _foto_portatrice() -> Dictionary:
-	var immagini := _trova_cartella(VFS.get_root(), "Immagini")
+	# Il nome della cartella e' TRADOTTO (locale/ui.csv): cercarlo scritto in italiano
+	# funzionava solo finche' il gioco era in italiano. La chiave invece non cambia.
+	var immagini := _trova_cartella(VFS.get_root(), OSContent._t("VFS_PICTURES"))
 	for c in immagini.get("children", []):
 		if str(c.get("code", "")) != "" or str(c.get("code_commento", "")) != "":
 			return c

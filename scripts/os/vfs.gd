@@ -68,12 +68,15 @@ static func _link_parents(node: Dictionary, parent) -> void:
 
 # Cartella che rappresenta il Desktop (i file creati sulla scrivania).
 static func get_desktop() -> Dictionary:
-	var d = resolve_node(["Risorse del computer", "Disco locale (C:)", "Desktop"])
+	# I nomi delle cartelle sono TRADOTTI (locale/ui.csv), quindi il percorso va ricostruito
+	# con le stesse chiavi che ha usato OSContent quando ha generato l'albero -- scriverli a
+	# mano in italiano funzionava solo finche' il gioco era in italiano.
+	var d = resolve_node([OSContent._t("VFS_MY_COMPUTER"), OSContent._t("VFS_C_DRIVE"), "Desktop"])
 	return d if d is Dictionary else get_root()
 
 # Cartella "Cestino" (figlia diretta della radice).
 static func get_trash() -> Dictionary:
-	var d = resolve_node(["Risorse del computer", "Cestino"])
+	var d = resolve_node([OSContent._t("VFS_MY_COMPUTER"), OSContent._t("VFS_TRASH")])
 	return d if d is Dictionary else get_root()
 
 # True se il nodo dato e' proprio la cartella Cestino.

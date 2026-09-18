@@ -1,0 +1,166 @@
+keys,en,it
+UI_PAUSED_TITLE,GAME PAUSED,GIOCO IN PAUSA
+UI_PAUSED_HINT,P or ESC to resume,P o ESC per riprendere
+UI_BACK_TO_MENU,Back to menu,Torna al menu
+UI_QUIT_GAME,Quit game,Chiudi il gioco
+UI_RESUME,Resume,Riprendi
+UI_GAME_OVER,GAME OVER,GAME OVER
+DEATH_SUB_1,You should not have looked away.,Non dovevi distogliere lo sguardo.
+DEATH_SUB_2,It was watching you before you noticed.,Ti osservava da prima che te ne accorgessi.
+DEATH_SUB_3,The signal went out. So did you.,Il segnale si e' spento. Anche il tuo.
+DEATH_SUB_4,Something inside the screen saw you.,Qualcosa dentro lo schermo ti ha visto.
+DEATH_SUB_5,Nobody ever answers at 52 Hz.,A 52 Hz non risponde mai nessuno.
+DEATH_SUB_6,The room was not that empty.,La stanza non era cosi' vuota.
+DEATH_CLOWN_1,The smile was the last thing you saw.,Il sorriso era l'ultima cosa che hai visto.
+DEATH_CLOWN_2,You should not have stopped watching the corridor.,Non dovevi smettere di guardare il corridoio.
+DEATH_CLOWN_3,It reached the end while you were reading.,E' arrivato in fondo mentre tu leggevi.
+DEATH_CLOWN_4,You should have looked it in the eyes.,Avresti dovuto guardarlo negli occhi.
+MENU_FILE,File,File
+MENU_EDIT,Edit,Modifica
+MENU_VIEW,View,Visualizza
+MENU_SEARCH,Search,Cerca
+MENU_TOOLS,Tools,Strumenti
+MENU_FAVORITES,Favorites,Preferiti
+NP_SAVE,Save,Salva
+NP_CLOSE,Close,Chiudi
+NP_UNDO,Undo,Annulla
+NP_CUT,Cut,Taglia
+NP_COPY,Copy,Copia
+NP_PASTE,Paste,Incolla
+NP_DELETE,Delete,Elimina
+NP_SELECT_ALL,Select All,Seleziona tutto
+IV_TITLE,Image adjustments,Regolazioni immagine
+IV_RESET,Reset,Reimposta
+IV_BRIGHTNESS,Brightness,Luminosita'
+IV_CONTRAST,Contrast,Contrasto
+IV_SATURATION,Saturation,Saturazione
+IV_BLACK_POINT,Black point,Punto nero
+IV_WHITE_POINT,White point,Punto bianco
+IV_SHARPNESS,Sharpness,Nitidezza
+IV_WINDOW,Image Viewer,Visualizzatore immagini
+EX_ADDRESS,Address:,Indirizzo:
+EX_NEW_TEXT,New Text Document,Nuovo documento di testo
+EX_OPEN,Open,Apri
+EX_OPEN_NOTEPAD,Open with Notepad,Apri con Blocco note
+EX_DELETE,Delete,Elimina
+UI_CANCEL,Cancel,Annulla
+UI_YES,Yes,Sì
+UI_NO,No,No
+SHELL_START,Start,Avvio
+SHELL_EXPLORER,File Explorer,Esplora risorse
+SHELL_SHUTDOWN,Shut Down,Spegni il PC
+NP_UNTITLED,Untitled,Senza nome
+BOOT_STARTING,Starting 52-hz Whale...,Avvio di 52-hz Whale in corso...
+BOOT_VERSION,Version 4.02,Versione 4.02
+LOGIN_TITLE,Log On to 52-hz Whale,Accesso a 52-hz Whale
+LOGIN_MSG,Type your password to log on.,Digitare la password per accedere.
+LOGIN_PASSWORD,Password:,Password:
+LOGIN_WRONG,Incorrect password. Try again.,Password non corretta. Riprovare.
+SECRET_TITLE,ACCESS DENIED,ACCESSO NEGATO
+SECRET_UNLOCK,Unlock,Sblocca
+SHUTDOWN_TITLE,Shut Down,Spegnimento
+SHUTDOWN_MSG,Are you sure you want to shut down the computer?,Sei sicuro di voler spegnere il PC?
+NOSIGNAL_TITLE,NO SIGNAL,NESSUN SEGNALE
+NOSIGNAL_SUB,Check the signal cable,Controllare il cavo del segnale
+VFS_MY_COMPUTER,My Computer,Risorse del computer
+VFS_C_DRIVE,Local Disk (C:),Disco locale (C:)
+VFS_TRASH,Recycle Bin,Cestino
+VFS_DOCUMENTS,Documents,Documenti
+VFS_PICTURES,Pictures,Immagini
+VFS_SYSTEM,System,Sistema
+VFS_NEW_DOC,New Document,Nuovo documento
+FN_DIARY,diary.txt,diario.txt
+FN_PASSWORD,password.txt,password.txt
+FN_SHOPPING,shopping_list.txt,lista_spesa.txt
+FN_HOMEPAGE,Home page.url,Pagina iniziale.url
+FN_SYSNOTES,system_notes.txt,note_sistema.txt
+FN_NOTE,note.txt,note.txt
+FN_CODE,code.txt,codice.txt
+FN_LICENCE,licence.txt,licenza.txt
+FN_ACTIVATION,activation.txt,attivazione.txt
+FN_REMINDER,reminder.txt,promemoria.txt
+FN_SCRATCH,scratch.txt,scratch.txt
+FD_BACKUP,Backup,Backup
+FD_ARCHIVE,Archive,Archivio
+FD_COPY,Copy,Copia
+FD_OLD_FILES,Old files,Vecchi file
+FD_SPARE,Spare,Riserva
+FT_DIARY,Dear diary\nI found a strange computer today.\nThe screen comes on with a hum...\n\nSomething is wrong with this room.,Caro diario\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza.
+FT_PASSWORD,Do NOT tell anyone:\n  user: admin\n  pass: hunter2\n\n(delete this file!),NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)
+FT_SHOPPING,- floppy disks\n- sticky tape\n- coffee\n- a new keyboard,- floppy disk\n- nastro adesivo\n- caffe'\n- una nuova tastiera
+FT_SYSNOTES,Maintenance complete.\nLast restart: Monday.,Manutenzione completata.\nUltimo riavvio: lunedi'.
+FT_NOTE,Automatic backup copy.\nDo not delete this folder.,Copia di sicurezza automatica.\nNon eliminare questa cartella.
+FT_CARRIER_1,Product activation code:\n  {{KEY}}\n\nKeep it somewhere safe. Do not share it.,Codice di attivazione del prodotto:\n  {{KEY}}\n\nConservare in luogo sicuro. Non divulgare a terzi.
+FT_CARRIER_2,Notes:\n- buy floppies\n- {{KEY}} (important!)\n- call Luke,Appunti:\n- comprare floppy\n- {{KEY}} (importante!)\n- chiamare Luca
+FT_CARRIER_3,Licence agreement\nSerial number: {{KEY}}\nValid for one computer only.,Licenza d'uso\nNumero di serie: {{KEY}}\nValida per un solo computer.
+FT_CARRIER_4,do not forget the code {{KEY}}\nthis time I hid it well.,non dimenticare il codice {{KEY}}\nstavolta l'ho nascosto bene.
+BR_BACK,Back,Indietro
+BR_FORWARD,Forward,Avanti
+BR_STOP,Stop,Interrompi
+BR_REFRESH,Refresh,Aggiorna
+BR_HOME,Home page,Pagina iniziale
+BR_SOURCE,Source,Origine
+BR_PRINT,Print,Stampa
+BR_ADDR_HINT,Type an address like http://www.site.com,Digita un indirizzo come http://www.sito.it
+BR_GO,Go,Vai
+BR_SOURCE_TITLE,Page source (HTML),Sorgente della pagina (HTML)
+BR_READY,Ready,Pronto
+BR_CONNECTING,Connecting to %s...,Connessione a %s in corso...
+BR_RECEIVING,Receiving data: %d KB of %d KB,Ricezione dati: %d KB di %d KB
+BR_DONE,Done: %s,Completato: %s
+BR_STOPPED,Stopped,Interrotto
+BR_COPY_ALL,Copy all,Copia tutto
+BR_VIEW_SOURCE,View source,Visualizza sorgente
+BR_NEW,New,Nuovo
+BR_OPEN,Open...,Apri...
+BR_SAVE_AS,Save As...,Salva con nome...
+BR_PRINT_DOTS,Print...,Stampa...
+BR_FIND,Find on this page...,Trova in questa pagina...
+BR_FONT,Font,Carattere
+BR_ADD_FAVORITE,Add to Favorites,Aggiungi a Preferiti
+BR_HELP_TOPICS,Help Topics,Argomenti della Guida
+BR_ABOUT,About WebNet Explorer,Informazioni su WebNet Explorer
+BR_ABOUT_NAME,WebNet Explorer 2.0,WebNet Explorer 2.0
+BR_ABOUT_VER,Version 2.0 (build 412),Versione 2.0 (build 412)
+BR_ABOUT_COPY,(c) 1998 WebNet Telematic Services,(c) 1998 WebNet Servizi Telematici
+BR_NO_SITES,(no sites),(nessun sito)
+UI_YOU_WIN,YOU WIN,HAI VINTO
+FC_1,holiday photos - archive %s,foto vacanze - archivio %s
+FC_2,scan %s - do not delete,scansione %s - non cancellare
+FC_3,backup copy %s,copia di sicurezza %s
+FC_4,%s - roll 3,%s - rullino 3
+FC_5,proof %s - to print,provino %s - da stampare
+FC_6,personal archive %s,archivio personale %s
+WS_NEWS,NewsToday,NewsOggi
+WS_NEWS_D,"News and technology, updated every day.","Cronaca e tecnologia, aggiornate ogni giorno."
+WS_WEATHER,WeatherNow,MeteoNow
+WS_WEATHER_D,Hour-by-hour weather forecasts.,Previsioni del tempo ora per ora.
+WS_GAMES,PlayWeb,GiocaWeb
+WS_GAMES_D,Shareware games to download over the modem.,Giochi shareware da scaricare col modem.
+WS_BLOG,Jack99's secret blog,Il blog segreto di Jack99
+WS_BLOG_D,Personal page. Theories and loose notes.,Pagina personale. Teorie e appunti sparsi.
+WS_FORUM,RetroForum - Message board,RetroForum - Bacheca
+WS_FORUM_D,"Floppies, 56k modems and other nostalgia.","Floppy, modem 56k e altre nostalgie."
+WS_SHOP,BuyItAll - Deals,CompraTutto - Offerte
+WS_SHOP_D,Mail order shopping at shock prices.,Acquisti per corrispondenza a prezzi shock.
+WS_MAIL,WebMail,WebMail
+WS_MAIL_D,Your mailbox. Almost out of space.,La tua casella di posta. Spazio quasi esaurito.
+WS_MYST,Mysteries.NET,Misteri.NET
+WS_MYST_D,Truths they don't want you to know.,Verita' che non vogliono farti sapere.
+WEB_HOME_TITLE,Welcome to WebNet Gateway v3.1,Benvenuto su WebNet Gateway v3.1
+WEB_HOME_TAGLINE,Your on-ramp to the Information Superhighway,Il tuo punto d'accesso all'Autostrada dell'Informazione
+WEB_HOME_FAVS,YOUR BOOKMARKS:,I TUOI PREFERITI:
+WEB_HOME_RECENT,[ RECENTLY VISITED SITES ],[ SITI VISITATI DI RECENTE ]
+WEB_HOME_FOOT1,Site registered with WebNet ISP,Sito registrato presso WebNet ISP
+WEB_HOME_FOOT2,For any problem contact your provider,Per eventuali problemi contatta il tuo provider
+WK_V_1,%s,%s
+WK_V_2,%s,%s
+WK_V_3,%s,%s
+WK_V_4,you want this %s,you want this %s
+WK_V_5,"Personal reminder: %s. Do not lose it.","Promemoria personale: %s. Non perderlo."
+WK_V_6,Side note: the code is %s.,Nota a margine: il codice e' %s.
+WK_V_7,P.S. I wrote down %s so I would not forget.,P.S. ho segnato %s per non scordarlo.
+WK_V_8,To log on remember: %s.,Per accedere ricordarsi di: %s.
+UI_START,Start,Avvia
+UI_OPTIONS,Options,Opzioni
+UI_QUIT,Quit,Esci

@@ -90,8 +90,9 @@ func _ready() -> void:
 	var kb := WebRuntime.fake_kb("forum")
 	_check("KB_COERENTI", str(WebRuntime._recent_row({"file": "forum", "name": "x", "desc": ""})).find("[%d KB]" % kb) >= 0,
 			"i KB della barra di stato non sono quelli che elenca la wiki")
+	# si confronta con la frase TRADOTTA, non con una parola italiana
 	_check("STATO_CONNESSIONE", _browser._stato_lbl.text.find(WebRuntime.host_of("forum")) >= 0
-			and _browser._stato_lbl.text.find("onnessione") >= 0,
+			and _browser._stato_lbl.text == tr("BR_CONNECTING") % WebRuntime.host_of("forum"),
 			"all'inizio la barra dice: '%s'" % _browser._stato_lbl.text)
 	var visto_kb := false
 	var visto_blocchi := false
@@ -184,7 +185,7 @@ func _ready() -> void:
 			% [str(_browser._velo.visible), _browser._velo.anchor_top])
 	_check("INTERROMPI_CONGELA", absf(_browser._velo.anchor_top - prima) <= 0.03,
 			"il velo si e' mosso dopo l'interruzione: da %.2f a %.2f" % [prima, _browser._velo.anchor_top])
-	_check("INTERROMPI_LO_DICE", _browser._stato_lbl.text.find("nterrot") >= 0,
+	_check("INTERROMPI_LO_DICE", _browser._stato_lbl.text == tr("BR_STOPPED"),
 			"la barra di stato dice: '%s'" % _browser._stato_lbl.text)
 	# ...e ricaricando si deve poter avere la pagina intera: interrompere non blocca il gioco
 	_browser._load("forum")

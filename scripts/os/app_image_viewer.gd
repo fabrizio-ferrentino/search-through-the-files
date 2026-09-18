@@ -112,31 +112,31 @@ func launch(node) -> void:
 	side.add_child(col)
 
 	var title := Label.new()
-	title.text = "Regolazioni immagine"
+	title.text = tr("IV_TITLE")
 	col.add_child(title)
 
-	_add_slider(col, "Luminosita'", "brightness", -0.7, 0.7)
-	_add_slider(col, "Contrasto", "contrast", 0.2, 8.0)
-	_add_slider(col, "Saturazione", "saturation", 0.0, 3.0)
-	_add_slider(col, "Punto nero", "black_point", 0.0, 0.95)
-	_add_slider(col, "Punto bianco", "white_point", 0.05, 1.0)
+	_add_slider(col, tr("IV_BRIGHTNESS"), "brightness", -0.7, 0.7)
+	_add_slider(col, tr("IV_CONTRAST"), "contrast", 0.2, 8.0)
+	_add_slider(col, tr("IV_SATURATION"), "saturation", 0.0, 3.0)
+	_add_slider(col, tr("IV_BLACK_POINT"), "black_point", 0.0, 0.95)
+	_add_slider(col, tr("IV_WHITE_POINT"), "white_point", 0.05, 1.0)
 	# Il passa-banda: separa la scritta dal dettaglio della foto per DIMENSIONE, non per
 	# intensita' (vedi adjust.gdshader). E' lo strumento che rende la chiave trovabile su
 	# qualsiasi foto, senza doverla ritoccare.
-	_add_slider(col, "Nitidezza", "detail", 0.0, 1.0)
+	_add_slider(col, tr("IV_SHARPNESS"), "detail", 0.0, 1.0)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(spacer)
 
 	var reset := Button.new()
-	reset.text = "Reimposta"
+	reset.text = tr("IV_RESET")
 	reset.focus_mode = Control.FOCUS_NONE
 	reset.pressed.connect(_reset)
 	col.add_child(reset)
 
 	if window:
-		window.set_title(str(data.get("name", "Visualizzatore immagini")))
+		window.set_title(str(data.get("name", tr("IV_WINDOW"))))
 
 # Posiziona la scritta-chiave nel SubViewport. Sceglie la zona piu' LISCIA della foto
 # Sovrappone la scritta-chiave alla foto, DENTRO il SubViewport di composizione (foto +

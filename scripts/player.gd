@@ -363,14 +363,14 @@ func _show_ending() -> void:
 	bg.add_child(vb)
 
 	var title := Label.new()
-	title.text = "HAI VINTO"
+	title.text = tr("UI_YOU_WIN")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 96)
 	title.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 	vb.add_child(title)
 
 	var btn := Button.new()
-	btn.text = "Torna al menu"
+	btn.text = tr("UI_BACK_TO_MENU")
 	btn.custom_minimum_size = Vector2(240, 56)
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))

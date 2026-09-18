@@ -140,18 +140,26 @@ const PHOTO_TINTS := ["5a5560", "625a52", "525e58", "5c5c4e", "565c66", "604f52"
 const PHOTO_DIR := "res://assets/textures/photos/"
 
 # Testi portatori della chiave in un FILE di testo.
-const _FILE_CARRIERS := [
-	"Codice di attivazione del prodotto:\n  {{KEY}}\n\nConservare in luogo sicuro. Non divulgare a terzi.",
-	"Appunti:\n- comprare floppy\n- {{KEY}} (importante!)\n- chiamare Luca",
-	"Licenza d'uso\nNumero di serie: {{KEY}}\nValida per un solo computer.",
-	"non dimenticare il codice {{KEY}}\nstavolta l'ho nascosto bene.",
-]
+const _FILE_CARRIERS := ["FT_CARRIER_1", "FT_CARRIER_2", "FT_CARRIER_3", "FT_CARRIER_4"]
 # Nomi possibili del file portatore (devono NON collidere coi file base del VFS).
-const _FILE_NAMES := ["codice.txt", "licenza.txt", "attivazione.txt", "promemoria.txt", "scratch.txt"]
+# CHIAVI, non nomi: il nome vero lo da' _t() quando si genera il run.
+const _FILE_NAMES := ["FN_CODE", "FN_LICENCE", "FN_ACTIVATION", "FN_REMINDER", "FN_SCRATCH"]
 # Cartelle del VFS dove puo' finire il file portatore della chiave.
-const _FILE_FOLDERS := ["Documenti", "Sistema", "Immagini"]
+const _FILE_FOLDERS := ["VFS_DOCUMENTS", "VFS_SYSTEM", "VFS_PICTURES"]
 # Nomi possibili della cartella che porta il codice nel proprio nome.
-const _FOLDER_NAMES := ["Backup", "Archivio", "Copia", "Vecchi file", "Riserva"]
+const _FOLDER_NAMES := ["FD_BACKUP", "FD_ARCHIVE", "FD_COPY", "FD_OLD_FILES", "FD_SPARE"]
+
+# Testo lungo tradotto. Nel CSV gli "a capo" si scrivono come \n (due caratteri: righe
+# vere dentro una cella complicherebbero il file), e qui si riconvertono. Vale per i testi
+# DI GIOCO; le stringhe d'interfaccia stanno su una riga e passano da _t() normale.
+# Traduzione da una funzione STATICA. Non si puo' usare tr(): quello e' un metodo di
+# Object, e tutto OSContent e' statico (lo chiamano VFS._build e i test senza istanziare
+# niente). TranslationServer.translate fa la stessa cosa passando dal singleton.
+static func _t(chiave: String) -> String:
+	return TranslationServer.translate(chiave)
+
+static func _testo(chiave: String) -> String:
+	return _t(chiave).c_unescape()
 
 # ---------------- filesystem (albero base del run) ----------------
 
@@ -167,27 +175,27 @@ static func build_filesystem() -> Dictionary:
 		_folder("Desktop", "folder", [
 			{"name": "Secret", "type": "secret", "icon": "locked"},
 		]),
-		_folder("Documenti", "folder", [
-			_text("diario.txt", "Caro diario,\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza."),
-			_text("password.txt", "NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)"),
-			_text("lista_spesa.txt", "- floppy disk\n- nastro adesivo\n- caffe'\n- una nuova tastiera"),
+		_folder(_t("VFS_DOCUMENTS"), "folder", [
+			_text(_t("FN_DIARY"), _testo("FT_DIARY")),
+			_text(_t("FN_PASSWORD"), _testo("FT_PASSWORD")),
+			_text(_t("FN_SHOPPING"), _testo("FT_SHOPPING")),
 		]),
 		# La cartella Immagini contiene le foto del run (una nasconde la chiave 4).
-		_folder("Immagini", "folder", _make_image_folder(rng)),
+		_folder(_t("VFS_PICTURES"), "folder", _make_image_folder(rng)),
 		_folder("Internet", "folder", [
-			_html("Pagina iniziale.url", "start"),
+			_html(_t("FN_HOMEPAGE"), "start"),
 		]),
-		_folder("Sistema", "folder", [
+		_folder(_t("VFS_SYSTEM"), "folder", [
 			_text("config.sys", "DEVICE=HIMEM.SYS\nDOS=HIGH,UMB\nFILES=30\nBUFFERS=20"),
 			_text("autoexec.bat", "@ECHO OFF\nPROMPT $P$G\nPATH C:\\DOS\nSET TEMP=C:\\TEMP"),
-			_text("note_sistema.txt", "Manutenzione completata.\nUltimo riavvio: lunedi'."),
+			_text(_t("FN_SYSNOTES"), _testo("FT_SYSNOTES")),
 		]),
 	]
 	_place_file_key(c_children, rng)     # chiave 1
 	_place_folder_key(c_children, rng)   # chiave 2
-	return _folder("Risorse del computer", "computer", [
-		_folder("Disco locale (C:)", "folder", c_children),
-		_folder("Cestino", "trash", []),
+	return _folder(_t("VFS_MY_COMPUTER"), "computer", [
+		_folder(_t("VFS_C_DRIVE"), "folder", c_children),
+		_folder(_t("VFS_TRASH"), "trash", []),
 	])
 
 # Chiave 1: file portatore (nome + contenuto a caso) in una cartella a caso.
@@ -195,11 +203,11 @@ static func _place_file_key(c_children: Array, rng: RandomNumberGenerator) -> vo
 	var label := GameManager.key_label(KEY_FILE)
 	if label == "":
 		return
-	var folder := _find_child(c_children, _pick(_FILE_FOLDERS, rng))
+	var folder := _find_child(c_children, _t(_pick(_FILE_FOLDERS, rng)))
 	if folder.is_empty():
 		return
-	var name: String = _pick(_FILE_NAMES, rng)
-	var content: String = _pick(_FILE_CARRIERS, rng)
+	var name: String = _t(_pick(_FILE_NAMES, rng))
+	var content: String = _testo(_pick(_FILE_CARRIERS, rng))
 	folder["children"].append(_text(name, content.replace(KEY_SLOT, label)))
 	GameManager.note_key(KEY_FILE, "%s (in %s)" % [name, str(folder.get("name", "?"))])
 
@@ -209,9 +217,9 @@ static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> 
 	var label := GameManager.key_label(KEY_FOLDER)
 	if label == "":
 		return
-	var base: String = _pick(_FOLDER_NAMES, rng)
+	var base: String = _t(_pick(_FOLDER_NAMES, rng))
 	var folder := _folder("%s %s" % [base, label], "folder", [
-		_text("note.txt", "Copia di sicurezza automatica.\nNon eliminare questa cartella."),
+		_text(_t("FN_NOTE"), _testo("FT_NOTE")),
 	])
 	c_children.insert(rng.randi_range(0, c_children.size()), folder)
 	GameManager.note_key(KEY_FOLDER, "%s (nome cartella, in C:)" % str(folder.get("name", "?")))
@@ -296,15 +304,8 @@ static func _make_photos(rng: RandomNumberGenerator) -> Array:
 # suo programma di fotoritocco, col codice dentro. Non si dice mai "codice" o "chiave": chi
 # legge deve riconoscerlo da solo.
 static func _commento_file(label: String, rng: RandomNumberGenerator) -> String:
-	var modelli := [
-		"foto vacanze - archivio %s",
-		"scansione %s - non cancellare",
-		"copia di sicurezza %s",
-		"%s - rullino 3",
-		"provino %s, da stampare",
-		"archivio personale %s",
-	]
-	return (str(_pick(modelli, rng)) % label)
+	var modelli := ["FC_1", "FC_2", "FC_3", "FC_4", "FC_5", "FC_6"]
+	return (_t(str(_pick(modelli, rng))) % label)
 
 # Come si VEDE un'immagine aperta col Blocco note: l'intestazione JFIF, poi byte illeggibili,
 # col commento in chiaro in mezzo. Non e' un vero JPEG (le foto del run sono generate a

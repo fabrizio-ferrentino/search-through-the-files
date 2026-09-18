@@ -26,7 +26,7 @@ func launch(arg) -> void:
 	# --- barra dei menu ---
 	var menubar := HBoxContainer.new()
 	menubar.add_theme_constant_override("separation", 2)
-	for m in ["File", "Modifica", "Visualizza", "Strumenti", "?"]:
+	for m in [tr("MENU_FILE"), tr("MENU_EDIT"), tr("MENU_VIEW"), tr("MENU_TOOLS"), "?"]:
 		var mb := Button.new()
 		mb.text = m
 		mb.flat = true
@@ -55,7 +55,7 @@ func launch(arg) -> void:
 	addrbar.add_theme_constant_override("separation", 6)
 	root.add_child(addrbar)
 	var addr_lbl := Label.new()
-	addr_lbl.text = "Indirizzo:"
+	addr_lbl.text = tr("EX_ADDRESS")
 	addr_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	addrbar.add_child(addr_lbl)
 
@@ -215,20 +215,20 @@ func _go_up() -> void:
 func _on_empty_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
-			_show_menu([["Nuovo documento di testo", _new_text_file]])
+			_show_menu([[tr("EX_NEW_TEXT"), _new_text_file]])
 		elif event.button_index == MOUSE_BUTTON_LEFT and _selected:
 			_selected.set_selected(false)
 			_selected = null
 
 func _on_item_context(item: DesktopItem) -> void:
 	var data: Dictionary = item.data
-	var voci: Array = [["Apri", func(): _on_activated(data)]]
+	var voci: Array = [[tr("EX_OPEN"), func(): _on_activated(data)]]
 	# "Apri con Blocco note" su un'immagine: mostra i BYTE del file. C'e' perche' e' d'epoca
 	# (era il modo di sbirciare dentro un file senza strumenti) e perche' una delle chiavi
 	# del run puo' stare proprio la', nel commento del file, invece che nei pixel.
 	if str(data.get("filetype", "")) == "image":
-		voci.append(["Apri con Blocco note", func(): os.open_app("notepad", data)])
-	voci.append(["Elimina", func(): _delete_item(data)])
+		voci.append([tr("EX_OPEN_NOTEPAD"), func(): os.open_app("notepad", data)])
+	voci.append([tr("EX_DELETE"), func(): _delete_item(data)])
 	_show_menu(voci)
 
 func _name_exists(n: String) -> bool:

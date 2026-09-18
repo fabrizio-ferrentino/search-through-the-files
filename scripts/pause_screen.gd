@@ -9,7 +9,8 @@ extends CanvasLayer
 # o col pulsante Riprendi. NB: mentre l'albero e' in pausa player.gd non riceve piu'
 # input (e' in pausa anche lui), percio' il tasto per riprendere va ascoltato QUI.
 
-const TITOLO := "GIOCO IN PAUSA"
+# Il titolo si traduce quando si costruisce la schermata, non qui: una const non puo chiamare tr().
+const TITOLO_KEY := "UI_PAUSED_TITLE"
 
 # Emesso quando si riprende: serve a chi l'ha aperta per tornare allo stato di prima.
 signal resumed
@@ -60,14 +61,14 @@ func _costruisci() -> void:
 
 	var titolo := Label.new()
 	titolo.name = "Titolo"
-	titolo.text = TITOLO
+	titolo.text = tr(TITOLO_KEY)
 	titolo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	titolo.add_theme_font_size_override("font_size", 86)
 	titolo.add_theme_color_override("font_color", Color(0.88, 0.88, 0.88))
 	vb.add_child(titolo)
 
 	var nota := Label.new()
-	nota.text = "P o ESC per riprendere"
+	nota.text = tr("UI_PAUSED_HINT")
 	nota.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nota.add_theme_font_size_override("font_size", 26)
 	nota.add_theme_color_override("font_color", Color(0.62, 0.62, 0.62))
@@ -77,14 +78,17 @@ func _costruisci() -> void:
 	stacco.custom_minimum_size = Vector2(0, 26)
 	vb.add_child(stacco)
 
-	vb.add_child(_pulsante("Riprendi", riprendi))
-	vb.add_child(_pulsante("Torna al menu", _al_menu))
-	vb.add_child(_pulsante("Chiudi il gioco", _chiudi))
+	vb.add_child(_pulsante("Riprendi", "UI_RESUME", riprendi))
+	vb.add_child(_pulsante("AlMenu", "UI_BACK_TO_MENU", _al_menu))
+	vb.add_child(_pulsante("Chiudi", "UI_QUIT_GAME", _chiudi))
 
-func _pulsante(testo: String, azione: Callable) -> Button:
+# Il NOME del nodo non si traduce mai: e' un identificatore, e chi cerca un pulsante (i
+# test, o chiunque faccia find_child) non deve dipendere dalla lingua in cui gira il gioco.
+# Si traduce solo il testo.
+func _pulsante(nome: String, chiave: String, azione: Callable) -> Button:
 	var b := Button.new()
-	b.name = testo
-	b.text = testo
+	b.name = nome
+	b.text = tr(chiave)
 	b.custom_minimum_size = Vector2(280, 52)
 	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b.add_theme_font_size_override("font_size", 24)

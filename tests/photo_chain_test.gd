@@ -43,7 +43,9 @@ func _ready() -> void:
 	for i in range(5):
 		await get_tree().process_frame
 
-	var immagini := _trova(VFS.get_root(), "Immagini")
+	# Il nome della cartella e' TRADOTTO (locale/ui.csv): cercarlo scritto in italiano
+	# funzionava solo finche' il gioco era in italiano. La chiave invece non cambia.
+	var immagini := _trova(VFS.get_root(), OSContent._t("VFS_PICTURES"))
 	var foto: Dictionary = {}
 	for c in immagini.get("children", []):
 		if str(c.get("code", "")) != "":

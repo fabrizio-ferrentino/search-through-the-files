@@ -10,20 +10,20 @@ const JUMPSCARE_TIME := 1.2
 
 # Sottotitoli placeholder. In futuro varieranno in base al fantasma (cause).
 const SUBTITLES := [
-	"Non dovevi distogliere lo sguardo.",
-	"Ti osservava da prima che te ne accorgessi.",
-	"Il segnale si e' spento. Anche il tuo.",
-	"Qualcosa, dentro lo schermo, ti ha visto.",
-	"A 52 Hz non risponde mai nessuno.",
-	"La stanza non era cosi' vuota.",
+	"DEATH_SUB_1",
+	"DEATH_SUB_2",
+	"DEATH_SUB_3",
+	"DEATH_SUB_4",
+	"DEATH_SUB_5",
+	"DEATH_SUB_6",
 ]
 
 # Battute specifiche del Clown (M4): scelte quando cause == "clown".
 const CLOWN_SUBTITLES := [
-	"Il sorriso era l'ultima cosa che hai visto.",
-	"Non dovevi smettere di guardare il corridoio.",
-	"E' arrivato in fondo mentre tu leggevi.",
-	"Avresti dovuto guardarlo negli occhi.",
+	"DEATH_CLOWN_1",
+	"DEATH_CLOWN_2",
+	"DEATH_CLOWN_3",
+	"DEATH_CLOWN_4",
 ]
 
 var _shake := false
@@ -132,14 +132,15 @@ func _show_gameover() -> void:
 	scr.add_child(vb)
 
 	var title := Label.new()
-	title.text = "GAME OVER"
+	title.text = tr("UI_GAME_OVER")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 110)
 	title.add_theme_color_override("font_color", Color(0.75, 0.05, 0.05))
 	vb.add_child(title)
 
 	var sub := Label.new()
-	sub.text = _pick_subtitle(cause)
+	# _pick_subtitle ritorna una CHIAVE: la frase la sceglie il seme, la lingua il giocatore
+	sub.text = tr(_pick_subtitle(cause))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_font_size_override("font_size", 30)
 	sub.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
@@ -150,7 +151,7 @@ func _show_gameover() -> void:
 	vb.add_child(spacer)
 
 	var btn := Button.new()
-	btn.text = "Torna al menu"
+	btn.text = tr("UI_BACK_TO_MENU")
 	btn.custom_minimum_size = Vector2(240, 56)
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn.pressed.connect(func():
