@@ -358,15 +358,24 @@ func _on_meta(meta) -> void:
 # mangia il clic destro; _input gira prima della distribuzione gui, e cosi' la
 # selezione sopravvive al clic destro). Ctrl+C/Ctrl+A: solo quando il focus non
 # e' in un campo di testo (barra indirizzo, ispettore), che si copia da solo.
+# Input GLOBALE (non _gui_input): serve perche' il tasto destro e Ctrl+C devono funzionare
+# sulla pagina senza che il RichTextLabel abbia il fuoco.
+# Il prezzo e' che _input arriva SEMPRE, anche a finestra ridotta o coperta, quindi qui si
+# deve controllare a mano di essere davvero sullo schermo -- vedi _in_primo_piano().
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-		if window != null and not window.active:
+		if not _sotto_il_mouse():
 			return
 		if _rtl != null and _rtl.get_global_rect().has_point(get_global_mouse_position()):
+			# come in Windows: il destro ATTIVA la finestra e apre il menu in un colpo solo.
+			# Senza questo il primo destro su una finestra non attiva si perdeva a darle il
+			# fuoco e bisognava cliccare due volte.
+			if window != null and not window.active and os != null:
+				os.focus_window(window)
 			_show_ctx()
 			get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and event.ctrl_pressed:
-		if window != null and not window.active:
+		if not _in_primo_piano():
 			return
 		var focus := get_viewport().gui_get_focus_owner()
 		if focus is LineEdit or focus is TextEdit:
@@ -376,6 +385,30 @@ func _input(event: InputEvent) -> void:
 		elif event.keycode == KEY_A:
 			_rtl.select_all()
 			get_viewport().set_input_as_handled()
+
+# Per la TASTIERA (Ctrl+C, Ctrl+A): comanda il FUOCO, non il mouse.
+# "attiva" da sola non basta -- una finestra RIDOTTA A ICONA e' nascosta ma i suoi nodi
+# restano nell'albero, con le stesse coordinate di prima, quindi senza questo controllo il
+# browser continuava a rispondere da dietro e a consumare l'evento
+# (get_viewport().set_input_as_handled()), lasciando desktop e altre finestre a bocca
+# asciutta. is_visible_in_tree() diventa falso appena un antenato si nasconde.
+func _in_primo_piano() -> bool:
+	if not is_visible_in_tree():
+		return false
+	return window == null or window.active
+
+# Per il MOUSE: comanda chi sta sotto il cursore, non chi ha il fuoco.
+# Lo si chiede al desktop (finestra_sotto) invece di guardare window.active perche' _input
+# gira PRIMA che il desktop assegni il fuoco: al primo destro su una finestra non ancora
+# attiva "sono io l'attiva?" risponderebbe sempre no, e il clic andrebbe sprecato.
+# Passando dal desktop si rispetta anche lo z-order, cosi' una finestra COPERTA da un'altra
+# non si prende un clic che non e' suo.
+func _sotto_il_mouse() -> bool:
+	if not is_visible_in_tree():
+		return false
+	if window == null or os == null:
+		return true
+	return os.finestra_sotto(get_global_mouse_position()) == window
 
 # ---------------- copia ----------------
 

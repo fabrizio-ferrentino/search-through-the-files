@@ -327,6 +327,26 @@ func focus_window(win: OSWindow) -> void:
 		w.set_active(w == win)
 	_update_taskbar()
 
+# Quando la finestra davanti sparisce -- ridotta a icona, chiusa, o riabbassata dal suo
+# pulsante nella taskbar -- il fuoco passa a quella SOTTO, come in Win95.
+# Prima restava semplicemente "nessuna finestra attiva", che e' uno stato che sul desktop
+# vero non esiste, e si vedeva: chi legge l'input GLOBALE risponde solo se la sua finestra
+# e' attiva (BrowserApp._in_primo_piano), quindi col browser dietro una cartella appena
+# ridotta il tasto destro non faceva niente finche' non ci si cliccava sopra col sinistro
+# (segnalato il 19/09/2026).
+# L'ordine dei figli di window_layer E' lo z-order: l'ULTIMO visibile e' quello davanti.
+func _attiva_finestra_sotto() -> void:
+	var sotto: OSWindow = null
+	for c in window_layer.get_children():
+		var w := c as OSWindow
+		if w != null and is_instance_valid(w) and w.visible and not w.is_queued_for_deletion():
+			sotto = w
+	if sotto != null:
+		focus_window(sotto)
+	else:
+		active_window = null
+		_update_taskbar()
+
 func _add_taskbar_button(win: OSWindow) -> void:
 	var b := _icon_button(win.win_title, win.icon_kind, TASKBAR_H - 8)
 	b.toggle_mode = true
@@ -344,16 +364,21 @@ func _on_taskbar_pressed(win: OSWindow) -> void:
 	elif win == active_window:
 		win.hide()
 		win.set_active(false)
-		active_window = null
-		_update_taskbar()
+		_attiva_finestra_sotto()
 	else:
 		focus_window(win)
 
 func _on_window_min(win: OSWindow) -> void:
 	win.hide()
+	# ...e SMETTE di essere quella attiva. Nasconderla non bastava: "active" restava true,
+	# e un'app che intercetta l'input globale (BrowserApp._input col tasto destro) si credeva
+	# ancora in primo piano, si mangiava il clic e sul desktop il menu non si apriva piu'
+	# (segnalato il 19/09/2026). Una finestra che non si vede non e' attiva, punto.
+	win.set_active(false)
 	if active_window == win:
-		active_window = null
-	_update_taskbar()
+		_attiva_finestra_sotto()
+	else:
+		_update_taskbar()
 
 func _on_window_closed(win: OSWindow) -> void:
 	windows.erase(win)
@@ -362,7 +387,9 @@ func _on_window_closed(win: OSWindow) -> void:
 		taskbar_buttons.erase(win)
 	if active_window == win:
 		active_window = null
-	_update_taskbar()
+		_attiva_finestra_sotto()
+	else:
+		_update_taskbar()
 
 func _on_title_changed(win: OSWindow) -> void:
 	if taskbar_buttons.has(win):
@@ -523,7 +550,11 @@ func _input(event: InputEvent) -> void:
 	if _modal_layer != null and is_instance_valid(_modal_layer):
 		return
 
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	# ANCHE il tasto destro porta in primo piano la finestra sotto il cursore, non solo il
+	# sinistro: e' quello che fa Windows, e senza di questo su una finestra visibile ma non
+	# attiva il primo destro andava sprecato a darle il fuoco (chi legge l'input globale
+	# risponde solo se la sua finestra e' attiva) e serviva un clic in piu'.
+	if event is InputEventMouseButton and event.pressed 			and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT):
 		var mp := get_global_mouse_position()
 		# chiudi il menu Start se si clicca fuori
 		if start_menu and start_menu.visible:
@@ -533,18 +564,27 @@ func _input(event: InputEvent) -> void:
 		# porta in primo piano la finestra sotto il cursore
 		_focus_under_mouse(mp)
 
-func _focus_under_mouse(mp: Vector2) -> void:
-	# itera nell'ordine visivo (z-order): l'ultimo figlio e' quello in primo piano
+# La finestra sotto un punto, o null. Pubblica perche' serve anche alle app: chi legge
+# l'input GLOBALE (BrowserApp col tasto destro) non puo' fidarsi di "sono la finestra
+# attiva?" -- _input gira PRIMA che il desktop assegni il fuoco, quindi al primo destro su
+# una finestra non attiva la risposta sarebbe sempre no. Questa domanda invece e' vera
+# subito, e rispetta lo z-order: se due finestre si sovrappongono, vince quella davanti.
+func finestra_sotto(mp: Vector2) -> OSWindow:
 	var kids := window_layer.get_children()
 	for i in range(kids.size() - 1, -1, -1):
 		var w := kids[i] as OSWindow
 		if w != null and w.visible and w.get_global_rect().has_point(mp):
-			if w != active_window:
-				focus_window(w)
-			else:
-				# assicura che resti in cima
-				window_layer.move_child(w, -1)
-			return
+			return w
+	return null
+
+func _focus_under_mouse(mp: Vector2) -> void:
+	var w := finestra_sotto(mp)
+	if w != null:
+		if w != active_window:
+			focus_window(w)
+		else:
+			# assicura che resti in cima
+			window_layer.move_child(w, -1)
 
 # Si sta scrivendo dentro l'OS? Chi ascolta i tasti globali della stanza (la
 # PAUSA, tasto P) deve stare zitto mentre il fuoco e' su un campo di testo: nel

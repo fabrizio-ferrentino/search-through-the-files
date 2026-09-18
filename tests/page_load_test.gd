@@ -39,6 +39,13 @@ func _ready() -> void:
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)
 	BrowserApp.attesa_scala = 1.0        # qui l'attesa vera E' l'oggetto del test
+	# Gli interruttori li decide il proprietario nel file, e questo test NON deve dipendere
+	# da dove li ha lasciati: quasi tutto quello che c'e' qui prova il comportamento con
+	# l'attesa accesa e la scoperta progressiva, quindi li si fissa. (Successo davvero: con
+	# SCOPERTA_GRADUALE lasciato a false tre prove diventavano rosse pur essendo il gioco
+	# perfettamente sano.) L'ultima sezione li spegne e riaccende apposta, per provarli.
+	BrowserApp.ATTESA_ATTIVA = true
+	BrowserApp.SCOPERTA_GRADUALE = true
 
 	_sub = SubViewport.new()
 	_sub.size = VP_SIZE
