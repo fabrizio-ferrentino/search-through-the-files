@@ -293,6 +293,7 @@ func open_window(title: String, win_size: Vector2, icon_kind: String) -> OSWindo
 	window_layer.add_child(win)
 	win.setup(title, win_size, icon_kind)
 	win.position = Vector2(90 + _cascade * 28, 60 + _cascade * 28)
+	win.assesta()      # nasce dentro lo schermo, comunque sia grande e dovunque cada
 	_cascade = (_cascade + 1) % 7
 	win.closed.connect(_on_window_closed)
 	win.minimized.connect(_on_window_min)

@@ -159,13 +159,47 @@ func _gui_input(event: InputEvent) -> void:
 			_apply_resize(get_global_mouse_position())
 			accept_event()
 		elif _dragging:
-			var p := get_global_mouse_position() - _drag_off
-			# tieni la barra titolo dentro lo schermo
-			var screen: Vector2 = get_parent_control().size if get_parent_control() else size
-			p.x = clamp(p.x, -size.x + 80, screen.x - 40)
-			p.y = clamp(p.y, 0.0, screen.y - 36)
-			global_position = p
+			# dal globale alle coordinate del genitore (e' li' che vive position), poi
+			# dentro lo schermo: la finestra si ferma al bordo, non ci passa sotto
+			var p := get_global_mouse_position() - _drag_off - (global_position - position)
+			position = _dentro(p, size)
 			accept_event()
+
+# ---------------- il confine dello schermo ----------------
+# Il monitor del gioco e' un 4:3 FISSO: quello che una finestra si porta oltre il bordo
+# non si vede piu' e col mouse non si recupera -- non c'e' un secondo schermo dove
+# spingerla, ne' un desktop piu' grande da scorrere. Percio' trascinamento e
+# ridimensionamento si fermano al bordo, come succede su un PC vero (richiesta del
+# proprietario, 20/09/2026).
+#
+# L'AREA UTILE e' lo schermo meno la barra delle applicazioni: la stessa che riempie
+# l'ingrandimento, cosi' una finestra spinta in basso e una ingrandita arrivano
+# esattamente allo stesso punto invece di fermarsi a due altezze diverse.
+func area_utile() -> Rect2:
+	var p := get_parent_control()
+	var s: Vector2 = p.size if p != null else size
+	return Rect2(Vector2.ZERO, Vector2(s.x, maxf(0.0, s.y - OSDesktop.TASKBAR_H)))
+
+# La posizione piu' vicina a quella chiesta che tiene TUTTA la finestra dentro l'area.
+# Se la finestra e' piu' grande dell'area resta incollata in alto a sinistra: meglio
+# perdere il bordo destro che la barra del titolo, che e' l'unica presa che ha.
+func _dentro(p: Vector2, s: Vector2) -> Vector2:
+	var a := area_utile()
+	return Vector2(
+		clampf(p.x, a.position.x, maxf(a.position.x, a.end.x - s.x)),
+		clampf(p.y, a.position.y, maxf(a.position.y, a.end.y - s.y)))
+
+# Rimette la finestra dentro lo schermo. La chiama il desktop appena l'ha aperta, e
+# serve a chiunque cambi posizione o dimensione da codice: il confine e' rispettato
+# da chi trascina, ma niente impedisce a un'app di piazzarsi fuori.
+func assesta() -> void:
+	if _maximized:
+		return
+	var a := area_utile()
+	var minimo := custom_minimum_size
+	size = Vector2(clampf(size.x, minimo.x, maxf(minimo.x, a.size.x)),
+			clampf(size.y, minimo.y, maxf(minimo.y, a.size.y)))
+	position = _dentro(position, size)
 
 # --- Ridimensionamento in stile Win95: si "afferra" il bordo 3D della finestra ---
 
@@ -205,16 +239,26 @@ func _apply_resize(gm: Vector2) -> void:
 	var minh := custom_minimum_size.y
 	var new_pos := r.position
 	var new_size := r.size
+	# ...e nemmeno tirando un bordo si esce dallo schermo: il lato che si trascina si
+	# ferma al confine, quello opposto resta inchiodato dov'e' (altrimenti la finestra
+	# scivolerebbe mentre la si allarga)
+	var a := area_utile()
 	if _resize_edges & EDGE_L:
 		new_size.x = maxf(minw, r.size.x - d.x)
 		new_pos.x = r.position.x + r.size.x - new_size.x
+		if new_pos.x < a.position.x:
+			new_pos.x = a.position.x
+			new_size.x = maxf(minw, r.position.x + r.size.x - new_pos.x)
 	elif _resize_edges & EDGE_R:
-		new_size.x = maxf(minw, r.size.x + d.x)
+		new_size.x = clampf(r.size.x + d.x, minw, maxf(minw, a.end.x - new_pos.x))
 	if _resize_edges & EDGE_T:
 		new_size.y = maxf(minh, r.size.y - d.y)
 		new_pos.y = r.position.y + r.size.y - new_size.y
+		if new_pos.y < a.position.y:
+			new_pos.y = a.position.y
+			new_size.y = maxf(minh, r.position.y + r.size.y - new_pos.y)
 	elif _resize_edges & EDGE_B:
-		new_size.y = maxf(minh, r.size.y + d.y)
+		new_size.y = clampf(r.size.y + d.y, minh, maxf(minh, a.end.y - new_pos.y))
 	position = new_pos
 	size = new_size
 
@@ -256,6 +300,7 @@ func toggle_max() -> void:
 		_maximized = false
 		position = _restore_rect.position
 		size = _restore_rect.size
+		assesta()      # il rettangolo salvato era buono per lo schermo di allora
 	else:
 		_maximized = true
 		_restore_rect = Rect2(position, size)
