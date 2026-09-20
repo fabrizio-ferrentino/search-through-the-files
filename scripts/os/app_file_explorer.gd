@@ -7,7 +7,15 @@ var window
 
 var _folder: Dictionary
 var _history: Array = []          # per il pulsante "Indietro"
+# Larghezza di una casella. I nomi di SISTEMA sono in 8.3 maiuscolo e a 92 px
+# "AUTOEXEC.BAT" andava a capo in mezzo all'estensione ("CONFIG.SY / S"): illeggibile, e
+# mai visto su un PC dell'epoca. Le lettere maiuscole larghe (COMMAND.COM) vogliono 132.
+const CELLA_W := 132
+const CELLA_SEP := 8
+
 var _grid: GridContainer
+var _scroll: ScrollContainer
+var _in_disposizione := false
 var _addr: Label
 var _combo_icon: OSIcon
 var _items: Array = []
@@ -101,7 +109,8 @@ func launch(arg) -> void:
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(panel)
 
-	var scroll := ScrollContainer.new()
+	_scroll = ScrollContainer.new()
+	var scroll := _scroll
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scroll.offset_left = 4
 	scroll.offset_top = 4
@@ -110,7 +119,7 @@ func launch(arg) -> void:
 	panel.add_child(scroll)
 
 	_grid = GridContainer.new()
-	_grid.columns = 6
+	_grid.columns = 1                # vero valore: _aggiorna_colonne(), sulla larghezza
 	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_grid.add_theme_constant_override("h_separation", 8)
 	_grid.add_theme_constant_override("v_separation", 8)
@@ -118,6 +127,7 @@ func launch(arg) -> void:
 	_grid.mouse_filter = Control.MOUSE_FILTER_PASS
 	scroll.add_child(_grid)
 	scroll.gui_input.connect(_on_empty_input)
+	scroll.resized.connect(_aggiorna_colonne)
 
 	_build_ctx()
 	_folder = arg if arg is Dictionary else VFS.get_root()
@@ -165,14 +175,30 @@ func _refresh() -> void:
 	for c in _grid.get_children():
 		c.queue_free()
 	_items.clear()
+	_aggiorna_colonne()
 	for child in _folder.get("children", []):
 		var item := DesktopItem.new()
-		item.setup(child, 40, 92, Win95.C_TEXT)
+		item.setup(child, 40, CELLA_W, Win95.C_TEXT)
 		item.activated.connect(_on_activated)
 		item.picked.connect(_on_picked)
 		item.context_requested.connect(_on_item_context)
 		_grid.add_child(item)
 		_items.append(item)
+
+# Quante icone per riga ci stanno DAVVERO nella finestra. Con un numero fisso di colonne
+# una finestra stretta tagliava l'ultima (e ne usciva una barra di scorrimento orizzontale,
+# che un Esplora non ha mai avuto in vista a icone): qui invece si ridispongono, come
+# facevano loro. La guardia serve perche' cambiare le colonne cambia l'ingombro del
+# contenitore, che puo' riemettere "resized" -- la stessa trappola della barra delle
+# applicazioni (desktop.gd::_disponi_barra).
+func _aggiorna_colonne() -> void:
+	if _in_disposizione or _scroll == null or _grid == null:
+		return
+	_in_disposizione = true
+	var larga: float = _scroll.size.x
+	var quante: int = int(floor((larga + CELLA_SEP) / float(CELLA_W + CELLA_SEP)))
+	_grid.columns = maxi(1, quante)
+	_in_disposizione = false
 
 func _on_picked(item: DesktopItem) -> void:
 	if _selected and _selected != item:

@@ -144,8 +144,17 @@ const _FILE_CARRIERS := ["FT_CARRIER_1", "FT_CARRIER_2", "FT_CARRIER_3", "FT_CAR
 # Nomi possibili del file portatore (devono NON collidere coi file base del VFS).
 # CHIAVI, non nomi: il nome vero lo da' _t() quando si genera il run.
 const _FILE_NAMES := ["FN_CODE", "FN_LICENCE", "FN_ACTIVATION", "FN_REMINDER", "FN_SCRATCH"]
-# Cartelle del VFS dove puo' finire il file portatore della chiave.
-const _FILE_FOLDERS := ["VFS_DOCUMENTS", "VFS_SYSTEM", "VFS_PICTURES"]
+# Nomi di SISTEMA: non si traducono, e stanno in 8.3 maiuscolo. Non e' pigrizia -- anche
+# nelle versioni italiane dell'epoca C:\WINDOWS\SYSTEM restava tale, e solo le cartelle
+# dell'utente (Documenti, Programmi, Menu Avvio) erano tradotte. Quel contrasto fra nomi
+# corti maiuscoli e nomi lunghi tradotti e' meta' dell'aria d'epoca.
+const DIR_SISTEMA := "WHALE"        # la cartella del sistema operativo (il C:\WINDOWS locale)
+const DIR_SYSTEM := "SYSTEM"
+const DIR_FONTS := "FONTS"
+const DIR_TEMP := "TEMP"
+# Nomi di prodotto: marchi inventati, uguali in ogni lingua (come lo erano i veri).
+const APP_WEB := "WebNet Explorer"
+const APP_FOTO := "PhotoLab 2.0"
 # Nomi possibili della cartella che porta il codice nel proprio nome.
 const _FOLDER_NAMES := ["FD_BACKUP", "FD_ARCHIVE", "FD_COPY", "FD_OLD_FILES", "FD_SPARE"]
 
@@ -169,50 +178,131 @@ static func _testo(chiave: String) -> String:
 # VFS._build(), che aggiunge poi i back-reference _parent.
 static func build_filesystem() -> Dictionary:
 	var rng := _run_rng(VFS_SALT)
-	var c_children: Array = [
-		# La cartella protetta vive sul Desktop: l'icona "Documenti" e' un'esca
-		# (sembra normale ma e' la cartella segreta da sbloccare, type "secret").
-		_folder("Desktop", "folder", [
-			{"name": "Secret", "type": "secret", "icon": "locked"},
+	var c_children: Array = _disco_c(rng)
+	_place_file_key(c_children, rng)     # chiave 1
+	_place_folder_key(c_children, rng)   # chiave 2
+	# RISORSE DEL COMPUTER = le UNITA', non una cartella sola. Un "Risorse del computer"
+	# con dentro il solo disco C: e' la cosa che tradisce il tema piu' in fretta: nel '98
+	# la prima finestra che si apriva elencava floppy, disco, CD-ROM e Cestino. A: e D:
+	# sono vuoti apposta (nessun dischetto dentro), ma ci sono.
+	return _folder(_t("VFS_MY_COMPUTER"), "computer", [
+		_folder(_t("VFS_A_DRIVE"), "floppy", []),
+		_folder(_t("VFS_C_DRIVE"), "hdd", c_children),
+		_folder(_t("VFS_D_DRIVE"), "cdrom", []),
+		_folder(_t("VFS_TRASH"), "trash", []),
+	])
+
+# La radice di C:, come la trovavi accendendo un PC dell'epoca: i file d'avvio SULLA
+# RADICE (prima stavano in una cartella "Sistema", dove nessun PC li ha mai avuti), la
+# cartella del sistema operativo, i programmi, i documenti e la TEMP.
+static func _disco_c(rng: RandomNumberGenerator) -> Array:
+	return [
+		_cartella_sistema(),
+		_folder(_t("VFS_PROGRAMS"), "folder", [
+			_folder(APP_WEB, "folder", [
+				_binario("WEBNET.EXE"),
+				_text(_t("FN_APP_README"), _testo("FT_APP_README")),
+			]),
+			_folder(APP_FOTO, "folder", [
+				_binario("PHOTOLAB.EXE"),
+				_binario("PLFILTER.DLL"),
+			]),
 		]),
 		_folder(_t("VFS_DOCUMENTS"), "folder", [
+			# le foto del run stanno qui dentro: una nasconde la chiave 4
+			_folder(_t("VFS_PICTURES"), "folder", _make_image_folder(rng)),
 			_text(_t("FN_DIARY"), _testo("FT_DIARY")),
 			_text(_t("FN_PASSWORD"), _testo("FT_PASSWORD")),
 			_text(_t("FN_SHOPPING"), _testo("FT_SHOPPING")),
 		]),
-		# La cartella Immagini contiene le foto del run (una nasconde la chiave 4).
-		_folder(_t("VFS_PICTURES"), "folder", _make_image_folder(rng)),
-		_folder("Internet", "folder", [
+		_folder(DIR_TEMP, "folder", [
+			_binario("~MF0A12.TMP"),
+		]),
+		_text("AUTOEXEC.BAT", "@ECHO OFF\nPROMPT $P$G\nPATH C:\\" + DIR_SISTEMA
+				+ ";C:\\" + DIR_SISTEMA + "\\" + DIR_SYSTEM + "\nSET TEMP=C:\\" + DIR_TEMP
+				+ "\nLH C:\\" + DIR_SISTEMA + "\\MOUSE.COM"),
+		_text("CONFIG.SYS", "DEVICE=C:\\" + DIR_SISTEMA + "\\HIMEM.SYS\nDOS=HIGH,UMB\n"
+				+ "FILES=30\nBUFFERS=20\nSTACKS=9,256"),
+		_text("BOOTLOG.TXT", "Loading Device = C:\\" + DIR_SISTEMA + "\\HIMEM.SYS\n"
+				+ "LoadSuccess   = C:\\" + DIR_SISTEMA + "\\HIMEM.SYS\n"
+				+ "Loading Device = C:\\" + DIR_SISTEMA + "\\VMM32.VXD\n"
+				+ "LoadSuccess   = C:\\" + DIR_SISTEMA + "\\VMM32.VXD\n"
+				+ "SysCritInit   = OK\nInitComplete  = OK"),
+		_binario("COMMAND.COM"),
+		_binario("IO.SYS"),
+	]
+
+# C:\WHALE -- la cartella del sistema, al posto di C:\WINDOWS. Dentro c'e' quello che
+# Windows 95 ci teneva: SYSTEM, FONTS, TEMP, il Desktop, il Menu Avvio, i Preferiti e i
+# file .INI. Il Desktop sta QUI, non nella radice di C:, perche' e' li' che stava davvero
+# (ed e' la cartella che VFS.get_desktop() cerca per disegnare le icone sulla scrivania).
+static func _cartella_sistema() -> Dictionary:
+	return _folder(DIR_SISTEMA, "folder", [
+		_folder(DIR_SYSTEM, "folder", [
+			_binario("VMM32.VXD"), _binario("KRNL386.EXE"), _binario("GDI.EXE"),
+			_binario("USER.EXE"), _binario("MOUSE.DRV"), _binario("SOUND.DRV"),
+		]),
+		_folder(DIR_FONTS, "folder", [
+			_binario("SYSTEM.FON"), _binario("COURIER.FON"), _binario("ARIAL.TTF"),
+		]),
+		_folder(DIR_TEMP, "folder", [
+			_binario("~DF3A12.TMP"),
+			_text("INSTALL.LOG", "[Setup]\nStart = 09:14:22\nCopy = "
+					+ DIR_SYSTEM + "\\VMM32.VXD ... OK\nEnd = 09:16:03"),
+		]),
+		# La cartella protetta vive sul Desktop: sembra una cartella qualunque ma e'
+		# quella da sbloccare (type "secret").
+		_folder(_t("VFS_DESKTOP"), "folder", [
+			{"name": _t("VFS_SECRET"), "type": "secret", "icon": "locked"},
+		]),
+		_folder(_t("VFS_START_MENU"), "folder", [
+			_folder(_t("VFS_PROGRAMS_MENU"), "folder", [
+				_html(APP_WEB, "start"),
+			]),
+		]),
+		_folder(_t("VFS_FAVORITES"), "folder", [
 			_html(_t("FN_HOMEPAGE"), "start"),
 		]),
-		_folder(_t("VFS_SYSTEM"), "folder", [
-			_text("config.sys", "DEVICE=HIMEM.SYS\nDOS=HIGH,UMB\nFILES=30\nBUFFERS=20"),
-			_text("autoexec.bat", "@ECHO OFF\nPROMPT $P$G\nPATH C:\\DOS\nSET TEMP=C:\\TEMP"),
-			_text(_t("FN_SYSNOTES"), _testo("FT_SYSNOTES")),
-		]),
-	]
-	_place_file_key(c_children, rng)     # chiave 1
-	_place_folder_key(c_children, rng)   # chiave 2
-	return _folder(_t("VFS_MY_COMPUTER"), "computer", [
-		_folder(_t("VFS_C_DRIVE"), "folder", c_children),
-		_folder(_t("VFS_TRASH"), "trash", []),
+		_text(DIR_SISTEMA + ".INI", "[windows]\nload=\nrun=\n\n[Desktop]\n"
+				+ "Wallpaper=(None)\nTileWallpaper=0"),
+		_text("SYSTEM.INI", "[boot]\nshell=WHALEEXP.EXE\nmouse.drv=MOUSE.DRV\n\n"
+				+ "[386Enh]\nEMMExclude=C000-CFFF"),
+		_text(_t("FN_SYSNOTES"), _testo("FT_SYSNOTES")),
 	])
+
+# Dove puo' finire il file che porta la chiave 1: PERCORSI (dalla radice di C:), non nomi.
+# Prima si cercava fra i soli figli di C:, e con un albero profondo non basta piu'. Sono
+# tutti posti in cui un .txt non stona -- fra i documenti, fra le foto, in una TEMP o
+# nella cartella di un programma: il giocatore deve poterci arrivare ragionando.
+static func _cartelle_chiave() -> Array:
+	return [
+		[_t("VFS_DOCUMENTS")],
+		[_t("VFS_DOCUMENTS"), _t("VFS_PICTURES")],
+		[DIR_SISTEMA, DIR_TEMP],
+		[DIR_TEMP],
+		[_t("VFS_PROGRAMS"), APP_FOTO],
+		[DIR_SISTEMA],
+	]
 
 # Chiave 1: file portatore (nome + contenuto a caso) in una cartella a caso.
 static func _place_file_key(c_children: Array, rng: RandomNumberGenerator) -> void:
 	var label := GameManager.key_label(KEY_FILE)
 	if label == "":
 		return
-	var folder := _find_child(c_children, _t(_pick(_FILE_FOLDERS, rng)))
+	var percorso: Array = _pick(_cartelle_chiave(), rng)
+	var folder := _find_path(c_children, percorso)
 	if folder.is_empty():
-		return
+		percorso = [_t("VFS_DOCUMENTS")]          # ripiego: i Documenti ci sono sempre
+		folder = _find_path(c_children, percorso)
+		if folder.is_empty():
+			return
 	var name: String = _t(_pick(_FILE_NAMES, rng))
 	var content: String = _testo(_pick(_FILE_CARRIERS, rng))
 	folder["children"].append(_text(name, content.replace(KEY_SLOT, label)))
-	GameManager.note_key(KEY_FILE, "%s (in %s)" % [name, str(folder.get("name", "?"))])
+	GameManager.note_key(KEY_FILE, "%s (in %s)" % [name, _percorso_dos(percorso)])
 
-# Chiave 2: cartella di "backup" (nome a caso) col codice scritto nel nome stesso,
-# inserita in un punto a caso tra i figli di C:.
+# Chiave 2: cartella di "backup" (nome a caso) col codice scritto nel proprio nome. Va
+# nella radice di C: o dentro Documenti: sono i due posti dove uno la metterebbe davvero.
 static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> void:
 	var label := GameManager.key_label(KEY_FOLDER)
 	if label == "":
@@ -221,15 +311,32 @@ static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> 
 	var folder := _folder("%s %s" % [base, label], "folder", [
 		_text(_t("FN_NOTE"), _testo("FT_NOTE")),
 	])
-	c_children.insert(rng.randi_range(0, c_children.size()), folder)
-	GameManager.note_key(KEY_FOLDER, "%s (nome cartella, in C:)" % str(folder.get("name", "?")))
+	var percorso: Array = []
+	var dentro: Array = c_children
+	if rng.randf() < 0.5:
+		var doc := _find_path(c_children, [_t("VFS_DOCUMENTS")])
+		if not doc.is_empty():
+			percorso = [_t("VFS_DOCUMENTS")]
+			dentro = doc["children"]
+	dentro.insert(rng.randi_range(0, dentro.size()), folder)
+	GameManager.note_key(KEY_FOLDER, "%s (nome cartella, in %s)"
+			% [str(folder.get("name", "?")), _percorso_dos(percorso)])
+
+# Un percorso (array di nomi sotto C:) scritto come lo scriveva il sistema: C:\WHALE\TEMP.
+static func _percorso_dos(percorso: Array) -> String:
+	var s := "C:\\"
+	for i in range(percorso.size()):
+		s += str(percorso[i])
+		if i < percorso.size() - 1:
+			s += "\\"
+	return s
 
 # ---------------- foto (cartella Immagini + chiave 4) ----------------
 
 # Contenuto della cartella Immagini: un leggimi che suggerisce il puzzle + le foto.
 static func _make_image_folder(rng: RandomNumberGenerator) -> Array:
 	var children: Array = [
-		_text("leggimi.txt", "Alcune di queste foto sono venute male: troppo chiare,\ntroppo scure o slavate. Non buttarle."),
+		_text(_t("FN_README"), _testo("FT_README")),
 	]
 	children.append_array(_make_photos(rng))
 	return children
@@ -866,6 +973,17 @@ static func _pick(arr: Array, rng: RandomNumberGenerator):
 	return arr[rng.randi_range(0, arr.size() - 1)]
 
 # Prima cartella figlia (type "folder") col nome dato; {} se assente.
+# Segue un PERCORSO di nomi di cartella a partire da un elenco di figli ({} se si perde).
+static func _find_path(children: Array, parts: Array) -> Dictionary:
+	if parts.is_empty():
+		return {}
+	var cur := _find_child(children, str(parts[0]))
+	for i in range(1, parts.size()):
+		if cur.is_empty():
+			return {}
+		cur = _find_child(cur.get("children", []), str(parts[i]))
+	return cur
+
 static func _find_child(children: Array, name: String) -> Dictionary:
 	for c in children:
 		if c is Dictionary and str(c.get("name", "")) == name and str(c.get("type", "")) == "folder":
@@ -882,3 +1000,24 @@ static func _text(name: String, content: String) -> Dictionary:
 
 static func _html(name: String, url: String) -> Dictionary:
 	return {"name": name, "type": "file", "icon": "web", "filetype": "html", "url": url}
+
+# Un file BINARIO (.EXE, .DLL, .VXD, .TMP, un font): aperto col Blocco note mostra la
+# sbrodolata di byte, com'era. Non e' decorazione: chi ha gia' visto che un eseguibile e'
+# illeggibile capisce al volo cosa sta guardando quando apre una FOTO col Blocco note, che
+# e' una delle due strade della chiave 4 (vedi byte_dump). filetype "bin" = sola lettura.
+# Il contenuto e' deterministico dal nome: riaprirlo da' sempre lo stesso.
+static func _binario(nome: String) -> Dictionary:
+	var r := RandomNumberGenerator.new()
+	r.seed = hash(nome)
+	var righe := PackedStringArray()
+	# "MZ" + l'intestazione DOS, come iniziava ogni eseguibile
+	righe.append(_bytes([77, 90, 144, 0, 3, 0, 0, 0, 4]) + _riga_binaria(r, 48))
+	for i in range(r.randi_range(6, 11)):
+		righe.append(_riga_binaria(r, 64))
+	# la scritta che stava in chiaro dentro quasi ogni .EXE dell'epoca
+	righe.append(_riga_binaria(r, 14) + "This program cannot be run in DOS mode."
+			+ _riga_binaria(r, 9))
+	for i in range(r.randi_range(8, 16)):
+		righe.append(_riga_binaria(r, 64))
+	return {"name": nome, "type": "file", "icon": "exe", "filetype": "bin",
+			"content": "\n".join(righe)}

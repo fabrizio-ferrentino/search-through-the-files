@@ -71,7 +71,10 @@ static func get_desktop() -> Dictionary:
 	# I nomi delle cartelle sono TRADOTTI (locale/ui.csv), quindi il percorso va ricostruito
 	# con le stesse chiavi che ha usato OSContent quando ha generato l'albero -- scriverli a
 	# mano in italiano funzionava solo finche' il gioco era in italiano.
-	var d = resolve_node([OSContent._t("VFS_MY_COMPUTER"), OSContent._t("VFS_C_DRIVE"), "Desktop"])
+	# Dal 20/09/2026 il Desktop sta in C:\WHALE\Desktop e non nella radice di C:, che e'
+	# dove lo teneva Windows 95 (C:\WINDOWS\Desktop).
+	var d = resolve_node([OSContent._t("VFS_MY_COMPUTER"), OSContent._t("VFS_C_DRIVE"),
+			OSContent.DIR_SISTEMA, OSContent._t("VFS_DESKTOP")])
 	return d if d is Dictionary else get_root()
 
 # Cartella "Cestino" (figlia diretta della radice).

@@ -46,16 +46,17 @@ func launch(arg) -> void:
 	# faceva davvero, ed e' una delle strade per trovare una chiave (OSContent.byte_dump
 	# mette il commento del file in chiaro in mezzo alla sbrodolata). Non e' modificabile:
 	# riscrivere byte a caso in un'immagine non deve poter cambiare il contenuto del gioco.
-	var e_immagine: bool = str(file.get("filetype", "")) == "image"
-	if e_immagine:
-		_edit.text = OSContent.byte_dump(file)
-		_edit.editable = false
-	else:
-		_edit.text = file.get("content", "")
+	# Un BINARIO (.EXE, .DLL, un font) ha gia' la sua sbrodolata dentro "content": la si
+	# mostra com'e'. Nessuno dei due si puo' modificare: riscrivere byte a caso non deve
+	# poter cambiare il contenuto del gioco.
+	var tipo := str(file.get("filetype", ""))
+	var e_immagine: bool = tipo == "image"
+	var sola_lettura: bool = e_immagine or tipo == "bin"
+	_edit.text = OSContent.byte_dump(file) if e_immagine else str(file.get("content", ""))
+	_edit.editable = not sola_lettura
 	# il testo iniziale e' la base: senza questo, "Annulla" lo cancellerebbe tutto
 	_edit.clear_undo_history()
-	if not e_immagine:
-		_edit.editable = true
+	_edit.editable = not sola_lettura
 	_edit.context_menu_enabled = false   # usiamo il nostro menu personalizzato
 	_edit.add_theme_font_size_override("font_size", 18)
 	_edit.gui_input.connect(_on_edit_input)
@@ -63,7 +64,7 @@ func launch(arg) -> void:
 
 	_build_menu()
 	# da qui in poi le modifiche dell'utente segnano il file come "non salvato"
-	if not e_immagine:
+	if not sola_lettura:
 		_edit.text_changed.connect(_on_text_changed)
 
 func _on_text_changed() -> void:

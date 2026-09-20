@@ -27,6 +27,14 @@ func _draw() -> void:
 			_rete(w, h)
 		"file", "text":
 			_file(w, h)
+		"floppy":
+			_floppy(w, h)
+		"hdd":
+			_disco(w, h)
+		"cdrom":
+			_cd(w, h)
+		"exe":
+			_eseguibile(w, h)
 		"image":
 			_image(w, h)
 		"notepad":
@@ -180,6 +188,64 @@ func _file(w: float, h: float) -> void:
 	for i in range(4):
 		var ly := page.position.y + h * (0.26 + i * 0.13)
 		draw_line(Vector2(page.position.x + 3, ly), Vector2(page.position.x + page.size.x - 3, ly), Color("8a8a8a"), 1.0)
+
+# ---------------- unita' e programmi ----------------
+# Le tre unita' di "Risorse del computer" e l'icona di un eseguibile. Servono perche'
+# l'albero del filesystem adesso elenca A:, C: e D: come faceva il sistema vero: con
+# l'icona della cartella su tutte e tre, quella finestra non somiglierebbe a niente.
+# Come la balena e il globo, hanno un LOD: sotto i 24 px i dettagli minuti (le righe
+# dell'etichetta, la spia, i tasti) spariscono invece di impastarsi.
+
+# Floppy da 3,5": corpo scuro, otturatore metallico in alto, etichetta chiara in basso.
+func _floppy(w: float, h: float) -> void:
+	var body := Rect2(w * 0.12, h * 0.12, w * 0.76, h * 0.76)
+	draw_rect(body, Color("2f3a4a"))
+	_outline(body, Color("151b24"))
+	var shutter := Rect2(w * 0.36, h * 0.14, w * 0.30, h * 0.24)
+	draw_rect(shutter, Color("c8ccd2"))
+	_outline(shutter, Color("6b7078"))
+	draw_rect(Rect2(w * 0.47, h * 0.16, w * 0.08, h * 0.20), Color("8d939b"))
+	var etichetta := Rect2(w * 0.22, h * 0.48, w * 0.56, h * 0.32)
+	draw_rect(etichetta, Color("e8e8e0"))
+	_outline(etichetta, Color("9a9a90"))
+	if h >= 24.0:
+		for i in range(2):
+			draw_rect(Rect2(w * 0.26, h * (0.56 + i * 0.09), w * 0.48, maxf(1.0, h * 0.04)),
+					Color("b9b9ae"))
+
+# Disco fisso: il cassetto beige di un PC beige, con la fascia e la spia accesa.
+func _disco(w: float, h: float) -> void:
+	var box := Rect2(w * 0.08, h * 0.28, w * 0.84, h * 0.44)
+	draw_rect(box, Color("c9c8b8"))
+	_outline(box, Color("5a5a50"))
+	draw_rect(Rect2(w * 0.12, h * 0.34, w * 0.76, h * 0.10), Color("dedcd0"))
+	draw_rect(Rect2(w * 0.12, h * 0.56, w * 0.76, h * 0.10), Color("a3a296"))
+	if h >= 24.0:
+		draw_rect(Rect2(w * 0.76, h * 0.46, w * 0.08, h * 0.07), Color("3fbf3f"))
+
+# CD-ROM: il disco visto in faccia, col foro e il riflesso.
+func _cd(w: float, h: float) -> void:
+	var c := Vector2(w * 0.5, h * 0.5)
+	var r: float = minf(w, h) * 0.42
+	draw_circle(c, r, Color("cfd4da"))
+	if h >= 24.0:
+		draw_arc(c, r * 0.78, -0.9, 0.5, 12, Color("eef3f8"), maxf(1.0, h * 0.06))
+	draw_arc(c, r, 0.0, TAU, 28, Color("70767f"), maxf(1.0, h * 0.045))
+	draw_circle(c, r * 0.40, Color("9aa3ad"))
+	draw_circle(c, r * 0.17, Color("3a3f46"))
+
+# Eseguibile: una finestrella con la barra del titolo blu, che e' come si disegnava un
+# programma senza icona propria.
+func _eseguibile(w: float, h: float) -> void:
+	var box := Rect2(w * 0.14, h * 0.18, w * 0.72, h * 0.64)
+	draw_rect(box, Color("d6d5c6"))
+	_outline(box, Color("4a4a42"))
+	draw_rect(Rect2(w * 0.16, h * 0.20, w * 0.68, h * 0.16), Color("000080"))
+	if h >= 24.0:
+		draw_rect(Rect2(w * 0.72, h * 0.23, w * 0.09, h * 0.10), Color("c0c0c0"))
+		for i in range(3):
+			draw_rect(Rect2(w * 0.20, h * (0.44 + i * 0.12), w * 0.40, maxf(1.0, h * 0.05)),
+					Color("8a8a80"))
 
 func _image(w: float, h: float) -> void:
 	# foto incorniciata: cielo, sole, una montagnola (icona "file immagine")
