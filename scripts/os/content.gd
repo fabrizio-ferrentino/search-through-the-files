@@ -424,24 +424,59 @@ static func byte_dump(node: Dictionary) -> String:
 	var r := RandomNumberGenerator.new()
 	r.seed = hash(nome)
 	var out := PackedStringArray()
+	# DOVE finisce il commento: sorteggiato dal nome del file, quindi diverso a ogni run e
+	# sempre lo stesso riaprendo lo stesso file. Prima era scritto a mano e usciva SEMPRE
+	# alla riga 7 su 31 -- il 20% dall'alto, misurato su 14 semi (proprietario, 20/09/2026:
+	# "appare sempre in alto"). Era lo stesso difetto della chiave web, che prima di
+	# web_anchor.gd finiva sempre in fondo alla pagina.
+	var punto := r.randi_range(0, 3) if commento != "" else -1
+
 	# intestazione JFIF come si vedeva davvero. I byte si costruiscono con _bytes() e non con
 	# gli escape nel sorgente: un \u0000 dentro una stringa GDScript fa fallire il tokenizer
 	# ("Unexpected NUL character"), e i NUL veri diventano spazi perche' e' cosi' che li
 	# mostrava un editor di testo.
 	out.append(_bytes([255, 216, 255, 224, 0, 16]) + "JFIF" + _bytes([0, 1, 1, 0, 0, 1, 0, 1, 0, 0]))
 	out.append(_riga_binaria(r, 62))
+	if punto == 0:
+		out.append(_segmento_commento(r, commento))      # subito dopo l'intestazione
+
+	# tabelle di quantizzazione (DQT)
 	out.append(_riga_binaria(r, 58) + _bytes([255, 219, 0, 67, 0]))
-	for i in range(3):
+	for i in range(r.randi_range(2, 6)):
 		out.append(_riga_binaria(r, 64))
-	# il commento: marcatore COM (ff fe), lunghezza, poi il testo IN CHIARO
-	if commento != "":
-		out.append(_riga_binaria(r, 12) + _bytes([255, 254, 0, commento.length() + 2])
-				+ commento + _riga_binaria(r, 10))
+	if punto == 1:
+		out.append(_segmento_commento(r, commento))      # fra le tabelle
+
+	# dimensioni (SOF0) e tabelle di Huffman (DHT)
 	out.append(_bytes([255, 192, 0, 17, 8]) + _riga_binaria(r, 44))
-	for i in range(22):
+	out.append(_bytes([255, 196, 0, 31, 0]) + _riga_binaria(r, 40))
+	for i in range(r.randi_range(3, 9)):
 		out.append(_riga_binaria(r, 64))
-	out.append(_riga_binaria(r, 37) + _bytes([255, 217]))
+	if punto == 2:
+		out.append(_segmento_commento(r, commento))      # l'ultimo punto possibile
+
+	# SOS: da qui in poi sono dati compressi. Un commento NON puo' stare li' in mezzo --
+	# dopo l'inizio scansione non ci sono piu' marcatori fino alla fine, e un file fatto
+	# cosi' non sarebbe un JPEG. Per questo l'unico modo di finire IN FONDO e' la coda.
+	out.append(_bytes([255, 218, 0, 12, 3]) + _riga_binaria(r, 48))
+	for i in range(r.randi_range(6, 26)):
+		out.append(_riga_binaria(r, 64))
+	out.append(_riga_binaria(r, 37) + _bytes([255, 217]))     # EOI: fine dell'immagine
+
+	# ...e dopo la fine: quello che tanti programmi dell'epoca lasciavano attaccato al file
+	# (miniature, avanzi dell'editor). E' la posizione che prima non esisteva affatto.
+	if punto == 3:
+		out.append(_segmento_commento(r, commento))
+		for i in range(r.randi_range(0, 3)):
+			out.append(_riga_binaria(r, 64))
 	return "\n".join(out)
+
+# Il segmento COM: byte, marcatore FF FE, lunghezza, il testo IN CHIARO, altri byte. Anche
+# quanti byte stanno prima e dopo e' sorteggiato: a lunghezza fissa la riga del commento
+# si riconoscerebbe dalla forma, senza nemmeno leggerla.
+static func _segmento_commento(r: RandomNumberGenerator, testo: String) -> String:
+	return _riga_binaria(r, r.randi_range(3, 22)) + _bytes([255, 254, 0, testo.length() + 2]) \
+			+ testo + _riga_binaria(r, r.randi_range(3, 18))
 
 # Byte espliciti come caratteri. I NUL diventano spazi: un NUL vero dentro una String di
 # Godot la troncherebbe, e a schermo non si vedrebbe comunque nulla.
