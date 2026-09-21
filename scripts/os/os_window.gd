@@ -31,10 +31,27 @@ var _drag_off := Vector2.ZERO
 var _maximized := false
 var _restore_rect := Rect2()
 
+# "Mostra il contenuto delle finestre durante il trascinamento" SPENTO, come era per
+# default su Win95: si vede solo il contorno tratteggiato e la finestra salta alla
+# geometria nuova al rilascio (richiesta del proprietario, 21/09/2026). Non era solo
+# gusto: ridisegnare il contenuto a ogni pixel era troppo per quelle macchine -- e qui
+# ha lo stesso effetto collaterale buono, perche' una pagina del browser non rifa'
+# l'impaginazione delle tabelle a ogni movimento del mouse, ma una volta sola.
+# Due interruttori STATICI (come ATTESA_ATTIVA del browser) perche' l'originale le
+# trattava come una cosa sola: per avere il contorno SOLO sul ridimensionamento basta
+# CONTORNO_SPOSTA = false, e mettendoli entrambi a false si torna al comportamento
+# "dal vivo" di prima. I test li ribaltano per davvero: un interruttore collegato a
+# niente e' peggio che non averlo.
+static var CONTORNO_RIDIMENSIONA := true
+static var CONTORNO_SPOSTA := true
+
 var _resizing := false
 var _resize_edges := 0
 var _resize_start_mouse := Vector2.ZERO
 var _resize_start_rect := Rect2()
+
+var _fantasma := false               # questo trascinamento sta mostrando il contorno
+var _fantasma_rect := Rect2()        # la geometria che il contorno sta promettendo
 
 func setup(title: String, win_size: Vector2, ikind: String) -> void:
 	win_title = title
@@ -99,6 +116,8 @@ func set_active(v: bool) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_layout_titlebar()
+	elif what == NOTIFICATION_EXIT_TREE:
+		_abbandona_trascinamento()
 
 func _layout_titlebar() -> void:
 	if not _btn_close:
@@ -139,6 +158,9 @@ func _gui_input(event: InputEvent) -> void:
 				_resize_edges = edges
 				_resize_start_mouse = get_global_mouse_position()
 				_resize_start_rect = Rect2(position, size)
+				_fantasma = CONTORNO_RIDIMENSIONA and _contorno_disponibile()
+				if _fantasma:
+					_mostra_fantasma(_resize_start_rect)
 				accept_event()
 				return
 			# 2) barra titolo -> trascina (doppio click = ingrandisci/ripristina)
@@ -150,20 +172,64 @@ func _gui_input(event: InputEvent) -> void:
 				else:
 					_dragging = true
 					_drag_off = get_global_mouse_position() - global_position
+					_fantasma = CONTORNO_SPOSTA and _contorno_disponibile()
+					if _fantasma:
+						_mostra_fantasma(Rect2(position, size))
 				accept_event()
 		else:
+			# IL SALTO: fin qui si e' visto solo il contorno, la geometria nuova si
+			# applica tutta insieme adesso.
+			if _fantasma and (_dragging or _resizing):
+				position = _fantasma_rect.position
+				size = _fantasma_rect.size
+			_spegni_contorno()
 			_dragging = false
 			_resizing = false
 	elif event is InputEventMouseMotion:
 		if _resizing:
-			_apply_resize(get_global_mouse_position())
+			var r := _rect_resize(get_global_mouse_position())
+			if _fantasma:
+				_mostra_fantasma(r)
+			else:
+				position = r.position
+				size = r.size
 			accept_event()
 		elif _dragging:
 			# dal globale alle coordinate del genitore (e' li' che vive position), poi
 			# dentro lo schermo: la finestra si ferma al bordo, non ci passa sotto
 			var p := get_global_mouse_position() - _drag_off - (global_position - position)
-			position = _dentro(p, size)
+			var d := Rect2(_dentro(p, size), size)
+			if _fantasma:
+				_mostra_fantasma(d)
+			else:
+				position = d.position
 			accept_event()
+
+# ---------------- il contorno tratteggiato ----------------
+# Il contorno lo disegna il DESKTOP (OSDesktop._build_contorno): deve stare sopra tutte
+# le finestre e uscire dai bordi di questa, che ha clip_contents. Senza desktop -- una
+# finestra costruita da sola in un test, o un'app che la usa fuori dall'OS -- si
+# ridimensiona dal vivo come prima, invece di non far niente.
+func _contorno_disponibile() -> bool:
+	return os != null and os.has_method("mostra_contorno")
+
+# Il rettangolo va al desktop in coordinate GLOBALI: la finestra ragiona in coordinate
+# del genitore (e' li' che vive position), il contorno vive altrove nell'albero.
+func _mostra_fantasma(r: Rect2) -> void:
+	_fantasma_rect = r
+	os.mostra_contorno(Rect2(r.position + (global_position - position), r.size))
+
+func _spegni_contorno() -> void:
+	if _fantasma and _contorno_disponibile():
+		os.nascondi_contorno()
+	_fantasma = false
+
+# Se la finestra spariva mentre la si trascinava (minimizzata, chiusa, tolta dall'
+# albero) il contorno resterebbe disegnato su uno schermo dove non si muove piu' niente.
+func _abbandona_trascinamento() -> void:
+	_spegni_contorno()
+	_dragging = false
+	_resizing = false
 
 # ---------------- il confine dello schermo ----------------
 # Il monitor del gioco e' un 4:3 FISSO: quello che una finestra si porta oltre il bordo
@@ -230,9 +296,11 @@ func _edges_at(pos: Vector2) -> int:
 			e |= EDGE_B
 	return e
 
-# Applica il ridimensionamento ancorando il lato opposto e rispettando la
-# dimensione minima (custom_minimum_size).
-func _apply_resize(gm: Vector2) -> void:
+# La geometria che il ridimensionamento vuole: lato opposto ancorato, dimensione
+# minima rispettata, tutto dentro lo schermo. E' un CONTO e non un effetto, perche' il
+# contorno ha bisogno dello stesso numero senza toccare la finestra -- e cosi' il
+# contorno non puo' promettere una geometria che il rilascio poi correggerebbe.
+func _rect_resize(gm: Vector2) -> Rect2:
 	var d := gm - _resize_start_mouse
 	var r := _resize_start_rect
 	var minw := custom_minimum_size.x
@@ -259,8 +327,7 @@ func _apply_resize(gm: Vector2) -> void:
 			new_size.y = maxf(minh, r.position.y + r.size.y - new_pos.y)
 	elif _resize_edges & EDGE_B:
 		new_size.y = clampf(r.size.y + d.y, minh, maxf(minh, a.end.y - new_pos.y))
-	position = new_pos
-	size = new_size
+	return Rect2(new_pos, new_size)
 
 # Forma del cursore (Control.CursorShape) per la combinazione di lati data.
 # La stanza la applica al ColorRect dell'overlay: _get_cursor_shape() non basta
@@ -293,6 +360,7 @@ func cursor_at(local_pos: Vector2) -> int:
 	return _cursor_for_edges(_edges_at(local_pos))
 
 func _on_min() -> void:
+	_abbandona_trascinamento()
 	minimized.emit(self)
 
 func toggle_max() -> void:
@@ -311,5 +379,6 @@ func toggle_max() -> void:
 	_layout_titlebar()
 
 func close() -> void:
+	_abbandona_trascinamento()
 	closed.emit(self)
 	queue_free()

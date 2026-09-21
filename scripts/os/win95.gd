@@ -247,6 +247,62 @@ static func premi_acceleratore(pulsanti: Array, event: InputEventKey) -> bool:
 			return true
 	return false
 
+# ---------------- il CONTORNO del trascinamento ----------------
+# Su Win95 l'impostazione "mostra il contenuto delle finestre durante il trascinamento"
+# era SPENTA per default: spostando o ridimensionando si vedeva solo un rettangolo
+# tratteggiato, e la finestra saltava alla geometria nuova al rilascio.
+# L'originale lo disegnava direttamente sullo schermo con un pennello a scacchiera e
+# l'operazione XOR (PATINVERT): compariva sopra qualunque cosa e per farlo sparire
+# bastava ridisegnarlo identico. Qui fra i modi di fusione del canvas lo XOR non c'e'
+# (servirebbe leggere lo schermo con uno shader), ma la cosa che si RICONOSCE e' la
+# scacchiera, non l'inversione: nero e bianco al 50% si stacca su qualsiasi fondo --
+# il grigio della faccia, il teal del desktop, una pagina bianca.
+# Il blocco e' di 2 px e non di 1 per la stessa ragione dei dettagli delle icone sotto
+# i 24 px: il viewport dell'OS viene ridotto a ~2/3 e passato nella CRT, e una
+# scacchiera da 1 px la' dentro torna grigio piatto.
+const TRATTEGGIO_BLOCCO := 2
+const CONTORNO_SPESSORE := 4         # come il bordo 3D di una finestra
+
+static var _tex_tratteggio: ImageTexture = null
+
+static func tratteggio() -> ImageTexture:
+	if _tex_tratteggio != null:
+		return _tex_tratteggio
+	var lato := TRATTEGGIO_BLOCCO * 2
+	var dati := PackedByteArray()
+	for y in range(lato):
+		for x in range(lato):
+			var v: int = 0 if ((x / TRATTEGGIO_BLOCCO) + (y / TRATTEGGIO_BLOCCO)) % 2 == 0 else 255
+			dati.append_array(PackedByteArray([v, v, v, 255]))
+	var img := Image.create_from_data(lato, lato, false, Image.FORMAT_RGBA8, dati)
+	_tex_tratteggio = ImageTexture.create_from_image(img)
+	return _tex_tratteggio
+
+# Disegna il contorno di un rettangolo col tratteggio.
+# (Nota misurata il 21/09/2026, sabotando il test: in Godot 4.6 draw_texture_rect col
+# flag "tile" ripete la trama DA SE', anche con texture_repeat disabilitato sul nodo.
+# Lo strato del desktop lo abilita comunque, insieme al filtro NEAREST, perche' e' la
+# condizione dichiarata dalla documentazione -- ma non ci si appoggi: il guardiano vero
+# del tratteggio sono i pixel letti da finestre_contorno_test.)
+# Le quattro strisce sono agganciate alla griglia del blocco: ogni draw_texture_rect
+# ripete la trama dalla PROPRIA origine, e senza l'aggancio due lati adiacenti
+# partirebbero con la fase sfasata di 1 px, cioe' con gli angoli sfilacciati.
+static func contorno(ci: CanvasItem, r: Rect2, spessore := CONTORNO_SPESSORE) -> void:
+	var b := float(TRATTEGGIO_BLOCCO)
+	var p := Vector2(floorf(r.position.x / b) * b, floorf(r.position.y / b) * b)
+	var s := Vector2(roundf(r.size.x / b) * b, roundf(r.size.y / b) * b)
+	if s.x < b * 2.0 or s.y < b * 2.0:
+		return
+	var sp: float = minf(float(spessore), minf(s.x, s.y) * 0.5)
+	sp = maxf(b, floorf(sp / b) * b)
+	var t := tratteggio()
+	ci.draw_texture_rect(t, Rect2(p, Vector2(s.x, sp)), true)
+	ci.draw_texture_rect(t, Rect2(p + Vector2(0.0, s.y - sp), Vector2(s.x, sp)), true)
+	var h := s.y - sp * 2.0
+	if h > 0.0:
+		ci.draw_texture_rect(t, Rect2(p + Vector2(0.0, sp), Vector2(sp, h)), true)
+		ci.draw_texture_rect(t, Rect2(p + Vector2(s.x - sp, sp), Vector2(sp, h)), true)
+
 # La riga incisa che separa i gruppi dentro una tendina.
 static func menu_separator() -> Control:
 	var sep := Control.new()

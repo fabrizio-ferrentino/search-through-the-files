@@ -56,6 +56,8 @@ var _modal_chiudibile: Control = null
 var _ctx_layer: Control
 var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
+var _contorno: Control = null        # rettangolo tratteggiato di spostamento/ridimensionamento
+var _contorno_rect := Rect2()
 var _booting := false                # avvio in corso: l'OS non accetta input
 var _boot_token := 0                 # cresce a ogni avvio/spegnimento: annulla la sequenza vecchia
 var _no_signal_box: Panel = null
@@ -79,6 +81,7 @@ func _ready() -> void:
 	_build_taskbar()
 	_build_start_menu()
 	_build_desktop_menu()
+	_build_contorno()
 
 	# stato iniziale: il PC parte spento -> "nessun segnale" sul monitor
 	if not GameManager.pc_on:
@@ -87,6 +90,39 @@ func _ready() -> void:
 		_show_login()
 
 # ---------------- costruzione UI ----------------
+
+# Il CONTORNO del trascinamento (lo chiede OSWindow, lo disegna Win95.contorno).
+# Sta qui e non dentro la finestra per tre motivi: la finestra ha clip_contents e il
+# contorno la supera in tutte le direzioni; su Win95 quel rettangolo era disegnato
+# sullo SCHERMO, quindi passava sopra le altre finestre; e durante un ridimensionamento
+# la finestra non cambia geometria, mentre il contorno si'. E' l'ULTIMO figlio del
+# desktop, cioe' il piu' in alto, e NON prende il mouse: se lo prendesse si mangerebbe
+# i movimenti del trascinamento che lo sta muovendo.
+func _build_contorno() -> void:
+	_contorno = Control.new()
+	_contorno.name = "Contorno"
+	_contorno.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_contorno.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# trama ripetuta e non interpolata: e' la condizione dichiarata per il disegno a
+	# mattonelle (in 4.6 il flag "tile" la ripete comunque -- vedi Win95.contorno)
+	_contorno.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	_contorno.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_contorno.visible = false
+	_contorno.draw.connect(func(): Win95.contorno(_contorno, _contorno_rect))
+	add_child(_contorno)
+
+# Mostra o aggiorna il contorno. Il rettangolo arriva in coordinate GLOBALI del
+# viewport, perche' chi lo manda vive in un altro punto dell'albero.
+func mostra_contorno(r: Rect2) -> void:
+	if _contorno == null:
+		return
+	_contorno_rect = Rect2(r.position - _contorno.global_position, r.size)
+	_contorno.visible = true
+	_contorno.queue_redraw()
+
+func nascondi_contorno() -> void:
+	if _contorno != null:
+		_contorno.visible = false
 
 func _build_wallpaper() -> void:
 	var wp := ColorRect.new()
