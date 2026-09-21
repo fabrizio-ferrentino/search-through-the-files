@@ -16,7 +16,14 @@ extends Node
 #   3 in modalita' PIXEL il codice NON sia nel dump (o sarebbe una scorciatoia gratis);
 #   4 il codice non compaia nelle foto ESCA, in nessuna delle due modalita';
 #   5 il dump sia stabile (riaprire il file da' lo stesso) e abbia la forma di un JPEG;
-#   6 il pannello F12 dica quale delle due vie e' stata usata.
+#   6 il pannello F12 dica quale delle due vie e' stata usata;
+#   7 la POSIZIONE del commento nel dump CAMBI da un run all'altro. Prima era scritta a
+#     mano e usciva sempre alla riga 7 su 31 -- il 20% dall'alto, su qualunque seme e
+#     qualunque foto (proprietario, 20/09/2026: "appare sempre in alto"): chi aveva
+#     trovato una chiave sapeva dove guardare per tutte le altre. Un commento JPEG non
+#     puo' stare in mezzo ai dati compressi, percio' le posizioni possibili sono le tre
+#     dell'intestazione piu' la CODA dopo la fine del file, ed e' li' che deve finire
+#     qualche volta.
 #
 # Va eseguito come SCENA (serve l'autoload GameManager). Headless va bene: qui non si
 # guardano pixel.
@@ -28,6 +35,7 @@ const SEMI := 40
 var _fails: Array = []
 var _quanti_file := 0
 var _quanti_pixel := 0
+var _posizioni: Array = []      # dove stava il codice nel dump (0.0 = in cima, 1.0 = in fondo)
 
 func _ready() -> void:
 	get_tree().create_timer(300.0).timeout.connect(func(): print("RISULTATO: FAIL -> timeout"); get_tree().quit(1))
@@ -42,11 +50,47 @@ func _ready() -> void:
 	_check("QUOTA_RAGIONEVOLE", quota >= 0.25 and quota <= 0.75,
 			"la modalita' 'nel file' esce nel %d%% dei casi" % int(quota * 100.0))
 
+	_prova_posizioni()
+
 	if _fails.is_empty():
 		print("RISULTATO: PASS (le due vie funzionano e restano distinte)")
 	else:
 		print("RISULTATO: FAIL -> " + ", ".join(_fails))
 	get_tree().quit(0 if _fails.is_empty() else 1)
+
+# In quale punto del dump sta il codice, da 0.0 (prima riga) a 1.0 (ultima).
+func _dove(dump: String, etichetta: String) -> float:
+	var righe := dump.split("
+")
+	for i in range(righe.size()):
+		if str(righe[i]).find(etichetta) >= 0:
+			return float(i) / float(maxi(1, righe.size() - 1))
+	return -1.0
+
+# La posizione deve girare: e' tutto il punto della correzione del 20/09/2026.
+func _prova_posizioni() -> void:
+	if _posizioni.size() < 5:
+		_check("POSIZIONI_ABBASTANZA", false,
+				"solo %d run nella via 'nel file': non si puo' dire niente" % _posizioni.size())
+		return
+	var quarti := {}
+	var minimo := 2.0
+	var massimo := -1.0
+	for p in _posizioni:
+		var v: float = float(p)
+		quarti[mini(3, int(v * 4.0))] = true
+		minimo = minf(minimo, v)
+		massimo = maxf(massimo, v)
+	var elenco := PackedStringArray()
+	for p in _posizioni:
+		elenco.append("%d%%" % int(round(float(p) * 100.0)))
+	print("   posizione del codice nel dump: %s" % ", ".join(elenco))
+	_check("POSIZIONE_VARIA", quarti.size() >= 3,
+			"il codice cade sempre nella stessa parte del file (%d quarti su 4)" % quarti.size())
+	_check("NON_SOLO_IN_ALTO", massimo > 0.6,
+			"il codice non arriva mai oltre il %d%% del file" % int(round(massimo * 100.0)))
+	_check("ANCHE_IN_ALTO", minimo < 0.4,
+			"il codice non e' mai nell'intestazione (minimo %d%%)" % int(round(minimo * 100.0)))
 
 func _prova(seme: int) -> void:
 	GameManager.start_new_run(seme)
@@ -77,6 +121,8 @@ func _prova(seme: int) -> void:
 		_quanti_file += 1
 		if dump.find(etichetta) < 0:
 			_ko(seme, "modalita' file ma il codice non e' nei byte")
+		else:
+			_posizioni.append(_dove(dump, etichetta))
 		if str(portatrice.get("code", "")) != "":
 			_ko(seme, "modalita' file ma c'e' anche la scritta nei pixel")
 		if str(portatrice.get("code_commento", "")).find(etichetta) < 0:
@@ -103,9 +149,15 @@ func _prova(seme: int) -> void:
 	# stabile: riaprire il file deve dare lo stesso dump
 	if OSContent.byte_dump(portatrice) != dump:
 		_ko(seme, "il dump cambia da un'apertura all'altra")
-	# ...e deve avere la forma di un JPEG: inizia con FFD8 e finisce con FFD9
-	if dump.substr(0, 2) != char(255) + char(216) or not dump.ends_with(char(255) + char(217)):
-		_ko(seme, "il dump non ha l'intestazione o la chiusura di un JPEG")
+	# ...e deve avere la forma di un JPEG: inizia con FFD8 e contiene la fine FFD9. Non si
+	# pretende piu' che FINISCA con FFD9: dopo la fine puo' esserci la coda che i programmi
+	# dell'epoca lasciavano attaccata (ed e' una delle posizioni del commento), ma dev'essere
+	# poca roba, non una seconda immagine.
+	var eoi := dump.rfind(char(255) + char(217))
+	if dump.substr(0, 2) != char(255) + char(216) or eoi < 0:
+		_ko(seme, "il dump non ha l'intestazione o la fine di un JPEG")
+	elif dump.length() - eoi > 600:
+		_ko(seme, "dopo la fine del JPEG ci sono %d caratteri di coda" % (dump.length() - eoi - 2))
 	if dump.find("JFIF") < 0:
 		_ko(seme, "manca l'intestazione JFIF")
 

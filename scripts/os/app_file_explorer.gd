@@ -622,12 +622,10 @@ func _voci_percorso() -> Array:
 # La finestrella "Informazioni su": nomi e versione sono quelli che il sistema mostra
 # all'avvio (desktop.gd), non altri -- e' lo stesso programma.
 func _informazioni() -> void:
-	_riempi_menu([
-		[tr("EX_ABOUT_NAME"), Callable()],
-		["-"],
-		[tr("BOOT_VERSION"), Callable()],
-		[tr("EX_ABOUT_COPY"), Callable()],
-		["-"],
-		[tr("NP_CLOSE"), func(): pass],
-	])
-	_mostra_menu(Vector2(size.x * 0.22, size.y * 0.28))
+	_chiudi_menu()
+	if os == null:
+		return
+	# Lo apre il DESKTOP, non questa finestra: cosi' sta al centro dello schermo e non lo
+	# taglia nessun bordo (vedi OSDesktop.apri_informazioni).
+	os.apri_informazioni(tr("EX_ABOUT"), window.icon_kind if window != null else "folder",
+			[tr("EX_ABOUT_NAME"), tr("BOOT_VERSION"), "", tr("EX_ABOUT_COPY")])

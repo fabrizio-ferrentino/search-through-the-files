@@ -1013,15 +1013,12 @@ func _mostra_menu(pos: Vector2) -> void:
 # La finestrella "Informazioni su": un About d'epoca, e l'unica voce del menu "?" che fa
 # qualcosa. Nomi inventati, come in tutto il resto dell'OS.
 func _informazioni() -> void:
-	_riempi_menu([
-		[tr("BR_ABOUT_NAME"), Callable()],
-		["-"],
-		[tr("BR_ABOUT_VER"), Callable()],
-		[tr("BR_ABOUT_COPY"), Callable()],
-		["-"],
-		[tr("NP_CLOSE"), func(): pass],
-	])
-	_mostra_menu(Vector2(size.x * 0.5 - 150.0, size.y * 0.35))
+	_chiudi_menu()
+	if os == null:
+		return
+	# Come nell'Esplora: lo disegna il desktop, centrato sullo schermo.
+	os.apri_informazioni(tr("BR_ABOUT"), "web",
+			[tr("BR_ABOUT_NAME"), tr("BR_ABOUT_VER"), "", tr("BR_ABOUT_COPY")])
 
 func _text_btn(text: String, cb: Callable) -> Button:
 	var b := Button.new()

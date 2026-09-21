@@ -50,6 +50,9 @@ var _cascade := 0
 var _desk_sel: DesktopItem = null
 var _state_overlay: Control = null   # overlay di stato a tutto schermo (login / nessun segnale / avvio)
 var _modal_layer: Control = null     # ultimo dialogo modale aperto (login / arresto / cartella segreta)
+# Un dialogo che ESC deve poter CHIUDERE (l'About). Login e cartella segreta non sono qui:
+# la' ESC e' la via d'uscita dal PC, per scelta (vedi _show_login).
+var _modal_chiudibile: Control = null
 var _ctx_layer: Control
 var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
@@ -655,6 +658,13 @@ func _toggle_start_menu() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
+		# Con un dialogo CHIUDIBILE aperto (l'About) ESC chiude quello, non il PC: e' cosi'
+		# che si comporta un dialogo con l'OK. Gli altri modali restano come prima.
+		if _modal_chiudibile != null and is_instance_valid(_modal_chiudibile):
+			_modal_chiudibile.queue_free()
+			_modal_chiudibile = null
+			get_viewport().set_input_as_handled()
+			return
 		# ESC: torna alla vista stanza (il PC resta nello stato attuale)
 		exit_requested.emit()
 		return
@@ -1051,6 +1061,69 @@ func _make_modal(title: String, dlg_size: Vector2, bg: Color) -> Dictionary:
 	tbar.add_child(tl)
 
 	return {"layer": layer, "panel": panel}
+
+# ---------------- "Informazioni su" (About) ----------------
+
+# Il dialogo About dei programmi dell'OS. Sta QUI, nel desktop, e non dentro l'app, perche'
+# deve comparire SEMPRE AL CENTRO DELLO SCHERMO (richiesta del proprietario, 21/09/2026):
+# prima ogni programma se lo disegnava dentro la propria finestra, riusando la tendina dei
+# menu, e allora il riquadro si spostava con la finestra -- ingrandita finiva in un punto,
+# piccola in un altro, e in una finestra stretta veniva perfino tagliato dal bordo.
+# Un About era un DIALOGO anche nell'originale, non una tendina: barra del titolo, icona
+# del programma, nome, versione, copyright e un OK. _make_modal lo centra da solo
+# (position = (size - dlg) * 0.5) e lo mette su uno strato del DESKTOP, quindi nessuna
+# finestra lo taglia e lo schermo dietro resta visibile ma bloccato.
+func apri_informazioni(titolo: String, icona: String, righe: Array) -> void:
+	# La larghezza la decide la riga piu' LUNGA, misurata col font vero (il tema disegna a
+	# 18 px): a larghezza fissa il copyright veniva tagliato a meta' parola.
+	var f := Win95.font("sans")
+	var larga := 0.0
+	for r in righe:
+		larga = maxf(larga, f.get_string_size(str(r), HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x)
+	var dlg := Vector2(maxf(430.0, larga + 120.0),
+			56.0 + maxf(3.0, float(righe.size())) * 26.0 + 74.0)
+	var d := _make_modal(titolo, dlg, Color(0, 0, 0, 0.25))
+	var layer: Control = d["layer"]
+	var panel: Panel = d["panel"]
+	_modal_chiudibile = layer
+
+	var ic := OSIcon.new()
+	ic.kind = icona
+	ic.position = Vector2(24, 48)
+	ic.size = Vector2(40, 40)
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(ic)
+
+	var y := 46.0
+	for r in righe:
+		var l := Label.new()
+		l.text = str(r)
+		l.position = Vector2(84, y)
+		l.size = Vector2(dlg.x - 104.0, 24)
+		l.clip_text = true
+		panel.add_child(l)
+		y += 26.0
+
+	# la riga incisa sopra il pulsante, come nei dialoghi dell'epoca
+	var riga := Control.new()
+	riga.position = Vector2(14, dlg.y - 58.0)
+	riga.size = Vector2(dlg.x - 28.0, 2)
+	riga.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	riga.draw.connect(func():
+		riga.draw_line(Vector2(0, 0), Vector2(riga.size.x, 0), Win95.C_SHADOW, 1.0)
+		riga.draw_line(Vector2(0, 1), Vector2(riga.size.x, 1), Win95.C_LIGHT, 1.0))
+	panel.add_child(riga)
+
+	var ok := Button.new()
+	ok.name = "OK"
+	ok.text = tr("UI_OK")
+	ok.size = Vector2(104, 34)
+	ok.position = Vector2(floorf((dlg.x - 104.0) * 0.5), dlg.y - 46.0)
+	ok.pressed.connect(func():
+		_modal_chiudibile = null
+		layer.queue_free())
+	panel.add_child(ok)
+	ok.call_deferred("grab_focus")
 
 # Schermata di login: chiede la password (per ora "123") prima di mostrare il desktop.
 func _show_login() -> void:
