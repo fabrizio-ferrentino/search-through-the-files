@@ -34,6 +34,12 @@ func setup(node_data: Dictionary, icon_size: int, label_w: int, label_color: Col
 	_label.add_theme_color_override("font_color", label_color)
 	_label.custom_minimum_size = Vector2(label_w, 0)
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Ridisegnare QUANDO l'etichetta si sistema: _draw() legge la sua posizione, che al
+	# primo disegno non e' ancora stata calcolata dal contenitore. Su un file appena
+	# creato -- che nasce gia' selezionato -- il riquadro blu finiva sopra l'icona e il
+	# testo bianco spariva sul fondo chiaro (segnalato dal proprietario, 20/09/2026), e
+	# li' restava, perche' niente chiedeva un altro disegno.
+	_label.item_rect_changed.connect(queue_redraw)
 	add_child(_label)
 
 func set_selected(v: bool) -> void:
@@ -52,10 +58,25 @@ func _gui_input(event: InputEvent) -> void:
 			context_requested.emit(self)
 			accept_event()
 
+# Il riquadro della selezione: in Win95 abbracciava il TESTO, non tutta la casella. Se il
+# nome sta su una riga si stringe attorno a lui; se va a capo si prende tutta la larghezza,
+# che e' quanto occupa davvero.
+func rett_selezione() -> Rect2:
+	var r := _label.get_rect()
+	var f := _label.get_theme_font("font")
+	if f != null:
+		var dim := _label.get_theme_font_size("font_size")
+		var larga: float = f.get_string_size(_label.text, HORIZONTAL_ALIGNMENT_CENTER,
+				-1, dim).x + 6.0
+		if larga < r.size.x:
+			r.position.x += (r.size.x - larga) * 0.5
+			r.size.x = larga
+	return r
+
 func _draw() -> void:
 	if selected and _label:
 		# evidenziazione blu dietro l'etichetta
-		var lr := _label.get_rect()
+		var lr := rett_selezione()
 		draw_rect(lr, Win95.C_SELECT)
 		_label.add_theme_color_override("font_color", Win95.C_TITLE_TEXT)
 	elif _label:

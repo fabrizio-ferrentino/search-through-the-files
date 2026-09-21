@@ -86,6 +86,109 @@ static func _sb(raised: bool, bg: Color, double: bool, ml: int, mt: int, mr: int
 	return s
 
 # Tema globale applicato alla radice dell'OS: i figli ereditano.
+# ---------------- pezzi di CORNICE condivisi ----------------
+# Stanno qui, e non dentro un'app, perche' la cornice dev'essere la STESSA dappertutto:
+# il browser e l'Esplora risorse costruiscono le loro barre con queste funzioni, cosi' un
+# pulsante spento si riconosce allo stesso modo in tutte e due (regola 7 del CLAUDE.md).
+
+# Altezza delle strisce. MENUBAR_H tiene conto dell'altezza vera di un pulsante di menu
+# (31 px col tema e il font di qui) piu' i 2+2 di margine: piu' bassa, le voci sbordano
+# sulla barra sotto e le due barre sembrano schiacciate l'una sull'altra. Era il difetto
+# dell'Esplora risorse, che ne aveva 26 (segnalato dal proprietario, 20/09/2026).
+const MENUBAR_H := 35
+const ADDRBAR_H := 36
+const TB_ICONA := 24
+const TB_CAPTION := 14        # la didascalia e' piu' piccola del testo dei menu, come allora
+const TB_ALTA := 54
+
+# Un pulsante della barra strumenti: icona sopra, nome sotto. Il contenuto sta in un VBox
+# FIGLIO (un Button non impagina i figli da solo), che e' anche comodo per lo stato
+# disabilitato: sbiadendo il VBox si spengono insieme icona e nome. La larghezza la decide
+# il NOME misurato col font vero, perche' a larghezza fissa le didascalie lunghe si
+# tagliavano. Le didascalie ci sono perche' il viewport dell'OS viene ridotto a ~2/3 e
+# passa dal CRT: le sole icone, a quella scala, non si leggono.
+static func tool_button(kind: String, testo := "", cb := Callable(), attivo := true) -> Button:
+	var b := Button.new()
+	var larga: float = 40.0
+	if testo != "":
+		larga = maxf(larga, font("sans").get_string_size(
+				testo, HORIZONTAL_ALIGNMENT_LEFT, -1, TB_CAPTION).x + 12.0)
+	b.custom_minimum_size = Vector2(larga, TB_ALTA)
+	b.focus_mode = Control.FOCUS_NONE
+	var box := VBoxContainer.new()
+	box.name = "Contenuto"
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_top = 3
+	box.offset_bottom = -2
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_theme_constant_override("separation", 1)
+	b.add_child(box)
+	var ic := OSIcon.new()
+	ic.kind = kind
+	ic.custom_minimum_size = Vector2(TB_ICONA, TB_ICONA)
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(ic)
+	if testo != "":
+		var lb := Label.new()
+		lb.text = testo
+		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lb.add_theme_font_size_override("font_size", TB_CAPTION)
+		lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(lb)
+	if cb.is_valid():
+		b.pressed.connect(cb)
+	if not attivo:
+		b.disabled = true
+	fade(b, not attivo)
+	return b
+
+# Sbiadisce (o riaccende) il contenuto di un pulsante, per accompagnare lo stato
+# disabilitato. Serve perche' il tema colora di grigio solo il testo DEL BUTTON, e qui
+# icona e didascalia sono nodi figli: a colori pieni un pulsante spento sembra attivo.
+static func fade(b: Button, spento: bool) -> void:
+	if b == null:
+		return
+	var box := b.get_node_or_null("Contenuto") as Control
+	if box != null:
+		box.modulate = Color(1, 1, 1, 0.38) if spento else Color(1, 1, 1, 1)
+
+# Una striscia in rilievo che attraversa la finestra: e' il contenitore delle barre in
+# Win95, e senza di lei i pulsanti sembrano appoggiati sul niente.
+static func strip(parent: Control, alta: int) -> Panel:
+	var p := Panel.new()
+	p.add_theme_stylebox_override("panel", _sb(true, C_FACE, false, 0, 0, 0, 0))
+	p.custom_minimum_size = Vector2(0, alta)
+	parent.add_child(p)
+	return p
+
+# La "maniglia" a due righe verticali all'inizio della barra: nei programmi dell'epoca
+# diceva che la barra si poteva staccare e trascinare. Qui non si stacca (non serve), ma
+# senza di lei la barra non si riconosce.
+static func grip() -> Control:
+	var c := Control.new()
+	c.custom_minimum_size = Vector2(9, 0)
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.draw.connect(func():
+		var h: float = c.size.y
+		for i in range(2):
+			var x: float = 2.0 + float(i) * 4.0
+			c.draw_line(Vector2(x, 2.0), Vector2(x, h - 2.0), C_LIGHT, 1.0)
+			c.draw_line(Vector2(x + 1.0, 2.0), Vector2(x + 1.0, h - 2.0), C_SHADOW, 1.0))
+	return c
+
+# La riga incisa che separa i gruppi dentro una tendina.
+static func menu_separator() -> Control:
+	var sep := Control.new()
+	sep.custom_minimum_size = Vector2(0, 7)
+	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sep.draw.connect(func():
+		var y: float = 3.0
+		sep.draw_line(Vector2(2, y), Vector2(sep.size.x - 2, y), C_SHADOW, 1.0)
+		sep.draw_line(Vector2(2, y + 1), Vector2(sep.size.x - 2, y + 1), C_LIGHT, 1.0))
+	return sep
+
 static func make_theme() -> Theme:
 	var t := Theme.new()
 	t.default_font = font()

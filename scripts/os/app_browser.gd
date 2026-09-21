@@ -94,7 +94,7 @@ func launch(arg) -> void:
 	# pulsanti piatti appoggiati sul fondo della finestra, e senza la striscia non si
 	# leggevano come una barra dei menu ma come una riga di etichette. Le voci aprono
 	# tendine vere (_apri_menu): erano tutte morte.
-	var menubar := _striscia(root, 30)
+	var menubar := _striscia(root, Win95.MENUBAR_H)
 	var mb_box := HBoxContainer.new()
 	mb_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mb_box.offset_left = 3
@@ -119,7 +119,7 @@ func launch(arg) -> void:
 		mb_box.add_child(mb)
 
 	# --- barra strumenti ---
-	var toolbar := _striscia(root, TB_ALTA + 8)
+	var toolbar := _striscia(root, Win95.TB_ALTA + 8)
 	var tb_box := HBoxContainer.new()
 	tb_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	tb_box.offset_left = 2
@@ -164,10 +164,17 @@ func launch(arg) -> void:
 	_globo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tb_box.add_child(_globo)
 
+	# La finestra non si stringe sotto la larghezza della barra strumenti: piu' stretta,
+	# gli ultimi pulsanti uscivano dal bordo (vedi la stessa nota in app_file_explorer).
+	if window != null:
+		var minima: float = tb_box.get_combined_minimum_size().x + 24.0
+		window.custom_minimum_size = Vector2(maxf(window.custom_minimum_size.x, minima),
+				window.custom_minimum_size.y)
+
 	# --- barra indirizzo ---
 	# Anche questa su una striscia in rilievo: le tre barre (menu, strumenti, indirizzo)
 	# devono leggersi come tre bande dello stesso mobile, non come righe sospese.
-	var addrstrip := _striscia(root, 36)
+	var addrstrip := _striscia(root, Win95.ADDRBAR_H)
 	var addrbar := HBoxContainer.new()
 	addrbar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	addrbar.offset_left = 4
@@ -857,82 +864,19 @@ func _globo_acceso(attivo: bool) -> void:
 # la barra non era di sole icone -- ogni pulsante aveva la sua didascalia, ed e' anche il
 # motivo per cui quelle barre erano cosi' alte. Le icone da sole, oltretutto, qui non si
 # leggevano: lo schermo dell'OS viene rimpicciolito a ~2/3 e passato dal CRT.
-# Il contenuto sta in un VBox figlio (un Button non impagina i figli da solo), che e' anche
-# comodo per lo stato disabilitato: sbiadendo il VBox si spengono insieme icona e nome.
-# La larghezza la decide il NOME, misurato col font vero: a larghezza fissa "Interrompi" e
-# "Pagina iniziale" venivano tagliati.
-const TB_ICONA := 24
-const TB_CAPTION := 14        # la didascalia e' piu' piccola del testo dei menu, come allora
-const TB_ALTA := 54
-
+# La cornice (pulsanti con didascalia, strisce, maniglia) e' in Win95: la costruisce
+# anche l'Esplora risorse, e dev'essere la stessa. Qui restano solo i nomi corti.
 func _icon_btn(kind: String, testo := "", cb := Callable(), attivo := true) -> Button:
-	var b := Button.new()
-	var larga: float = 40.0
-	if testo != "":
-		larga = maxf(larga, Win95.font("sans").get_string_size(
-				testo, HORIZONTAL_ALIGNMENT_LEFT, -1, TB_CAPTION).x + 12.0)
-	b.custom_minimum_size = Vector2(larga, TB_ALTA)
-	b.focus_mode = Control.FOCUS_NONE
-	var box := VBoxContainer.new()
-	box.name = "Contenuto"
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	box.offset_top = 3
-	box.offset_bottom = -2
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_theme_constant_override("separation", 1)
-	b.add_child(box)
-	var ic := OSIcon.new()
-	ic.kind = kind
-	ic.custom_minimum_size = Vector2(TB_ICONA, TB_ICONA)
-	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(ic)
-	if testo != "":
-		var lb := Label.new()
-		lb.text = testo
-		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lb.add_theme_font_size_override("font_size", TB_CAPTION)
-		lb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(lb)
-	if cb.is_valid():
-		b.pressed.connect(cb)
-	if not attivo:
-		b.disabled = true
-	_pallido(b, not attivo)
-	return b
+	return Win95.tool_button(kind, testo, cb, attivo)
 
-# Sbiadisce (o riaccende) il contenuto di un pulsante, per accompagnare lo stato
-# disabilitato. Serve perche' il tema colora di grigio solo il testo DEL BUTTON, e qui
-# icona e didascalia sono nodi figli: a colori pieni un pulsante spento sembra attivo.
 func _pallido(b: Button, spento: bool) -> void:
-	var box := b.get_node_or_null("Contenuto") as Control
-	if box != null:
-		box.modulate = Color(1, 1, 1, 0.38) if spento else Color(1, 1, 1, 1)
+	Win95.fade(b, spento)
 
-# Una striscia in rilievo che attraversa la finestra: e' il contenitore delle barre in
-# Win95, e senza di lei i pulsanti sembrano appoggiati sul niente.
 func _striscia(parent: Control, alta: int) -> Panel:
-	var p := Panel.new()
-	p.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, false, 0, 0, 0, 0))
-	p.custom_minimum_size = Vector2(0, alta)
-	parent.add_child(p)
-	return p
+	return Win95.strip(parent, alta)
 
-# La "maniglia" a due righe verticali all'inizio della barra: nei programmi dell'epoca
-# diceva che la barra si poteva staccare e trascinare. Qui non si stacca (non serve), ma
-# senza di lei la barra non si riconosce.
 func _maniglia() -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = Vector2(9, 0)
-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	c.draw.connect(func():
-		var h: float = c.size.y
-		for i in range(2):
-			var x: float = 2.0 + float(i) * 4.0
-			c.draw_line(Vector2(x, 2.0), Vector2(x, h - 2.0), Win95.C_LIGHT, 1.0)
-			c.draw_line(Vector2(x + 1.0, 2.0), Vector2(x + 1.0, h - 2.0), Win95.C_SHADOW, 1.0))
-	return c
+	return Win95.grip()
 
 # Aggiorna lo stato dei pulsanti che DIPENDONO da dove siamo: indietro/avanti secondo la
 # cronologia, interrompi solo mentre si carica. E' il "disabilitato" piu' importante di
@@ -1037,14 +981,7 @@ func _riempi_menu(voci: Array) -> void:
 	for v in voci:
 		var testo := str(v[0])
 		if testo == "-":
-			var sep := Control.new()
-			sep.custom_minimum_size = Vector2(0, 7)
-			sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			sep.draw.connect(func():
-				var y: float = 3.0
-				sep.draw_line(Vector2(2, y), Vector2(sep.size.x - 2, y), Win95.C_SHADOW, 1.0)
-				sep.draw_line(Vector2(2, y + 1), Vector2(sep.size.x - 2, y + 1), Win95.C_LIGHT, 1.0))
-			_ctx_menu.add_child(sep)
+			_ctx_menu.add_child(Win95.menu_separator())
 			continue
 		var cb: Callable = v[1] if v.size() > 1 else Callable()
 		var b := Button.new()

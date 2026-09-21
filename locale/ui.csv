@@ -178,3 +178,19 @@ FN_README,readme.txt,leggimi.txt
 FT_README,Some of these came out badly: too light\ntoo dark or washed out. Do not throw them away.,Alcune di queste foto sono venute male: troppo chiare\ntroppo scure o slavate. Non buttarle.
 FN_APP_README,README.TXT,LEGGIMI.TXT
 FT_APP_README,WebNet Explorer 2.0\n\nInstallation complete.\nRun WEBNET.EXE to connect.,WebNet Explorer 2.0\n\nInstallazione completata.\nAvviare WEBNET.EXE per collegarsi.
+EX_UP,Up,Su
+EX_PROPERTIES,Properties,Proprieta'
+EX_INVERT,Invert Selection,Inverti selezione
+EX_TOOLBAR,Toolbar,Barra degli strumenti
+EX_STATUSBAR,Status Bar,Barra di stato
+EX_LARGE_ICONS,Large Icons,Icone grandi
+EX_SMALL_ICONS,Small Icons,Icone piccole
+EX_LIST,List,Elenco
+EX_DETAILS,Details,Dettagli
+EX_OPTIONS,Options...,Opzioni...
+EX_FIND,Find...,Trova...
+EX_MAP_DRIVE,Map Network Drive...,Connetti unita' di rete...
+EX_DISCONNECT,Disconnect Network Drive...,Disconnetti unita' di rete...
+EX_ABOUT,About File Explorer,Informazioni su Esplora risorse
+EX_ABOUT_NAME,File Explorer,Esplora risorse
+EX_ABOUT_COPY,"(C) 1981-1995 Hydrophone Systems, Inc.","(C) 1981-1995 Hydrophone Systems, Inc."
