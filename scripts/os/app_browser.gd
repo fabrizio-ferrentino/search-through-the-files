@@ -22,7 +22,8 @@ var _inspector_edit: TextEdit
 var _ctx_layer: Control
 var _ctx_menu: VBoxContainer
 var _ctx_panel: Panel
-var _menu_aperto: Button = null      # voce di menu premuta (resta "giu'" mentre e' aperta)
+var _menu_aperto: Button = null
+var _barra_menu: Array = []          # le voci della barra, per ALT+lettera      # voce di menu premuta (resta "giu'" mentre e' aperta)
 var _btn_back: Button
 var _btn_fwd: Button
 var _btn_stop: Button
@@ -102,21 +103,21 @@ func launch(arg) -> void:
 	mb_box.offset_bottom = -2
 	mb_box.add_theme_constant_override("separation", 0)
 	menubar.add_child(mb_box)
+	# Le scritte hanno la & davanti alla lettera dell'acceleratore (locale/ui.csv): la barra
+	# la toglie, sottolinea quella lettera e risponde ad ALT (Win95.menubar_button). In
+	# inglese "Favorites" ha la A sottolineata, non la F: la F e' di "File", ed e' proprio
+	# cosi' che facevano i programmi dell'epoca quando la prima lettera era occupata.
 	for m in [[tr("MENU_FILE"), _voci_file], [tr("MENU_EDIT"), _voci_modifica],
 			[tr("MENU_VIEW"), _voci_visualizza], [tr("MENU_FAVORITES"), Callable()],
 			["?", _voci_aiuto]]:
-		var mb := Button.new()
-		mb.text = str(m[0])
-		mb.flat = true
-		mb.focus_mode = Control.FOCUS_NONE
-		mb.custom_minimum_size = Vector2(0, 0)
 		var f: Callable = m[1]
+		# "Preferiti" resta grigio per scelta di gioco: vedi la nota sulla barra strumenti.
+		var mb := Win95.menubar_button(str(m[0]), f.is_valid())
+		mb.custom_minimum_size = Vector2(0, 0)
 		if f.is_valid():
 			mb.pressed.connect(func(): _apri_menu(f.call(), mb))
-		else:
-			# "Preferiti" e' grigio: vedi la nota sulla barra strumenti qui sotto.
-			mb.disabled = true
 		mb_box.add_child(mb)
+		_barra_menu.append(mb)
 
 	# --- barra strumenti ---
 	var toolbar := _striscia(root, Win95.TB_ALTA + 8)
@@ -145,7 +146,7 @@ func launch(arg) -> void:
 	# il giocatore deve girare fra le pagine, non saltarci da un menu. Il pulsante e la voce
 	# restano al loro posto, grigi, perche' un browser dell'epoca senza Preferiti non e'
 	# credibile. WebRuntime.sites() resta: e' l'elenco che la wiki usa comunque.
-	_btn_pref = _icon_btn("star", tr("MENU_FAVORITES"), Callable(), false)
+	_btn_pref = _icon_btn("star", Win95.testo_semplice(tr("MENU_FAVORITES")), Callable(), false)
 	tb_box.add_child(_btn_pref)
 	# Stampa: non c'e' una stampante e non ci sara'. Resta al suo posto perche' un browser
 	# del '98 senza il pulsante stampa non e' credibile, ma DISABILITATO -- l'unica cosa
@@ -378,6 +379,12 @@ func _on_meta(meta) -> void:
 # Il prezzo e' che _input arriva SEMPRE, anche a finestra ridotta o coperta, quindi qui si
 # deve controllare a mano di essere davvero sullo schermo -- vedi _in_primo_piano().
 func _input(event: InputEvent) -> void:
+	# ALT+lettera apre la tendina sottolineata. Vale la stessa regola del resto della
+	# tastiera qui: risponde solo la finestra in primo piano.
+	if event is InputEventKey and _in_primo_piano() \
+			and Win95.premi_acceleratore(_barra_menu, event):
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		if not _sotto_il_mouse():
 			return

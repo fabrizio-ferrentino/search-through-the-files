@@ -178,6 +178,75 @@ static func grip() -> Control:
 			c.draw_line(Vector2(x + 1.0, 2.0), Vector2(x + 1.0, h - 2.0), C_SHADOW, 1.0))
 	return c
 
+# Una voce della BARRA DEI MENU. Il testo arriva con la & davanti alla lettera
+# dell'acceleratore, come si scriveva allora ("&File", "F&avorites" quando la F e' gia'
+# presa): la & non si vede, la lettera dopo viene SOTTOLINEATA e ALT+quella lettera apre
+# la tendina (vedi premi_acceleratore). In Win95 la sottolineatura era sempre visibile,
+# non solo tenendo premuto ALT, e qui si fa uguale.
+# Le due cose stanno insieme di proposito: una lettera sottolineata che non risponde ad
+# ALT sarebbe una promessa non mantenuta, la stessa cosa di un pulsante finto.
+# attivo = false la disegna GRIGIA (e ALT la ignora), per le voci che non fanno niente.
+# Il segnale lo collega CHI CHIAMA: la lambda ha bisogno del pulsante stesso, quindi non si
+# puo' passare il callback qui dentro.
+static func menubar_button(testo: String, attivo := true) -> Button:
+	var b := Button.new()
+	var i := testo.find("&")
+	var pulito := testo.replace("&", "")
+	b.text = pulito
+	b.flat = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.disabled = not attivo
+	if i >= 0 and i < pulito.length():
+		b.set_meta("acceleratore", pulito.substr(i, 1).to_lower())
+		b.draw.connect(func(): _sottolinea(b, i))
+	return b
+
+# Toglie le & da una scritta: serve dove la stessa chiave di traduzione viene riusata FUORI
+# da una barra dei menu (la didascalia di un pulsante della barra strumenti), dove la &
+# comparirebbe come un carattere qualunque.
+static func testo_semplice(s: String) -> String:
+	return s.replace("&", "")
+
+# La riga sotto la lettera. Si misura col font vero perche' il testo del Button e'
+# CENTRATO: a occhio finirebbe sotto la lettera sbagliata. I margini orizzontali del tema
+# sono simmetrici (10 e 10), quindi il centro del testo e' il centro del pulsante; lo
+# stato PREMUTO invece sposta tutto di 1 px a destra (11 e 9), com'era nei pulsanti
+# dell'epoca, e la riga lo segue.
+static func _sottolinea(b: Button, indice: int) -> void:
+	var f := b.get_theme_font("font")
+	if f == null or b.text.length() <= indice:
+		return
+	var dim := b.get_theme_font_size("font_size")
+	var tutto := f.get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, dim)
+	var prima := 0.0
+	if indice > 0:
+		prima = f.get_string_size(b.text.substr(0, indice), HORIZONTAL_ALIGNMENT_LEFT, -1, dim).x
+	var larga: float = f.get_string_size(b.text.substr(indice, 1),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, dim).x
+	var x: float = (b.size.x - tutto.x) * 0.5 + prima + (1.0 if b.button_pressed else 0.0)
+	var base: float = (b.size.y - f.get_height(dim)) * 0.5 + f.get_ascent(dim) + 2.0
+	var col: Color = b.get_theme_color("font_disabled_color") if b.disabled \
+			else b.get_theme_color("font_color")
+	b.draw_line(Vector2(x, base), Vector2(x + larga, base), col, 1.0)
+
+# ALT+lettera: cerca fra i pulsanti di una barra quello con quell'acceleratore e lo premi.
+# Torna true se ha fatto qualcosa, cosi' chi chiama marca l'evento come gestito (senza,
+# la lettera finirebbe anche nel campo di testo che ha il fuoco).
+static func premi_acceleratore(pulsanti: Array, event: InputEventKey) -> bool:
+	if event == null or not event.pressed or event.echo or not event.alt_pressed:
+		return false
+	if event.keycode < KEY_A or event.keycode > KEY_Z:
+		return false
+	var lettera := char(event.keycode).to_lower()
+	for p in pulsanti:
+		var b := p as Button
+		if b == null or b.disabled or not is_instance_valid(b):
+			continue
+		if str(b.get_meta("acceleratore", "")) == lettera:
+			b.pressed.emit()
+			return true
+	return false
+
 # La riga incisa che separa i gruppi dentro una tendina.
 static func menu_separator() -> Control:
 	var sep := Control.new()

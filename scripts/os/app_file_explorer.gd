@@ -36,6 +36,7 @@ var _btn_up: Button
 var _btn_del: Button
 var _btn_drop: Button
 var _menu_aperto: Button = null
+var _barra_menu: Array = []          # le voci della barra, per ALT+lettera
 
 func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -57,16 +58,16 @@ func launch(arg) -> void:
 	mb_box.offset_bottom = -2
 	mb_box.add_theme_constant_override("separation", 0)
 	menubar.add_child(mb_box)
+	# Le scritte arrivano col & davanti alla lettera dell'acceleratore (vedi locale/ui.csv):
+	# Win95.menubar_button la toglie, sottolinea quella lettera e la registra per ALT.
 	for m in [[tr("MENU_FILE"), _voci_file], [tr("MENU_EDIT"), _voci_modifica],
 			[tr("MENU_VIEW"), _voci_visualizza], [tr("MENU_TOOLS"), _voci_strumenti],
 			["?", _voci_aiuto]]:
-		var mb := Button.new()
-		mb.text = str(m[0])
-		mb.flat = true
-		mb.focus_mode = Control.FOCUS_NONE
 		var f: Callable = m[1]
+		var mb := Win95.menubar_button(str(m[0]))
 		mb.pressed.connect(func(): _apri_menu(f.call(), mb))
 		mb_box.add_child(mb)
+		_barra_menu.append(mb)
 
 	# --- barra strumenti ---
 	var toolbar := Win95.strip(root, Win95.TB_ALTA + 8)
@@ -96,7 +97,8 @@ func launch(arg) -> void:
 	tb_box.add_child(Win95.tool_button("props", tr("EX_PROPERTIES"), Callable(), false))
 	tb_box.add_child(_vsep())
 	# Cicla fra icone grandi e piccole, come il pulsante omonimo di Win95.
-	tb_box.add_child(Win95.tool_button("views", tr("MENU_VIEW"), _cambia_vista))
+	tb_box.add_child(Win95.tool_button("views", Win95.testo_semplice(tr("MENU_VIEW")),
+			_cambia_vista))
 
 	# La finestra non si puo' stringere sotto la larghezza della sua barra strumenti:
 	# sotto quella misura gli ultimi pulsanti finivano oltre il bordo e venivano tagliati
@@ -264,6 +266,15 @@ func _aggiorna_colonne() -> void:
 	var quante: int = int(floor((larga + CELLA_SEP) / float(_cella_w() + CELLA_SEP)))
 	_grid.columns = maxi(1, quante)
 	_in_disposizione = false
+
+# ALT+lettera apre la tendina sottolineata. Solo se la finestra e' ATTIVA: la tastiera
+# appartiene a una finestra sola, altrimenti tutti gli Esplora aperti risponderebbero
+# insieme allo stesso ALT+F.
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey) or window == null or not window.active:
+		return
+	if Win95.premi_acceleratore(_barra_menu, event):
+		get_viewport().set_input_as_handled()
 
 func _cella_w() -> int:
 	return CELLA_W if _vista == VISTA_GRANDI else CELLA_W_PICCOLE

@@ -15,12 +15,12 @@ DEATH_CLOWN_1,The smile was the last thing you saw.,Il sorriso era l'ultima cosa
 DEATH_CLOWN_2,You should not have stopped watching the corridor.,Non dovevi smettere di guardare il corridoio.
 DEATH_CLOWN_3,It reached the end while you were reading.,E' arrivato in fondo mentre tu leggevi.
 DEATH_CLOWN_4,You should have looked it in the eyes.,Avresti dovuto guardarlo negli occhi.
-MENU_FILE,File,File
-MENU_EDIT,Edit,Modifica
-MENU_VIEW,View,Visualizza
-MENU_SEARCH,Search,Cerca
-MENU_TOOLS,Tools,Strumenti
-MENU_FAVORITES,Favorites,Preferiti
+MENU_FILE,&File,&File
+MENU_EDIT,&Edit,&Modifica
+MENU_VIEW,&View,&Visualizza
+MENU_SEARCH,&Search,&Cerca
+MENU_TOOLS,&Tools,&Strumenti
+MENU_FAVORITES,F&avorites,&Preferiti
 NP_SAVE,Save,Salva
 NP_CLOSE,Close,Chiudi
 NP_UNDO,Undo,Annulla

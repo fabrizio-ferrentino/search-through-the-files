@@ -10,6 +10,7 @@ var _edit: TextEdit
 var _file_name := "Senza nome"
 var _file_dict = null          # riferimento al file nel VFS (per salvare)
 var _modified := false
+var _barra_menu: Array = []          # le voci della barra, per ALT+lettera
 var _menu_layer: Control
 var _menu_panel: Panel
 var _menu_vbox: VBoxContainer
@@ -30,14 +31,20 @@ func launch(arg) -> void:
 	# barra dei menu (File / Modifica con tendina)
 	var menubar := HBoxContainer.new()
 	menubar.add_theme_constant_override("separation", 2)
-	var mb_file := _menubar_btn(tr("MENU_FILE"))
+	# Barra dei menu con l'acceleratore sottolineato, come le altre due (Win95.menubar_button
+	# toglie la & dalla scritta tradotta e risponde ad ALT+lettera).
+	var mb_file := Win95.menubar_button(tr("MENU_FILE"))
 	mb_file.pressed.connect(func(): _open_file_menu(mb_file))
 	menubar.add_child(mb_file)
-	var mb_mod := _menubar_btn(tr("MENU_EDIT"))
+	var mb_mod := Win95.menubar_button(tr("MENU_EDIT"))
 	mb_mod.pressed.connect(func(): _open_edit_menu(_below(mb_mod)))
 	menubar.add_child(mb_mod)
-	menubar.add_child(_menubar_btn(tr("MENU_SEARCH")))
-	menubar.add_child(_menubar_btn("?"))
+	# "Cerca" e "?" non fanno niente: qui restano GRIGIE invece di sembrare attive - la
+	# stessa regola del browser e dell'Esplora (Win95.menubar_button senza callback).
+	var mb_cerca := Win95.menubar_button(tr("MENU_SEARCH"), false)
+	menubar.add_child(mb_cerca)
+	menubar.add_child(Win95.menubar_button("?", false))
+	_barra_menu = [mb_file, mb_mod, mb_cerca]
 	root.add_child(menubar)
 
 	_edit = TextEdit.new()
@@ -91,6 +98,13 @@ func _on_edit_input(event: InputEvent) -> void:
 		_edit.accept_event()
 
 # ---------------- menu a tendina (File / Modifica / tasto destro) ----------------
+
+# ALT+lettera: come nelle altre barre, e solo se questa finestra e' attiva.
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey) or window == null or not window.active:
+		return
+	if Win95.premi_acceleratore(_barra_menu, event):
+		get_viewport().set_input_as_handled()
 
 func _menubar_btn(text: String) -> Button:
 	var b := Button.new()
