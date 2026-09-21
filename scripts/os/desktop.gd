@@ -1281,7 +1281,7 @@ func open_secret_folder(_node: Dictionary) -> void:
 
 # Conferma di spegnimento (stile classico: solo Sì / No).
 func _show_shutdown() -> void:
-	var dlg := _make_modal(tr("SHUTDOWN_TITLE"), Vector2(380, 170), Color(0, 0, 0, 0.35))
+	var dlg := _make_modal(tr("SHUTDOWN_TITLE"), Vector2(400, 190), Color(0, 0, 0, 0.35))
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 
@@ -1299,19 +1299,19 @@ func _show_shutdown() -> void:
 	var lbl := Label.new()
 	lbl.text = tr("SHUTDOWN_MSG")
 	lbl.position = Vector2(72, 52)
-	lbl.size = Vector2(panel.size.x - 90, 40)
+	lbl.size = Vector2(panel.size.x - 92, 56)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel.add_child(lbl)
 
 	var yes := Button.new()
 	yes.text = tr("UI_YES")
-	yes.position = Vector2(panel.size.x * 0.5 - 104, 118)
+	yes.position = Vector2(panel.size.x * 0.5 - 104, 130)
 	yes.size = Vector2(96, 32)
 	panel.add_child(yes)
 
 	var no := Button.new()
 	no.text = tr("UI_NO")
-	no.position = Vector2(panel.size.x * 0.5 + 8, 118)
+	no.position = Vector2(panel.size.x * 0.5 + 8, 130)
 	no.size = Vector2(96, 32)
 	panel.add_child(no)
 

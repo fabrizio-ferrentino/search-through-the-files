@@ -41,7 +41,14 @@ extends Node
 #     - un file appena creato si vedeva storto: nasce SELEZIONATO, e _draw() leggeva la
 #       posizione dell'etichetta prima che il contenitore l'avesse impaginata, cosi' il
 #       riquadro blu finiva sopra l'icona e il nome (bianco) spariva. Qui si guardano i
-#       PIXEL, perche' era un difetto di pixel: lo stato interno era giusto anche prima.
+#       PIXEL, perche' era un difetto di pixel: lo stato interno era giusto anche prima;
+#   9 l'ACCELERATORE della barra dei menu (21/09/2026): la lettera sottolineata come su
+#     Win95. La & del CSV non deve arrivare a schermo, le lettere devono essere UNICHE
+#     dentro la barra (in inglese "Favorites" prende la A perche' la F e' di "File", come
+#     faceva Internet Explorer), ALT+lettera deve aprire quella tendina -- una lettera
+#     sottolineata che non risponde sarebbe una promessa non mantenuta -- e la riga deve
+#     essere DISEGNATA: si guardano i pixel sotto la lettera, e sotto il "?" (che non ha
+#     acceleratore) non ci deve essere.
 #
 # Va eseguito come SCENA (serve l'autoload GameManager). A FINESTRA, non headless: il
 # controllo 8 legge i pixel.
@@ -94,6 +101,7 @@ func _ready() -> void:
 	await _prova_about_centrato()
 	_prova_viste()
 	await _prova_file_nuovo()
+	await _prova_acceleratori()
 
 	if _fails.is_empty():
 		print("RISULTATO: PASS (la cornice risponde, e cio' che non fa niente lo dichiara)")
@@ -108,7 +116,9 @@ func _timeout() -> void:
 # ---------- 1 e 2: le tendine ----------
 
 func _prova_barra_menu() -> void:
-	var attese := [tr("MENU_FILE"), tr("MENU_EDIT"), tr("MENU_VIEW"), tr("MENU_TOOLS"), "?"]
+	# la & dell'acceleratore sta nel CSV ma NON deve arrivare a schermo
+	var attese := [Win95.testo_semplice(tr("MENU_FILE")), Win95.testo_semplice(tr("MENU_EDIT")),
+			Win95.testo_semplice(tr("MENU_VIEW")), Win95.testo_semplice(tr("MENU_TOOLS")), "?"]
 	var trovate: Array = []
 	for b in _bottoni_menu():
 		trovate.append((b as Button).text)
@@ -140,7 +150,7 @@ func _prova_barra_menu() -> void:
 		totale_spente += spente
 		if attive > 0:
 			menu_con_attive += 1
-		if btn.text == tr("MENU_EDIT"):
+		if btn.text == Win95.testo_semplice(tr("MENU_EDIT")):
 			attive_modifica = attive
 		print("   %-12s %d voci: %d attive, %d disabilitate" % [btn.text, voci.size(), attive, spente])
 		_check("TENDINA_" + btn.text.to_upper(), true, "")
@@ -224,7 +234,7 @@ func _prova_stato_pulsanti() -> void:
 func _prova_menu_file_con_selezione() -> void:
 	var file_btn: Button = null
 	for b in _bottoni_menu():
-		if (b as Button).text == tr("MENU_FILE"):
+		if (b as Button).text == Win95.testo_semplice(tr("MENU_FILE")):
 			file_btn = b
 	if file_btn == null:
 		_check("MENU_FILE_CON_SELEZIONE", false, "non trovo la voce File")
@@ -507,6 +517,109 @@ func _voci_menu(voci: Array) -> Array:
 		out.append(str(v[0]))
 	return out
 
+# ---------- 9: l'acceleratore sottolineato ----------
+
+func _prova_acceleratori() -> void:
+	_app._chiudi_menu()
+	_os.focus_window(_win)        # la tastiera va alla finestra ATTIVA
+	_win.size = Vector2(740, 520)
+	for i in range(3):
+		await get_tree().process_frame
+
+	# la & non arriva a schermo, e ogni voce (tranne "?") ha la sua lettera
+	var lettere: Array = []
+	var senza: Array = []
+	for b in _bottoni_menu():
+		var btn := b as Button
+		if btn.text.find("&") >= 0:
+			_ko("NIENTE_AMPERSAND", "la voce '%s' mostra la & del CSV" % btn.text)
+		var acc := str(btn.get_meta("acceleratore", ""))
+		if acc == "":
+			senza.append(btn.text)
+		else:
+			lettere.append(acc)
+			if btn.text.to_lower().find(acc) < 0:
+				_ko("LETTERA_NEL_TESTO", "'%s' dice di avere l'acceleratore '%s'" % [btn.text, acc])
+	_check("NIENTE_AMPERSAND_OK", not _fails.has("NIENTE_AMPERSAND"), "la & arriva a schermo")
+	_check("ACCELERATORI_CI_SONO", lettere.size() >= 4,
+			"solo %d voci su %d hanno l'acceleratore" % [lettere.size(), _bottoni_menu().size()])
+	# UNICHE: due voci con la stessa lettera renderebbero ALT ambiguo
+	var viste := {}
+	var doppie: Array = []
+	for l in lettere:
+		if viste.has(l):
+			doppie.append(str(l))
+		viste[l] = true
+	_check("ACCELERATORI_UNICI", doppie.is_empty(),
+			"lettere ripetute nella barra: %s" % ", ".join(doppie))
+	print("   acceleratori: %s   senza: %s" % [", ".join(lettere), str(senza)])
+
+	# ALT+lettera apre QUELLA tendina (e non una qualunque)
+	var vista := _voce_menu_con_acceleratore(Win95.testo_semplice(tr("MENU_VIEW")))
+	if vista == "":
+		_check("ALT_APRE", false, "la voce Visualizza non ha acceleratore")
+		return
+	await _alt(vista)
+	var aperto := _app._ctx_layer != null and _app._ctx_layer.visible
+	var e_visualizza := false
+	for v in _voci_tendina():
+		if (v as Button).text.find(Win95.testo_semplice(tr("EX_LARGE_ICONS"))) >= 0:
+			e_visualizza = true
+	_check("ALT_APRE", aperto and e_visualizza,
+			"ALT+%s: tendina aperta=%s, ed e' quella di Visualizza=%s"
+			% [vista.to_upper(), str(aperto), str(e_visualizza)])
+	_app._chiudi_menu()
+	await get_tree().process_frame
+
+	# ...e la riga sotto la lettera e' DISEGNATA (pixel), mentre sotto il "?" non c'e'
+	await RenderingServer.frame_post_draw
+	var img := _vp.get_texture().get_image()
+	for b in _bottoni_menu():
+		var btn := b as Button
+		var acc := str(btn.get_meta("acceleratore", ""))
+		var riga := _riga_sottolineata(img, btn.get_global_rect())
+		if acc == "":
+			_check("NIENTE_RIGA_SU_" + btn.text, not riga,
+					"'%s' non ha acceleratore ma ha una riga sotto" % btn.text)
+		else:
+			_check("RIGA_SU_" + btn.text.to_upper(), riga,
+					"sotto '%s' non c'e' la sottolineatura" % btn.text)
+
+# Una riga orizzontale continua (>= 5 px scuri di fila) nella parte BASSA del pulsante,
+# sotto la base del testo: li' nessun glifo di queste parole ha inchiostro, quindi una
+# corsa lunga puo' essere solo la sottolineatura.
+func _riga_sottolineata(img: Image, r: Rect2) -> bool:
+	var y0 := int(r.position.y + r.size.y * 0.60)
+	var y1 := int(r.position.y + r.size.y) - 2
+	for y in range(y0, y1):
+		var corsa := 0
+		for x in range(int(r.position.x) + 2, int(r.end.x) - 2):
+			var c := img.get_pixel(x, y)
+			if c.r < 0.45 and c.g < 0.45 and c.b < 0.45:
+				corsa += 1
+				if corsa >= 5:
+					return true
+			else:
+				corsa = 0
+	return false
+
+func _voce_menu_con_acceleratore(testo: String) -> String:
+	for b in _bottoni_menu():
+		var btn := b as Button
+		if btn.text == testo:
+			return str(btn.get_meta("acceleratore", ""))
+	return ""
+
+# ALT+lettera spinto nel SubViewport come lo spingerebbe una tastiera vera.
+func _alt(lettera: String) -> void:
+	var e := InputEventKey.new()
+	e.keycode = int(lettera.to_upper().unicode_at(0))
+	e.alt_pressed = true
+	e.pressed = true
+	_vp.push_input(e, true)
+	for i in range(2):
+		await get_tree().process_frame
+
 # ---------- helper ----------
 
 func _entra(nome: String) -> void:
@@ -524,7 +637,8 @@ func _seleziona_primo_file() -> String:
 	return ""
 
 func _bottoni_menu() -> Array:
-	var attese := [tr("MENU_FILE"), tr("MENU_EDIT"), tr("MENU_VIEW"), tr("MENU_TOOLS"), "?"]
+	var attese := [Win95.testo_semplice(tr("MENU_FILE")), Win95.testo_semplice(tr("MENU_EDIT")),
+			Win95.testo_semplice(tr("MENU_VIEW")), Win95.testo_semplice(tr("MENU_TOOLS")), "?"]
 	var out: Array = []
 	for b in _app.find_children("*", "Button", true, false):
 		var btn := b as Button

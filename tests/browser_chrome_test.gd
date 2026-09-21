@@ -67,7 +67,10 @@ func _ready() -> void:
 func _prova_barra_menu() -> void:
 	# Le voci sono TRADOTTE: si confrontano con tr(), non con le parole italiane, o il test
 	# fallirebbe per la lingua invece che per un guasto.
-	var attese := [tr("MENU_FILE"), tr("MENU_EDIT"), tr("MENU_VIEW"), tr("MENU_FAVORITES"), "?"]
+	# Le scritte hanno la & dell'acceleratore nel CSV ("F&avorites"): a schermo la & NON
+	# deve arrivare, quindi si confronta col testo semplice.
+	var attese := [Win95.testo_semplice(tr("MENU_FILE")), Win95.testo_semplice(tr("MENU_EDIT")),
+			Win95.testo_semplice(tr("MENU_VIEW")), Win95.testo_semplice(tr("MENU_FAVORITES")), "?"]
 	var trovate: Array = []
 	for b in _bottoni_menu():
 		trovate.append(b.text)
@@ -184,8 +187,9 @@ func _bottoni_menu() -> Array:
 	var out: Array = []
 	for b in _app.find_children("*", "Button", true, false):
 		var btn := b as Button
-		if btn.flat and [tr("MENU_FILE"), tr("MENU_EDIT"), tr("MENU_VIEW"),
-				tr("MENU_FAVORITES"), "?"].has(btn.text):
+		if btn.flat and [Win95.testo_semplice(tr("MENU_FILE")),
+				Win95.testo_semplice(tr("MENU_EDIT")), Win95.testo_semplice(tr("MENU_VIEW")),
+				Win95.testo_semplice(tr("MENU_FAVORITES")), "?"].has(btn.text):
 			if _app._ctx_layer == null or not _app._ctx_layer.is_ancestor_of(btn):
 				out.append(btn)
 	return out
