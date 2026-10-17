@@ -195,3 +195,7 @@ EX_ABOUT,About File Explorer,Informazioni su Esplora risorse
 EX_ABOUT_NAME,File Explorer,Esplora risorse
 EX_ABOUT_COPY,"(C) 1981-1995 Hydrophone Systems, Inc.","(C) 1981-1995 Hydrophone Systems, Inc."
 UI_OK,OK,OK
+SECRET_WRONG,Wrong or incomplete codes. Try again.,Codici errati o incompleti. Riprovare.
+SECRET_SUB_1,CAN YOU HEAR ME?,MI SENTI?
+SECRET_SUB_2,NO ONE ANSWERS,NESSUNO RISPONDE
+SECRET_SUB_3,ARE YOU STILL THERE?,SEI ANCORA LÌ?

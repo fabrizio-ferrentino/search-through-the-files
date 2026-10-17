@@ -57,6 +57,7 @@ var _ctx_layer: Control
 var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
 var _contorno: Control = null        # rettangolo tratteggiato di spostamento/ridimensionamento
+var _glitch_cartella: SecretGlitch = null   # il guasto del dialogo della cartella segreta
 var _contorno_rect := Rect2()
 var _booting := false                # avvio in corso: l'OS non accetta input
 var _boot_token := 0                 # cresce a ogni avvio/spegnimento: annulla la sequenza vecchia
@@ -1096,7 +1097,7 @@ func _make_modal(title: String, dlg_size: Vector2, bg: Color) -> Dictionary:
 	tl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tbar.add_child(tl)
 
-	return {"layer": layer, "panel": panel}
+	return {"layer": layer, "panel": panel, "title": tl}
 
 # ---------------- "Informazioni su" (About) ----------------
 
@@ -1233,6 +1234,14 @@ func open_secret_folder(_node: Dictionary) -> void:
 	var layer: Control = dlg["layer"]
 	var panel: Panel = dlg["panel"]
 
+	# Il GUASTO del dialogo (vedi secret_glitch.gd): sta sullo strato, sopra il pannello,
+	# e muore con lui. Creato subito perche' i campi qui sotto gli parlano.
+	var guasto := SecretGlitch.new()
+	guasto.name = "Guasto"
+	layer.add_child(guasto)
+	guasto.setup(layer, panel, dlg["title"])
+	_glitch_cartella = guasto
+
 	# Niente istruzioni ne' etichette di riga: solo i campi. Il giocatore deduce la
 	# riga dal prefisso trovato nei contenuti (es. "2-..." -> 2o campo dall'alto).
 	var fields: Array = []   # un LineEdit per riga (chiave)
@@ -1248,7 +1257,8 @@ func open_secret_folder(_node: Dictionary) -> void:
 			if u != le.text:
 				var col := le.caret_column
 				le.text = u
-				le.caret_column = col)
+				le.caret_column = col
+			guasto.tremito())     # il dialogo sobbalza mentre si scrive
 		panel.add_child(le)
 		fields.append(le)
 
@@ -1279,7 +1289,8 @@ func open_secret_folder(_node: Dictionary) -> void:
 			layer.queue_free()
 			game_won.emit()
 		else:
-			err.text = "Codici errati o incompleti. Riprovare."
+			err.text = tr("SECRET_WRONG")
+			guasto.rifiuto()
 
 	cancel.pressed.connect(func(): layer.queue_free())
 	unlock.pressed.connect(attempt)
@@ -1288,32 +1299,12 @@ func open_secret_folder(_node: Dictionary) -> void:
 	if not fields.is_empty():
 		fields[0].call_deferred("grab_focus")
 
-	# --- effetto "rotto/glitch" sul dialogo ---
-	# Overlay sopra il pannello che legge lo schermo sotto e lo distorce. mouse IGNORE:
-	# non blocca i campi/pulsanti sotto. Aggiunto per ultimo -> disegnato in cima.
-	var fx := ColorRect.new()
-	fx.name = "GlitchFX"
-	fx.position = Vector2.ZERO
-	fx.size = panel.size
-	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var mat := ShaderMaterial.new()
-	mat.shader = load("res://scripts/os/glitch.gdshader")
-	mat.set_shader_parameter("intensity", 0.05)   # fondo basso: mai del tutto pulito
-	fx.material = mat
-	panel.add_child(fx)
 
-	# Raffiche: per lo piu' calmo, con brevi picchi di glitch a intervalli casuali.
-	var burst := Timer.new()
-	burst.one_shot = false
-	burst.wait_time = randf_range(1.5, 3.0)
-	panel.add_child(burst)
-	burst.timeout.connect(func():
-		burst.wait_time = randf_range(1.5, 3.0)   # prossima raffica
-		var tw := create_tween()
-		tw.tween_property(mat, "shader_parameter/intensity", randf_range(0.6, 1.0), 0.04)
-		tw.tween_interval(randf_range(0.12, 0.3))
-		tw.tween_property(mat, "shader_parameter/intensity", 0.05, 0.22))
-	burst.start()
+# Fa partire una raffica sul dialogo della cartella segreta, se e' aperto. La usano gli
+# strumenti di sviluppo e i test (tests/glitch_look_check, cartella_segreta_test).
+func glitch_segreto(forza: float, tipo := -1) -> void:
+	if _glitch_cartella != null and is_instance_valid(_glitch_cartella):
+		_glitch_cartella.raffica(forza, tipo)
 
 # Conferma di spegnimento (stile classico: solo Sì / No).
 func _show_shutdown() -> void:
