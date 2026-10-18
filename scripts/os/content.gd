@@ -172,15 +172,22 @@ static func _testo(chiave: String) -> String:
 
 # ---------------- filesystem (albero base del run) ----------------
 
-# Albero base del filesystem (radice "Risorse del computer"). Il filler e' fisso; le
-# foto della cartella Immagini e le chiavi 1 (file), 2 (cartella) e 4 (immagine)
-# vengono generate/piazzate a caso (seminato) prima di restituire. Lo consuma
-# VFS._build(), che aggiunge poi i back-reference _parent.
+# Albero del filesystem (radice "Risorse del computer"), in tre tempi:
+#  1 lo SCHELETRO fisso (_disco_c): quello che ogni PC del '98 aveva e che il gioco cerca,
+#    con le foto del run in Documenti\Immagini;
+#  2 il RIEMPIMENTO a caso (_riempi_disco, dal catalogo in catalogo_disco.gd): cartelle in
+#    piu', programmi inventati, file d'epoca e qualche file horror. Diverso a ogni partita
+#    (18/10/2026, richiesta del proprietario);
+#  3 le CHIAVI 1 (file) e 2 (cartella), che possono finire anche nelle cartelle nuove.
+# Il riempimento ha un RNG SUO: cosi' non sposta le estrazioni di foto e chiavi, e
+# aggiungere una voce al catalogo non cambia quale foto porta il codice.
+# Lo consuma VFS._build(), che aggiunge poi i back-reference _parent.
 static func build_filesystem() -> Dictionary:
 	var rng := _run_rng(VFS_SALT)
 	var c_children: Array = _disco_c(rng)
-	_place_file_key(c_children, rng)     # chiave 1
-	_place_folder_key(c_children, rng)   # chiave 2
+	var nuove: Dictionary = _riempi_disco(c_children)
+	_place_file_key(c_children, rng, nuove["chiave_file"])       # chiave 1
+	_place_folder_key(c_children, rng, nuove["sotto_documenti"])  # chiave 2
 	# RISORSE DEL COMPUTER = le UNITA', non una cartella sola. Un "Risorse del computer"
 	# con dentro il solo disco C: e' la cosa che tradisce il tema piu' in fretta: nel '98
 	# la prima finestra che si apriva elencava floppy, disco, CD-ROM e Cestino. A: e D:
@@ -208,12 +215,11 @@ static func _disco_c(rng: RandomNumberGenerator) -> Array:
 				_binario("PLFILTER.DLL"),
 			]),
 		]),
+		# i file di Documenti arrivano dal catalogo (diario, lettere, ricette... e qualcosa
+		# di peggio): qui resta solo Immagini, SEMPRE allo stesso posto
 		_folder(_t("VFS_DOCUMENTS"), "folder", [
 			# le foto del run stanno qui dentro: una nasconde la chiave 4
 			_folder(_t("VFS_PICTURES"), "folder", _make_image_folder(rng)),
-			_text(_t("FN_DIARY"), _testo("FT_DIARY")),
-			_text(_t("FN_PASSWORD"), _testo("FT_PASSWORD")),
-			_text(_t("FN_SHOPPING"), _testo("FT_SHOPPING")),
 		]),
 		_folder(DIR_TEMP, "folder", [
 			_binario("~MF0A12.TMP"),
@@ -267,7 +273,6 @@ static func _cartella_sistema() -> Dictionary:
 				+ "Wallpaper=(None)\nTileWallpaper=0"),
 		_text("SYSTEM.INI", "[boot]\nshell=WHALEEXP.EXE\nmouse.drv=MOUSE.DRV\n\n"
 				+ "[386Enh]\nEMMExclude=C000-CFFF"),
-		_text(_t("FN_SYSNOTES"), _testo("FT_SYSNOTES")),
 	])
 
 # Dove puo' finire il file che porta la chiave 1: PERCORSI (dalla radice di C:), non nomi.
@@ -284,26 +289,30 @@ static func _cartelle_chiave() -> Array:
 		[DIR_SISTEMA],
 	]
 
-# Chiave 1: file portatore (nome + contenuto a caso) in una cartella a caso.
-static func _place_file_key(c_children: Array, rng: RandomNumberGenerator) -> void:
+# Chiave 1: file portatore (nome + contenuto a caso) in una cartella a caso -- fra quelle
+# fisse di _cartelle_chiave() e quelle nate in questa partita (sottocartelle di Documenti,
+# programmi inventati, cartelle in piu' di C:).
+static func _place_file_key(c_children: Array, rng: RandomNumberGenerator, nuove: Array = []) -> void:
 	var label := GameManager.key_label(KEY_FILE)
 	if label == "":
 		return
-	var percorso: Array = _pick(_cartelle_chiave(), rng)
+	var percorso: Array = _pick(_cartelle_chiave() + nuove, rng)
 	var folder := _find_path(c_children, percorso)
 	if folder.is_empty():
 		percorso = [_t("VFS_DOCUMENTS")]          # ripiego: i Documenti ci sono sempre
 		folder = _find_path(c_children, percorso)
 		if folder.is_empty():
 			return
-	var name: String = _t(_pick(_FILE_NAMES, rng))
+	# il nome non deve coincidere con un file gia' li' (in italiano "licenza.txt" e il
+	# LICENZA.TXT di un programma sono lo stesso nome, su un disco Windows)
+	var name: String = _nome_libero(folder["children"], _t(_pick(_FILE_NAMES, rng)))
 	var content: String = _testo(_pick(_FILE_CARRIERS, rng))
 	folder["children"].append(_text(name, content.replace(KEY_SLOT, label)))
 	GameManager.note_key(KEY_FILE, "%s (in %s)" % [name, _percorso_dos(percorso)])
 
 # Chiave 2: cartella di "backup" (nome a caso) col codice scritto nel proprio nome. Va
 # nella radice di C: o dentro Documenti: sono i due posti dove uno la metterebbe davvero.
-static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> void:
+static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator, sotto_doc: Array = []) -> void:
 	var label := GameManager.key_label(KEY_FOLDER)
 	if label == "":
 		return
@@ -318,9 +327,174 @@ static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator) -> 
 		if not doc.is_empty():
 			percorso = [_t("VFS_DOCUMENTS")]
 			dentro = doc["children"]
+			# meta' delle volte un livello piu' giu', in una cartella dell'utente
+			if not sotto_doc.is_empty() and rng.randf() < 0.5:
+				var p: Array = _pick(sotto_doc, rng)
+				var sotto := _find_path(c_children, p)
+				if not sotto.is_empty():
+					percorso = p
+					dentro = sotto["children"]
 	dentro.insert(rng.randi_range(0, dentro.size()), folder)
 	GameManager.note_key(KEY_FOLDER, "%s (nome cartella, in %s)"
 			% [str(folder.get("name", "?")), _percorso_dos(percorso)])
+
+# ---------------- il riempimento a caso (catalogo_disco.gd) ----------------
+
+# Mette sul disco quello che il catalogo puo' offrire: sottocartelle in Documenti,
+# programmi inventati, cartelle in piu' di C:, binari in SYSTEM e TEMP, file d'epoca per
+# zona e 2-3 file horror. Torna i percorsi nuovi che le chiavi possono usare.
+#
+# DUE REGOLE che tengono uguali le partite fra le lingue (filesystem_test, STESSA_FORMA):
+# ogni scelta si fa per INDICE di voce del catalogo, mai sul nome tradotto; e "questa
+# voce c'e' gia' qui?" si chiede alla chiave della voce, non al nome. Una voce d'epoca o
+# horror compare una volta sola sul disco; i file dei programmi una per programma.
+static func _riempi_disco(c: Array) -> Dictionary:
+	var r := _run_rng(VFS_SALT + 2)
+	var doc := _find_path(c, [_t("VFS_DOCUMENTS")])
+	var prog := _find_path(c, [_t("VFS_PROGRAMS")])
+	var system := _find_path(c, [DIR_SISTEMA, DIR_SYSTEM])
+	var temp_c := _find_path(c, [DIR_TEMP])
+	var temp_w := _find_path(c, [DIR_SISTEMA, DIR_TEMP])
+	# zona -> luoghi possibili: [percorso, cartella]. La radice di C: non e' una cartella
+	# del VFS a questo punto (lo diventa dopo): una pseudo-cartella sui suoi figli basta.
+	var luoghi := {
+		CatalogoDisco.DOCUMENTI: [[[_t("VFS_DOCUMENTS")], doc]],
+		CatalogoDisco.RADICE: [[[], {"children": c}]],
+		CatalogoDisco.SISTEMA: [[[DIR_SISTEMA], _find_path(c, [DIR_SISTEMA])]],
+		CatalogoDisco.TEMP: [[[DIR_TEMP], temp_c], [[DIR_SISTEMA, DIR_TEMP], temp_w]],
+		CatalogoDisco.PROGRAMMA: [[[_t("VFS_PROGRAMS"), APP_FOTO],
+				_find_path(c, [_t("VFS_PROGRAMS"), APP_FOTO])]],
+		CatalogoDisco.EXTRA: [],
+	}
+	var chiave_file: Array = []
+	var sotto_documenti: Array = []
+
+	# 1. le cartelle dell'utente dentro Documenti
+	for k in _alcuni(CatalogoDisco.CARTELLE_DOCUMENTI, CatalogoDisco.QUANTE_SOTTOCARTELLE, r):
+		var f := _folder(_t(str(k)), "folder", [])
+		_inserisci(doc["children"], f, r)
+		var p := [_t("VFS_DOCUMENTS"), f["name"]]
+		luoghi[CatalogoDisco.DOCUMENTI].append([p, f])
+		chiave_file.append(p)
+		sotto_documenti.append(p)
+
+	# 2. i programmi inventati, ognuno coi suoi binari e (forse) LEGGIMI e LICENZA
+	for voce in _alcuni(CatalogoDisco.PROGRAMMI, CatalogoDisco.QUANTI_PROGRAMMI, r):
+		var f := _folder(str(voce[0]), "folder", _binari(voce[1]))
+		_file_dei_programmi(f, r)
+		_inserisci(prog["children"], f, r)
+		var p := [_t("VFS_PROGRAMS"), f["name"]]
+		luoghi[CatalogoDisco.PROGRAMMA].append([p, f])
+		chiave_file.append(p)
+	# PhotoLab e' fisso, ma un LEGGIMI ce lo puo' avere anche lui
+	_file_dei_programmi(luoghi[CatalogoDisco.PROGRAMMA][0][1], r)
+
+	# 3. le cartelle in piu' nella radice di C:
+	for voce in _alcuni(CatalogoDisco.CARTELLE_RADICE, CatalogoDisco.QUANTE_CARTELLE_RADICE, r):
+		var f := _folder(str(voce[0]), "folder", _binari(voce[1]))
+		_inserisci(c, f, r)
+		var p := [f["name"]]
+		luoghi[CatalogoDisco.EXTRA].append([p, f])
+		chiave_file.append(p)
+
+	# 4. binari in piu' in SYSTEM, e qualche ~DFxxxx.TMP nelle due TEMP
+	for nome in _alcuni(CatalogoDisco.BINARI_SISTEMA, CatalogoDisco.QUANTI_BINARI_SISTEMA, r):
+		system["children"].append(_binario(str(nome)))
+	for i in range(r.randi_range(CatalogoDisco.QUANTI_TMP[0], CatalogoDisco.QUANTI_TMP[1])):
+		var t: Dictionary = temp_c if r.randf() < 0.5 else temp_w
+		var nome := "~DF%04X.TMP" % r.randi_range(0x1000, 0xFFFF)
+		if _nome_libero(t["children"], nome) == nome:
+			t["children"].append(_binario(nome))
+
+	# 5. i file d'epoca, zona per zona
+	var usate := {}          # chiavi delle voci gia' sul disco: una volta sola ciascuna
+	for zona in CatalogoDisco.QUANTI_EPOCA:
+		var quanti: Array = CatalogoDisco.QUANTI_EPOCA[zona]
+		var n := r.randi_range(int(quanti[0]), int(quanti[1]))
+		var adatte: Array = []
+		for voce in CatalogoDisco.FILE_EPOCA:
+			if (voce[2] as Array).has(zona):
+				adatte.append(voce)
+		for voce in _shuffled(adatte, r):
+			if n <= 0:
+				break
+			if _metti_voce(voce, [zona], luoghi, usate, r):
+				n -= 1
+
+	# 6. gli horror: pochi, in uno qualunque dei loro posti
+	var h := r.randi_range(CatalogoDisco.QUANTI_HORROR[0], CatalogoDisco.QUANTI_HORROR[1])
+	for voce in _shuffled(CatalogoDisco.FILE_HORROR, r):
+		if h <= 0:
+			break
+		if _metti_voce(voce, voce[2], luoghi, usate, r):
+			h -= 1
+
+	return {"chiave_file": chiave_file, "sotto_documenti": sotto_documenti}
+
+# Mette UNA voce del catalogo in uno dei luoghi delle zone date (a caso). Falso se la voce
+# e' gia' sul disco o se nessuna di quelle zone ha un luogo in questa partita (EXTRA senza
+# cartelle in piu'): chi chiama passa alla voce successiva.
+static func _metti_voce(voce: Array, zone: Array, luoghi: Dictionary, usate: Dictionary,
+		r: RandomNumberGenerator) -> bool:
+	if usate.has(voce[0]):
+		return false
+	var possibili: Array = []
+	for z in zone:
+		possibili.append_array(luoghi.get(z, []))
+	if possibili.is_empty():
+		return false
+	var dove: Dictionary = _pick(possibili, r)[1]
+	var nome := _t(str(voce[0]))
+	if _nome_libero(dove["children"], nome) != nome:
+		return false
+	var f := _text(nome, _testo(str(voce[1])).replace("{PROG}", str(dove.get("name", ""))))
+	f["voce"] = voce[0]       # da quale voce del catalogo viene (lo leggono i test)
+	_inserisci(dove["children"], f, r)
+	usate[voce[0]] = true
+	return true
+
+# LEGGIMI e LICENZA di un programma, ognuno con la sua probabilita'.
+static func _file_dei_programmi(cartella: Dictionary, r: RandomNumberGenerator) -> void:
+	for voce in CatalogoDisco.FILE_DEI_PROGRAMMI:
+		if r.randf() < float(voce[2]):
+			var nome := _t(str(voce[0]))
+			if _nome_libero(cartella["children"], nome) == nome:
+				var f := _text(nome, _testo(str(voce[1])).replace("{PROG}", str(cartella["name"])))
+				f["voce"] = voce[0]
+				cartella["children"].append(f)
+
+static func _binari(nomi: Array) -> Array:
+	var out: Array = []
+	for n in nomi:
+		out.append(_binario(str(n)))
+	return out
+
+# Da 'min' a 'max' elementi distinti dell'array, a caso.
+static func _alcuni(arr: Array, quanti: Array, r: RandomNumberGenerator) -> Array:
+	var n := mini(arr.size(), r.randi_range(int(quanti[0]), int(quanti[1])))
+	return _shuffled(arr, r).slice(0, n)
+
+# In un punto a caso dell'elenco: in fondo si riconoscerebbe a colpo d'occhio cosa e'
+# stato aggiunto (lo stesso motivo per cui la cartella della chiave 2 si infila a caso).
+static func _inserisci(figli: Array, nodo: Dictionary, r: RandomNumberGenerator) -> void:
+	figli.insert(r.randi_range(0, figli.size()), nodo)
+
+# Il nome dato se e' libero in quella cartella, altrimenti "nome (2).ext": come un disco
+# Windows, maiuscole e minuscole non contano.
+static func _nome_libero(figli: Array, nome: String) -> String:
+	var presi := {}
+	for f in figli:
+		if f is Dictionary:
+			presi[str(f.get("name", "")).to_lower()] = true
+	if not presi.has(nome.to_lower()):
+		return nome
+	var punto := nome.rfind(".")
+	var base := nome if punto <= 0 else nome.substr(0, punto)
+	var est := "" if punto <= 0 else nome.substr(punto)
+	var n := 2
+	while presi.has(("%s (%d)%s" % [base, n, est]).to_lower()):
+		n += 1
+	return "%s (%d)%s" % [base, n, est]
 
 # Un percorso (array di nomi sotto C:) scritto come lo scriveva il sistema: C:\WHALE\TEMP.
 static func _percorso_dos(percorso: Array) -> String:

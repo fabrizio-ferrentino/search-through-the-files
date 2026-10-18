@@ -203,3 +203,58 @@ EX_RENAME,Rename,Rinomina
 RN_ERR_TITLE,Error Renaming File,Errore durante la ridenominazione
 RN_ERR_EXISTS,"Cannot rename %s: a file with the name you specified already exists. Specify a different filename.","Impossibile rinominare %s: esiste già un file con il nome specificato. Specificare un nome diverso."
 RN_ERR_CHARS,"A filename cannot contain any of the following characters: \ / : * ? "" < > |","Il nome di un file non può contenere i seguenti caratteri: \ / : * ? "" < > |"
+FD_LETTERS,Letters,Lettere
+FD_SCHOOL,School,Scuola
+FD_RECIPES,Recipes,Ricette
+FD_WORK,Work,Lavoro
+FD_OLD_STUFF,Old stuff,Roba vecchia
+FN_LETTER,letter_to_mum.txt,lettera_mamma.txt
+FT_LETTER,"Dear Mum,\nthe new computer works. It makes a noise at night but the shop says it's normal.\nI'll call you on Sunday.\nLove","Cara mamma,\nil computer nuovo funziona. Di notte fa un rumore ma il negozio dice che e' normale.\nTi chiamo domenica.\nUn bacio"
+FN_HOMEWORK,homework.txt,compiti.txt
+FT_HOMEWORK,"History - page 112, exercises 3 and 4\nMaths - fractions (all of them)\nRemember: library book due on Friday","Storia - pagina 112, esercizi 3 e 4\nMatematica - frazioni (tutte)\nRicordare: riportare il libro in biblioteca venerdi'"
+FN_RECIPE,tiramisu.txt,tiramisu_nonna.txt
+FT_RECIPE,Tiramisu (Grandma's)\n- 4 eggs\n- 500 g mascarpone\n- ladyfingers\n- coffee and cocoa\nNO cream. She would know.,Tiramisu' (della nonna)\n- 4 uova\n- 500 g di mascarpone\n- savoiardi\n- caffe' e cacao\nNIENTE panna. Se ne accorgerebbe.
+FN_PHONES,phone_numbers.txt,numeri_telefono.txt
+FT_PHONES,Home       0471 238 554\nDentist    0471 902 117\nPizza      0471 330 090\nPC shop    0471 555 208 (ask for Mark),Casa       0471 238 554\nDentista   0471 902 117\nPizzeria   0471 330 090\nNegozio PC 0471 555 208 (chiedere di Marco)
+FN_TODO,todo.txt,cose_da_fare.txt
+FT_TODO,- defragment drive C:\n- copy the photos onto floppies\n- uninstall the demo games\n- find out why the clock is always wrong,- deframmentare l'unita' C:\n- copiare le foto sui dischetti\n- disinstallare i giochi demo\n- capire perche' l'orologio e' sempre sbagliato
+FN_SCORES,scores.txt,punteggi.txt
+FT_SCORES,MINEFIELD high scores\n  Beginner     12 s\n  Expert      174 s\n\nPATIENCE: 3 games won out of 41,Record di MINEFIELD\n  Principiante 12 s\n  Esperto     174 s\n\nPATIENCE: 3 partite vinte su 41
+FN_CONTROL_INI,CONTROL.INI,CONTROL.INI
+FT_CONTROL_INI,[Current]\ncolor schemes=Whale Standard\n\n[Patterns]\n(None)=(None)\nBoxes=127 65 65 65 65 65 127 0,[Current]\ncolor schemes=Whale Standard\n\n[Patterns]\n(None)=(None)\nBoxes=127 65 65 65 65 65 127 0
+FN_PROTOCOL_INI,PROTOCOL.INI,PROTOCOL.INI
+FT_PROTOCOL_INI,[ndishlp$]\nDriverName=ndishlp$\n\n[protman$]\nDriverName=PROTMAN$\nPRIORITY=WH$NDISHLP,[ndishlp$]\nDriverName=ndishlp$\n\n[protman$]\nDriverName=PROTMAN$\nPRIORITY=WH$NDISHLP
+FN_NETLOG,NETLOG.TXT,NETLOG.TXT
+FT_NETLOG,Network log\n\nWebNet ISP - dial-up connection\nConnected at 28800 bps\nSession time: 00:42:17\nDisconnected by the remote computer.,Registro della rete\n\nWebNet ISP - connessione remota\nConnesso a 28800 bps\nDurata della sessione: 00:42:17\nDisconnesso dal computer remoto.
+FN_SETUPLOG,SETUPLOG.TXT,SETUPLOG.TXT
+FT_SETUPLOG,[Setup]\nVersion = 4.00.950\nInstallType = 1\nCustomise = 0\n\n[Started]\nDetection = OK\nCopy files = OK\nFirst boot = OK,[Setup]\nVersion = 4.00.950\nInstallType = 1\nCustomise = 0\n\n[Started]\nDetection = OK\nCopy files = OK\nFirst boot = OK
+FN_DETLOG,DETLOG.TXT,DETLOG.TXT
+FT_DETLOG,Detection log\n\nChecking for: Programmable interrupt controller... OK\nChecking for: Direct memory access controller... OK\nChecking for: Serial port... OK\nChecking for: Sound card... OK\nChecking for: Unknown device at address 52h... ?,Registro del rilevamento\n\nRicerca di: Controller di interrupt programmabile... OK\nRicerca di: Controller di accesso diretto alla memoria... OK\nRicerca di: Porta seriale... OK\nRicerca di: Scheda audio... OK\nRicerca di: Periferica sconosciuta all'indirizzo 52h... ?
+FN_SCANDISK,SCANDISK.LOG,SCANDISK.LOG
+FT_SCANDISK,ScanDisk log\n\nDrive C: checked.\nFile allocation table: OK\nFolder structure: OK\nSurface scan: OK\n\nNo errors found.,Registro di ScanDisk\n\nUnita' C: controllata.\nTabella di allocazione file: OK\nStruttura delle cartelle: OK\nAnalisi della superficie: OK\n\nNessun errore trovato.
+FN_DRIVER_TXT,DRIVER.TXT,DRIVER.TXT
+FT_DRIVER_TXT,"Driver installation\n\n1. Copy the files into the DRIVERS folder.\n2. Restart the computer.\n3. If the screen flickers after restarting, do not panic.","Installazione del driver\n\n1. Copiare i file nella cartella DRIVERS.\n2. Riavviare il computer.\n3. Se dopo il riavvio lo schermo sfarfalla, niente panico."
+FN_PRG_README,README.TXT,LEGGIMI.TXT
+FT_PRG_README,{PROG}\n\nThank you for choosing {PROG}.\nInstallation completed successfully.\n\nSee LICENSE.TXT for the terms of use.,{PROG}\n\nGrazie per aver scelto {PROG}.\nInstallazione completata correttamente.\n\nVedere LICENZA.TXT per le condizioni d'uso.
+FN_PRG_LICENSE,LICENSE.TXT,LICENZA.TXT
+FT_PRG_LICENSE,"{PROG} - SINGLE USER LICENCE\n\nThis software is licensed, not sold.\nYou may install it on ONE computer only.\nCopying is forbidden.","{PROG} - LICENZA PER UN SOLO UTENTE\n\nIl software e' concesso in licenza, non venduto.\nPuo' essere installato su UN solo computer.\nE' vietata la copia."
+FN_HR_STILL_ON,still_on.txt,ancora_acceso.txt
+FT_HR_STILL_ON,"If you are reading this, the computer is still on.\n\nI tried to switch it off. Three times.\nThe screen stays warm even when it is unplugged.","Se stai leggendo questo, il computer e' ancora acceso.\n\nHo provato a spegnerlo. Tre volte.\nLo schermo resta caldo anche quando e' staccato."
+FN_HR_52HZ,52HZ.TXT,52HZ.TXT
+FT_HR_52HZ,Frequency: 52 Hz.\nToo high for the others to hear.\nIt keeps calling anyway.\n\nI recorded it from the speaker at 03:12.\nThere is no speaker in this room.,Frequenza: 52 Hz.\nTroppo alta perche' gli altri la sentano.\nContinua a chiamare lo stesso.\n\nL'ho registrata dall'altoparlante alle 03:12.\nIn questa stanza non c'e' nessun altoparlante.
+FN_HR_README,README.1ST,README.1ST
+FT_HR_README,Thank you for installing.\n\nPlease do not answer if it asks for your name.\nIt already knows the room.\nIt already knows the chair.,Grazie per l'installazione.\n\nNon rispondere se ti chiede come ti chiami.\nConosce gia' la stanza.\nConosce gia' la sedia.
+FN_HR_PREVIOUS,user_notes.txt,appunti_utente.txt
+FT_HR_PREVIOUS,Day 1: bought it second hand. The previous owner left everything on it.\nDay 4: the clock in the corner is never right.\nDay 9: somebody else's files keep appearing.\nDay 12: they are my files. I don't remember writing them.,Giorno 1: comprato usato. Il vecchio proprietario ha lasciato tutto dentro.\nGiorno 4: l'orologio nell'angolo non e' mai giusto.\nGiorno 9: continuano a comparire file di qualcun altro.\nGiorno 12: sono file miei. Non ricordo di averli scritti.
+FN_HR_SCANDISK,SCANDSK2.LOG,SCANDSK2.LOG
+FT_HR_SCANDISK,ScanDisk found errors on drive C:\n\n  Cluster 6610: something is written here\n  Cluster 6611: something is written here\n  Cluster 6612: it is still writing\n\nScanDisk could not fix these errors.,ScanDisk ha trovato errori sull'unita' C:\n\n  Cluster 6610: qui c'e' scritto qualcosa\n  Cluster 6611: qui c'e' scritto qualcosa\n  Cluster 6612: sta ancora scrivendo\n\nScanDisk non ha potuto correggere questi errori.
+FN_HR_DONT,dont_open.txt,non_aprire.txt
+FT_HR_DONT,you opened it.\n\nthat's fine.\nI only wanted to know if someone was still there.,l'hai aperto.\n\nva bene.\nvolevo solo sapere se c'era ancora qualcuno.
+FN_HR_CALL,call.txt,chiamata.txt
+FT_HR_CALL,Modem log\n\nATDT 0000000\nCONNECT 52\n\n...hello?\n...is anyone answering?\n\nNO CARRIER,Registro del modem\n\nATDT 0000000\nCONNECT 52\n\n...pronto?\n...risponde qualcuno?\n\nNO CARRIER
+FN_HR_AUTOSAVE,~WRL0052.TMP,~WRL0052.TMP
+FT_HR_AUTOSAVE,autosave\n\nhe sits at the desk every night\nhe never turns around\nhe thinks the screen is the only thing that is on,salvataggio automatico\n\nsi siede alla scrivania ogni notte\nnon si gira mai\ncrede che lo schermo sia l'unica cosa accesa
+FN_HR_INVENTORY,inventory.txt,inventario.txt
+FT_HR_INVENTORY,Room inventory\n- desk: 1\n- lamp: 1\n- computer: 1\n- chair: 1\n- people: 2\n\nI live alone.,Inventario della stanza\n- scrivania: 1\n- lampada: 1\n- computer: 1\n- sedia: 1\n- persone: 2\n\nIo vivo da solo.
+FN_HR_WHALE,whale.txt,balena.txt
+FT_HR_WHALE,The logo is a whale.\nThe loneliest one: it sings at a frequency no other whale answers.\n\nI used to think it was a strange choice for a computer.\nNow I think it is the only honest one.,Il logo e' una balena.\nLa piu' sola: canta a una frequenza a cui nessun'altra risponde.\n\nPensavo fosse una scelta strana per un computer.\nOra penso che sia l'unica onesta.
