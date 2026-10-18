@@ -26,6 +26,14 @@ const CLOWN_SUBTITLES := [
 	"DEATH_CLOWN_4",
 ]
 
+# Battute del virus mortale del PC (M5): cause == "virus".
+const VIRUS_SUBTITLES := [
+	"DEATH_VIRUS_1",
+	"DEATH_VIRUS_2",
+	"DEATH_VIRUS_3",
+	"DEATH_VIRUS_4",
+]
+
 var _shake := false
 var _shake_amt := 0.0
 
@@ -163,8 +171,10 @@ func _show_gameover() -> void:
 	create_tween().tween_property(vb, "modulate:a", 1.0, 0.6)
 
 # Sottotitolo della schermata GAME OVER, scelto in base alla causa (il nemico).
-# Per ora solo il Clown ha battute proprie; le altre cause usano il set generico.
+# Il Clown e il virus mortale hanno battute proprie; le altre cause usano il set generico.
 func _pick_subtitle(cause: String) -> String:
 	if cause == "clown":
 		return CLOWN_SUBTITLES[randi() % CLOWN_SUBTITLES.size()]
+	if cause == "virus":
+		return VIRUS_SUBTITLES[randi() % VIRUS_SUBTITLES.size()]
 	return SUBTITLES[randi() % SUBTITLES.size()]

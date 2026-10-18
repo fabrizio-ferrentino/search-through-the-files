@@ -58,6 +58,7 @@ var _ctx_panel: Panel
 var _ctx_vbox: VBoxContainer
 var _contorno: Control = null        # rettangolo tratteggiato di spostamento/ridimensionamento
 var _glitch_cartella: SecretGlitch = null   # il guasto del dialogo della cartella segreta
+var _schermo_blu: SchermoBlu = null  # lo schermo blu del crash (virus_director.gd), se c'e'
 var _contorno_rect := Rect2()
 var _booting := false                # avvio in corso: l'OS non accetta input
 var _boot_token := 0                 # cresce a ogni avvio/spegnimento: annulla la sequenza vecchia
@@ -675,7 +676,8 @@ func _rinomina_attiva() -> DesktopItem:
 # l'About" (21/09/2026) funzionava solo nei test, che spingono i tasti nel SubViewport.
 func trattiene_esc() -> bool:
 	return _rinomina_attiva() != null \
-			or (_modal_chiudibile != null and is_instance_valid(_modal_chiudibile))
+			or (_modal_chiudibile != null and is_instance_valid(_modal_chiudibile)) \
+			or schermo_blu_aperto()     # sullo schermo blu ESC e' "un tasto qualsiasi"
 
 # Ricostruisce le icone del desktop (es. dopo aver spostato file nel Cestino da
 # un'altra finestra): aggiorna anche lo stato pieno/vuoto del Cestino.
@@ -908,6 +910,7 @@ func boot() -> void:
 func power_off() -> void:
 	_boot_token += 1           # ferma la sequenza di avvio, se ne stava girando una
 	_booting = false
+	_chiudi_schermo_blu()      # spegnere col case e' l'altro modo di uscire da un crash
 	for w in windows.duplicate():
 		if is_instance_valid(w):
 			w.close()
@@ -1381,6 +1384,75 @@ func open_secret_folder(_node: Dictionary) -> void:
 func glitch_segreto(forza: float, tipo := -1) -> void:
 	if _glitch_cartella != null and is_instance_valid(_glitch_cartella):
 		_glitch_cartella.raffica(forza, tipo)
+
+# ---------------- virus (M5, scripts/threats/virus_director.gd) ----------------
+
+# Il desktop e' libero per un virus? PC acceso e loggato, niente avvio, niente login o
+# dialoghi aperti (la cartella segreta compresa: li' il guasto c'e' gia', e un crash sopra
+# i codici appena scritti sarebbe una punizione, non paura) e nessuna rinomina in corso.
+func pronto_per_virus() -> bool:
+	return GameManager.pc_on and GameManager.logged_in and not _booting \
+			and (_state_overlay == null or not is_instance_valid(_state_overlay)) \
+			and (_modal_layer == null or not is_instance_valid(_modal_layer)) \
+			and _rinomina_attiva() == null
+
+# Uno strato subito SOPRA LA CARTA DA PARATI e sotto le icone (lo sfondo del virus mortale).
+func sopra_sfondo(n: Control) -> void:
+	add_child(n)
+	move_child(n, 1)
+
+# Uno strato subito SOPRA LE FINESTRE e sotto barra, menu Avvio e dialoghi (il sangue):
+# la via d'uscita -- Avvio > Arresta -- deve restare pulita.
+func sopra_finestre(n: Control) -> void:
+	add_child(n)
+	move_child(n, window_layer.get_index() + 1)
+
+# Il CRASH: lo schermo blu sopra a tutto. Al tasto: normale -> si chiude il programma in
+# primo piano; grave -> il PC si riavvia (avvio + login di nuovo).
+func schermo_blu(grave: bool, rng: RandomNumberGenerator) -> void:
+	_chiudi_schermo_blu()
+	if start_menu != null:
+		start_menu.visible = false
+		start_btn.button_pressed = false
+	var sb := SchermoBlu.new()
+	add_child(sb)
+	sb.setup(grave, rng)
+	sb.move_to_front()
+	_schermo_blu = sb
+	_modal_layer = sb      # come un modale: il desktop sotto non reagisce, cursore a freccia
+	sb.premuto.connect(_on_schermo_blu_premuto)
+
+func schermo_blu_aperto() -> bool:
+	return _schermo_blu != null and is_instance_valid(_schermo_blu) \
+			and not _schermo_blu.is_queued_for_deletion()
+
+func _on_schermo_blu_premuto(grave: bool) -> void:
+	_chiudi_schermo_blu()
+	if grave:
+		riavvia()
+	elif active_window != null and is_instance_valid(active_window) and active_window.visible:
+		active_window.close()      # "l'applicazione corrente verra' terminata"
+
+func _chiudi_schermo_blu() -> void:
+	if _schermo_blu != null and is_instance_valid(_schermo_blu):
+		_schermo_blu.queue_free()
+	_schermo_blu = null
+
+# Riavvio a caldo dopo un crash grave: tutto chiuso, PC sempre acceso, avvio da capo e login.
+func riavvia() -> void:
+	_boot_token += 1
+	_booting = false
+	GameManager.logged_in = false
+	if start_menu != null:
+		start_menu.visible = false
+		start_btn.button_pressed = false
+	for w in windows.duplicate():
+		if is_instance_valid(w):
+			w.close()
+	active_window = null
+	window_layer.position = Vector2.ZERO
+	_update_taskbar()
+	_play_boot()
 
 # Conferma di spegnimento (stile classico: solo Sì / No).
 func _show_shutdown() -> void:

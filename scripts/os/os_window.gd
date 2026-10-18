@@ -359,6 +359,14 @@ func cursor_at(local_pos: Vector2) -> int:
 		return Control.CURSOR_ARROW
 	return _cursor_for_edges(_edges_at(local_pos))
 
+# La sta trascinando o ridimensionando il giocatore? (chi la muove da codice, come le
+# finestre vaganti di VirusStupido, la lascia stare finche' e' cosi')
+func occupata() -> bool:
+	return _dragging or _resizing
+
+func is_maximized() -> bool:
+	return _maximized
+
 func _on_min() -> void:
 	_abbandona_trascinamento()
 	minimized.emit(self)

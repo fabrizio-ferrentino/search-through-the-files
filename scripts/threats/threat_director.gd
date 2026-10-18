@@ -9,6 +9,7 @@ extends Node
 # regista non sa nulla della geometria, quindi puoi spostarle/aggiungerne liberamente.
 
 var player = null         # la Camera3D (player.gd): posa per la mira + is_in_pc()
+var virus = null          # il VirusDirector (M5): niente affacci durante il virus mortale
 
 var _clown = null
 var _spots: Array = []
@@ -69,6 +70,10 @@ func _ready() -> void:
 	_setup_glitch()
 	_setup_torch()
 
+# Il nemico si sta affacciando adesso? (il VirusDirector non fa partire virus intanto)
+func in_agguato() -> bool:
+	return _state == State.PEEK
+
 func _refresh_spots() -> void:
 	_spots = get_tree().get_nodes_in_group("enemy_spots")
 
@@ -104,7 +109,9 @@ func _process(delta: float) -> void:
 			_to_wait()
 	elif _state == State.WAIT:
 		_timer += delta
-		if _timer >= _interval():
+		# durante il virus mortale del PC si aspetta: due minacce mortali insieme non sono
+		# tensione, sono una lotteria (e il VirusDirector fa lo stesso con gli affacci)
+		if _timer >= _interval() and not (virus != null and virus.mortale_in_corso()):
 			_peek()
 	elif _state == State.PEEK:
 		_react_left -= delta

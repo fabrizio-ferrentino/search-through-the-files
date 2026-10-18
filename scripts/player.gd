@@ -42,6 +42,7 @@ var _home_fov := 75.0
 
 # --- minaccia stanza (M4): regista + corridoio + nemico (Clown) ---
 var _threats = null                    # ThreatDirector (spawnato a runtime)
+var _virus = null                      # VirusDirector (M5): i virus dentro il PC
 
 # --- schermo del monitor nella stanza (mostra il desktop del PC) ---
 @export_group("Schermo monitor")
@@ -158,6 +159,14 @@ func _spawn_threats() -> void:
 	director.player = self
 	get_parent().add_child(director)
 	_threats = director
+	# ...e quella DENTRO il PC (M5): i virus. Vivono nell'OS, il regista sta qui accanto.
+	var virus = load("res://scripts/threats/virus_director.gd").new()
+	virus.name = "VirusDirector"
+	virus.player = self
+	virus.os = _os
+	get_parent().add_child(virus)
+	_virus = virus
+	director.virus = virus
 
 # Direzione di sguardo corrente (per il regista delle minacce): "center"/"left"/
 # "right"/"back", dedotta da target_yaw.
@@ -341,6 +350,8 @@ func _on_game_won() -> void:
 	entering = true            # blocca input e movimento fino al cambio scena
 	if _threats != null:       # niente jumpscare sopra la schermata di vittoria
 		_threats.stop()
+	if _virus != null:         # ...ne' virus
+		_virus.stop()
 	if _pc_layer:
 		_pc_layer.visible = false
 	_in_pc = false

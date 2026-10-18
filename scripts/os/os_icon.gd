@@ -35,6 +35,8 @@ func _draw() -> void:
 			_cd(w, h)
 		"exe":
 			_eseguibile(w, h)
+		"smiley":
+			_faccina(w, h)
 		"image":
 			_image(w, h)
 		"notepad":
@@ -246,6 +248,21 @@ func _eseguibile(w: float, h: float) -> void:
 		for i in range(3):
 			draw_rect(Rect2(w * 0.20, h * (0.44 + i * 0.12), w * 0.40, maxf(1.0, h * 0.05)),
 					Color("8a8a80"))
+
+# Faccina gialla: l'icona del virus YouAreStupid (virus_stupido.gd). Sotto i 24 px la
+# bocca diventa un trattino, perche' l'arco si impasterebbe.
+func _faccina(w: float, h: float) -> void:
+	var c := Vector2(w * 0.5, h * 0.5)
+	var r: float = minf(w, h) * 0.40
+	var tratto: float = maxf(1.0, h * 0.05)
+	draw_circle(c, r, Color("ffd800"))
+	draw_arc(c, r, 0.0, TAU, 24, Color("3a3000"), tratto)
+	draw_circle(c + Vector2(-r * 0.36, -r * 0.25), maxf(1.0, r * 0.14), Color.BLACK)
+	draw_circle(c + Vector2(r * 0.36, -r * 0.25), maxf(1.0, r * 0.14), Color.BLACK)
+	if h >= 24.0:
+		draw_arc(c + Vector2(0, r * 0.05), r * 0.55, PI * 0.15, PI * 0.85, 12, Color.BLACK, tratto)
+	else:
+		draw_rect(Rect2(c.x - r * 0.4, c.y + r * 0.35, r * 0.8, tratto), Color.BLACK)
 
 func _image(w: float, h: float) -> void:
 	# foto incorniciata: cielo, sole, una montagnola (icona "file immagine")
