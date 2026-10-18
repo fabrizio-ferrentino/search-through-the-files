@@ -42,9 +42,11 @@ var _game_over_active := false
 # della partita precedente, dato che vive sulla radice e sopravvive al cambio di scena).
 var run_active := false
 
-# Debug: toggle minacce (F11). Quando false, il ThreatDirector non genera
-# affacci e non puo' uccidere — utile per testare modifiche in pace.
-var threats_enabled := true
+# Debug: le minacce si spengono in due gruppi, per provare l'una senza l'altra.
+# F11 = quelle della STANZA (ThreatDirector: niente affacci, non puo' uccidere);
+# F8 = quelle del PC (VirusDirector: niente virus, il conto si ferma).
+var room_threats_enabled := true
+var pc_threats_enabled := true
 
 # DEV-ONLY. Dove e' finita ogni chiave: lo riempiono i generatori dei contenuti
 # mentre le piazzano (content.gd, web_runtime.gd) chiamando note_key(). Serve al
@@ -109,7 +111,7 @@ func _salva_lingua(codice: String) -> void:
 	cfg.set_value("gioco", "lingua", codice)
 	var err := cfg.save(FILE_IMPOSTAZIONI)
 	if err != OK:
-		push_warning("impostazioni non salvate (errore %d)" % err)
+		push_warning("settings not saved (error %d)" % err)
 
 # ---------------- ciclo di vita del run ----------------
 
@@ -159,7 +161,12 @@ func restart() -> void:
 	start_new_run()
 
 # DEV-ONLY: F12 mostra chiavi e nascondigli, F10 forza il game over (per provare
-# jumpscare/flusso), F11 spegne le minacce. Da togliere prima del rilascio.
+# jumpscare/flusso), F11 accende/spegne le minacce della STANZA, F8 quelle del PC (F9,
+# far partire un virus, sta in virus_director.gd). Da togliere prima del rilascio.
+# Tutto il testo di debug -- pannello e console -- e' in INGLESE, in ogni lingua del
+# gioco (richiesta del proprietario, 18/10/2026): non e' testo per chi gioca, e non passa
+# dal CSV. I nomi delle cose del gioco che compaiono nelle note (file, cartelle, siti)
+# restano invece quelli che il giocatore vede.
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F12:
@@ -168,11 +175,18 @@ func _input(event: InputEvent) -> void:
 			if run_active:
 				game_over("debug")
 			else:
-				print("[GameManager] F10 ignorato: nessuna partita in corso")
+				print("[GameManager] F10 ignored: no run in progress")
 		elif event.keycode == KEY_F11:
-			threats_enabled = not threats_enabled
-			print("[GameManager] threats_enabled = ", threats_enabled)
+			room_threats_enabled = not room_threats_enabled
+			print("[GameManager] room threats (F11): ", _on_off(room_threats_enabled))
 			_refresh_keys_panel()
+		elif event.keycode == KEY_F8:
+			pc_threats_enabled = not pc_threats_enabled
+			print("[GameManager] PC threats (F8): ", _on_off(pc_threats_enabled))
+			_refresh_keys_panel()
+
+static func _on_off(v: bool) -> String:
+	return "ON" if v else "OFF"
 
 # ---------------- chiavi (M1) ----------------
 
@@ -224,12 +238,11 @@ func note_key(index: int, dove: String) -> void:
 # Rapporto sintetico: intestazione con seme e stato delle minacce, poi una riga
 # per chiave (codice, tipo, dove sta).
 func keys_report() -> String:
-	var tipi := {1: "FILE", 2: "CART", 3: "WEB", 4: "FOTO"}
-	var out := "CHIAVI  seme %d  -  minacce %s
-" % [run_seed, "ON" if threats_enabled else "OFF"]
+	var tipi := {1: "FILE", 2: "FOLDER", 3: "WEB", 4: "IMAGE"}
+	var out := "KEYS  seed %d  -  room threats %s  -  PC threats %s\n" % [run_seed,
+			_on_off(room_threats_enabled), _on_off(pc_threats_enabled)]
 	for i in range(1, KEY_COUNT + 1):
-		out += "%-8s %-5s %s
-" % [key_label(i), str(tipi.get(i, "?")), str(key_hints.get(i, "-"))]
+		out += "%-8s %-6s %s\n" % [key_label(i), str(tipi.get(i, "?")), str(key_hints.get(i, "-"))]
 	return out.strip_edges()
 
 # Mostra/nasconde il pannello di debug con le chiavi; stampa lo stesso in console.
@@ -241,10 +254,9 @@ func toggle_keys_panel() -> void:
 	if not run_active:
 		# nel menu non c'e' niente da mostrare: aprirlo farebbe vedere i dati del run
 		# precedente (il pannello sta sulla radice e sopravvive al cambio di scena)
-		print("[GameManager] F12 ignorato: nessuna partita in corso")
+		print("[GameManager] F12 ignored: no run in progress")
 		return
-	print("
-" + keys_report())
+	print("\n" + keys_report())
 	var layer := CanvasLayer.new()
 	layer.name = "DebugKeysLayer"
 	layer.layer = 30                      # sopra vista PC (10) e schermata di morte (20)
@@ -281,9 +293,9 @@ func close_keys_panel() -> void:
 	_keys_panel = null
 	_keys_label = null
 
-# Riscrive il testo del pannello (se aperto): lo usa anche F11, cosi' lo stato
+# Riscrive il testo del pannello (se aperto): lo usano anche F8 e F11, cosi' lo stato
 # delle minacce si vede cambiare sul momento.
 func _refresh_keys_panel() -> void:
 	if _keys_label != null and is_instance_valid(_keys_label):
-		_keys_label.text = keys_report() + "
-F10 morte  F11 minacce F12 chiudi"
+		_keys_label.text = keys_report() \
+				+ "\nF8 PC threats  F9 start a virus  F10 die  F11 room threats  F12 close"

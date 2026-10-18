@@ -126,7 +126,7 @@ static func ancore(src: String, visibile: bool) -> Array:
 					var sp2 := _spazio_centrale(tratto)
 					if sp2 >= 0:
 						out.append({"pos": i + sp2 + 1, "tipo": COMM_TESTO,
-								"nota": "commento " + dove})
+								"nota": "comment " + dove})
 			i = lt
 			continue
 
@@ -148,15 +148,15 @@ static func ancore(src: String, visibile: bool) -> Array:
 			if par_testo >= MIN_PARAGRAFO and not par_titolo \
 					and (par_testo - par_link) >= MIN_FUORI_LINK and visibile:
 				out.append({"pos": i, "tipo": CODA_PARAGRAFO,
-						"nota": "in coda al paragrafo %d" % n_par})
+						"nota": "end of paragraph %d" % n_par})
 		if chiude and (nm == "td" or nm == "th") and in_cella and not cella_th and visibile:
 			var cima: String = str(pila[pila.size() - 1]) if not pila.is_empty() else ""
 			if cima == nm and cella_testo >= MIN_CELLA \
 					and _leggibile(_fondo(fondo_cella, fondo_riga, fondo_tab, fondo_pagina), col_testo):
 				out.append({"pos": i, "tipo": CODA_CELLA,
-						"nota": "in coda alla cella %d (tab. %d)" % [n_celle, n_tab]})
+						"nota": "end of cell %d (table %d)" % [n_celle, n_tab]})
 		if not visibile and chiude and nm == "head":
-			out.append({"pos": i, "tipo": COMM_HEAD, "nota": "commento nell'intestazione"})
+			out.append({"pos": i, "tipo": COMM_HEAD, "nota": "comment in <head>"})
 
 		# ---- ancora ATTRIBUTO: dentro un tag che c'e' gia' ----
 		if not visibile and not chiude and zona == "body":
@@ -167,7 +167,7 @@ static func ancore(src: String, visibile: bool) -> Array:
 				att = "alt"
 			if att != "":
 				out.append({"pos": i + 1 + nm.length(), "tipo": ATTRIBUTO, "attr": att,
-						"nota": "attributo %s di <%s>" % [att, nm]})
+						"nota": "%s attribute of <%s>" % [att, nm]})
 
 		# ---- aggiornamento dello stato ----
 		match nm:
@@ -249,18 +249,18 @@ static func ancore(src: String, visibile: bool) -> Array:
 					out.append({"pos": dopo, "tipo": RIGA, "nota": _nota_riga(nm, chiude)})
 				else:
 					out.append({"pos": dopo, "tipo": COMM_BLOCCO,
-							"nota": "commento " + _nota_riga(nm, chiude)})
+							"nota": "comment " + _nota_riga(nm, chiude)})
 		if visibile and lista_pos >= 0 and prof_tab == 0:
 			# nuova voce: in testa all'elenco o dopo una voce esistente
 			if (not chiude and nm == "ul") or (chiude and nm == "li"):
 				out.append({"pos": dopo, "tipo": VOCE_ELENCO, "lista": lista_pos,
-						"nota": "nuova voce nell'elenco"})
+						"nota": "new list item"})
 		if not visibile and prof_tab > 0 and not in_cella:
 			if (not chiude and nm == "table") or (chiude and (nm == "tr" or nm == "td" or nm == "th")):
 				out.append({"pos": dopo, "tipo": COMM_TABELLA,
-						"nota": "commento nella tabella %d" % n_tab})
+						"nota": "comment in table %d" % n_tab})
 		if not visibile and chiude and nm == "title":
-			out.append({"pos": dopo, "tipo": COMM_HEAD, "nota": "commento nell'intestazione"})
+			out.append({"pos": dopo, "tipo": COMM_HEAD, "nota": "comment after <title>"})
 
 		i = dopo
 	return out
@@ -346,13 +346,13 @@ static func _reso(tipo: String, testo: String, chiave: String) -> String:
 # la pagina non offre nessun aggancio adatto: la chiave non si perde mai.
 static func _ripiego(src: String, testo: String, visibile: bool) -> Dictionary:
 	if testo == "":
-		return {"html": src, "tipo": RIPIEGO, "nota": "nessuna chiave", "pos": -1,
+		return {"html": src, "tipo": RIPIEGO, "nota": "no key", "pos": -1,
 				"inserito": "", "reso": ""}
 	var pezzo := ("\n<p><font face=\"Arial\" size=\"2\">" + testo + "</font></p>\n") if visibile \
 			else ("\n<!-- " + _commento_sicuro(testo) + " -->\n")
 	var pos := src.findn("</body>")
 	var html := (src.substr(0, pos) + pezzo + src.substr(pos)) if pos >= 0 else (src + pezzo)
-	return {"html": html, "tipo": RIPIEGO, "nota": "in fondo (nessun aggancio)",
+	return {"html": html, "tipo": RIPIEGO, "nota": "at the bottom (no anchor found)",
 			"pos": pos, "inserito": pezzo, "reso": testo if visibile else ""}
 
 # ============================================================
@@ -438,14 +438,14 @@ static func _scegli(pesi: Array, frac: float) -> int:
 
 static func _nota_testo(par_aperto: bool, n_par: int, in_cella: bool, n_celle: int) -> String:
 	if in_cella:
-		return "in mezzo alla cella %d" % n_celle
+		return "mid-sentence in cell %d" % n_celle
 	if par_aperto:
-		return "in mezzo al paragrafo %d" % n_par
-	return "in mezzo al testo"
+		return "mid-sentence in paragraph %d" % n_par
+	return "mid-text"
 
 static func _nota_riga(nm: String, chiude: bool) -> String:
 	if nm == "body" and not chiude:
-		return "riga in cima alla pagina"
+		return "line at the top of the page"
 	if nm == "body" and chiude:
-		return "riga in fondo alla pagina"
-	return "riga dopo </%s>" % nm if chiude else "riga dopo <%s>" % nm
+		return "line at the bottom of the page"
+	return "line after </%s>" % nm if chiude else "line after <%s>" % nm

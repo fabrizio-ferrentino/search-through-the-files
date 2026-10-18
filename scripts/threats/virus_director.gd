@@ -14,7 +14,8 @@ extends Node
 # segreta compresa -- o rinomine in corso, e mai mentre il nemico del corridoio si sta
 # affacciando (due minacce mortali insieme non sono tensione, sono una lotteria; il
 # ThreatDirector, dal canto suo, non si affaccia durante il virus mortale).
-# Spegnere le minacce (F11) congela il conto e toglie il virus mortale in corso.
+# Spegnere le minacce del PC (F8, GameManager.pc_threats_enabled) congela il conto e toglie
+# il virus mortale in corso; F11 (le minacce della STANZA) qui non c'entra.
 # DEV-ONLY: F9 fa partire subito il prossimo virus, a giro (mortale -> stupido -> crash).
 
 var player = null            # la Camera3D (player.gd): is_in_pc() e il regista della stanza
@@ -27,6 +28,8 @@ const ENTRATA_MIN := 4.0     # secondi dentro il PC prima che uno possa partire
 const TIPI := ["mortale", "stupido", "crash"]
 const PESI := [0.4, 0.3, 0.3]
 const QUOTA_GRAVE := 0.25    # quanti schermi blu riavviano il PC
+# Il nome di ogni virus nei messaggi di debug (in inglese, come tutto il debug).
+const NOMI_DEBUG := {"mortale": "lethal", "stupido": "YouAreStupid", "crash": "blue screen"}
 
 var _rng := RandomNumberGenerator.new()
 var _evento := ""            # il virus in corso ("" = nessuno)
@@ -68,7 +71,7 @@ func avanza(delta: float) -> void:
 	if _evento != "":
 		_segui()
 		return
-	if not GameManager.threats_enabled:
+	if not GameManager.pc_threats_enabled:
 		return
 	if GameManager.pc_on and GameManager.logged_in:
 		_tempo += delta
@@ -105,7 +108,7 @@ func _scegli() -> String:
 func _avvia(tipo: String) -> void:
 	_evento = tipo
 	_ultimo = tipo
-	print("[VirusDirector] virus: ", tipo)
+	print("[VirusDirector] virus: ", NOMI_DEBUG.get(tipo, tipo))
 	match tipo:
 		"mortale":
 			var v := VirusMortale.new()
@@ -126,12 +129,12 @@ func _avvia(tipo: String) -> void:
 func _segui() -> void:
 	match _evento:
 		"mortale":
-			if not GameManager.pc_on or not GameManager.threats_enabled:
+			if not GameManager.pc_on or not GameManager.pc_threats_enabled:
 				if is_instance_valid(_nodo):
 					_nodo.pulisci()
 				_fine()
 		"stupido":
-			if not GameManager.threats_enabled and is_instance_valid(_nodo):
+			if not GameManager.pc_threats_enabled and is_instance_valid(_nodo):
 				_nodo.ferma()
 			if not is_instance_valid(_nodo):
 				_fine()
@@ -166,4 +169,4 @@ func forza(tipo := "") -> bool:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F9:
 		if GameManager.run_active and not forza():
-			print("[VirusDirector] F9 ignorato: virus gia' in corso o desktop non libero")
+			print("[VirusDirector] F9 ignored: a virus is already running or the desktop is busy")

@@ -10,12 +10,22 @@ extends Node
 #   4 la morte chiuda il pannello e disattivi i tasti di debug
 #   5 dopo la morte F12 non riapra niente
 #   6 F10 fuori partita non faccia comparire la schermata di morte
+#   7 F11 accenda/spenga SOLO le minacce della stanza e F8 SOLO quelle del PC, e il
+#     pannello lo dica; e che il debug sia sempre in INGLESE, anche a gioco in italiano
 #
 # Esecuzione:
 #   & $godot --path $proj res://tests/debug_panel_test.tscn
 # ============================================================
 
 var _fails: Array = []
+
+# Le parole delle vecchie note di debug in italiano: nessuna deve tornare nel pannello.
+# (Non "commento", "foto" e simili da sole: potrebbero stare nel NOME di un file del gioco,
+# che resta nella lingua di chi gioca.)
+const PAROLE_ITALIANE := ["CHIAVI", "seme", "minacce", "nome cartella", "NEL FILE",
+		"nei pixel", "rapporto", "sfocata", "generata", "visibile", "sorgente",
+		"in coda", "in mezzo", "intestazione", "nuova voce", "riga dopo", "riga in",
+		"nella tabella", "da risolvere", "nessun aggancio", "morte", "chiudi"]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS   # game_over mette in pausa l'albero
@@ -42,6 +52,43 @@ func _ready() -> void:
 	_check("IN_PARTITA_APRE", _aperto(), "in partita F12 non apre il pannello")
 	var testo_a := _testo()
 	_check("MOSTRA_SEME", testo_a.find("111") >= 0, "il pannello non mostra il seme 111: %s" % testo_a.split("\n")[0])
+
+	# 2b) F11 = minacce della STANZA, F8 = minacce del PC: ognuno il suo, e il pannello lo dice
+	_premi(KEY_F11)
+	await get_tree().process_frame
+	_check("F11_SOLO_STANZA", not GameManager.room_threats_enabled and GameManager.pc_threats_enabled
+			and _testo().contains("room threats OFF") and _testo().contains("PC threats ON"),
+			"dopo F11: stanza %s, PC %s, pannello '%s'" % [str(GameManager.room_threats_enabled),
+			str(GameManager.pc_threats_enabled), _testo().split("\n")[0]])
+	_premi(KEY_F8)
+	await get_tree().process_frame
+	_check("F8_SOLO_PC", not GameManager.room_threats_enabled and not GameManager.pc_threats_enabled
+			and _testo().contains("PC threats OFF"),
+			"dopo F8: stanza %s, PC %s, pannello '%s'" % [str(GameManager.room_threats_enabled),
+			str(GameManager.pc_threats_enabled), _testo().split("\n")[0]])
+	_premi(KEY_F11)
+	_premi(KEY_F8)
+	await get_tree().process_frame
+	_check("RIACCENDE", GameManager.room_threats_enabled and GameManager.pc_threats_enabled,
+			"premuti di nuovo, F11 e F8 non riaccendono le minacce")
+
+	# 2c) il debug e' SEMPRE in inglese (owner, 18/10/2026), anche a gioco in italiano:
+	# nessuna parola delle vecchie note italiane, su piu' semi (vie e nascondigli diversi)
+	var lingua_prima: String = GameManager.lingua
+	var italiano: Array = []
+	for lingua in ["it", "en"]:
+		GameManager.set_lingua(lingua, false)
+		for seme in [111, 222, 333, 444, 555, 666]:
+			GameManager.start_new_run(seme)
+			var t := GameManager.keys_report()
+			for parola in PAROLE_ITALIANE:
+				if t.contains(parola) and not italiano.has(parola):
+					italiano.append(parola)
+	GameManager.set_lingua(lingua_prima, false)
+	await get_tree().process_frame
+	_check("SEMPRE_IN_INGLESE", italiano.is_empty() and _testo().contains("KEYS")
+			and _testo().contains("F8 PC threats"), "parole italiane nel debug: %s" % str(italiano))
+	GameManager.start_new_run(111)
 
 	# 3) partita nuova col pannello aperto: i dati devono aggiornarsi
 	GameManager.start_new_run(222)

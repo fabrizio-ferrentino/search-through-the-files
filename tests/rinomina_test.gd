@@ -40,7 +40,8 @@ var _fails: Array = []
 func _ready() -> void:
 	get_tree().create_timer(120.0).timeout.connect(func(): _timeout())
 	await get_tree().process_frame
-	GameManager.threats_enabled = false
+	GameManager.room_threats_enabled = false
+	GameManager.pc_threats_enabled = false
 	GameManager.start_new_run(8080)
 	GameManager.pc_on = true
 	GameManager.logged_in = true
@@ -68,7 +69,8 @@ func _ready() -> void:
 		print("RISULTATO: PASS (si rinomina come in Win95, e il codice si copia e si incolla)")
 	else:
 		print("RISULTATO: FAIL -> " + ", ".join(_fails))
-	GameManager.threats_enabled = true
+	GameManager.room_threats_enabled = true
+	GameManager.pc_threats_enabled = true
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
 func _timeout() -> void:

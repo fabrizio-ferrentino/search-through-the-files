@@ -8,8 +8,9 @@ extends Node
 # Si pretende che:
 #   1 IL RITMO (scelto dal proprietario: "rari"): niente virus prima di PRIMO_VIRUS di PC
 #     acceso, niente se il giocatore e' nella stanza, appena entrato, con un dialogo
-#     aperto o a minacce spente (F11 congela il conto); dopo uno, la pausa e' fra
-#     PAUSA_MIN e PAUSA_MAX; mai lo stesso due volte di fila, e tutti e tre escono;
+#     aperto o a minacce del PC spente (F8 congela il conto; F11, la stanza, no); dopo
+#     uno, la pausa e' fra PAUSA_MIN e PAUSA_MAX; mai lo stesso due volte di fila, e
+#     tutti e tre escono;
 #   2 il MORTALE si veda -- sfondo rosso NEI PIXEL, la scritta tradotta, il sangue che
 #     cola sopra le finestre ma SOTTO barra e menu Avvio (la via d'uscita resta pulita) --
 #     e che spegnere salvi, dal menu Avvio E dal case: niente morte, ogni strato tolto,
@@ -42,7 +43,8 @@ func _ready() -> void:
 	get_tree().create_timer(180.0).timeout.connect(func(): _timeout())
 	await get_tree().process_frame
 	GameManager.set_lingua("it", false)
-	GameManager.threats_enabled = true
+	GameManager.room_threats_enabled = true
+	GameManager.pc_threats_enabled = true
 	GameManager.start_new_run(5150)
 	GameManager.pc_on = true
 	GameManager.logged_in = true
@@ -77,7 +79,8 @@ func _fine() -> void:
 	else:
 		print("RISULTATO: FAIL -> " + ", ".join(_fails))
 	get_tree().paused = false
-	GameManager.threats_enabled = true
+	GameManager.room_threats_enabled = true
+	GameManager.pc_threats_enabled = true
 	get_tree().quit(0 if _fails.is_empty() else 1)
 
 func _timeout() -> void:
@@ -110,13 +113,20 @@ func _prova_ritmo() -> void:
 	_os._modal_layer.queue_free()
 	await get_tree().process_frame
 
-	# F11 congela il conto
-	GameManager.threats_enabled = false
+	# F8 (minacce del PC) congela il conto...
+	GameManager.pc_threats_enabled = false
 	var t0: float = _vd._tempo
 	_passi(30.0)
-	_check("F11_CONGELA", _vd.in_corso() == "" and is_equal_approx(_vd._tempo, t0),
-			"a minacce spente: evento '%s', tempo %.1f -> %.1f" % [_vd.in_corso(), t0, _vd._tempo])
-	GameManager.threats_enabled = true
+	_check("F8_CONGELA", _vd.in_corso() == "" and is_equal_approx(_vd._tempo, t0),
+			"a minacce del PC spente: evento '%s', tempo %.1f -> %.1f" % [_vd.in_corso(), t0, _vd._tempo])
+	GameManager.pc_threats_enabled = true
+	# ...F11 (minacce della stanza) no: e' un altro interruttore
+	GameManager.room_threats_enabled = false
+	_vd.avanza(0.5)
+	_check("F11_NON_TOCCA_IL_PC", _vd._tempo > t0,
+			"a minacce della STANZA spente il conto dei virus si e' fermato")
+	GameManager.room_threats_enabled = true
+	_vd._tempo = t0
 
 	_passi(1.0)
 	var tipo: String = _vd.in_corso()

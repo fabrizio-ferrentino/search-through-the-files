@@ -163,7 +163,7 @@ func _prova(seme: int) -> void:
 
 	# il pannello F12 deve dire quale via e' stata usata
 	var hint := str(GameManager.key_hints.get(OSContent.KEY_IMAGE, ""))
-	var atteso := "NEL FILE" if nel_file else "nei pixel"
+	var atteso := "IN THE FILE" if nel_file else "in the pixels"
 	if hint.find(atteso) < 0:
 		_ko(seme, "il suggerimento F12 non dice la via ('%s', atteso '%s')" % [hint, atteso])
 

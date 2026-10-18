@@ -93,10 +93,10 @@ func _process(delta: float) -> void:
 		return
 	_update_heat(delta)
 	_update_torch(delta)
-	# Debug: minacce disabilitate (F11): niente affacci, niente game_over.
+	# Debug: minacce della STANZA disabilitate (F11): niente affacci, niente game_over.
 	# Torcia e batteria restano attive. Si resta in CALM cosi' riattivando si riparte
 	# da una finestra sicura (mai un PEEK "congelato" che ti uccide al riavvio).
-	if not GameManager.threats_enabled:
+	if not GameManager.room_threats_enabled:
 		if _clown != null and _clown.visible:
 			_clown.dismiss()
 		_reset_tell()

@@ -335,7 +335,7 @@ static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator, sot
 					percorso = p
 					dentro = sotto["children"]
 	dentro.insert(rng.randi_range(0, dentro.size()), folder)
-	GameManager.note_key(KEY_FOLDER, "%s (nome cartella, in %s)"
+	GameManager.note_key(KEY_FOLDER, "%s (folder name, in %s)"
 			% [str(folder.get("name", "?")), _percorso_dos(percorso)])
 
 # ---------------- il riempimento a caso (catalogo_disco.gd) ----------------
@@ -568,10 +568,10 @@ static func _make_photos(rng: RandomNumberGenerator) -> Array:
 	var nel_file: bool = rng.randf() < CODE_QUOTA_FILE
 	var sorgente := str(photos[idx].get("path", "")).get_file()
 	var dove := str(photos[idx]["name"])
-	dove += " = %s" % (sorgente if sorgente != "" else "generata")
+	dove += " = %s" % (sorgente if sorgente != "" else "generated")
 	if nel_file:
 		photos[idx]["code_commento"] = _commento_file(label, rng)
-		dove += " - NEL FILE (Blocco note)"
+		dove += " - IN THE FILE (open with Notepad)"
 		GameManager.note_key(KEY_IMAGE, dove)
 		return photos
 
@@ -585,9 +585,9 @@ static func _make_photos(rng: RandomNumberGenerator) -> Array:
 			photos[idx]["blur_rect"] = spot["blur_rect"]
 			photos[idx]["blur_target"] = spot["blur_target"]
 		var uv: Vector2 = spot["uv"]
-		dove += " - nei pixel a %d%%,%d%%" % [int(uv.x * 100.0), int(uv.y * 100.0)]
-		dove += " (rapporto %.1f%s)" % [float(spot.get("rapporto", 0.0)),
-				", sfocata" if spot.has("blur_rect") else ""]
+		dove += " - in the pixels at %d%%,%d%%" % [int(uv.x * 100.0), int(uv.y * 100.0)]
+		dove += " (ratio %.1f%s)" % [float(spot.get("rapporto", 0.0)),
+				", blurred" if spot.has("blur_rect") else ""]
 	GameManager.note_key(KEY_IMAGE, dove)
 	return photos
 

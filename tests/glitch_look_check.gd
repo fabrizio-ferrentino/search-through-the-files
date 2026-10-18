@@ -27,7 +27,8 @@ func _ready() -> void:
 	get_tree().create_timer(60.0).timeout.connect(func(): _timeout())
 	await get_tree().process_frame
 	var sbagliato := OS.get_cmdline_user_args().has("sbagliato")
-	GameManager.threats_enabled = false
+	GameManager.room_threats_enabled = false
+	GameManager.pc_threats_enabled = false
 	GameManager.start_new_run(2024)
 	GameManager.pc_on = true
 	GameManager.logged_in = true

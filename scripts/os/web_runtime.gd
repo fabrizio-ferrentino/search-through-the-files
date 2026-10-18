@@ -345,9 +345,9 @@ static func _risolvi(src: String) -> Dictionary:
 
 # La riga del pannello di debug (F12): sito, modalita' e DOVE sta la chiave.
 static func _hint() -> String:
-	var modo := "visibile" if _visible else "sorgente"
+	var modo := "visible" if _visible else "source only"
 	return "%s - %s - %s" % [display_url(_carrier), modo,
-			str(_ancora.get("nota", "posizione da risolvere"))]
+			str(_ancora.get("nota", "position not resolved yet"))]
 
 # ---------------- stato del run (serve ai test) ----------------
 
