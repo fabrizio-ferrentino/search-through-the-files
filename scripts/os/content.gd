@@ -421,13 +421,16 @@ static func _riempi_disco(c: Array) -> Dictionary:
 			if _metti_voce(voce, [zona], luoghi, usate, r):
 				n -= 1
 
-	# 6. gli horror: pochi, in uno qualunque dei loro posti
-	var h := r.randi_range(CatalogoDisco.QUANTI_HORROR[0], CatalogoDisco.QUANTI_HORROR[1])
-	for voce in _shuffled(CatalogoDisco.FILE_HORROR, r):
-		if h <= 0:
-			break
-		if _metti_voce(voce, voce[2], luoghi, usate, r):
-			h -= 1
+	# 6. la storia: i file del PADRE (almeno uno sempre) e gli HORROR, pochi, ciascuno in
+	# uno qualunque dei suoi posti
+	for gruppo in [[CatalogoDisco.FILE_LORE_PADRE, CatalogoDisco.QUANTI_PADRE],
+			[CatalogoDisco.FILE_HORROR, CatalogoDisco.QUANTI_HORROR]]:
+		var h := r.randi_range(int(gruppo[1][0]), int(gruppo[1][1]))
+		for voce in _shuffled(gruppo[0], r):
+			if h <= 0:
+				break
+			if _metti_voce(voce, voce[2], luoghi, usate, r):
+				h -= 1
 
 	return {"chiave_file": chiave_file, "sotto_documenti": sotto_documenti}
 
@@ -447,11 +450,18 @@ static func _metti_voce(voce: Array, zone: Array, luoghi: Dictionary, usate: Dic
 	var nome := _t(str(voce[0]))
 	if _nome_libero(dove["children"], nome) != nome:
 		return false
-	var f := _text(nome, _testo(str(voce[1])).replace("{PROG}", str(dove.get("name", ""))))
+	var f := _text(nome, _testo_catalogo(str(voce[1]), str(dove.get("name", ""))))
 	f["voce"] = voce[0]       # da quale voce del catalogo viene (lo leggono i test)
 	_inserisci(dove["children"], f, r)
 	usate[voce[0]] = true
 	return true
+
+# Il testo di una voce del catalogo coi SEGNAPOSTO sostituiti: {PROG} = la cartella in cui
+# finisce (il programma), {PROTAGONISTA} = il nome del protagonista, che sta in UNA riga
+# del CSV (LORE_PROTAGONIST) perche' il proprietario potrebbe cambiarlo.
+static func _testo_catalogo(chiave: String, cartella: String) -> String:
+	return _testo(chiave).replace("{PROG}", cartella) \
+			.replace("{PROTAGONISTA}", _t("LORE_PROTAGONIST"))
 
 # LEGGIMI e LICENZA di un programma, ognuno con la sua probabilita'.
 static func _file_dei_programmi(cartella: Dictionary, r: RandomNumberGenerator) -> void:
@@ -459,7 +469,7 @@ static func _file_dei_programmi(cartella: Dictionary, r: RandomNumberGenerator) 
 		if r.randf() < float(voce[2]):
 			var nome := _t(str(voce[0]))
 			if _nome_libero(cartella["children"], nome) == nome:
-				var f := _text(nome, _testo(str(voce[1])).replace("{PROG}", str(cartella["name"])))
+				var f := _text(nome, _testo_catalogo(str(voce[1]), str(cartella["name"])))
 				f["voce"] = voce[0]
 				cartella["children"].append(f)
 

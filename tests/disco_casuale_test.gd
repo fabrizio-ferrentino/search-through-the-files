@@ -26,16 +26,21 @@ extends Node
 #   & $godot --headless --path $proj res://tests/disco_casuale_test.tscn
 # ============================================================
 
-const SEMI := 30
+# 80 e non 30: con un solo horror per partita su nove, ognuno esce ~11% delle volte, e su
+# 30 partite uno restava fuori per pura sfortuna (~3%: e' successo); su 80 il rischio di un
+# falso "non esce mai" scende sotto l'1 per mille. Ci mette una decina di secondi.
+const SEMI := 80
 const VIETATI := "\\/:*?\"<>|"
 
 var _fails: Array = []
 var _chiave_re := RegEx.new()
+var _segnaposto_re := RegEx.new()
 
 func _ready() -> void:
 	get_tree().create_timer(300.0).timeout.connect(func(): _timeout())
 	await get_tree().process_frame
 	_chiave_re.compile("\\b\\d-[A-Z0-9]{4}\\b")
+	_segnaposto_re.compile("\\{[A-Z_]+\\}")
 	var lingua_prima: String = GameManager.lingua
 
 	_prova_catalogo()
@@ -57,6 +62,7 @@ func _timeout() -> void:
 func _voci_file() -> Array:
 	var tutte: Array = []
 	tutte.append_array(CatalogoDisco.FILE_EPOCA)
+	tutte.append_array(CatalogoDisco.FILE_LORE_PADRE)
 	tutte.append_array(CatalogoDisco.FILE_HORROR)
 	tutte.append_array(CatalogoDisco.FILE_DEI_PROGRAMMI)
 	return tutte
@@ -66,6 +72,7 @@ func _prova_catalogo() -> void:
 	var doppi := PackedStringArray()
 	var finte := PackedStringArray()
 	var zone_sbagliate := PackedStringArray()
+	var ignoti := PackedStringArray()
 	for lingua in GameManager.LINGUE:
 		GameManager.set_lingua(str(lingua), false)
 		var nomi := {}
@@ -80,10 +87,14 @@ func _prova_catalogo() -> void:
 			var testo := OSContent._testo(str(voce[1]))
 			if _chiave_re.search(testo) != null:
 				finte.append("%s/%s" % [lingua, voce[1]])
+			# solo segnaposto CONOSCIUTI: uno scritto male resterebbe a schermo cosi' com'e'
+			for m in _segnaposto_re.search_all(testo):
+				if not ["{PROG}", "{PROTAGONISTA}"].has(m.get_string()):
+					ignoti.append("%s/%s: %s" % [lingua, voce[1], m.get_string()])
 		for k in CatalogoDisco.CARTELLE_DOCUMENTI:
 			if tr(str(k)) == str(k):
 				mancanti.append("%s/%s" % [lingua, k])
-	for voce in CatalogoDisco.FILE_EPOCA + CatalogoDisco.FILE_HORROR:
+	for voce in CatalogoDisco.FILE_EPOCA + CatalogoDisco.FILE_LORE_PADRE + CatalogoDisco.FILE_HORROR:
 		for z in voce[2]:
 			if int(z) < CatalogoDisco.DOCUMENTI or int(z) > CatalogoDisco.EXTRA:
 				zone_sbagliate.append("%s: zona %s" % [voce[0], str(z)])
@@ -92,6 +103,9 @@ func _prova_catalogo() -> void:
 	_check("NESSUNA_CHIAVE_FINTA", finte.is_empty(),
 			"testi con qualcosa che sembra una chiave: " + ", ".join(finte))
 	_check("ZONE_VALIDE", zone_sbagliate.is_empty(), ", ".join(zone_sbagliate))
+	_check("SEGNAPOSTO_CONOSCIUTI", ignoti.is_empty(), "segnaposto sconosciuti: " + ", ".join(ignoti))
+	_check("NOME_PROTAGONISTA", tr("LORE_PROTAGONIST") != "LORE_PROTAGONIST",
+			"manca LORE_PROTAGONIST nel CSV: {PROTAGONISTA} non avrebbe un nome")
 
 # ---------- 3, 4 e 5: le partite ----------
 
@@ -101,7 +115,9 @@ func _prova_partite() -> void:
 	var viste := {}             # voci e cartelle comparse almeno una volta
 	var horror_keys := {}
 	for v in CatalogoDisco.FILE_HORROR:
-		horror_keys[v[0]] = true
+		horror_keys[v[0]] = "horror"
+	for v in CatalogoDisco.FILE_LORE_PADRE:
+		horror_keys[v[0]] = "padre"
 	var t0 := Time.get_ticks_msec()
 
 	for seme in range(1, SEMI + 1):
@@ -135,12 +151,19 @@ func _prova_partite() -> void:
 				_guasto(guasti, "IMMAGINI_FISSA", "%s: Immagini manca o ha %d foto" % [luogo, foto])
 
 			# conti e regole su tutto l'albero
-			var conti := {"horror": 0, "voci": [], "sotto_doc": 0, "programmi": 0}
+			var conti := {"horror": 0, "padre": 0, "voci": [], "sotto_doc": 0, "programmi": 0}
 			_visita(radice, luogo, conti, guasti, horror_keys)
 			var hmin: int = CatalogoDisco.QUANTI_HORROR[0]
 			var hmax: int = CatalogoDisco.QUANTI_HORROR[1]
 			if int(conti["horror"]) < hmin or int(conti["horror"]) > hmax:
 				_guasto(guasti, "HORROR_QUANTI", "%s: %d horror" % [luogo, int(conti["horror"])])
+			# il PADRE: almeno uno in ogni partita (il peso della storia e' su di lui)
+			# almeno UNO e' una regola del proprietario, non del catalogo: il minimo non si
+			# legge solo da QUANTI_PADRE, o mettendolo a zero il test sarebbe d'accordo
+			var pmin: int = maxi(1, int(CatalogoDisco.QUANTI_PADRE[0]))
+			var pmax: int = CatalogoDisco.QUANTI_PADRE[1]
+			if int(conti["padre"]) < pmin or int(conti["padre"]) > pmax:
+				_guasto(guasti, "PADRE_QUANTI", "%s: %d file del padre" % [luogo, int(conti["padre"])])
 			for v in conti["voci"]:
 				viste[v] = true
 
@@ -178,7 +201,7 @@ func _prova_partite() -> void:
 
 	print("   %d partite x %d lingue in %d ms; dischi diversi: %d su %d"
 			% [SEMI, GameManager.LINGUE.size(), Time.get_ticks_msec() - t0, firme.size(), SEMI])
-	for nome in ["SCHELETRO", "IMMAGINI_FISSA", "IMMAGINI_PULITA", "HORROR_QUANTI",
+	for nome in ["SCHELETRO", "IMMAGINI_FISSA", "IMMAGINI_PULITA", "HORROR_QUANTI", "PADRE_QUANTI",
 			"NIENTE_DOPPIONI", "NIENTE_SEGNAPOSTO", "NIENTE_VIETATI", "CHIAVI_SUL_DISCO",
 			"RIPRODUCIBILE", "STESSA_FORMA"]:
 		var lista: Array = guasti.get(nome, [])
@@ -218,12 +241,14 @@ func _visita(nodo: Dictionary, luogo: String, conti: Dictionary, guasti: Diction
 			for ch in VIETATI:
 				if nome.contains(ch):
 					_guasto(guasti, "NIENTE_VIETATI", "%s: '%s'" % [luogo, nome])
-		if str(f.get("content", "")).contains("{PROG}"):
-			_guasto(guasti, "NIENTE_SEGNAPOSTO", "%s: {PROG} in %s" % [luogo, nome])
+		# solo i file di TESTO: in un binario (byte a caso) una {COSA} puo' uscire per caso
+		if str(f.get("filetype", "")) == "text" and _segnaposto_re.search(str(f.get("content", ""))) != null:
+			_guasto(guasti, "NIENTE_SEGNAPOSTO", "%s: segnaposto rimasto in %s" % [luogo, nome])
 		if f.has("voce"):
 			(conti["voci"] as Array).append(str(f["voce"]))
 			if horror_keys.has(f["voce"]):
-				conti["horror"] = int(conti["horror"]) + 1
+				var gruppo := str(horror_keys[f["voce"]])
+				conti[gruppo] = int(conti[gruppo]) + 1
 		_visita(f, luogo, conti, guasti, horror_keys)
 
 # La FORMA: tipi e numero di figli, senza i nomi (che cambiano con la lingua).

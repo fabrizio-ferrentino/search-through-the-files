@@ -4,6 +4,11 @@ extends RefCounted
 # IL CATALOGO DEL DISCO (18/10/2026): cosa PUO' esserci sul disco di una partita.
 # Solo dati. Chi li usa e' OSContent._riempi_disco, che a ogni partita pesca da qui -- col
 # seme del run, quindi stessa partita = stesso disco -- e mette file e cartelle a caso.
+# LA STORIA dietro i testi e' in docs/GDD.md §2b: il PC era del PADRE di Noah, che la
+# maledizione possedette fino a fargli uccidere la moglie. I file NORMALI sono la vita
+# della sua famiglia; i file del PADRE la scivolata; gli HORROR la voce del ragazzo da cui
+# tutto e' partito e della maledizione che parla a chi e' al PC adesso. Quello che nel GDD
+# e' ancora APERTO (i nomi, come passa la maledizione) nei testi non si inventa.
 # Lo scheletro (unita', C:\WHALE, Programmi, Documenti\Immagini, TEMP, Cestino) NON sta
 # qui: e' fisso, in OSContent._disco_c, perche' e' quello che ogni PC del '98 aveva e che
 # il gioco stesso cerca.
@@ -13,7 +18,8 @@ extends RefCounted
 #        FN_HR_MIOFILE,my_file.txt,mio_file.txt
 #        FT_HR_MIOFILE,First line\nSecond line,Prima riga\nSeconda riga
 #    (gli "a capo" si scrivono \n; una cella con una virgola va fra virgolette "...")
-# 2. Qui sotto una riga in FILE_EPOCA (file normali d'epoca) o FILE_HORROR:
+# 2. Qui sotto una riga in FILE_EPOCA (file normali d'epoca), FILE_LORE_PADRE (i file
+#    del padre) o FILE_HORROR (il ragazzo e la maledizione):
 #        ["FN_HR_MIOFILE", "FT_HR_MIOFILE", [DOCUMENTI, TEMP]],
 #    l'ultima parte dice DOVE puo' finire (le zone sono qui sotto).
 # 3. Lanciare l'import (Godot lo fa da solo all'apertura dell'editor), o il gioco
@@ -23,6 +29,9 @@ extends RefCounted
 #    conflitto con un altro, e che nessun testo somigli a una CHIAVE.
 # Per MODIFICARE un file basta cambiare il testo nel CSV (punto 1) e rifare l'import.
 # La guida completa, con le cartelle e i programmi: docs/DISK_CONTENT.md.
+#
+# Nei testi {PROTAGONISTA} diventa il nome del protagonista (LORE_PROTAGONIST nel CSV,
+# oggi "Noah"): se un giorno cambia nome, si cambia quella riga sola.
 #
 # Due regole:
 #  - i NOMI devono essere diversi fra loro (in ogni lingua), anche solo per maiuscole:
@@ -61,19 +70,33 @@ const FILE_EPOCA := [
 	["FN_DRIVER_TXT", "FT_DRIVER_TXT", [EXTRA, TEMP]],
 ]
 
-# --- file HORROR: [nome, testo, zone]. Pochi per partita (vedi QUANTI_HORROR): rari,
-# cosi' quando se ne trova uno fa effetto. Alcuni si travestono da file normali. ---
-const FILE_HORROR := [
+# --- i file del PADRE: [nome, testo, zone]. Il PC era suo (GDD §2b): diari che partono
+# normali e scivolano, la lettera ai figli, l'ultima notte. Il proprietario vuole il peso
+# della storia su di lui, quindi in OGNI partita ce n'e' almeno uno (QUANTI_PADRE). ---
+const FILE_LORE_PADRE := [
+	["FN_DAD_MARCH", "FT_DAD_MARCH", [DOCUMENTI]],
+	["FN_DAD_APRIL", "FT_DAD_APRIL", [DOCUMENTI]],
+	["FN_DAD_NOTES", "FT_DAD_NOTES", [DOCUMENTI]],
+	["FN_DAD_SONS", "FT_DAD_SONS", [DOCUMENTI, TEMP]],
+	["FN_DAD_LATE", "FT_DAD_LATE", [TEMP, SISTEMA, DOCUMENTI]],
 	["FN_HR_STILL_ON", "FT_HR_STILL_ON", [DOCUMENTI, TEMP]],
+	["FN_HR_WHALE", "FT_HR_WHALE", [SISTEMA, DOCUMENTI]],
+]
+
+# --- file HORROR: [nome, testo, zone]. La voce del RAGAZZO da cui tutto e' partito (la
+# balena da 52 Hz e' il suo emblema: un richiamo a cui nessuno risponde) e quella della
+# MALEDIZIONE, che parla a chi e' al PC adesso. Pochi per partita (QUANTI_HORROR), cosi'
+# quando se ne trova uno fa effetto. Alcuni si travestono da file normali. ---
+const FILE_HORROR := [
 	["FN_HR_52HZ", "FT_HR_52HZ", [SISTEMA, TEMP]],
+	["FN_HR_LAST", "FT_HR_LAST", [SISTEMA, TEMP, RADICE]],
 	["FN_HR_README", "FT_HR_README", [PROGRAMMA, EXTRA, RADICE]],
-	["FN_HR_PREVIOUS", "FT_HR_PREVIOUS", [DOCUMENTI]],
 	["FN_HR_SCANDISK", "FT_HR_SCANDISK", [RADICE, SISTEMA]],
-	["FN_HR_DONT", "FT_HR_DONT", [DOCUMENTI, TEMP]],
 	["FN_HR_CALL", "FT_HR_CALL", [TEMP, EXTRA, SISTEMA]],
 	["FN_HR_AUTOSAVE", "FT_HR_AUTOSAVE", [TEMP]],
+	["FN_HR_DONT", "FT_HR_DONT", [DOCUMENTI, TEMP]],
+	["FN_HR_ALONE", "FT_HR_ALONE", [DOCUMENTI, TEMP, SISTEMA]],
 	["FN_HR_INVENTORY", "FT_HR_INVENTORY", [DOCUMENTI, EXTRA]],
-	["FN_HR_WHALE", "FT_HR_WHALE", [SISTEMA, DOCUMENTI]],
 ]
 
 # --- i file che OGNI programma inventato puo' avere: [nome, testo, probabilita'] ---
@@ -111,7 +134,10 @@ const BINARI_SISTEMA := ["SHELL.DLL", "COMMDLG.DLL", "MMSYSTEM.DLL", "TOOLHELP.D
 		"KEYBOARD.DRV", "SYSTEM.DRV", "WINSOCK.DLL", "LZEXPAND.DLL", "VER.DLL"]
 
 # --- QUANTITA' per partita: [minimo, massimo] ---
-const QUANTI_HORROR := [2, 3]
+# padre + horror = 2-3 per partita, come scelto dal proprietario ("pochi e rari"), con
+# almeno un file del padre sempre
+const QUANTI_PADRE := [1, 2]
+const QUANTI_HORROR := [1, 1]
 const QUANTI_PROGRAMMI := [1, 3]
 const QUANTE_CARTELLE_RADICE := [0, 2]
 const QUANTE_SOTTOCARTELLE := [1, 3]

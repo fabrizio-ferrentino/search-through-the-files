@@ -84,7 +84,7 @@ FD_ARCHIVE,Archive,Archivio
 FD_COPY,Copy,Copia
 FD_OLD_FILES,Old files,Vecchi file
 FD_SPARE,Spare,Riserva
-FT_DIARY,Dear diary\nI found a strange computer today.\nThe screen comes on with a hum...\n\nSomething is wrong with this room.,Caro diario\noggi ho trovato uno strano computer.\nLo schermo si accende con un ronzio...\n\nC'e' qualcosa che non torna in questa stanza.
+FT_DIARY,"Dear diary,\nthe computer arrived today. The boys are already fighting over it.\nMy wife says I'll end up spending my nights on it. She's probably right.\n\nIt hums a little even when it's off. The shop says that's normal.","Caro diario,\noggi e' arrivato il computer. I ragazzi se lo contendono gia'.\nMia moglie dice che finiro' per passarci le notti. Probabilmente ha ragione.\n\nRonza un po' anche da spento. Il negozio dice che e' normale."
 FT_PASSWORD,Do NOT tell anyone:\n  user: admin\n  pass: hunter2\n\n(delete this file!),NON dire a nessuno:\n  utente: admin\n  pass:   hunter2\n\n(cancellare questo file!)
 FT_SHOPPING,- floppy disks\n- sticky tape\n- coffee\n- a new keyboard,- floppy disk\n- nastro adesivo\n- caffe'\n- una nuova tastiera
 FT_SYSNOTES,Maintenance complete.\nLast restart: Monday.,Manutenzione completata.\nUltimo riavvio: lunedi'.
@@ -209,13 +209,13 @@ FD_RECIPES,Recipes,Ricette
 FD_WORK,Work,Lavoro
 FD_OLD_STUFF,Old stuff,Roba vecchia
 FN_LETTER,letter_to_mum.txt,lettera_mamma.txt
-FT_LETTER,"Dear Mum,\nthe new computer works. It makes a noise at night but the shop says it's normal.\nI'll call you on Sunday.\nLove","Cara mamma,\nil computer nuovo funziona. Di notte fa un rumore ma il negozio dice che e' normale.\nTi chiamo domenica.\nUn bacio"
+FT_LETTER,"Dear Mum,\nthe new computer works. The boys love it, I can hardly get near it.\nIt makes a noise at night but the shop says it's normal.\nWe'll come and see you on Sunday.\nLove","Cara mamma,\nil computer nuovo funziona. Ai ragazzi piace tantissimo, io non riesco nemmeno ad avvicinarmi.\nDi notte fa un rumore ma il negozio dice che e' normale.\nVeniamo a trovarti domenica.\nUn bacio"
 FN_HOMEWORK,homework.txt,compiti.txt
 FT_HOMEWORK,"History - page 112, exercises 3 and 4\nMaths - fractions (all of them)\nRemember: library book due on Friday","Storia - pagina 112, esercizi 3 e 4\nMatematica - frazioni (tutte)\nRicordare: riportare il libro in biblioteca venerdi'"
 FN_RECIPE,tiramisu.txt,tiramisu_nonna.txt
 FT_RECIPE,Tiramisu (Grandma's)\n- 4 eggs\n- 500 g mascarpone\n- ladyfingers\n- coffee and cocoa\nNO cream. She would know.,Tiramisu' (della nonna)\n- 4 uova\n- 500 g di mascarpone\n- savoiardi\n- caffe' e cacao\nNIENTE panna. Se ne accorgerebbe.
 FN_PHONES,phone_numbers.txt,numeri_telefono.txt
-FT_PHONES,Home       0471 238 554\nDentist    0471 902 117\nPizza      0471 330 090\nPC shop    0471 555 208 (ask for Mark),Casa       0471 238 554\nDentista   0471 902 117\nPizzeria   0471 330 090\nNegozio PC 0471 555 208 (chiedere di Marco)
+FT_PHONES,Home       0471 238 554\nDentist    0471 902 117\nSchool     0471 640 312\nPizza      0471 330 090\nNeighbour  0471 238 556 (for emergencies),Casa       0471 238 554\nDentista   0471 902 117\nScuola     0471 640 312\nPizzeria   0471 330 090\nVicino     0471 238 556 (per le emergenze)
 FN_TODO,todo.txt,cose_da_fare.txt
 FT_TODO,- defragment drive C:\n- copy the photos onto floppies\n- uninstall the demo games\n- find out why the clock is always wrong,- deframmentare l'unita' C:\n- copiare le foto sui dischetti\n- disinstallare i giochi demo\n- capire perche' l'orologio e' sempre sbagliato
 FN_SCORES,scores.txt,punteggi.txt
@@ -241,11 +241,9 @@ FT_PRG_LICENSE,"{PROG} - SINGLE USER LICENCE\n\nThis software is licensed, not s
 FN_HR_STILL_ON,still_on.txt,ancora_acceso.txt
 FT_HR_STILL_ON,"If you are reading this, the computer is still on.\n\nI tried to switch it off. Three times.\nThe screen stays warm even when it is unplugged.","Se stai leggendo questo, il computer e' ancora acceso.\n\nHo provato a spegnerlo. Tre volte.\nLo schermo resta caldo anche quando e' staccato."
 FN_HR_52HZ,52HZ.TXT,52HZ.TXT
-FT_HR_52HZ,Frequency: 52 Hz.\nToo high for the others to hear.\nIt keeps calling anyway.\n\nI recorded it from the speaker at 03:12.\nThere is no speaker in this room.,Frequenza: 52 Hz.\nTroppo alta perche' gli altri la sentano.\nContinua a chiamare lo stesso.\n\nL'ho registrata dall'altoparlante alle 03:12.\nIn questa stanza non c'e' nessun altoparlante.
+FT_HR_52HZ,Frequency: 52 Hz.\nThe whale that sings where nobody can hear it.\n\nI wrote to everyone. I called everyone.\nNobody ever answered.\n\nSo now I answer for them.,"Frequenza: 52 Hz.\nLa balena che canta dove nessuno la sente.\n\nHo scritto a tutti. Ho chiamato tutti.\nNessuno ha mai risposto.\n\nAdesso rispondo io, al posto loro."
 FN_HR_README,README.1ST,README.1ST
 FT_HR_README,Thank you for installing.\n\nPlease do not answer if it asks for your name.\nIt already knows the room.\nIt already knows the chair.,Grazie per l'installazione.\n\nNon rispondere se ti chiede come ti chiami.\nConosce gia' la stanza.\nConosce gia' la sedia.
-FN_HR_PREVIOUS,user_notes.txt,appunti_utente.txt
-FT_HR_PREVIOUS,Day 1: bought it second hand. The previous owner left everything on it.\nDay 4: the clock in the corner is never right.\nDay 9: somebody else's files keep appearing.\nDay 12: they are my files. I don't remember writing them.,Giorno 1: comprato usato. Il vecchio proprietario ha lasciato tutto dentro.\nGiorno 4: l'orologio nell'angolo non e' mai giusto.\nGiorno 9: continuano a comparire file di qualcun altro.\nGiorno 12: sono file miei. Non ricordo di averli scritti.
 FN_HR_SCANDISK,SCANDSK2.LOG,SCANDSK2.LOG
 FT_HR_SCANDISK,ScanDisk found errors on drive C:\n\n  Cluster 6610: something is written here\n  Cluster 6611: something is written here\n  Cluster 6612: it is still writing\n\nScanDisk could not fix these errors.,ScanDisk ha trovato errori sull'unita' C:\n\n  Cluster 6610: qui c'e' scritto qualcosa\n  Cluster 6611: qui c'e' scritto qualcosa\n  Cluster 6612: sta ancora scrivendo\n\nScanDisk non ha potuto correggere questi errori.
 FN_HR_DONT,dont_open.txt,non_aprire.txt
@@ -253,8 +251,23 @@ FT_HR_DONT,you opened it.\n\nthat's fine.\nI only wanted to know if someone was 
 FN_HR_CALL,call.txt,chiamata.txt
 FT_HR_CALL,Modem log\n\nATDT 0000000\nCONNECT 52\n\n...hello?\n...is anyone answering?\n\nNO CARRIER,Registro del modem\n\nATDT 0000000\nCONNECT 52\n\n...pronto?\n...risponde qualcuno?\n\nNO CARRIER
 FN_HR_AUTOSAVE,~WRL0052.TMP,~WRL0052.TMP
-FT_HR_AUTOSAVE,autosave\n\nhe sits at the desk every night\nhe never turns around\nhe thinks the screen is the only thing that is on,salvataggio automatico\n\nsi siede alla scrivania ogni notte\nnon si gira mai\ncrede che lo schermo sia l'unica cosa accesa
+FT_HR_AUTOSAVE,autosave\n\nhe sits at the desk every night\nhe still thinks the screen is the only thing that is on\n\nhe has a wife. he has two sons.\nI never had anyone.,salvataggio automatico\n\nsi siede alla scrivania ogni notte\ncrede ancora che lo schermo sia l'unica cosa accesa\n\nha una moglie. ha due figli.\nio non ho mai avuto nessuno.
 FN_HR_INVENTORY,inventory.txt,inventario.txt
-FT_HR_INVENTORY,Room inventory\n- desk: 1\n- lamp: 1\n- computer: 1\n- chair: 1\n- people: 2\n\nI live alone.,Inventario della stanza\n- scrivania: 1\n- lampada: 1\n- computer: 1\n- sedia: 1\n- persone: 2\n\nIo vivo da solo.
+FT_HR_INVENTORY,Room inventory\n- desk: 1\n- lamp: 1\n- computer: 1\n- chair: 1\n- people: 2\n\nThere should only be one of you.,Inventario della stanza\n- scrivania: 1\n- lampada: 1\n- computer: 1\n- sedia: 1\n- persone: 2\n\nDovresti essere da solo.
 FN_HR_WHALE,whale.txt,balena.txt
-FT_HR_WHALE,The logo is a whale.\nThe loneliest one: it sings at a frequency no other whale answers.\n\nI used to think it was a strange choice for a computer.\nNow I think it is the only honest one.,Il logo e' una balena.\nLa piu' sola: canta a una frequenza a cui nessun'altra risponde.\n\nPensavo fosse una scelta strana per un computer.\nOra penso che sia l'unica onesta.
+FT_HR_WHALE,The system logo is a whale.\nThe loneliest one: it sings at a frequency no other whale answers.\n\nI never chose it. It was there the first time I switched the computer on.\nI used to think it was a strange choice.\nNow I think something lonely chose it.,Il logo del sistema e' una balena.\nLa piu' sola: canta a una frequenza a cui nessun'altra risponde.\n\nNon l'ho scelta io. C'era gia' la prima volta che ho acceso il computer.\nPensavo fosse una scelta strana.\nOra penso che l'abbia scelta qualcosa di solo.
+LORE_PROTAGONIST,Noah,Noah
+FN_DAD_MARCH,diary_march.txt,diario_marzo.txt
+FT_DAD_MARCH,March 3: since I set the computer up I sleep badly. I keep waking up at the desk.\nMarch 9: the screen was on this morning. I'm sure I switched it off.\nMarch 15: she says I talk in my sleep. She says it isn't my voice.,3 marzo: da quando ho montato il computer dormo male. Mi sveglio alla scrivania.\n9 marzo: stamattina lo schermo era acceso. Sono sicuro di averlo spento.\n15 marzo: lei dice che parlo nel sonno. Dice che non e' la mia voce.
+FN_DAD_APRIL,diary_april.txt,diario_aprile.txt
+FT_DAD_APRIL,April 2: there is a folder I didn't make. I can't delete it.\nApril 10: I don't like the way the boys look at me.\nApril 11: no. I don't like the way I look at the boys.,2 aprile: c'e' una cartella che non ho creato io. Non riesco a cancellarla.\n10 aprile: non mi piace come mi guardano i ragazzi.\n11 aprile: no. Non mi piace come guardo io i ragazzi.
+FN_DAD_SONS,to_my_sons.txt,ai_miei_figli.txt
+FT_DAD_SONS,"To my sons.\n\nIf you are reading this, I am not myself any more.\nIt isn't the computer. Something came with the computer.\nIt wants what it never had, and it takes it from whoever has it.\n\n{PROTAGONISTA}, if you ever find this machine: switch it off.\nDon't look for me in here.","Ai miei figli.\n\nSe state leggendo questo, io non sono piu' io.\nNon e' il computer. Qualcosa e' arrivato insieme al computer.\nVuole quello che non ha mai avuto, e lo toglie a chi ce l'ha.\n\n{PROTAGONISTA}, se un giorno trovi questa macchina: spegnila.\nNon cercarmi qui dentro."
+FN_DAD_NOTES,dont_forget.txt,non_dimenticare.txt
+FT_DAD_NOTES,"- pick the boys up at four\n- her birthday on the 12th: flowers, the yellow ones\n- call the doctor about the headaches\n- don't sit at the desk after midnight\n- DON'T SIT AT THE DESK AFTER MIDNIGHT","- prendere i ragazzi alle quattro\n- il suo compleanno il 12: fiori, quelli gialli\n- chiamare il dottore per il mal di testa\n- non sedersi alla scrivania dopo mezzanotte\n- NON SEDERSI ALLA SCRIVANIA DOPO MEZZANOTTE"
+FN_DAD_LATE,late.txt,tardi.txt
+FT_DAD_LATE,it's late. she's asleep. the boys are asleep.\nthe house is quiet.\na family is never this quiet.\n\nit will be.,e' tardi. lei dorme. i ragazzi dormono.\nla casa e' silenziosa.\nuna famiglia non e' mai cosi' silenziosa.\n\nlo sara'.
+FN_HR_LAST,LAST.TXT,ULTIMO.TXT
+FT_HR_LAST,"nobody will notice.\nnobody ever noticed anything.\n\nif I have nobody, nobody should have anyone.\n\nI'll stay here. I'll keep you all company.","nessuno se ne accorgera'.\nnessuno si e' mai accorto di niente.\n\nse io non ho nessuno, nessuno deve avere qualcuno.\n\nresto qui. vi faccio compagnia io."
+FN_HR_ALONE,alone.txt,solo.txt
+FT_HR_ALONE,you're alone tonight.\ngood.\n\nfamilies are loud.\nfamilies leave.,stanotte sei solo.\nbene.\n\nle famiglie fanno rumore.\nle famiglie se ne vanno.
