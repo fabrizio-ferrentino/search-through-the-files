@@ -109,6 +109,57 @@ static func move_to_trash(node) -> void:
 	node["_parent"] = trash
 	trash["children"].append(node)
 
+# ---------------- rinomina ----------------
+
+const NOME_VIETATI := "\\/:*?\"<>|"
+
+# Si puo' rinominare? NO per:
+#  - la cartella protetta (e' la fine della partita, come per l'eliminazione);
+#  - i figli della RADICE: le unita' A: C: D: e il Cestino (le unita' in Win95 si
+#    rinominavano nell'etichetta, non nella lettera, e qui non hanno un'etichetta);
+#  - quello che sta NEL CESTINO (in Win95 prima si ripristinava);
+#  - la catena che porta al Desktop (C:\WHALE\Desktop): get_desktop() la cerca per NOME,
+#    quindi rinominare WHALE o Desktop farebbe sparire tutte le icone della scrivania.
+#    E' l'unica ricerca per nome che il gioco fa mentre si gioca (l'altra, il Cestino,
+#    e' gia' esclusa sopra).
+# Tutto il resto si'; anche le cartelle di sistema come SYSTEM o FONTS, che nessuno cerca
+# per nome -- come in Win95, che lasciava farlo.
+static func rinominabile(node) -> bool:
+	if not node is Dictionary:
+		return false
+	if str(node.get("type", "")) == "secret":
+		return false
+	var genitore = node.get("_parent", null)
+	if not genitore is Dictionary or is_same(genitore, get_root()):
+		return false
+	if is_trash(genitore):
+		return false
+	var d = get_desktop()
+	while d is Dictionary:
+		if is_same(d, node):
+			return false
+		d = d.get("_parent", null)
+	return true
+
+# Cambia il nome. Torna "" se fatto (anche quando non c'era niente da cambiare), oppure la
+# chiave del CSV del motivo per cui no. Come Windows: maiuscole e minuscole contano per
+# chi legge ma non per il disco, quindi "Foto" e "FOTO" nella stessa cartella sono lo
+# stesso nome -- e rinominare "foto" in "Foto" si puo'.
+static func rinomina(node: Dictionary, nuovo: String) -> String:
+	nuovo = nuovo.strip_edges()
+	if nuovo == "" or nuovo == str(node.get("name", "")):
+		return ""
+	for ch in NOME_VIETATI:
+		if nuovo.contains(ch):
+			return "RN_ERR_CHARS"
+	var genitore = node.get("_parent", null)
+	if genitore is Dictionary:
+		for c in genitore.get("children", []):
+			if not is_same(c, node) and str(c.get("name", "")).to_lower() == nuovo.to_lower():
+				return "RN_ERR_EXISTS"
+	node["name"] = nuovo
+	return ""
+
 # Nome non in conflitto con i figli di "folder" (aggiunge " (n)" prima dell'estensione).
 static func _unique_name(folder: Dictionary, wanted: String) -> String:
 	var taken := {}

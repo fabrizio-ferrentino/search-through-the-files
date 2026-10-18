@@ -174,6 +174,7 @@ func _add_desktop_item(d: Dictionary, y: float, is_file: bool) -> void:
 	# la cartella protetta non e' eliminabile: niente menu contestuale "Elimina"
 	if is_file and d.get("type", "") != "secret":
 		item.context_requested.connect(_on_desktop_item_context)
+		item.rinomina_finita.connect(_on_desktop_rinominato)
 	icons_layer.add_child(item)
 
 func _build_taskbar() -> void:
@@ -593,6 +594,10 @@ func _on_desktop_item_context(item: DesktopItem) -> void:
 	if str(data.get("filetype", "")) == "image":
 		voci.append([tr("EX_OPEN_NOTEPAD"), func(): open_app("notepad", data)])
 	voci.append([tr("EX_DELETE"), func(): _delete_desktop_file(data)])
+	var rin := Callable()
+	if VFS.rinominabile(data):
+		rin = func(): item.inizia_rinomina()
+	voci.append([tr("EX_RENAME"), rin])
 	_show_desktop_menu(voci)
 
 func _deselect_desktop() -> void:
@@ -625,6 +630,52 @@ func _desktop_name_exists(df: Dictionary, n: String) -> bool:
 func _delete_desktop_file(data) -> void:
 	VFS.move_to_trash(data)   # va nel Cestino, non sparisce
 	_refresh_icons()
+
+# ---------------- rinomina ----------------
+
+func _on_desktop_rinominato(item: DesktopItem, nuovo: String) -> void:
+	var nodo: Dictionary = item.data
+	if not rinomina_nodo(nodo, nuovo):
+		return
+	# come in Win95 resta selezionata, col nome nuovo
+	for c in icons_layer.get_children():
+		if c is DesktopItem and is_same((c as DesktopItem).data, nodo):
+			_on_desktop_picked(c)
+
+# Il punto unico da cui passa un cambio di nome, dal desktop o da un Esplora: applica,
+# avvisa se non si puo' (con un dialogo come quello di Win95), e ridisegna chi mostra
+# quel nodo -- la scrivania e OGNI Esplora aperto, non solo quello da cui si e' partiti.
+func rinomina_nodo(nodo: Dictionary, nuovo: String) -> bool:
+	var vecchio := str(nodo.get("name", ""))
+	var errore := VFS.rinomina(nodo, nuovo)
+	if errore != "":
+		var msg := tr(errore)
+		if msg.contains("%s"):
+			msg = msg % vecchio
+		apri_informazioni(tr("RN_ERR_TITLE"), str(nodo.get("icon", "file")), [msg])
+		return false
+	_refresh_icons()
+	for w in window_layer.get_children():
+		if w is OSWindow:
+			for app in (w as OSWindow).content_root.get_children():
+				if app is FileExplorerApp:
+					(app as FileExplorerApp).aggiorna_dopo_rinomina(nodo)
+	return true
+
+# Il riquadro di rinomina che ha il fuoco, ovunque sia (scrivania o Esplora), o null.
+func _rinomina_attiva() -> DesktopItem:
+	var f := get_viewport().gui_get_focus_owner()
+	if f != null and f.has_meta("rinomina") and f.get_parent() is DesktopItem:
+		return f.get_parent()
+	return null
+
+# ESC va trattenuto dall'OS invece di far uscire dal PC: mentre si rinomina (annulla la
+# rinomina, come in Win95) e con un dialogo chiudibile aperto (l'About). player.gd lo
+# chiede PRIMA di uscire: senza, nel gioco vero ESC non arrivava mai qui -- e "ESC chiude
+# l'About" (21/09/2026) funzionava solo nei test, che spingono i tasti nel SubViewport.
+func trattiene_esc() -> bool:
+	return _rinomina_attiva() != null \
+			or (_modal_chiudibile != null and is_instance_valid(_modal_chiudibile))
 
 # Ricostruisce le icone del desktop (es. dopo aver spostato file nel Cestino da
 # un'altra finestra): aggiorna anche lo stato pieno/vuoto del Cestino.
@@ -695,6 +746,13 @@ func _toggle_start_menu() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
+		# Mentre si rinomina ESC ANNULLA, come in Win95: il nome resta quello di prima. E'
+		# anche il modo di copiare un nome senza cambiarlo (F2, CTRL+C, ESC).
+		var rin := _rinomina_attiva()
+		if rin != null:
+			rin.annulla_rinomina()
+			get_viewport().set_input_as_handled()
+			return
 		# Con un dialogo CHIUDIBILE aperto (l'About) ESC chiude quello, non il PC: e' cosi'
 		# che si comporta un dialogo con l'OK. Gli altri modali restano come prima.
 		if _modal_chiudibile != null and is_instance_valid(_modal_chiudibile):
@@ -718,6 +776,24 @@ func _input(event: InputEvent) -> void:
 	# _input gira prima della GUI, quindi il layer modale da solo non basta a fermarlo.
 	if _modal_layer != null and is_instance_valid(_modal_layer):
 		return
+
+	# un clic FUORI dal riquadro di rinomina conferma il nome, come in Win95 (cliccare su
+	# un punto che non prende il fuoco -- lo sfondo, un'icona -- non lo toglierebbe al
+	# riquadro, e la rinomina resterebbe aperta)
+	if event is InputEventMouseButton and event.pressed:
+		var rin := _rinomina_attiva()
+		if rin != null and not rin.campo_rinomina().get_global_rect().has_point(get_global_mouse_position()):
+			rin.conferma_rinomina()
+
+	# F2 rinomina l'icona selezionata della SCRIVANIA, se la tastiera e' sua: cioe' se non
+	# c'e' una finestra attiva (con una finestra attiva F2 e' suo: lo gestisce l'Esplora)
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F2:
+		if (active_window == null or not active_window.visible) and _desk_sel != null \
+				and is_instance_valid(_desk_sel) and VFS.rinominabile(_desk_sel.data) \
+				and _rinomina_attiva() == null:
+			_desk_sel.inizia_rinomina()
+			get_viewport().set_input_as_handled()
+			return
 
 	# ANCHE il tasto destro porta in primo piano la finestra sotto il cursore, non solo il
 	# sinistro: e' quello che fa Windows, e senza di questo su una finestra visibile ma non

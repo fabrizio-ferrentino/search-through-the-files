@@ -248,6 +248,7 @@ func _refresh() -> void:
 		item.activated.connect(_on_activated)
 		item.picked.connect(_on_picked)
 		item.context_requested.connect(_on_item_context)
+		item.rinomina_finita.connect(_on_rinominato)
 		_grid.add_child(item)
 		_items.append(item)
 	_aggiorna_pulsanti()
@@ -275,6 +276,41 @@ func _input(event: InputEvent) -> void:
 		return
 	if Win95.premi_acceleratore(_barra_menu, event):
 		get_viewport().set_input_as_handled()
+		return
+	# F2 = rinomina la selezione, come in Win95. Non mentre si scrive da qualche parte
+	# (anche nel riquadro di rinomina stesso: li' F2 non deve ripartire).
+	var k := event as InputEventKey
+	if k.pressed and not k.echo and k.keycode == KEY_F2 and _selected != null \
+			and VFS.rinominabile(_selected.data) and not (os != null and os.typing()):
+		_selected.inizia_rinomina()
+		get_viewport().set_input_as_handled()
+
+# La voce "Rinomina": attiva solo se quel nodo si puo' rinominare (VFS.rinominabile), grigia
+# altrimenti -- sulle unita', sul Cestino, su cio' che sta nel Cestino, sulla cartella
+# protetta e sulla strada del Desktop.
+func _azione_rinomina(item: DesktopItem) -> Callable:
+	if item == null or not VFS.rinominabile(item.data):
+		return Callable()
+	return func(): item.inizia_rinomina()
+
+func _on_rinominato(item: DesktopItem, nuovo: String) -> void:
+	if os != null:
+		os.rinomina_nodo(item.data, nuovo)    # ridisegna anche questo Esplora
+
+# Un nodo ha cambiato nome (da qui o dalla scrivania): se e' qui dentro, ridisegna e lo
+# lascia SELEZIONATO col nome nuovo; se e' la cartella aperta, cambia titolo e indirizzo.
+func aggiorna_dopo_rinomina(nodo: Dictionary) -> void:
+	var qui := is_same(nodo, _folder)
+	for c in _folder.get("children", []):
+		if is_same(c, nodo):
+			qui = true
+	if not qui:
+		return
+	_refresh()
+	for it in _items:
+		if is_same(it.data, nodo):
+			_on_picked(it)
+			break
 
 func _cella_w() -> int:
 	return CELLA_W if _vista == VISTA_GRANDI else CELLA_W_PICCOLE
@@ -404,6 +440,7 @@ func _on_item_context(item: DesktopItem) -> void:
 	if _eliminabile(data):
 		canc = func(): _delete_item(data)
 	voci.append([tr("EX_DELETE"), canc])       # grigia su unita', Cestino e cartella protetta
+	voci.append([tr("EX_RENAME"), _azione_rinomina(item)])
 	voci.append([tr("EX_PROPERTIES"), Callable()])
 	_show_menu(voci)
 
@@ -552,11 +589,13 @@ func _voci_file() -> Array:
 		crea = _new_text_file
 	var apri := Callable()
 	var canc := Callable()
+	var rin := Callable()
 	if _selected != null:
 		var d: Dictionary = _selected.data
 		apri = func(): _on_activated(d)
 		if _eliminabile(d):
 			canc = func(): _delete_item(d)
+		rin = _azione_rinomina(_selected)
 	var chiudi := Callable()
 	if window != null:
 		chiudi = func(): window.close()
@@ -565,6 +604,7 @@ func _voci_file() -> Array:
 		["-"],
 		[tr("EX_OPEN"), apri],
 		[tr("EX_DELETE"), canc],
+		[tr("EX_RENAME"), rin],
 		[tr("EX_PROPERTIES"), Callable()],
 		["-"],
 		[tr("NP_CLOSE"), chiudi],

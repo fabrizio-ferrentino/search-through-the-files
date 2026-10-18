@@ -199,3 +199,7 @@ SECRET_WRONG,Wrong or incomplete codes. Try again.,Codici errati o incompleti. R
 SECRET_SUB_1,CAN YOU HEAR ME?,MI SENTI?
 SECRET_SUB_2,NO ONE ANSWERS,NESSUNO RISPONDE
 SECRET_SUB_3,ARE YOU STILL THERE?,SEI ANCORA LÌ?
+EX_RENAME,Rename,Rinomina
+RN_ERR_TITLE,Error Renaming File,Errore durante la ridenominazione
+RN_ERR_EXISTS,"Cannot rename %s: a file with the name you specified already exists. Specify a different filename.","Impossibile rinominare %s: esiste già un file con il nome specificato. Specificare un nome diverso."
+RN_ERR_CHARS,"A filename cannot contain any of the following characters: \ / : * ? "" < > |","Il nome di un file non può contenere i seguenti caratteri: \ / : * ? "" < > |"

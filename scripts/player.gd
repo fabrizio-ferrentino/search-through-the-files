@@ -189,6 +189,11 @@ func _input(event):
 	if _in_pc:
 		# in vista PC: ESC esce, tutto il resto va inoltrato all'OS nel SubViewport
 		if event.is_action_pressed("ui_cancel"):
+			# ...tranne quando l'OS lo vuole per se': per annullare una rinomina o chiudere
+			# un About. Prima ESC usciva SEMPRE dal PC e l'OS non lo vedeva mai.
+			if _os != null and _os.has_method("trattiene_esc") and _os.trattiene_esc():
+				_forward_to_os(event)
+				return
 			_exit_pc()
 			return
 		_forward_to_os(event)
