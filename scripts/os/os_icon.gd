@@ -127,44 +127,85 @@ func _computer(w: float, h: float) -> void:
 # l'anello giallo in orbita, cioe' il logo di Internet Explorer: lo stesso
 # problema della bandiera di Windows sul pulsante Avvio.
 #
-# Adesso e' il simbolo d'epoca della rete -- un GLOBO coi meridiani, quello che
-# usavano i programmi prima che ogni browser mettesse la sua lettera -- nei colori
-# di questo sistema (gli stessi della balena, vedi _whale), appoggiato su due righe
-# d'acqua: il mare e' il tema dell'OS, e a 18 px resta una palla blu con una fascia
-# chiara, che si legge.
+# Adesso (18/10/2026, scelta del proprietario: "globo a rete") e' un MAPPAMONDO
+# d'epoca: oceano blu, due continenti verdi abbozzati e sopra la RETE di meridiani e
+# paralleli -- il browser si chiama WebNet, e la rete del globo e' il suo marchio. La
+# versione prima era un globo con due sole linee che galleggiava su due righe d'acqua.
+# I continenti sono inventati a occhio (nessuna carta vera: a 32 px non si
+# riconoscerebbe comunque) e stanno dentro il 0.85 del raggio, cosi' il bordo scuro
+# della sfera li chiude senza bisogno di ritagliarli.
+# Il dettaglio scende con la misura, come per la balena: la griglia fitta solo da 32 px,
+# a 24 un meridiano e l'equatore, sotto i 20 solo terra e equatore -- a 16-18 px (barra
+# delle applicazioni, barra del titolo) tre linee chiare su un disco sono una macchia.
+const _TERRA_OVEST := [
+	Vector2(-0.55, -0.62), Vector2(-0.30, -0.70), Vector2(-0.18, -0.50),
+	Vector2(-0.30, -0.28), Vector2(-0.22, -0.05), Vector2(-0.30, 0.15),
+	Vector2(-0.18, 0.40), Vector2(-0.28, 0.72), Vector2(-0.42, 0.60),
+	Vector2(-0.48, 0.30), Vector2(-0.62, 0.05), Vector2(-0.75, -0.25),
+	Vector2(-0.70, -0.48)]
+const _TERRA_EST := [
+	Vector2(0.18, -0.72), Vector2(0.42, -0.66), Vector2(0.55, -0.45),
+	Vector2(0.40, -0.30), Vector2(0.62, -0.18), Vector2(0.70, 0.05),
+	Vector2(0.55, 0.30), Vector2(0.40, 0.58), Vector2(0.25, 0.45),
+	Vector2(0.22, 0.18), Vector2(0.10, 0.0), Vector2(0.15, -0.25),
+	Vector2(0.08, -0.48)]
+
 func _rete(w: float, h: float) -> void:
 	var s: float = min(w, h)
 	var o := Vector2((w - s) * 0.5, (h - s) * 0.5)
-	var corpo := Color("14539e")
-	var chiaro := Color("8fd0f2")
+	var mare := Color("1f5fae")
+	var terra := Color("3f9a4a")
+	var rete := Color(0.75, 0.9, 0.98, 0.7)
 	var scuro := Color("0d3c75")
-	var c := o + Vector2(s * 0.5, s * 0.44)
+	var c := o + Vector2(s * 0.5, s * 0.5)
 	# raggio generoso: accanto a cartella e monitor un globo piccolo sembrava
 	# un'icona di un'altra serie
-	var r: float = s * 0.36
-	var sp: float = maxf(s * 0.045, 1.0)
+	var r: float = s * 0.40
+	var sp: float = maxf(s * 0.02, 1.0)
 
-	# la sfera, col bordo scuro (senza bordo, sul grigio della taskbar sfuma)
-	draw_circle(c, r, corpo)
-	draw_circle(c, r, scuro, false, sp)
-	# riflesso in alto a sinistra: fa sembrare una palla e non un disco
-	if s >= 32.0:
-		draw_circle(c + Vector2(-r * 0.36, -r * 0.42), r * 0.20, Color("3f86c8"))
+	draw_circle(c, r, mare)
+	for forma in [_TERRA_OVEST, _TERRA_EST]:
+		var pts := PackedVector2Array()
+		for p in forma:
+			pts.append(c + (p as Vector2) * r)
+		draw_colored_polygon(pts, terra)
 
-	# equatore e meridiano: due ellissi bastano a dire "globo". Il meridiano sotto
-	# i 20 px diventa una riga verticale e sporca, quindi sparisce.
-	draw_polyline(_ellisse(c, r * 0.95, r * 0.30), chiaro, sp)
+	# la rete: l'equatore sempre (dritto da piccolo, curvo come i paralleli quando ci
+	# sono anche loro); poi meridiani e paralleli man mano che c'e' posto. Linee sottili e
+	# un po' trasparenti: piene e fitte, alla prima prova, il globo sembrava una gabbia e i
+	# continenti sparivano sotto.
+	var grande := s >= 40.0
+	var medio := s >= 28.0
+	if medio:
+		draw_polyline(_arco_ellisse(c, r, r * 0.22, 0.0, PI), rete, sp)
+	else:
+		draw_line(c - Vector2(r, 0), c + Vector2(r, 0), rete, sp)
 	if s >= 20.0:
-		draw_polyline(_ellisse(c, r * 0.34, r * 0.95), chiaro, sp)
+		draw_line(c - Vector2(0, r), c + Vector2(0, r), rete, sp)
+		draw_polyline(_ellisse(c, r * (0.50 if grande else 0.58), r), rete, sp)
+	if grande:
+		draw_polyline(_ellisse(c, r * 0.87, r), rete, sp)
+	if medio:
+		# i paralleli si vedono di tre quarti: e' l'arco DAVANTI (quello in basso) di
+		# un'ellisse schiacciata, ed e' questo a dare la curvatura della sfera
+		for lat in ([-0.62, -0.31, 0.31, 0.62] if grande else [-0.5, 0.5]):
+			var semi: float = r * cos(asin(lat))
+			draw_polyline(_arco_ellisse(c + Vector2(0, r * lat), semi, semi * 0.22, 0.0, PI),
+					rete, sp)
+		# riflesso in alto a sinistra: fa sembrare una palla e non un disco
+		draw_circle(c + Vector2(-r * 0.42, -r * 0.45), r * 0.16, Color(1, 1, 1, 0.35))
 
-	# l'acqua: il globo ci GALLEGGIA dentro, quindi la riga lo ATTRAVERSA e sborda
-	# di lato -- messa sotto la sfera sembrava una sottolineatura staccata. Sotto i
-	# 24 px resta solo il globo: due righe pallide a quella misura sono una macchia.
-	if s >= 24.0:
-		draw_line(Vector2(c.x - r * 1.22, c.y + r * 0.70),
-				Vector2(c.x + r * 1.22, c.y + r * 0.70), chiaro, sp)
-		draw_line(Vector2(c.x - r * 0.72, c.y + r * 1.16),
-				Vector2(c.x + r * 0.72, c.y + r * 1.16), chiaro, sp)
+	# il bordo scuro per ultimo: chiude la griglia e stacca la palla dal grigio della
+	# barra (senza, sul grigio sfuma)
+	draw_circle(c, r, scuro, false, sp * 1.4)
+
+# Un tratto di ellisse da a0 a a1 (radianti; y verso il basso, come lo schermo).
+func _arco_ellisse(c: Vector2, rx: float, ry: float, a0: float, a1: float, passi := 16) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in range(passi + 1):
+		var a: float = lerpf(a0, a1, float(i) / float(passi))
+		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
+	return pts
 
 # Punti di un'ellisse chiusa: draw_arc fa solo cerchi, e un globo senza ellissi
 # non si legge.
