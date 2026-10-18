@@ -63,17 +63,19 @@ const _COMMENT := [
 ]
 
 static var _chosen: Array = []       # i 5 siti del run (dizionari del pool)
-static var _carrier := ""            # file del sito che ospita la chiave
-static var _visible := false
-static var _text := ""               # frase/commento col codice gia' inserito
-static var _key := ""
+# Le chiavi web del run: DUE dal 18/10/2026 (proprietario), su due siti DIVERSI, ognuna
+# col suo modo (visibile o solo nel sorgente) tirato a caso. Un Dictionary per chiave:
+#   indice   l'indice della chiave (OSContent.KEY_WEB_1 / KEY_WEB_2)
+#   key      la sua etichetta ("2-ABCD")
+#   carrier  il file del sito che la ospita
+#   visible  nel testo della pagina (true) o solo nel sorgente (false)
+#   text     la frase / il commento col codice gia' dentro
+#   frac_tipo, frac_fessura   DOVE finisce: due frazioni (0..1) e non una posizione,
+#            perche' qui l'HTML del portatore non c'e' ancora; diventano un punto preciso
+#            in source_html(), la prima a vedere la pagina (vedi web_anchor.gd)
+#   ancora   memo: { html, tipo, nota, pos, reso, hash }
+static var _posti: Array = []
 static var _built_seed := -9999
-# DOVE finisce la chiave. Si sorteggiano due frazioni (0..1) e non una posizione,
-# perche' qui l'HTML del portatore non c'e' ancora: diventano un punto preciso in
-# source_html(), che e' la prima a vedere la pagina. Vedi web_anchor.gd.
-static var _frac_tipo := 0.0
-static var _frac_fessura := 0.0
-static var _ancora: Dictionary = {}     # memo: { html, tipo, nota, pos, reso, hash }
 
 # Sceglie i 5 siti del run + portatore/modalita'/chiave dal seme. La chiama
 # BrowserApp.reset_pages() (da GameManager.start_new_run); _ensure() la rifa' se serve.
@@ -83,29 +85,46 @@ static func build() -> void:
 	_chosen = _shuffled(_pool(), rng)
 	if _chosen.size() > SITE_COUNT:
 		_chosen = _chosen.slice(0, SITE_COUNT)
-	_key = GameManager.key_label(OSContent.KEY_WEB)
+	_posti.clear()
+	# la PRIMA chiave fa le estrazioni nello stesso ordine di quando ce n'era una sola:
+	# cosi' i semi gia' giocati tengono il suo portatore, modo e frase
+	var a := _posto(OSContent.KEY_WEB_1, rng, _chosen)
+	_posti.append(a)
+	# la SECONDA si estrae dopo, IN CODA, fra i siti del run tranne quello della prima:
+	# due chiavi sulla stessa pagina sarebbero una chiave sola da cercare
+	var altri: Array = []
+	for c in _chosen:
+		if str(c["file"]) != str(a["carrier"]):
+			altri.append(c)
+	_posti.append(_posto(OSContent.KEY_WEB_2, rng, altri))
+	_built_seed = GameManager.run_seed
+	for p in _posti:
+		if str(p["key"]) != "" and str(p["carrier"]) != "":
+			GameManager.note_key(int(p["indice"]), _hint(p), "WEB")
+
+# Estrae dove va UNA chiave web, fra i siti dati.
+static func _posto(indice: int, rng: RandomNumberGenerator, siti: Array) -> Dictionary:
+	var p := {"indice": indice, "key": GameManager.key_label(indice), "carrier": "",
+			"visible": false, "text": "", "frac_tipo": 0.0, "frac_fessura": 0.0, "ancora": {}}
+	if siti.is_empty():
+		return p
 	# il portatore e' sempre un SITO d'autore: la wiki generata non puo' esserlo,
 	# cosi' la chiave non finisce mai nell'indice (come in WTTG2)
-	var c: Dictionary = _chosen[rng.randi_range(0, _chosen.size() - 1)]
-	_carrier = str(c["file"])
-	if _carrier == HOME:
-		_carrier = ""
-	_visible = rng.randf() < 0.5
-	if _key == "":
-		_text = ""
-	elif _visible:
-		_text = _frase(_VISIBLE[rng.randi_range(0, _VISIBLE.size() - 1)], _key)
-	else:
-		_text = _COMMENT[rng.randi_range(0, _COMMENT.size() - 1)] % _key
+	var c: Dictionary = siti[rng.randi_range(0, siti.size() - 1)]
+	p["carrier"] = "" if str(c["file"]) == HOME else str(c["file"])
+	p["visible"] = rng.randf() < 0.5
+	var key: String = p["key"]
+	if key != "":
+		if p["visible"]:
+			p["text"] = _frase(_VISIBLE[rng.randi_range(0, _VISIBLE.size() - 1)], key)
+		else:
+			p["text"] = _COMMENT[rng.randi_range(0, _COMMENT.size() - 1)] % key
 	# NB: questi due sorteggi stanno IN CODA di proposito. Metterli piu' su
 	# cambierebbe la sequenza dell'RNG, e con essa portatore/modalita'/frase di
 	# tutti i semi giocati finora.
-	_frac_tipo = rng.randf()
-	_frac_fessura = rng.randf()
-	_ancora = {}
-	_built_seed = GameManager.run_seed
-	if _key != "" and _carrier != "":
-		GameManager.note_key(OSContent.KEY_WEB, _hint())
+	p["frac_tipo"] = rng.randf()
+	p["frac_fessura"] = rng.randf()
+	return p
 
 # La frase tradotta col codice dentro. Se la traduzione manca, tr() restituisce la
 # chiave: senza "%s" l'operatore % darebbe errore e la chiave resterebbe fuori dalla
@@ -129,9 +148,9 @@ static func _ensure() -> void:
 # sfondo grigio, sezione PREFERITI + sezione SITI VISITATI DI RECENTE in Courier,
 # footer dell'ISP.
 #
-# La CHIAVE del run non finisce MAI qui: la wiki e' solo un indice (come in WTTG2).
-# La chiave vive su UNO dei siti elencati — vedi source_html() — e il portatore si
-# sceglie fra i file del pool, mai fra le pagine generate.
+# Le CHIAVI del run non finiscono MAI qui: la wiki e' solo un indice (come in WTTG2).
+# Vivono su DUE dei siti elencati — vedi source_html() — e i portatori si scelgono fra
+# i file del pool, mai fra le pagine generate.
 #
 # Il riquadro e' al 70% grazie a <table width="70%">, che il compilatore realizza
 # con una spacer trasparente (vedi HtmlBB._spacer_row): serve che il browser passi
@@ -319,7 +338,8 @@ static func home_html() -> String:
 		"rows": righe, "footer1": _t("WEB_HOME_FOOT1"), "footer2": _t("WEB_HOME_FOOT2"),
 	})
 
-# HTML d'autore con la chiave iniettata, SE questa pagina e' il portatore del run.
+# HTML d'autore con la chiave iniettata, SE questa pagina porta una delle chiavi web
+# (al massimo una: i due portatori sono siti diversi).
 # Il punto esatto lo sceglie WebAnchor fra tutti quelli sicuri della pagina (riga a
 # se', in mezzo a una frase, in coda a un paragrafo, voce di elenco, cella chiara;
 # in modalita' sorgente: commento o attributo) -- prima finiva sempre in fondo e si
@@ -327,27 +347,34 @@ static func home_html() -> String:
 # pagina (commenti rimossi) sia per il sorgente (commenti inclusi).
 static func source_html(page: String, src: String) -> String:
 	_ensure()
-	if page == HOME or page != _carrier or _key == "":
+	if page == HOME:
 		return src   # la wiki resta pulita: nessuna chiave, ne' visibile ne' nel sorgente
-	return str(_risolvi(src)["html"])
+	for p in _posti:
+		if str(p["carrier"]) == page and str(p["key"]) != "":
+			return str(_risolvi(p, src)["html"])
+	return src
 
 # Dove va la chiave in QUESTA pagina. Il risultato si tiene da parte (memo
 # sull'hash del sorgente): source_html() viene chiamata a ogni caricamento e anche
 # per il "visualizza sorgente", e deve dare sempre lo stesso HTML -- altrimenti la
 # chiave ballerebbe da un punto all'altro durante la partita.
-static func _risolvi(src: String) -> Dictionary:
+static func _risolvi(p: Dictionary, src: String) -> Dictionary:
 	var h := src.hash()
-	if not _ancora.has("html") or int(_ancora.get("hash", 0)) != h:
-		_ancora = WebAnchor.inietta(src, _text, _key, _visible, _frac_tipo, _frac_fessura)
-		_ancora["hash"] = h
-		GameManager.note_key(OSContent.KEY_WEB, _hint())
-	return _ancora
+	var ancora: Dictionary = p["ancora"]
+	if not ancora.has("html") or int(ancora.get("hash", 0)) != h:
+		ancora = WebAnchor.inietta(src, str(p["text"]), str(p["key"]), bool(p["visible"]),
+				float(p["frac_tipo"]), float(p["frac_fessura"]))
+		ancora["hash"] = h
+		p["ancora"] = ancora
+		GameManager.note_key(int(p["indice"]), _hint(p), "WEB")
+	return ancora
 
 # La riga del pannello di debug (F12): sito, modalita' e DOVE sta la chiave.
-static func _hint() -> String:
-	var modo := "visible" if _visible else "source only"
-	return "%s - %s - %s" % [display_url(_carrier), modo,
-			str(_ancora.get("nota", "position not resolved yet"))]
+static func _hint(p: Dictionary) -> String:
+	var modo := "visible" if bool(p["visible"]) else "source only"
+	var ancora: Dictionary = p["ancora"]
+	return "%s - %s - %s" % [display_url(str(p["carrier"])), modo,
+			str(ancora.get("nota", "position not resolved yet"))]
 
 # ---------------- stato del run (serve ai test) ----------------
 
@@ -358,25 +385,37 @@ static func sites() -> Array:
 	_ensure()
 	return _chosen.duplicate()
 
-static func carrier() -> String:
+# Quante chiavi web ci sono (n va da 0 a quanti_posti() - 1 negli accessori qui sotto;
+# senza n si parla della PRIMA, come quando ce n'era una sola).
+static func quanti_posti() -> int:
 	_ensure()
-	return _carrier
+	return _posti.size()
 
-static func is_visible() -> bool:
+# L'indice di chiave (OSContent.KEY_WEB_*) della chiave web n.
+static func indice(n := 0) -> int:
 	_ensure()
-	return _visible
+	return int(_posti[n]["indice"])
+
+static func carrier(n := 0) -> String:
+	_ensure()
+	return str(_posti[n]["carrier"])
+
+static func is_visible(n := 0) -> bool:
+	_ensure()
+	return bool(_posti[n]["visible"])
 
 # La frase (o il commento) col codice dentro, come viene inserita.
-static func key_text() -> String:
+static func key_text(n := 0) -> String:
 	_ensure()
-	return _text
+	return str(_posti[n]["text"])
 
 # { tipo, nota, pos, reso } dell'ancora scelta. "reso" e' cio' che deve comparire
 # a schermo ("" se la chiave sta solo nel sorgente). Vuoto se non ancora risolta.
-static func anchor_info() -> Dictionary:
+static func anchor_info(n := 0) -> Dictionary:
+	var ancora: Dictionary = {} if n >= _posti.size() else _posti[n]["ancora"]
 	return {
-		"tipo": str(_ancora.get("tipo", "")), "nota": str(_ancora.get("nota", "")),
-		"pos": int(_ancora.get("pos", -1)), "reso": str(_ancora.get("reso", "")),
+		"tipo": str(ancora.get("tipo", "")), "nota": str(ancora.get("nota", "")),
+		"pos": int(ancora.get("pos", -1)), "reso": str(ancora.get("reso", "")),
 	}
 
 # Copia mescolata (Fisher-Yates) con l'RNG dato; non tocca l'originale.

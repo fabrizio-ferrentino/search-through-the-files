@@ -76,6 +76,9 @@ func _ready() -> void:
 	# nessuna parola delle vecchie note italiane, su piu' semi (vie e nascondigli diversi)
 	var lingua_prima: String = GameManager.lingua
 	var italiano: Array = []
+	# ...e i TIPI delle chiavi (18/10/2026): la 1 e' FILE o FOLDER secondo il seme, la 2 e
+	# la 3 WEB, la 4 IMAGE -- la mappa fissa di prima avrebbe chiamato FOLDER una chiave web
+	var tipi_sbagliati: Array = []
 	for lingua in ["it", "en"]:
 		GameManager.set_lingua(lingua, false)
 		for seme in [111, 222, 333, 444, 555, 666]:
@@ -84,7 +87,14 @@ func _ready() -> void:
 			for parola in PAROLE_ITALIANE:
 				if t.contains(parola) and not italiano.has(parola):
 					italiano.append(parola)
+			var righe := t.split("\n")
+			var tipi := []
+			for i in range(1, 5):
+				tipi.append(righe[i].split(" ", false)[1] if righe.size() > i else "?")
+			if not ["FILE", "FOLDER"].has(tipi[0]) or tipi.slice(1) != ["WEB", "WEB", "IMAGE"]:
+				tipi_sbagliati.append("seme %d: %s" % [seme, str(tipi)])
 	GameManager.set_lingua(lingua_prima, false)
+	_check("TIPI_DELLE_CHIAVI", tipi_sbagliati.is_empty(), str(tipi_sbagliati))
 	await get_tree().process_frame
 	_check("SEMPRE_IN_INGLESE", italiano.is_empty() and _testo().contains("KEYS")
 			and _testo().contains("F8 PC threats"), "parole italiane nel debug: %s" % str(italiano))

@@ -121,26 +121,27 @@ func _prova_lingua(loc: String) -> void:
 	var visibili := 0
 	for seme in range(1, SEMI + 1):
 		GameManager.start_new_run(seme)
-		var kl: String = GameManager.key_label(OSContent.KEY_WEB)
-		var port := WebRuntime.carrier()
-		if port == "":
-			_ko("PORTATORE_" + loc, "il seme %d non ha portatore" % seme)
-			continue
-		if not FileAccess.file_exists("res://web/pages/%s/%s.html" % [loc, port]):
-			_ko("PORTATORE_" + loc, "il portatore %s non esiste in %s" % [port, loc])
-			continue
-		var testo := WebRuntime.key_text()
-		if testo.find("WK_V_") >= 0:
-			_ko("FRASE_" + loc, "la frase portatrice e' la chiave di traduzione: %s" % testo)
-		if testo.find(kl) < 0:
-			_ko("FRASE_" + loc, "la frase portatrice non contiene %s: %s" % [kl, testo])
-		if WebRuntime.is_visible():
-			visibili += 1
-		var inj := WebRuntime.source_html(port, BrowserApp.read_page(port))
-		if inj.find(kl) < 0:
-			_ko("INIEZIONE_" + loc, "%s non compare nell'HTML di %s (seme %d)" % [kl, port, seme])
-		if WebRuntime.home_html().find(kl) >= 0:
-			_ko("WIKI_PULITA_" + loc, "la chiave e' finita nella wiki (seme %d)" % seme)
+		for n in range(WebRuntime.quanti_posti()):    # due chiavi web, su due siti
+			var kl: String = GameManager.key_label(WebRuntime.indice(n))
+			var port := WebRuntime.carrier(n)
+			if port == "":
+				_ko("PORTATORE_" + loc, "il seme %d non ha portatore" % seme)
+				continue
+			if not FileAccess.file_exists("res://web/pages/%s/%s.html" % [loc, port]):
+				_ko("PORTATORE_" + loc, "il portatore %s non esiste in %s" % [port, loc])
+				continue
+			var testo := WebRuntime.key_text(n)
+			if testo.find("WK_V_") >= 0:
+				_ko("FRASE_" + loc, "la frase portatrice e' la chiave di traduzione: %s" % testo)
+			if testo.find(kl) < 0:
+				_ko("FRASE_" + loc, "la frase portatrice non contiene %s: %s" % [kl, testo])
+			if WebRuntime.is_visible(n):
+				visibili += 1
+			var inj := WebRuntime.source_html(port, BrowserApp.read_page(port))
+			if inj.find(kl) < 0:
+				_ko("INIEZIONE_" + loc, "%s non compare nell'HTML di %s (seme %d)" % [kl, port, seme])
+			if WebRuntime.home_html().find(kl) >= 0:
+				_ko("WIKI_PULITA_" + loc, "la chiave e' finita nella wiki (seme %d)" % seme)
 	_check("FRASI_VISIBILI_" + loc, visibili > 0,
 			"su %d semi nessuna chiave visibile: le frasi tradotte non sono state provate" % SEMI)
 

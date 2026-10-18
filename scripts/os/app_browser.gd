@@ -689,11 +689,12 @@ func _show_ctx() -> void:
 # Rigenera lo stato web del run (chiave + portatore). Gancio da GameManager.start_new_run().
 static func reset_pages() -> void:
 	WebRuntime.build()
-	# risolve SUBITO dove finisce la chiave: il pannello F12 deve poterlo dire
-	# prima che il giocatore apra la pagina, e WebRuntime non legge file da solo
-	var c := WebRuntime.carrier()
-	if c != "":
-		WebRuntime.source_html(c, read_page(c))
+	# risolve SUBITO dove finiscono le chiavi web (sono due): il pannello F12 deve
+	# poterlo dire prima che il giocatore apra le pagine, e WebRuntime non legge file
+	for n in range(WebRuntime.quanti_posti()):
+		var c := WebRuntime.carrier(n)
+		if c != "":
+			WebRuntime.source_html(c, read_page(c))
 
 # ---------------- caricamento della pagina ----------------
 

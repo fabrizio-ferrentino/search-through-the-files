@@ -52,6 +52,9 @@ var pc_threats_enabled := true
 # mentre le piazzano (content.gd, web_runtime.gd) chiamando note_key(). Serve al
 # pannello di debug F12: senza, provare una partita vuol dire cercare alla cieca.
 var key_hints: Dictionary = {}
+# ...e di che TIPO e' ogni chiave in questa partita: la 1 e' un file o una cartella a
+# seconda del seme (18/10/2026), quindi il pannello non puo' piu' avere una mappa fissa.
+var key_kinds: Dictionary = {}
 var _keys_panel: DebugPanel = null   # il pannello di debug F12 (debug_panel.gd)
 var _keys_label: Label = null        # le sue righe delle chiavi
 var debug_compatto := false          # pannello ridotto alle sole chiavi (resta fra un F12 e l'altro)
@@ -125,6 +128,7 @@ func start_new_run(new_seed: int = 0) -> void:
 	rng.seed = run_seed
 	_generate_keys()          # genera le chiavi PRIMA di costruire i contenuti che le ospitano
 	key_hints.clear()         # le posizioni le riannotano i generatori qui sotto
+	key_kinds.clear()
 	first_time_in_room = true
 	pc_on = false
 	logged_in = false
@@ -241,13 +245,17 @@ func check_keys(rows: Array) -> bool:
 # ---------------- DEV-ONLY: chiavi e nascondigli (F12) ----------------
 
 # Annota dove e' stata piazzata una chiave (lo chiamano i generatori dei contenuti).
-func note_key(index: int, dove: String) -> void:
+func note_key(index: int, dove: String, tipo := "") -> void:
 	key_hints[index] = dove
+	if tipo != "":
+		key_kinds[index] = tipo
 
 # Rapporto sintetico: intestazione con seme e stato delle minacce, poi una riga
 # per chiave (codice, tipo, dove sta).
 func keys_report() -> String:
-	var tipi := {1: "FILE", 2: "FOLDER", 3: "WEB", 4: "IMAGE"}
+	# la 1 la dice chi l'ha piazzata (FILE o FOLDER); 2 e 3 web, 4 immagine
+	var tipi := {1: "DISK", 2: "WEB", 3: "WEB", 4: "IMAGE"}
+	tipi.merge(key_kinds, true)
 	var out := "KEYS  seed %d  -  room threats %s  -  PC threats %s\n" % [run_seed,
 			_on_off(room_threats_enabled), _on_off(pc_threats_enabled)]
 	for i in range(1, KEY_COUNT + 1):

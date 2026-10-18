@@ -19,8 +19,10 @@ extends Node
 #     mentre le cartelle dell'utente sono tradotte -- era cosi' anche nelle versioni
 #     italiane, ed e' meta' dell'aria d'epoca;
 #   7 nessuna chiave di traduzione arriva a schermo come nome o contenuto;
-#   8 le chiavi 1 e 2 restano piazzate e trovabili nell'albero nuovo, e il pannello F12
-#     ne dice il percorso in stile DOS;
+#   8 la chiave 1 (del DISCO: un file O una cartella, a caso dal 18/10/2026) resta
+#     piazzata e trovabile nell'albero nuovo, ESATTAMENTE nel modo che il pannello F12
+#     dichiara (FILE = nel contenuto di un file, FOLDER = nel nome di una cartella) e col
+#     percorso in stile DOS; le chiavi web (2 e 3) non stanno sul disco;
 #   9 un file binario si apre e mostra byte illeggibili, non una pagina vuota.
 #
 # Va eseguito come SCENA (serve l'autoload GameManager). Headless va bene.
@@ -190,16 +192,29 @@ func _prova_chiavi_piazzate() -> void:
 	for seme in range(1, SEMI + 1):
 		GameManager.start_new_run(seme)
 		var radice := VFS.get_root()
-		for indice in [OSContent.KEY_FILE, OSContent.KEY_FOLDER]:
-			var etichetta: String = GameManager.key_label(indice)
-			if etichetta == "":
-				continue
-			if not _contiene(radice, etichetta):
-				guasti.append("seme %d: %s non e' nell'albero" % [seme, etichetta])
-			var nota := str(GameManager.key_hints.get(indice, ""))
-			if nota.find("C:\\") < 0:
-				guasti.append("seme %d: il pannello F12 non dice il percorso ('%s')" % [seme, nota])
+		var etichetta: String = GameManager.key_label(OSContent.KEY_DISCO)
+		var tipo := str(GameManager.key_kinds.get(OSContent.KEY_DISCO, ""))
+		var nei_nomi := _quante(radice, etichetta, "name")
+		var nei_testi := _quante(radice, etichetta, "content")
+		var atteso := [1, 0] if tipo == "FOLDER" else [0, 1]
+		if (tipo != "FILE" and tipo != "FOLDER") or [nei_nomi, nei_testi] != atteso:
+			guasti.append("seme %d: chiave 1 di tipo '%s' trovata %d volte nei nomi e %d nei file"
+					% [seme, tipo, nei_nomi, nei_testi])
+		var nota := str(GameManager.key_hints.get(OSContent.KEY_DISCO, ""))
+		if nota.find("C:\\") < 0:
+			guasti.append("seme %d: il pannello F12 non dice il percorso ('%s')" % [seme, nota])
+		for indice in OSContent.KEY_WEB:
+			if _contiene(radice, GameManager.key_label(indice)):
+				guasti.append("seme %d: la chiave web %d e' sul disco" % [seme, indice])
 	_check("CHIAVI_PIAZZATE", guasti.is_empty(), ", ".join(guasti))
+
+# Quante volte il codice compare nel campo dato ("name" o "content") dei nodi.
+func _quante(nodo: Dictionary, etichetta: String, campo: String) -> int:
+	var n := 1 if str(nodo.get(campo, "")).find(etichetta) >= 0 else 0
+	for c in nodo.get("children", []):
+		if c is Dictionary:
+			n += _quante(c, etichetta, campo)
+	return n
 
 # Il codice compare nel nome di un nodo o nel contenuto di un file.
 func _contiene(nodo: Dictionary, etichetta: String) -> bool:

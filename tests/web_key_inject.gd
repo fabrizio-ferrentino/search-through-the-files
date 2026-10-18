@@ -15,6 +15,12 @@ extends Node
 #     dal seme;
 #   5 il pannello F12 dica dove sta;
 #   6 le posizioni siano VARIE: e' il motivo di tutto il lavoro.
+# Dal 18/10/2026 le chiavi web sono DUE (proprietario): tutto quanto sopra vale per
+# OGNUNA, e in piu' si pretende che
+#   7 stiano sempre su due siti DIVERSI, che escano tutte e quattro le combinazioni di
+#     modo (visibile/sorgente x visibile/sorgente), e che la PRIMA sia rimasta quella di
+#     prima del cambio (BASE: misurata sul codice vecchio, sito + modo + frase) -- i semi
+#     gia' giocati non devono cambiare sotto i piedi.
 #
 # Va eseguito come SCENA (non con -s): serve l'autoload GameManager.
 #   & $godot --headless --path $proj res://tests/web_key_inject.tscn
@@ -22,8 +28,18 @@ extends Node
 
 const SEMI := 60
 const POOL := ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri"]
+# La chiave web di questi semi PRIMA che diventassero due (in italiano): sito, modo, frase
+# col codice al posto di "#".
+const BASE := {
+	1: ["mail", false, "build-key=#"], 7: ["meteo", false, "temporary-key=#"],
+	42: ["meteo", false, "why are u doing this #"], 111: ["mail", false, "#"],
+	4242: ["forum", false, "# i just want to be happy"],
+	5150: ["giochi", false, "# i just want to be happy"],
+	8080: ["news", true, "you want this #"], 12345: ["misteri", true, "#"],
+}
 
 var _fails: Array = []
+var _combinazioni: Dictionary = {}  # "vis/src" della coppia -> quante volte
 var _tipi: Dictionary = {}          # tipo -> quante volte
 var _punti: Dictionary = {}         # "pagina@pos" -> quante volte
 
@@ -36,6 +52,10 @@ func _ready() -> void:
 	var a := _scatto(12345)
 	var b := _scatto(12345)
 	_check("RIPRODUCIBILE", a == b, "stesso seme, posizioni diverse: %s vs %s" % [a, b])
+
+	_check("ESCONO_TUTTE_LE_COPPIE", _combinazioni.size() == 4,
+			"combinazioni di modo uscite: %s" % str(_combinazioni))
+	_prova_base()
 
 	_censimento()
 	_check("TIPI_VARI", _tipi.size() >= 8,
@@ -57,10 +77,38 @@ func _ready() -> void:
 
 func _prova(seme: int) -> void:
 	GameManager.start_new_run(seme)
-	var kl: String = GameManager.key_label(OSContent.KEY_WEB)
-	var port := WebRuntime.carrier()
-	var vis := WebRuntime.is_visible()
-	var info := WebRuntime.anchor_info()
+	if WebRuntime.quanti_posti() != 2:
+		_ko(seme, "%d chiavi web invece di 2" % WebRuntime.quanti_posti())
+		return
+	if WebRuntime.carrier(0) == WebRuntime.carrier(1):
+		_ko(seme, "le due chiavi web sono sullo stesso sito (%s)" % WebRuntime.carrier(0))
+	var coppia := "%s/%s" % ["vis" if WebRuntime.is_visible(0) else "src",
+			"vis" if WebRuntime.is_visible(1) else "src"]
+	_combinazioni[coppia] = int(_combinazioni.get(coppia, 0)) + 1
+	for n in range(2):
+		_prova_chiave(seme, n)
+
+# La prima chiave e' quella di prima del cambio.
+func _prova_base() -> void:
+	var lingua: String = GameManager.lingua
+	GameManager.set_lingua("it", false)
+	var diverse := []
+	for seme in BASE:
+		GameManager.start_new_run(int(seme))
+		var b: Array = BASE[seme]
+		var codice: String = GameManager.key_label(WebRuntime.indice(0))
+		var ora := [WebRuntime.carrier(0), WebRuntime.is_visible(0),
+				WebRuntime.key_text(0).replace(codice, "#")]
+		if ora != b:
+			diverse.append("seme %d: %s invece di %s" % [seme, str(ora), str(b)])
+	GameManager.set_lingua(lingua, false)
+	_check("PRIMA_CHIAVE_INVARIATA", diverse.is_empty(), "; ".join(diverse))
+
+func _prova_chiave(seme: int, n: int) -> void:
+	var kl: String = GameManager.key_label(WebRuntime.indice(n))
+	var port := WebRuntime.carrier(n)
+	var vis := WebRuntime.is_visible(n)
+	var info := WebRuntime.anchor_info(n)
 	var tipo := str(info["tipo"])
 	if kl == "" or port == "":
 		_ko(seme, "nessuna chiave o nessun portatore")
@@ -118,7 +166,7 @@ func _prova(seme: int) -> void:
 		_ko(seme, "la chiave e' su %d pagine" % quante)
 
 	# il pannello F12 deve dire sito, modalita' e posizione
-	var hint := str(GameManager.key_hints.get(OSContent.KEY_WEB, ""))
+	var hint := str(GameManager.key_hints.get(WebRuntime.indice(n), ""))
 	if hint.find(WebRuntime.display_url(port)) < 0 or hint.find(str(info["nota"])) < 0:
 		_ko(seme, "il suggerimento F12 non dice dove: '%s'" % hint)
 
@@ -129,8 +177,11 @@ func _prova(seme: int) -> void:
 # Fotografia della scelta per un seme: serve alla prova di riproducibilita'.
 func _scatto(seme: int) -> String:
 	GameManager.start_new_run(seme)
-	var info := WebRuntime.anchor_info()
-	return "%s/%s@%d" % [WebRuntime.carrier(), str(info["tipo"]), int(info["pos"])]
+	var out := ""
+	for n in range(WebRuntime.quanti_posti()):
+		var info := WebRuntime.anchor_info(n)
+		out += "%s/%s@%d " % [WebRuntime.carrier(n), str(info["tipo"]), int(info["pos"])]
+	return out
 
 func _censimento() -> void:
 	print("\n   posizioni estratte su %d semi:" % SEMI)

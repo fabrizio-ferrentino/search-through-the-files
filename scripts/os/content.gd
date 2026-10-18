@@ -9,12 +9,17 @@ extends RefCounted
 #
 # Parte 2 (generatore seminato): dal seme del run (GameManager.run_seed) si decide in
 # modo RIPRODUCIBILE quali ~5 siti del pool entrano nel run e DOVE finiscono le
-# chiavi. Mappa indice->categoria FISSA (vedi KEY_*):
-#   * chiave 1 FILE     -> file portatore (nome + testo a caso) in una cartella a caso
-#   * chiave 2 CARTELLA -> cartella "di backup" (nome a caso) col codice nel nome
-#   * chiave 3 WEB      -> un sito a caso del run, a caso nel TESTO VISIBILE o nel
-#                          SORGENTE HTML (commento)
+# chiavi. Mappa indice->categoria FISSA (vedi KEY_*), decisa dal proprietario il
+# 18/10/2026 (prima erano file / cartella / web / immagine, una per tecnica):
+#   * chiave 1 DISCO    -> a caso, meta' delle volte un FILE portatore (nome + testo a
+#                          caso, in una cartella a caso) e meta' una CARTELLA "di backup"
+#                          col codice nel nome. Mai tutte e due.
+#   * chiavi 2 e 3 WEB  -> due siti DIVERSI del run, ognuna a caso nel TESTO VISIBILE o
+#                          nel SORGENTE HTML (vedi web_runtime.gd)
 #   * chiave 4 IMMAGINE -> nascosta in una foto (parte 3, sotto)
+# La chiave non sta MAI dentro un binario (.EXE, .SYS, .COM, .DLL...): il file portatore
+# e' sempre un .txt nuovo, e i binari sono solo rumore illeggibile. E' una regola: aprire
+# a tappeto i binari non deve mai servire.
 #
 # Parte 3 (foto + puzzle di regolazione): la cartella "Immagini" contiene alcune foto.
 # Una porta la chiave 4 come scritta a bassissimo contrasto, leggibile solo regolando
@@ -34,9 +39,10 @@ extends RefCounted
 const KEY_SLOT := "{{KEY}}"
 
 # Mappa indice->categoria (fissa): dove finisce ogni chiave del run.
-const KEY_FILE := 1
-const KEY_FOLDER := 2
-const KEY_WEB := 3
+const KEY_DISCO := 1                 # file O cartella, a caso (vedi build_filesystem)
+const KEY_WEB_1 := 2
+const KEY_WEB_2 := 3
+const KEY_WEB := [KEY_WEB_1, KEY_WEB_2]
 const KEY_IMAGE := 4
 
 # Salt del generatore seminato del filesystem (i siti web vivono ora in WebRuntime).
@@ -178,7 +184,7 @@ static func _testo(chiave: String) -> String:
 #  2 il RIEMPIMENTO a caso (_riempi_disco, dal catalogo in catalogo_disco.gd): cartelle in
 #    piu', programmi inventati, file d'epoca e qualche file horror. Diverso a ogni partita
 #    (18/10/2026, richiesta del proprietario);
-#  3 le CHIAVI 1 (file) e 2 (cartella), che possono finire anche nelle cartelle nuove.
+#  3 la CHIAVE 1, in un file O nel nome di una cartella (a caso), anche fra le cartelle nuove.
 # Il riempimento ha un RNG SUO: cosi' non sposta le estrazioni di foto e chiavi, e
 # aggiungere una voce al catalogo non cambia quale foto porta il codice.
 # Lo consuma VFS._build(), che aggiunge poi i back-reference _parent.
@@ -186,8 +192,12 @@ static func build_filesystem() -> Dictionary:
 	var rng := _run_rng(VFS_SALT)
 	var c_children: Array = _disco_c(rng)
 	var nuove: Dictionary = _riempi_disco(c_children)
-	_place_file_key(c_children, rng, nuove["chiave_file"])       # chiave 1
-	_place_folder_key(c_children, rng, nuove["sotto_documenti"])  # chiave 2
+	# la chiave 1 sta in un file OPPURE nel nome di una cartella. L'estrazione viene
+	# DOPO le foto (_disco_c): cosi' quale foto porta il codice non cambia per nessun seme
+	if rng.randf() < 0.5:
+		_place_folder_key(c_children, rng, nuove["sotto_documenti"])
+	else:
+		_place_file_key(c_children, rng, nuove["chiave_file"])
 	# RISORSE DEL COMPUTER = le UNITA', non una cartella sola. Un "Risorse del computer"
 	# con dentro il solo disco C: e' la cosa che tradisce il tema piu' in fretta: nel '98
 	# la prima finestra che si apriva elencava floppy, disco, CD-ROM e Cestino. A: e D:
@@ -289,11 +299,11 @@ static func _cartelle_chiave() -> Array:
 		[DIR_SISTEMA],
 	]
 
-# Chiave 1: file portatore (nome + contenuto a caso) in una cartella a caso -- fra quelle
+# Chiave 1, come FILE: portatore (nome + contenuto a caso) in una cartella a caso -- fra quelle
 # fisse di _cartelle_chiave() e quelle nate in questa partita (sottocartelle di Documenti,
 # programmi inventati, cartelle in piu' di C:).
 static func _place_file_key(c_children: Array, rng: RandomNumberGenerator, nuove: Array = []) -> void:
-	var label := GameManager.key_label(KEY_FILE)
+	var label := GameManager.key_label(KEY_DISCO)
 	if label == "":
 		return
 	var percorso: Array = _pick(_cartelle_chiave() + nuove, rng)
@@ -308,12 +318,12 @@ static func _place_file_key(c_children: Array, rng: RandomNumberGenerator, nuove
 	var name: String = _nome_libero(folder["children"], _t(_pick(_FILE_NAMES, rng)))
 	var content: String = _testo(_pick(_FILE_CARRIERS, rng))
 	folder["children"].append(_text(name, content.replace(KEY_SLOT, label)))
-	GameManager.note_key(KEY_FILE, "%s (in %s)" % [name, _percorso_dos(percorso)])
+	GameManager.note_key(KEY_DISCO, "%s (in %s)" % [name, _percorso_dos(percorso)], "FILE")
 
-# Chiave 2: cartella di "backup" (nome a caso) col codice scritto nel proprio nome. Va
+# Chiave 1, come CARTELLA: "di backup" (nome a caso) col codice scritto nel proprio nome. Va
 # nella radice di C: o dentro Documenti: sono i due posti dove uno la metterebbe davvero.
 static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator, sotto_doc: Array = []) -> void:
-	var label := GameManager.key_label(KEY_FOLDER)
+	var label := GameManager.key_label(KEY_DISCO)
 	if label == "":
 		return
 	var base: String = _t(_pick(_FOLDER_NAMES, rng))
@@ -335,8 +345,8 @@ static func _place_folder_key(c_children: Array, rng: RandomNumberGenerator, sot
 					percorso = p
 					dentro = sotto["children"]
 	dentro.insert(rng.randi_range(0, dentro.size()), folder)
-	GameManager.note_key(KEY_FOLDER, "%s (folder name, in %s)"
-			% [str(folder.get("name", "?")), _percorso_dos(percorso)])
+	GameManager.note_key(KEY_DISCO, "%s (folder name, in %s)"
+			% [str(folder.get("name", "?")), _percorso_dos(percorso)], "FOLDER")
 
 # ---------------- il riempimento a caso (catalogo_disco.gd) ----------------
 

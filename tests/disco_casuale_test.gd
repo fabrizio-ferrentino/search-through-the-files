@@ -113,6 +113,7 @@ func _prova_partite() -> void:
 	var guasti := {}            # nome controllo -> elenco di problemi
 	var firme := {}             # firma del disco -> quante partite
 	var viste := {}             # voci e cartelle comparse almeno una volta
+	var tipi_disco := {}        # tipo della chiave 1 (FILE / FOLDER) -> quante partite
 	var horror_keys := {}
 	for v in CatalogoDisco.FILE_HORROR:
 		horror_keys[v[0]] = "horror"
@@ -179,11 +180,16 @@ func _prova_partite() -> void:
 				if not _figlio(c, str(voce[0])).is_empty():
 					viste[voce[0]] = true
 
-			# le chiavi 1 e 2 sono ancora sul disco
-			for indice in [OSContent.KEY_FILE, OSContent.KEY_FOLDER]:
-				var etichetta := GameManager.key_label(indice)
-				if etichetta != "" and not _contiene(radice, etichetta):
-					_guasto(guasti, "CHIAVI_SUL_DISCO", "%s: %s non c'e'" % [luogo, etichetta])
+			# la chiave 1 e' sul disco (in un file O nel nome di una cartella), le web no
+			var etichetta := GameManager.key_label(OSContent.KEY_DISCO)
+			if etichetta != "" and not _contiene(radice, etichetta):
+				_guasto(guasti, "CHIAVI_SUL_DISCO", "%s: %s non c'e'" % [luogo, etichetta])
+			for indice in OSContent.KEY_WEB:
+				if _contiene(radice, GameManager.key_label(indice)):
+					_guasto(guasti, "CHIAVI_SUL_DISCO", "%s: la chiave web %d e' sul disco" % [luogo, indice])
+			if str(lingua) == str(GameManager.LINGUE[0]):
+				var tipo := str(GameManager.key_kinds.get(OSContent.KEY_DISCO, "?"))
+				tipi_disco[tipo] = int(tipi_disco.get(tipo, 0)) + 1
 
 			forma[str(lingua)] = [_forma(radice), str(conti["voci"])]
 			if str(lingua) == str(GameManager.LINGUE[0]):
@@ -206,6 +212,11 @@ func _prova_partite() -> void:
 			"RIPRODUCIBILE", "STESSA_FORMA"]:
 		var lista: Array = guasti.get(nome, [])
 		_check(nome, lista.is_empty(), "; ".join(PackedStringArray(lista.slice(0, 5))))
+	# file O cartella, a caso: su tanti semi escono tutti e due, piu' o meno a meta'
+	var file := int(tipi_disco.get("FILE", 0))
+	var cartelle := int(tipi_disco.get("FOLDER", 0))
+	_check("DISCO_FILE_O_CARTELLA", file + cartelle == SEMI and file >= SEMI * 0.3
+			and cartelle >= SEMI * 0.3, "chiave 1 su %d semi: %s" % [SEMI, str(tipi_disco)])
 	_check("VARIA_DAVVERO", firme.size() >= SEMI - 2,
 			"solo %d dischi diversi su %d partite" % [firme.size(), SEMI])
 

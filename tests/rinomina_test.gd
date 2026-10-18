@@ -42,7 +42,14 @@ func _ready() -> void:
 	await get_tree().process_frame
 	GameManager.room_threats_enabled = false
 	GameManager.pc_threats_enabled = false
-	GameManager.start_new_run(8080)
+	# la chiave 1 sta nel nome di una cartella solo meta' delle volte (l'altra meta' in un
+	# file, dal 18/10/2026): si parte dal primo seme dove e' una cartella
+	var seme := 8080
+	GameManager.start_new_run(seme)
+	while str(GameManager.key_kinds.get(OSContent.KEY_DISCO, "")) != "FOLDER":
+		seme += 1
+		GameManager.start_new_run(seme)
+	print("seme %d (chiave 1 nel nome di una cartella)" % seme)
 	GameManager.pc_on = true
 	GameManager.logged_in = true
 	_room = load("res://scenes/main.tscn").instantiate()
@@ -80,8 +87,8 @@ func _timeout() -> void:
 # ---------- 1: il caso per cui esiste ----------
 
 func _prova_copia_codice() -> void:
-	var etichetta := GameManager.key_label(2)       # la chiave nel NOME di una cartella
-	var codice := GameManager.key_code(2)
+	var etichetta := GameManager.key_label(OSContent.KEY_DISCO)   # nel NOME di una cartella
+	var codice := GameManager.key_code(OSContent.KEY_DISCO)
 	var nodo = _cerca(VFS.get_root(), func(n): return str(n.get("name", "")).contains(etichetta))
 	if nodo == null:
 		_check("CARTELLA_CHIAVE", false, "non trovo la cartella col codice %s" % etichetta)
@@ -100,6 +107,12 @@ func _prova_copia_codice() -> void:
 	campo.select(da, da + codice.length())
 	DisplayServer.clipboard_set("")
 	await _tasto(KEY_C, "", true)
+	# gli appunti di Windows a volte si aggiornano con un frame di ritardo: si aspetta un
+	# poco (visto rosso una volta con "c'e' 'EE45' invece di 'EE45'", letto un istante dopo)
+	for i in range(10):
+		if DisplayServer.clipboard_get() == codice:
+			break
+		await get_tree().process_frame
 	_check("CTRL_C_COPIA_IL_CODICE", DisplayServer.clipboard_get() == codice,
 			"negli appunti c'e' '%s' invece di '%s'" % [DisplayServer.clipboard_get(), codice])
 	var nome_prima: String = nodo["name"]
@@ -109,7 +122,7 @@ func _prova_copia_codice() -> void:
 	_check("ESC_RESTA_NEL_PC", _player._in_pc and not _player.entering,
 			"ESC durante la rinomina ha fatto uscire dal PC")
 
-	# ...e il codice copiato arriva nel dialogo della cartella segreta, riga 2
+	# ...e il codice copiato arriva nel dialogo della cartella segreta, riga 1
 	_os.open_secret_folder({})
 	await get_tree().process_frame
 	var g: SecretGlitch = _os._glitch_cartella
@@ -119,11 +132,11 @@ func _prova_copia_codice() -> void:
 		if c is Panel:
 			pannello = c
 	var campi := pannello.find_children("*", "LineEdit", true, false)
-	(campi[1] as LineEdit).grab_focus()
+	(campi[0] as LineEdit).grab_focus()
 	await get_tree().process_frame
 	await _tasto(KEY_V, "", true)
-	_check("CTRL_V_NEL_DIALOGO", (campi[1] as LineEdit).text == codice,
-			"incollato nella riga 2: '%s' invece di '%s'" % [(campi[1] as LineEdit).text, codice])
+	_check("CTRL_V_NEL_DIALOGO", (campi[0] as LineEdit).text == codice,
+			"incollato nella riga 1: '%s' invece di '%s'" % [(campi[0] as LineEdit).text, codice])
 	for b in pannello.find_children("*", "Button", true, false):
 		if (b as Button).text == tr("UI_CANCEL"):
 			(b as Button).pressed.emit()

@@ -99,11 +99,12 @@ func _ready() -> void:
 	await _browser.attendi_caricamento()
 	for i in range(3):
 		await get_tree().process_frame
-	var kl0: String = GameManager.key_label(OSContent.KEY_WEB)
 	var wiki_txt: String = _browser._rtl.get_parsed_text()
 	var wiki_src: String = _browser._html_text
-	_check("WIKI_SENZA_CHIAVE", kl0 != "" and wiki_txt.find(kl0) < 0 and wiki_src.find(kl0) < 0,
-			"la chiave %s compare nella wiki" % kl0)
+	for indice in OSContent.KEY_WEB:
+		var kl0: String = GameManager.key_label(indice)
+		_check("WIKI_SENZA_CHIAVE", kl0 != "" and wiki_txt.find(kl0) < 0 and wiki_src.find(kl0) < 0,
+				"la chiave %s compare nella wiki" % kl0)
 
 	# --- selezione col drag sulla pagina del forum ---
 	_browser._load("forum")
@@ -144,52 +145,54 @@ func _ready() -> void:
 	# stringa: dedurla nascondeva un buco -- una frase visibile finita in un punto
 	# morto (dentro una tabella ma fuori dalle celle non viene resa) passava per
 	# "solo sorgente" e il test restava verde con la chiave introvabile in partita.
-	var kl: String = GameManager.key_label(OSContent.KEY_WEB)
-	var portatore := WebRuntime.carrier()
-	var visibile := WebRuntime.is_visible()
-	var ancora := WebRuntime.anchor_info()
-	_check("CHIAVE_GENERATA", kl != "" and portatore != "", "key_label o portatore vuoti")
-	print("chiave %s su '%s' -- %s (%s)" % [kl, portatore,
-			"visibile" if visibile else "solo sorgente", str(ancora["nota"])])
-	var trovate := 0
-	for f in ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri"]:
-		_browser._load(f)
-		await _browser.attendi_caricamento()
-		for i in range(2):
-			await get_tree().process_frame
-		var parsed: String = _browser._rtl.get_parsed_text()
-		var src: String = _browser._html_text
-		if src.find(kl) >= 0:
-			trovate += 1
-		if f != portatore:
-			continue
-		# il portatore: titolo intatto, modalita' rispettata, e in modalita'
-		# sorgente la chiave deve comparire nel "visualizza sorgente"
-		_check("TITOLO_INTATTO",
-				_browser.window == null or str(_browser.window.win_title) == _titolo_pulito(f),
-				"il titolo della finestra e' cambiato: '%s'" % (str(_browser.window.win_title) if _browser.window else ""))
-		if visibile:
-			_check("CHIAVE_VISIBILE_A_SCHERMO", parsed.find(kl) >= 0,
-					"modalita' visibile ma a schermo non c'e' (%s)" % str(ancora["tipo"]))
-			await _snap("web_chiave.png")
-		else:
-			_check("CHIAVE_NON_VISIBILE", parsed.find(kl) < 0,
-					"modalita' sorgente ma la chiave si legge a schermo (%s)" % str(ancora["tipo"]))
-			_browser._view_source()
-			for i in range(3):
+	# (dal 18/10/2026 le chiavi web sono DUE, su due siti diversi: si prova ognuna)
+	for n in range(WebRuntime.quanti_posti()):
+		var kl: String = GameManager.key_label(WebRuntime.indice(n))
+		var portatore := WebRuntime.carrier(n)
+		var visibile := WebRuntime.is_visible(n)
+		var ancora := WebRuntime.anchor_info(n)
+		_check("CHIAVE_GENERATA", kl != "" and portatore != "", "key_label o portatore vuoti")
+		print("chiave %s su '%s' -- %s (%s)" % [kl, portatore,
+				"visibile" if visibile else "solo sorgente", str(ancora["nota"])])
+		var trovate := 0
+		for f in ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri"]:
+			_browser._load(f)
+			await _browser.attendi_caricamento()
+			for i in range(2):
 				await get_tree().process_frame
-			_check("SORGENTE_MOSTRA_CHIAVE", _browser._inspector_edit.text.find(kl) >= 0,
-					"il 'visualizza sorgente' non mostra la chiave (%s)" % str(ancora["tipo"]))
-			await _snap("web_chiave_sorgente.png")
-			_browser._view_source()
-	_check("CHIAVE_SU_UNA_PAGINA", trovate == 1, "pagine col codice nel sorgente: %d" % trovate)
+			var parsed: String = _browser._rtl.get_parsed_text()
+			var src: String = _browser._html_text
+			if src.find(kl) >= 0:
+				trovate += 1
+			if f != portatore:
+				continue
+			# il portatore: titolo intatto, modalita' rispettata, e in modalita'
+			# sorgente la chiave deve comparire nel "visualizza sorgente"
+			_check("TITOLO_INTATTO",
+					_browser.window == null or str(_browser.window.win_title) == _titolo_pulito(f),
+					"il titolo della finestra e' cambiato: '%s'" % (str(_browser.window.win_title) if _browser.window else ""))
+			if visibile:
+				_check("CHIAVE_VISIBILE_A_SCHERMO", parsed.find(kl) >= 0,
+						"modalita' visibile ma a schermo non c'e' (%s)" % str(ancora["tipo"]))
+				await _snap("web_chiave_%d.png" % (n + 1))
+			else:
+				_check("CHIAVE_NON_VISIBILE", parsed.find(kl) < 0,
+						"modalita' sorgente ma la chiave si legge a schermo (%s)" % str(ancora["tipo"]))
+				_browser._view_source()
+				for i in range(3):
+					await get_tree().process_frame
+				_check("SORGENTE_MOSTRA_CHIAVE", _browser._inspector_edit.text.find(kl) >= 0,
+						"il 'visualizza sorgente' non mostra la chiave (%s)" % str(ancora["tipo"]))
+				await _snap("web_chiave_sorgente_%d.png" % (n + 1))
+				_browser._view_source()
+		_check("CHIAVE_SU_UNA_PAGINA", trovate == 1, "pagine col codice nel sorgente: %d" % trovate)
 
 	# --- e la modalita' SORGENTE, che col seme fisso qui sopra non capita mai ---
 	# Due semi scelti perche' nascondono la chiave in un attributo e in un commento
 	# a meta' del markup: sono i due modi nuovi, e vanno visti col browser vero.
 	for seme in [4242, 1]:
 		GameManager.start_new_run(seme)
-		var k2: String = GameManager.key_label(OSContent.KEY_WEB)
+		var k2: String = GameManager.key_label(OSContent.KEY_WEB_1)
 		var p2 := WebRuntime.carrier()
 		var a2 := WebRuntime.anchor_info()
 		if WebRuntime.is_visible():
