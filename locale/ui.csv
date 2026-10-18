@@ -272,25 +272,11 @@ FT_HR_LAST,"nobody will notice.\nnobody ever noticed anything.\n\nif I have nobo
 FN_HR_ALONE,alone.txt,solo.txt
 FT_HR_ALONE,you're alone tonight.\ngood.\n\nfamilies are loud.\nfamilies leave.,stanotte sei solo.\nbene.\n\nle famiglie fanno rumore.\nle famiglie se ne vanno.
 VIRUS_STUPID_TITLE,YouAreStupid,YouAreStupid
-VIRUS_STUPID_MSG,YOU ARE STUPID,SEI UNO STUPIDO
+VIRUS_STUPID_MSG,YOU ARE STUPID,YOU ARE STUPID
 VIRUS_CURSE_MSG,don't switch me off,non spegnermi
 BSOD_HEADER,WHALE,WHALE
-BSOD_TEXT,"A fatal exception {ECC} has occurred at {IND} in VXD {MOD}. The current application will be terminated.
-
-*  Press any key to terminate the current application.
-*  You will lose any unsaved information in that application.","Si e' verificata un'eccezione irreversibile {ECC} in {IND} in VXD {MOD}. L'applicazione corrente verra' terminata.
-
-*  Premere un tasto qualsiasi per terminare l'applicazione corrente.
-*  Le informazioni non salvate in quell'applicazione andranno perse."
-BSOD_TEXT_GRAVE,"A fatal exception {ECC} has occurred at {IND} in VXD {MOD}. The system has been halted and cannot continue.
-
-*  Press any key to restart your computer.
-*  You will lose any unsaved information in all applications.","Si e' verificata un'eccezione irreversibile {ECC} in {IND} in VXD {MOD}. Il sistema e' stato arrestato e non puo' continuare.
-
-*  Premere un tasto qualsiasi per riavviare il computer.
-*  Le informazioni non salvate in tutte le applicazioni andranno perse."
-BSOD_CONTINUE,Press any key to continue,Premere un tasto qualsiasi per continuare
-BSOD_RESTART,Press any key to restart,Premere un tasto qualsiasi per riavviare
+BSOD_TEXT,A fatal exception {ECC} has occurred at {IND} in VXD {MOD}. The system has been halted and cannot continue.\n\n*  The computer will be restarted automatically.\n*  Any unsaved information in all applications will be lost.,Si e' verificata un'eccezione irreversibile {ECC} in {IND} in VXD {MOD}. Il sistema e' stato arrestato e non puo' continuare.\n\n*  Il computer verra' riavviato automaticamente.\n*  Le informazioni non salvate in tutte le applicazioni andranno perse.
+BSOD_RESTART,Restarting in {N} seconds...,Riavvio tra {N} secondi...
 DEATH_VIRUS_1,You should have switched it off.,Dovevi spegnerlo.
 DEATH_VIRUS_2,It asked you not to switch it off. You listened.,Ti ha chiesto di non spegnerlo. L'hai ascoltato.
 DEATH_VIRUS_3,The screen was the only thing on. Now it is the only thing left.,Lo schermo era l'unica cosa accesa. Ora e' l'unica cosa rimasta.

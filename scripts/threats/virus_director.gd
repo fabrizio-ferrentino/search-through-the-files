@@ -4,8 +4,7 @@ extends Node
 # della stanza. Tre virus (GDD §7.2), uno alla volta:
 #   "mortale" -> VirusMortale: sfondo rosso, sangue, tremito; spegni il PC o muori;
 #   "stupido" -> VirusStupido: la raffica di finestre "YouAreStupid", non uccide;
-#   "crash"   -> lo SCHERMO BLU (OSDesktop.schermo_blu): un tasto chiude il programma in
-#                primo piano, o -- piu' di rado -- riavvia il PC.
+#   "crash"   -> lo SCHERMO BLU (OSDesktop.schermo_blu): un tasto riavvia il PC.
 # Ritmo scelto dal proprietario ("rari", non devono essere troppo invasivi): il tempo conta
 # solo a PC ACCESO e col desktop aperto (dopo il login); il primo virus non prima di
 # PRIMO_VIRUS, poi uno ogni PAUSA_MIN..PAUSA_MAX, mai due insieme, mai lo stesso due volte
@@ -27,7 +26,6 @@ const PAUSA_MAX := 240.0
 const ENTRATA_MIN := 4.0     # secondi dentro il PC prima che uno possa partire
 const TIPI := ["mortale", "stupido", "crash"]
 const PESI := [0.4, 0.3, 0.3]
-const QUOTA_GRAVE := 0.25    # quanti schermi blu riavviano il PC
 # Il nome di ogni virus nei messaggi di debug (in inglese, come tutto il debug).
 const NOMI_DEBUG := {"mortale": "lethal", "stupido": "YouAreStupid", "crash": "blue screen"}
 
@@ -123,7 +121,7 @@ func _avvia(tipo: String) -> void:
 			s.finito.connect(_fine)
 			_nodo = s
 		"crash":
-			os.schermo_blu(_rng.randf() < QUOTA_GRAVE, _rng)
+			os.schermo_blu(_rng)
 
 # Il virus in corso e' finito? Spegnere il PC salva dal mortale.
 func _segui() -> void:

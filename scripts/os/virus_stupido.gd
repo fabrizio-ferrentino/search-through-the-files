@@ -9,6 +9,16 @@ extends Node
 # chiude (power_off chiude tutte le finestre, e qui non si riapre niente a PC spento).
 # Le finestre sono OSWindow vere: barra delle applicazioni, trascinamento, chiusura.
 # Il regista (virus_director.gd) lo crea e aspetta "finito".
+# NON SI PUO' IGNORARE (proprietario, 18/10/2026: "vorrei evitare che i giocatori lo
+# ignorino e continuino a giocare"): le finestre stanno SEMPRE SOPRA le altre (cliccare la
+# finestra di dietro non le scavalca), NON SI ABBASSANO: i tre pulsanti ci sono, come su
+# ogni finestra, ma "riduci" e' grigio e spento, e nemmeno il pulsante nella barra le
+# nasconde (il proprietario ha provato la versione in cui si abbassavano e tornavano su da
+# sole dopo 2 s, e ha scelto questa) -- ogni nuova toglie il fuoco della tastiera a
+# quello che stavi scrivendo, e finche' ne resta aperta
+# una ne arriva un'altra ogni INSISTENZA secondi -- sempre dentro i due tetti. L'unico modo
+# di levarselo di torno e' chiuderle (o spegnere il PC).
+# La scritta resta in INGLESE in ogni lingua: e' il nome del virus, come "You are an idiot".
 
 signal finito
 
@@ -22,6 +32,7 @@ const QUOTA_VAGANTI := 0.4       # quante vagano per lo schermo
 const VEL_MIN := 120.0           # px/s
 const VEL_MAX := 210.0
 const LAMPEGGIO := 0.6           # bianco/nero si scambiano ogni 0.6 s: < 1 Hz, niente strobo
+const INSISTENZA := 5.0          # ignorate, ne arriva una in piu' ogni 5 s
 const DIM := Vector2(380, 240)
 
 var _os: OSDesktop = null
@@ -33,6 +44,7 @@ var _in_coda := 0                # aperture programmate e non ancora fatte
 var _attesa := 0.0               # conto alla rovescia per la prossima in coda
 var _fermo := false
 var _t := 0.0
+var _ignorate := 0.0             # da quanto ci sono finestre aperte e niente in coda
 
 func setup(os: OSDesktop, rng: RandomNumberGenerator) -> void:
 	_os = os
@@ -67,6 +79,15 @@ func avanza(delta: float) -> void:
 			_apri()
 	elif _in_coda > 0 and _fermo:
 		_in_coda = 0
+	# ignorate? ne arriva un'altra (il tetto la ferma da solo, in _apri)
+	if _in_coda == 0 and not _vive.is_empty() and not _fermo:
+		_ignorate += delta
+		if _ignorate >= INSISTENZA:
+			_ignorate = 0.0
+			if _aperte < MAX_TOTALE and _vive.size() < MAX_VIVE:
+				_in_coda = 1
+	else:
+		_ignorate = 0.0
 	_vaga(delta)
 	_lampeggia()
 	if _vive.is_empty() and (_in_coda == 0 or _fermo or not GameManager.pc_on):
@@ -83,6 +104,9 @@ func _apri() -> void:
 	win.position = Vector2(_rng.randf_range(0.0, maxf(0.0, a.size.x - win.size.x)),
 			_rng.randf_range(0.0, maxf(0.0, a.size.y - win.size.y))).floor()
 	win.assesta()
+	win.blocca_in_cima()
+	_os.focus_window(win)            # ricalcola l'ordine: lei sopra, ora che e' "in cima"
+	_os.get_viewport().gui_release_focus()   # quello che stavi scrivendo resta a meta'
 	win.content_root.add_child(_contenuto())
 	win.closed.connect(_chiusa)
 	_vive.append(win)

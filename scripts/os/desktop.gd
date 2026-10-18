@@ -390,7 +390,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 func focus_window(win: OSWindow) -> void:
 	active_window = win
 	if is_instance_valid(win):
-		window_layer.move_child(win, -1)
+		_alza(win)
 	for w in windows:
 		w.set_active(w == win)
 	_update_taskbar()
@@ -403,6 +403,17 @@ func focus_window(win: OSWindow) -> void:
 # ridotta il tasto destro non faceva niente finche' non ci si cliccava sopra col sinistro
 # (segnalato il 19/09/2026).
 # L'ordine dei figli di window_layer E' lo z-order: l'ULTIMO visibile e' quello davanti.
+# Porta una finestra in cima, ma SOTTO quelle "sempre in cima" (YouAreStupid): una finestra
+# normale non le scavalca mai, nemmeno cliccandola, cosi' il virus non si puo' ignorare
+# lavorando nella finestra di dietro.
+func _alza(win: OSWindow) -> void:
+	window_layer.move_child(win, -1)
+	if win.sempre_in_cima:
+		return
+	for w in windows:
+		if is_instance_valid(w) and w.sempre_in_cima:
+			window_layer.move_child(w, -1)
+
 func _attiva_finestra_sotto() -> void:
 	var sotto: OSWindow = null
 	for c in window_layer.get_children():
@@ -433,7 +444,7 @@ func _on_taskbar_pressed(win: OSWindow) -> void:
 	if not win.visible:
 		win.show()
 		focus_window(win)
-	elif win == active_window:
+	elif win == active_window and not win.sempre_in_cima:   # quelle non si abbassano
 		win.hide()
 		win.set_active(false)
 		_attiva_finestra_sotto()
@@ -676,8 +687,7 @@ func _rinomina_attiva() -> DesktopItem:
 # l'About" (21/09/2026) funzionava solo nei test, che spingono i tasti nel SubViewport.
 func trattiene_esc() -> bool:
 	return _rinomina_attiva() != null \
-			or (_modal_chiudibile != null and is_instance_valid(_modal_chiudibile)) \
-			or schermo_blu_aperto()     # sullo schermo blu ESC e' "un tasto qualsiasi"
+			or (_modal_chiudibile != null and is_instance_valid(_modal_chiudibile))
 
 # Ricostruisce le icone del desktop (es. dopo aver spostato file nel Cestino da
 # un'altra finestra): aggiorna anche lo stato pieno/vuoto del Cestino.
@@ -831,7 +841,7 @@ func _focus_under_mouse(mp: Vector2) -> void:
 			focus_window(w)
 		else:
 			# assicura che resti in cima
-			window_layer.move_child(w, -1)
+			_alza(w)
 
 # Si sta scrivendo dentro l'OS? Chi ascolta i tasti globali della stanza (la
 # PAUSA, tasto P) deve stare zitto mentre il fuoco e' su un campo di testo: nel
@@ -1407,41 +1417,47 @@ func sopra_finestre(n: Control) -> void:
 	add_child(n)
 	move_child(n, window_layer.get_index() + 1)
 
-# Il CRASH: lo schermo blu sopra a tutto. Al tasto: normale -> si chiude il programma in
-# primo piano; grave -> il PC si riavvia (avvio + login di nuovo).
-func schermo_blu(grave: bool, rng: RandomNumberGenerator) -> void:
+# Il CRASH: lo schermo blu sopra a tutto, e dopo SchermoBlu.DURATA secondi il PC si
+# RIAVVIA da solo, come nella realta' (proprietario, 18/10/2026: "si spegne e riaccende il
+# pc", e niente tasto da premere): nero, BIOS, avvio, login, e tutte le finestre perse.
+# Prima era "misto" (di solito si chiudeva solo il programma in primo piano) e poi "premere
+# un tasto per riavviare".
+func schermo_blu(rng: RandomNumberGenerator) -> void:
 	_chiudi_schermo_blu()
 	if start_menu != null:
 		start_menu.visible = false
 		start_btn.button_pressed = false
 	var sb := SchermoBlu.new()
 	add_child(sb)
-	sb.setup(grave, rng)
+	sb.setup(rng)
 	sb.move_to_front()
 	_schermo_blu = sb
 	_modal_layer = sb      # come un modale: il desktop sotto non reagisce, cursore a freccia
-	sb.premuto.connect(_on_schermo_blu_premuto)
+	sb.scaduto.connect(_on_schermo_blu_scaduto)
 
 func schermo_blu_aperto() -> bool:
 	return _schermo_blu != null and is_instance_valid(_schermo_blu) \
 			and not _schermo_blu.is_queued_for_deletion()
 
-func _on_schermo_blu_premuto(grave: bool) -> void:
+func _on_schermo_blu_scaduto() -> void:
 	_chiudi_schermo_blu()
-	if grave:
-		riavvia()
-	elif active_window != null and is_instance_valid(active_window) and active_window.visible:
-		active_window.close()      # "l'applicazione corrente verra' terminata"
+	riavvia()
 
 func _chiudi_schermo_blu() -> void:
 	if _schermo_blu != null and is_instance_valid(_schermo_blu):
 		_schermo_blu.queue_free()
 	_schermo_blu = null
 
-# Riavvio a caldo dopo un crash grave: tutto chiuso, PC sempre acceso, avvio da capo e login.
+const RIAVVIO_NERO := 1.2      # secondi di schermo nero fra il crash e il BIOS
+
+# Riavvio a caldo dopo un crash: tutto chiuso, PC sempre acceso, un attimo di NERO (il
+# monitor perde il segnale mentre la macchina riparte), poi l'avvio da capo e il login.
+# Il nero e' uno stato d'avvio a tutti gli effetti (_booting, _state_overlay): niente
+# input, niente virus, e spegnere col case in quel momento annulla tutto (_boot_token).
 func riavvia() -> void:
 	_boot_token += 1
-	_booting = false
+	var token: int = _boot_token
+	_booting = true
 	GameManager.logged_in = false
 	if start_menu != null:
 		start_menu.visible = false
@@ -1452,6 +1468,17 @@ func riavvia() -> void:
 	active_window = null
 	window_layer.position = Vector2.ZERO
 	_update_taskbar()
+	_clear_state()
+	var nero := ColorRect.new()
+	nero.color = Color.BLACK
+	nero.set_anchors_preset(Control.PRESET_FULL_RECT)
+	nero.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(nero)
+	nero.move_to_front()
+	_state_overlay = nero
+	await get_tree().create_timer(RIAVVIO_NERO).timeout
+	if not _boot_alive(token):
+		return
 	_play_boot()
 
 # Conferma di spegnimento (stile classico: solo Sì / No).

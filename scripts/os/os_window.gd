@@ -29,6 +29,10 @@ var _btn_close: GlyphButton
 var _dragging := false
 var _drag_off := Vector2.ZERO
 var _maximized := false
+# SEMPRE IN CIMA e NON RIDUCIBILE (le finestre di VirusStupido): il desktop le tiene sopra
+# le altre a ogni cambio di fuoco, il pulsante "riduci" c'e' ma e' disattivato, e il
+# pulsante nella barra non le nasconde. Si mettono con blocca_in_cima().
+var sempre_in_cima := false
 var _restore_rect := Rect2()
 
 # "Mostra il contenuto delle finestre durante il trascinamento" SPENTO, come era per
@@ -359,10 +363,18 @@ func cursor_at(local_pos: Vector2) -> int:
 		return Control.CURSOR_ARROW
 	return _cursor_for_edges(_edges_at(local_pos))
 
-# La sta trascinando o ridimensionando il giocatore? (chi la muove da codice, come le
-# finestre vaganti di VirusStupido, la lascia stare finche' e' cosi')
+# La sta trascinando o ridimensionando il giocatore, o tiene premuto un pulsante della
+# barra del titolo? Chi la muove da codice (le finestre vaganti di VirusStupido) la lascia
+# stare finche' e' cosi'. I PULSANTI contano perche' un pulsante scatta al RILASCIO, e solo
+# se il mouse e' ancora sopra di lui: se intanto la finestra scivola via, la X si vede
+# premere ma non chiude (segnalato dal proprietario, 18/10/2026).
 func occupata() -> bool:
-	return _dragging or _resizing
+	return _dragging or _resizing or _btn_close.premuto() or _btn_min.premuto() \
+			or _btn_max.premuto()
+
+func blocca_in_cima() -> void:
+	sempre_in_cima = true
+	_btn_min.disabilitato = true
 
 func is_maximized() -> bool:
 	return _maximized

@@ -15,13 +15,18 @@ extends Node
 #     cola sopra le finestre ma SOTTO barra e menu Avvio (la via d'uscita resta pulita) --
 #     e che spegnere salvi, dal menu Avvio E dal case: niente morte, ogni strato tolto,
 #     le finestre rimesse a posto; e che il ThreatDirector non si affacci intanto;
-#   3 YouAreStupid apra la sua raffica (titolo tradotto, dentro lo schermo, nella barra),
+#   3 YouAreStupid apra la sua raffica (titolo e scritta in INGLESE in ogni lingua, dentro
+#     lo schermo, nella barra), NON SI POSSA IGNORARE -- sempre sopra le altre finestre
+#     anche cliccandole, niente "riduci" ne' dalla barra, il fuoco della tastiera rubato,
+#     e lasciate li' ne arrivano altre -- la X chiuda anche una finestra IN MOVIMENTO
+#     (prima si premeva ma il rilascio cadeva fuori dal pulsante),
 #     le vaganti si muovano senza uscire, chiuderle ne faccia nascere altre ma MAI oltre i
 #     tetti, e che FINISCA; spegnere il PC lo chiuda e non riapra niente;
-#   4 lo SCHERMO BLU stia sopra a tutto e si veda blu; mangi i clic; ESC -- passando da
-#     player.gd -- sia "un tasto qualsiasi" e NON faccia uscire dal PC; il normale chiuda
-#     il programma in primo piano e lasci gli altri; il grave riavvii (finestre chiuse,
-#     avvio, login); il testo non abbia segnaposto rimasti ne' forme di chiave;
+#   4 lo SCHERMO BLU stia sopra a tutto e si veda blu; mangi i clic E i tasti (nessun tasto
+#     lo chiude: si subisce); mostri un conto alla rovescia tradotto che scende; ESC --
+#     passando da player.gd -- esca dal PC mentre il conto va avanti sul monitor; e allo
+#     scadere il PC si RIAVVII DA SOLO come nella realta' (finestre chiuse, nero, BIOS,
+#     login); F9 vero lo apra; il testo non abbia segnaposto rimasti ne' forme di chiave;
 #   5 la vittoria (stop) tolga il virus in corso e non ne faccia partire altri;
 #   6 le scritte nuove esistano in tutte e due le lingue, e la morte "virus" abbia le sue;
 #   7 ULTIMO, perche' chiude la partita: il mortale lasciato correre UCCIDA, con la causa
@@ -161,9 +166,8 @@ func _chiudi_evento() -> void:
 				w.close()
 			n.avanza(0.1)
 		"crash":
-			await _tasto(KEY_SPACE)
-			if not GameManager.logged_in:
-				await _riaccendi()
+			await _attendi_blu()
+			await _riaccendi()
 	await get_tree().process_frame
 	_vd.avanza(0.1)
 
@@ -274,12 +278,70 @@ func _prova_stupido() -> void:
 			titoli_ok = false
 	_check("TITOLO_E_BARRA", titoli_ok and _os.windows.size() == finestre_prima + vive.size(),
 			"titolo diverso da '%s' o finestre senza pulsante nella barra" % tr("VIRUS_STUPID_TITLE"))
+
+	# non si puo' ignorare: sempre sopra, non si riduce, ruba il fuoco
+	var prima_v: OSWindow = vive[0]
+	_check("TRE_PULSANTI", prima_v._btn_min.visible and prima_v._btn_max.visible
+			and prima_v._btn_close.visible and prima_v.sempre_in_cima,
+			"la finestra del virus non ha i tre pulsanti (riduci, ingrandisci, chiudi)")
+	# non si abbassa: "riduci" c'e' ma e' spento (clic VERO sul pulsante), e la barra non la
+	# nasconde (proprietario, 18/10/2026)
+	_os.focus_window(prima_v)
+	s._vel.erase(prima_v)                     # ferma, cosi' il clic cade sul pulsante
+	await get_tree().process_frame
+	_check("RIDUCI_SPENTO", prima_v._btn_min.disabilitato, "il 'riduci' del virus non e' disattivato")
+	_clic(prima_v._btn_min.get_global_rect().get_center())
+	await _frame(2)
+	_check("NON_SI_ABBASSA", prima_v.visible, "cliccando 'riduci' la finestra del virus si e' abbassata")
+	_os._on_taskbar_pressed(prima_v)
+	_check("NON_SI_ABBASSA_DALLA_BARRA", prima_v.visible,
+			"cliccando il suo pulsante nella barra la finestra del virus si e' abbassata")
+	var normale: OSWindow = _os.open_app("notepad", {"name": "w.txt", "content": ""})
+	_check("ALTRE_SI_ABBASSANO", not normale._btn_min.disabilitato, "anche le finestre normali hanno 'riduci' spento")
+	normale.close()
+	var note: OSWindow = _os.open_app("notepad", {"name": "z.txt", "content": "ciao"})
+	_os.focus_window(note)
+	_clic(note.position + Vector2(note.size.x * 0.5, 12))      # e anche cliccandola
+	await _frame(2)
+	var sotto := true
+	for w in s.vive():
+		if (w as OSWindow).get_index() < note.get_index():
+			sotto = false
+	_check("SEMPRE_IN_CIMA", sotto, "una finestra normale, cliccata, e' passata sopra al virus")
+	var campo: Control = note.find_children("*", "TextEdit", true, false)[0]
+	campo.grab_focus()
+	s._in_coda = 1
+	s._attesa = 0.0
+	s.avanza(0.01)
+	await get_tree().process_frame
+	_check("RUBA_IL_FUOCO", _os.get_viewport().gui_get_focus_owner() != campo,
+			"una finestra nuova del virus non toglie il fuoco al blocco note")
+	note.close()
+
+	# la X su una finestra che si MUOVE: premuta e rilasciata nello stesso punto, deve chiudere
+	var vagante: OSWindow = s.vive()[1]
+	vagante.position = Vector2(80, 300)
+	s._vel[vagante] = Vector2(500, 0)
+	var x: Vector2 = vagante._btn_close.get_global_rect().get_center()
+	_premi_mouse(x, true)
+	await get_tree().process_frame
+	for i in range(5):
+		s.avanza(0.1)                 # mezzo secondo col tasto giu': a 500 px/s sarebbe lontana
+		await get_tree().process_frame
+	_premi_mouse(x, false)
+	await _frame(2)
+	_check("X_SU_VAGANTE", not is_instance_valid(vagante),
+			"la X di una finestra in movimento si preme ma non chiude")
+
 	var posizioni := {}
 	for w in s._vel.keys():
 		posizioni[w] = (w as OSWindow).position
 	var fuori := 0
+	var all_inizio: int = s.vive().size()
+	var di_piu := 0
 	for i in range(400):
 		s.avanza(0.05)
+		di_piu = maxi(di_piu, s.vive().size() - all_inizio)
 		for w in s.vive():
 			var a: Rect2 = (w as OSWindow).area_utile()
 			if not a.grow(0.5).encloses(Rect2((w as OSWindow).position, (w as OSWindow).size)):
@@ -293,6 +355,9 @@ func _prova_stupido() -> void:
 	if posizioni.is_empty():
 		print("  (nota: in questo seme nessuna finestra vaga)")
 	_check("DENTRO_LO_SCHERMO", fuori == 0, "%d volte una finestra e' uscita dallo schermo" % fuori)
+	_check("IGNORATE_INSISTONO", di_piu >= 2 and s.vive().size() <= STUPIDO.MAX_VIVE,
+			"lasciate li' 20 s: %d finestre in piu', %d aperte (tetto %d)" % [di_piu,
+			s.vive().size(), STUPIDO.MAX_VIVE])
 	await _foto_frame("virus_stupido.png")
 
 	# chiudendole ne nascono altre, ma finisce
@@ -344,7 +409,7 @@ func _prova_schermo_blu() -> void:
 	var esplora: OSWindow = _os.open_app("explorer", VFS.get_root())
 	var note: OSWindow = _os.open_app("notepad", {"name": "y.txt", "content": "ciao"})
 	await _frame(2)
-	_os.schermo_blu(false, rng)
+	_os.schermo_blu(rng)
 	await _frame(2)
 	var sb: SchermoBlu = _os._schermo_blu
 	_check("BLU_IN_CIMA", sb != null and sb.get_index() == _os.get_child_count() - 1,
@@ -357,7 +422,7 @@ func _prova_schermo_blu() -> void:
 			blu += 1
 	_check("SI_VEDE_BLU", blu > 150, "solo %d punti blu su 200 nello schermo" % blu)
 	await _foto_frame("virus_blu.png")
-	var testo: String = sb.testo(false, rng)
+	var testo: String = sb.testo(rng)
 	_check("TESTO_PULITO", not testo.contains("{") and testo.contains("0028:C00")
 			and not RegEx.create_from_string("\\b\\d-[A-Z0-9]{4}\\b").search(testo),
 			"testo dello schermo blu: %s" % testo)
@@ -369,41 +434,72 @@ func _prova_schermo_blu() -> void:
 	_check("MANGIA_I_CLIC", _os.active_window == attiva and _os.schermo_blu_aperto(),
 			"un clic sotto lo schermo blu ha cambiato finestra o l'ha chiuso")
 
-	# ESC dalla coda vera: e' "un tasto", non l'uscita dal PC
-	await _tasto(KEY_ESCAPE)
-	_check("ESC_E_UN_TASTO", not _os.schermo_blu_aperto() and _player._in_pc and not _player.entering,
-			"dopo ESC: schermo blu %s, nel PC %s" % [str(_os.schermo_blu_aperto()), str(_player._in_pc)])
-	await _frame(2)
-	_check("CHIUDE_IL_PROGRAMMA", not is_instance_valid(note) and is_instance_valid(esplora),
-			"il blocco note in primo piano %s, l'esplora %s" % [
-			"c'e' ancora" if is_instance_valid(note) else "chiuso", "c'e'" if is_instance_valid(esplora) else "chiuso"])
+	# i tasti non lo chiudono (e non arrivano al blocco note che sta sotto): si subisce
+	await _tasto(KEY_B, "b")
+	await _tasto(KEY_SPACE, " ")
+	await _tasto(KEY_ENTER)
+	_check("TASTI_NON_LO_CHIUDONO", _os.schermo_blu_aperto() and is_instance_valid(note)
+			and is_instance_valid(esplora), "un tasto ha chiuso lo schermo blu o una finestra")
 
-	# il grave riavvia
-	_os.schermo_blu(true, rng)
-	await _frame(2)
-	await _tasto(KEY_A, "a")
-	await _frame(2)
-	_check("GRAVE_RIAVVIA", _os.windows.is_empty() and not GameManager.logged_in and _os._booting
-			and GameManager.pc_on, "dopo il tasto: %d finestre, loggato %s, avvio %s" % [
+	# il conto alla rovescia: tradotto, col numero, e scende
+	var n0: int = sb.secondi_al_riavvio() if is_instance_valid(sb) else -1
+	var riga0: String = sb.riga_fine() if is_instance_valid(sb) else ""
+	await get_tree().create_timer(1.2).timeout
+	var n1: int = sb.secondi_al_riavvio() if is_instance_valid(sb) else -1
+	_check("CONTO_ALLA_ROVESCIA", riga0.begins_with(tr("BSOD_RESTART").format({"N": n0}))
+			and not riga0.contains("{") and n1 >= 1 and n1 < n0,
+			"riga '%s', secondi %d -> %d" % [riga0, n0, n1])
+
+	# ESC dalla coda vera esce dal PC; lo schermo blu e il conto continuano sul monitor
+	await _tasto(KEY_ESCAPE)
+	for i in range(120):
+		if not _player.entering:
+			break
+		await get_tree().process_frame
+	_check("ESC_ESCE_E_CONTINUA", not _player._in_pc and _os.schermo_blu_aperto(),
+			"dopo ESC: nel PC %s, schermo blu %s" % [str(_player._in_pc), str(_os.schermo_blu_aperto())])
+
+	# ...e allo scadere il PC si RIAVVIA DA SOLO: tutto chiuso, prima il nero, poi il BIOS,
+	# poi il login -- senza che nessuno abbia premuto niente
+	await _attendi_blu()
+	_check("RIAVVIA_DA_SOLO", _os.windows.is_empty() and not is_instance_valid(note)
+			and not is_instance_valid(esplora) and not GameManager.logged_in and _os._booting
+			and GameManager.pc_on, "allo scadere: %d finestre, loggato %s, avvio %s" % [
 			_os.windows.size(), str(GameManager.logged_in), str(_os._booting)])
+	var ov = _os._state_overlay
+	_check("PRIMA_IL_NERO", ov is ColorRect and (ov as ColorRect).color == Color.BLACK
+			and (ov as ColorRect).get_child_count() == 0, "dopo il crash non c'e' lo schermo nero")
+	await get_tree().create_timer(OSDesktop.RIAVVIO_NERO + 0.4).timeout
+	ov = _os._state_overlay
+	_check("POI_IL_BIOS", ov != null and is_instance_valid(ov) and ov.find_children("*", "Label", true, false).size() > 0,
+			"dopo il nero non parte il BIOS")
 	await get_tree().create_timer(8.0).timeout
 	_check("LOGIN_DOPO", not _os._booting and _os._state_overlay != null and is_instance_valid(_os._state_overlay),
 			"dopo il riavvio non c'e' il login")
 	await _riaccendi()
-
-	# dal regista: finito il crash, il regista e' libero
-	_vd._ultimo = ""
-	_vd.forza("crash")
+	_player._show_pc_overlay()
 	await _frame(2)
-	_check("REGISTA_BLU", _os.schermo_blu_aperto(), "forza('crash') non ha aperto lo schermo blu")
-	await _tasto(KEY_SPACE)
-	if not GameManager.logged_in:
-		await _riaccendi()
+
+	# dal regista, col tasto F9 VERO (dentro il PC: lo stesso tasto arriva anche all'OS, ed e'
+	# cosi' che lo schermo blu si chiudeva nell'istante in cui si apriva); finito il crash,
+	# il regista e' libero
+	if not _player._in_pc:
+		_player._show_pc_overlay()
+		await _frame(2)
+	_vd._ultimo = ""
+	_vd._giro_debug = _vd.TIPI.find("crash")
+	await _tasto(KEY_F9)
+	await _frame(3)
+	_check("F9_APRE_IL_BLU", _os.schermo_blu_aperto() and _vd.in_corso() == "crash",
+			"F9 non lascia lo schermo blu aperto (aperto %s, regista '%s')" % [
+			str(_os.schermo_blu_aperto()), _vd.in_corso()])
+	await _attendi_blu()
+	await _riaccendi()
 	_vd.avanza(0.1)
 	_check("REGISTA_BLU_FINITO", _vd.in_corso() == "", "chiuso lo schermo blu il regista e' su '%s'" % _vd.in_corso())
 
 	# spegnere col case durante uno schermo blu lo toglie
-	_os.schermo_blu(false, rng)
+	_os.schermo_blu(rng)
 	_os.power_off()
 	await _frame(2)
 	_check("SPEGNERE_TOGLIE_IL_BLU", not _os.schermo_blu_aperto(), "a PC spento lo schermo blu e' rimasto")
@@ -426,10 +522,9 @@ func _prova_stop() -> void:
 
 func _prova_lingue() -> void:
 	var chiavi := ["VIRUS_STUPID_TITLE", "VIRUS_STUPID_MSG", "VIRUS_CURSE_MSG", "BSOD_HEADER",
-			"BSOD_TEXT", "BSOD_TEXT_GRAVE", "BSOD_CONTINUE", "BSOD_RESTART",
+			"BSOD_TEXT", "BSOD_RESTART",
 			"DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
-	var tradotte := ["VIRUS_STUPID_MSG", "VIRUS_CURSE_MSG", "BSOD_TEXT", "BSOD_TEXT_GRAVE",
-			"BSOD_CONTINUE", "BSOD_RESTART", "DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
+	var tradotte := ["VIRUS_CURSE_MSG", "BSOD_TEXT", "BSOD_RESTART", "DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
 	var mancano: Array = []
 	for k in chiavi:
 		var en := TranslationServer.get_translation_object("en").get_message(k)
@@ -437,6 +532,10 @@ func _prova_lingue() -> void:
 		if en == "" or it == "" or (k in tradotte and en == it):
 			mancano.append(k)
 	_check("LINGUE", mancano.is_empty(), "scritte mancanti o non tradotte: %s" % str(mancano))
+	# YouAreStupid resta in inglese anche a gioco in italiano (proprietario, 18/10/2026)
+	var msg_it := TranslationServer.get_translation_object("it").get_message("VIRUS_STUPID_MSG")
+	_check("STUPID_IN_INGLESE", msg_it == "YOU ARE STUPID",
+			"in italiano la scritta del virus e' '%s'" % msg_it)
 	var ds = load("res://scripts/death_screen.gd").new()
 	var sub: String = ds._pick_subtitle("virus")
 	ds.free()
@@ -481,6 +580,13 @@ func _riaccendi() -> void:
 	_os._clear_state()
 	await _frame(2)
 
+# Lo schermo blu si chiude da solo dopo DURATA: si aspetta che lo faccia, come chi gioca.
+# Torna appena e' chiuso, cioe' nel primo istante del riavvio (lo schermo nero).
+func _attendi_blu() -> void:
+	var fine: int = Time.get_ticks_msec() + int((SchermoBlu.DURATA + 2.0) * 1000.0)
+	while _os.schermo_blu_aperto() and Time.get_ticks_msec() < fine:
+		await get_tree().process_frame
+
 func _frame(n: int) -> void:
 	for i in range(n):
 		await get_tree().process_frame
@@ -497,13 +603,16 @@ func _bottone(radice: Node, testo: String) -> Button:
 	return null
 
 func _clic(p: Vector2) -> void:
-	for giu in [true, false]:
-		var e := InputEventMouseButton.new()
-		e.button_index = MOUSE_BUTTON_LEFT
-		e.pressed = giu
-		e.position = p
-		e.global_position = p
-		_player._os_viewport.push_input(e, true)
+	_premi_mouse(p, true)
+	_premi_mouse(p, false)
+
+func _premi_mouse(p: Vector2, giu: bool) -> void:
+	var e := InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = giu
+	e.position = p
+	e.global_position = p
+	_player._os_viewport.push_input(e, true)
 
 func _tasto(codice: Key, carattere := "") -> void:
 	for giu in [true, false]:
