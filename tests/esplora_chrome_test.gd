@@ -50,6 +50,12 @@ extends Node
 #     essere DISEGNATA: si guardano i pixel sotto la lettera, e sotto il "?" (che non ha
 #     acceleratore) non ci deve essere.
 #
+#  10 la cartella che si sta guardando sia APERTA (18/10/2026): icona "folder_open" nella
+#     casella dell'indirizzo, nella barra del titolo e nel pulsante della barra delle
+#     applicazioni, come in Win95 -- prima la casella la rimetteva chiusa a ogni
+#     navigazione e l'icona aperta non compariva mai; Risorse del computer e le unita'
+#     invece tengono la loro icona.
+#
 # Va eseguito come SCENA (serve l'autoload GameManager). A FINESTRA, non headless: il
 # controllo 8 legge i pixel.
 #   & $godot --path $proj res://tests/esplora_chrome_test.tscn
@@ -102,6 +108,7 @@ func _ready() -> void:
 	_prova_viste()
 	await _prova_file_nuovo()
 	await _prova_acceleratori()
+	await _prova_icona_aperta()
 
 	if _fails.is_empty():
 		print("RISULTATO: PASS (la cornice risponde, e cio' che non fa niente lo dichiara)")
@@ -619,6 +626,32 @@ func _alt(lettera: String) -> void:
 	_vp.push_input(e, true)
 	for i in range(2):
 		await get_tree().process_frame
+
+# ---------- 10: la cartella aperta ----------
+
+func _prova_icona_aperta() -> void:
+	_app.launch(VFS.get_root())
+	await get_tree().process_frame
+	var radice := str(VFS.get_root().get("icon", ""))
+	_check("ICONA_RISORSE", _icone() == [radice, radice, radice],
+			"Risorse del computer: %s, attesa la sua (%s)" % [str(_icone()), radice])
+	_entra(tr("VFS_C_DRIVE"))
+	await get_tree().process_frame
+	var unita := str(_app._folder.get("icon", ""))
+	_check("ICONA_UNITA", unita != "folder" and _icone() == [unita, unita, unita],
+			"unita' C: %s, attesa %s" % [str(_icone()), unita])
+	_entra(tr("VFS_DOCUMENTS"))
+	await get_tree().process_frame
+	_check("CARTELLA_APERTA", _icone() == ["folder_open", "folder_open", "folder_open"],
+			"in una cartella [indirizzo, titolo, barra] = %s" % str(_icone()))
+
+# L'icona di [casella dell'indirizzo, barra del titolo, pulsante nella barra applicazioni].
+func _icone() -> Array:
+	var barra := ""
+	for c in (_os.taskbar_buttons[_win] as Button).get_children():
+		if c is OSIcon:
+			barra = (c as OSIcon).kind
+	return [_app._combo_icon.kind, _win._icon.kind, barra]
 
 # ---------- helper ----------
 

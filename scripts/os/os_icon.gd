@@ -89,12 +89,32 @@ func _draw() -> void:
 func _outline(r: Rect2, c: Color) -> void:
 	draw_rect(r, c, false, 1.0)
 
+# Cartella. Ritocco del 18/10/2026 (proprietario: "rendere tutto coerente"): anche la
+# LINGUETTA ha il contorno, come tutte le altre icone della serie (prima solo il corpo,
+# e sul bianco dell'Esplora la linguetta si sfrangiava), e il davanti ha una riga chiara
+# in alto, la piega del cartone delle cartelle Win95. La cartella APERTA prima era la
+# stessa sagoma solo piu' chiara -- non sembrava aperta: ora il fondo resta dietro, piu'
+# scuro, e il davanti si piega in avanti, piu' basso e inclinato.
 func _folder(w: float, h: float, open := false) -> void:
+	var bordo := Color("80631a")
 	var tab := Rect2(w * 0.10, h * 0.24, w * 0.40, h * 0.14)
 	draw_rect(tab, Color("c79a30"))
+	_outline(tab, bordo)
 	var body := Rect2(w * 0.08, h * 0.32, w * 0.84, h * 0.48)
-	draw_rect(body, Color("f2c84b") if not open else Color("ffe08a"))
-	_outline(body, Color("80631a"))
+	if not open:
+		draw_rect(body, Color("f2c84b"))
+		if h >= 24.0:
+			draw_line(Vector2(body.position.x + 1, body.position.y + 1.5),
+					Vector2(body.end.x - 1, body.position.y + 1.5), Color("ffe08a"), maxf(1.0, h * 0.03))
+		_outline(body, bordo)
+		return
+	draw_rect(body, Color("c79a30"))
+	_outline(body, bordo)
+	var fronte := PackedVector2Array([
+		Vector2(w * 0.22, h * 0.46), Vector2(w * 0.97, h * 0.46),
+		Vector2(w * 0.86, h * 0.80), Vector2(w * 0.08, h * 0.80)])
+	draw_colored_polygon(fronte, Color("ffd866"))
+	draw_polyline(fronte + PackedVector2Array([fronte[0]]), bordo, 1.0)
 
 func _locked(w: float, h: float) -> void:
 	# cartella con un lucchetto sopra (nodo "secret")
@@ -216,21 +236,28 @@ func _ellisse(c: Vector2, rx: float, ry: float, passi := 28) -> PackedVector2Arr
 		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
 	return pts
 
+# Foglio di testo con l'orecchia. L'orecchia stava FUORI dal foglio (un triangolo grigio
+# appeso al bordo destro, ritoccato il 18/10/2026): ora e' l'angolo del foglio stesso,
+# tagliato e ripiegato in dentro, come in tutte le icone di documento dell'epoca.
 func _file(w: float, h: float) -> void:
-	var page := Rect2(w * 0.22, h * 0.12, w * 0.50, h * 0.76)
-	draw_rect(page, Color("ffffff"))
-	_outline(page, Color("404040"))
-	# angolo piegato
-	var fold := PackedVector2Array([
-		Vector2(page.position.x + page.size.x, page.position.y),
-		Vector2(page.position.x + page.size.x + w * 0.10, page.position.y + h * 0.14),
-		Vector2(page.position.x + page.size.x, page.position.y + h * 0.14),
-	])
-	draw_colored_polygon(fold, Color("dddddd"))
-	# righe di testo
-	for i in range(4):
-		var ly := page.position.y + h * (0.26 + i * 0.13)
-		draw_line(Vector2(page.position.x + 3, ly), Vector2(page.position.x + page.size.x - 3, ly), Color("8a8a8a"), 1.0)
+	var page := Rect2(w * 0.22, h * 0.10, w * 0.56, h * 0.80)
+	var p0 := page.position
+	var p1 := page.end
+	var piega: float = w * 0.16
+	var bordo := Color("404040")
+	var foglio := PackedVector2Array([p0, Vector2(p1.x - piega, p0.y),
+			Vector2(p1.x, p0.y + piega), p1, Vector2(p0.x, p1.y)])
+	draw_colored_polygon(foglio, Color.WHITE)
+	draw_polyline(foglio + PackedVector2Array([p0]), bordo, 1.0)
+	var orecchia := PackedVector2Array([Vector2(p1.x - piega, p0.y),
+			Vector2(p1.x - piega, p0.y + piega), Vector2(p1.x, p0.y + piega)])
+	draw_colored_polygon(orecchia, Color("d8d8d8"))
+	draw_polyline(orecchia + PackedVector2Array([orecchia[0]]), bordo, 1.0)
+	# righe di testo, sotto l'orecchia; da piccolo tre, o diventano una macchia grigia
+	var righe := 4 if h >= 24.0 else 3
+	for i in range(righe):
+		var ly: float = p0.y + piega + h * (0.10 + i * 0.13)
+		draw_line(Vector2(p0.x + 3, ly), Vector2(p1.x - 3, ly), Color("8a8a8a"), 1.0)
 
 # ---------------- unita' e programmi ----------------
 # Le tre unita' di "Risorse del computer" e l'icona di un eseguibile. Servono perche'
@@ -329,11 +356,12 @@ func _notepad(w: float, h: float) -> void:
 		draw_line(Vector2(page.position.x + 4, ly), Vector2(page.position.x + page.size.x - 4, ly), Color("9a9a9a"), 1.0)
 
 func _trash(w: float, h: float, full := false) -> void:
-	# carta accartocciata che sporge quando il cestino e' pieno (disegnata prima del bidone)
+	# FOGLI che sporgono quando il cestino e' pieno (disegnati prima del bidone, che ne
+	# copre il fondo). Erano tre palline bianche (ritocco del 18/10/2026): fogli storti si
+	# leggono come carta buttata, palline no.
 	if full:
-		for p in [Vector2(w * 0.36, h * 0.16), Vector2(w * 0.58, h * 0.12), Vector2(w * 0.48, h * 0.20)]:
-			draw_circle(p, w * 0.07, Color("eef0f2"))
-			draw_arc(p, w * 0.07, 0, TAU, 12, Color("9aa0a6"), 1.0)
+		for f in [[Vector2(0.38, 0.17), -0.35], [Vector2(0.58, 0.14), 0.25], [Vector2(0.49, 0.21), 0.05]]:
+			_foglio_storto(Vector2(w, h) * (f[0] as Vector2), Vector2(w * 0.20, h * 0.22), float(f[1]))
 	var lid := Rect2(w * 0.24, h * 0.20, w * 0.52, h * 0.08)
 	draw_rect(lid, Color("9aa0a6"))
 	_outline(lid, Color("4a4f54"))
@@ -352,8 +380,18 @@ func _arrow_left(w: float, h: float) -> void:
 		Vector2(w * 0.20, cy), Vector2(w * 0.46, cy - h * 0.24), Vector2(w * 0.46, cy + h * 0.24),
 	]), col)
 
+# Un foglio ruotato (centro, misura, angolo in radianti): la carta del cestino pieno.
+func _foglio_storto(c: Vector2, dim: Vector2, ang: float) -> void:
+	var pts := PackedVector2Array()
+	for v in [Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5)]:
+		pts.append(c + ((v as Vector2) * dim).rotated(ang))
+	draw_colored_polygon(pts, Color("f6f6f2"))
+	draw_polyline(pts + PackedVector2Array([pts[0]]), Color("8a8f94"), 1.0)
+
 func _up(w: float, h: float) -> void:
-	draw_rect(Rect2(w * 0.14, h * 0.44, w * 0.30, h * 0.10), Color("c79a30"))
+	var tab := Rect2(w * 0.14, h * 0.44, w * 0.30, h * 0.10)
+	draw_rect(tab, Color("c79a30"))
+	_outline(tab, Color("80631a"))     # come la linguetta delle cartelle
 	var body := Rect2(w * 0.12, h * 0.52, w * 0.74, h * 0.34)
 	draw_rect(body, Color("f2c84b"))
 	_outline(body, Color("80631a"))
@@ -439,17 +477,27 @@ func _stop(w: float, h: float) -> void:
 	draw_line(c + Vector2(-r * 0.5, -r * 0.5), c + Vector2(r * 0.5, r * 0.5), Color.WHITE, 2.0)
 	draw_line(c + Vector2(r * 0.5, -r * 0.5), c + Vector2(-r * 0.5, r * 0.5), Color.WHITE, 2.0)
 
+# Aggiorna: freccia circolare. Ritoccata il 18/10/2026: il tratto era fisso a 2.5 px
+# (filo sottile a 48 px) e la punta minuscola, quindi a 16 px si leggeva una "U". Ora
+# tratto e punta crescono con l'icona, e la punta segue la direzione dell'arco.
 func _refresh(w: float, h: float) -> void:
-	var c := Vector2(w * 0.5, h * 0.52)
-	var r: float = min(w, h) * 0.32
+	var s: float = min(w, h)
+	var c := Vector2(w * 0.5, h * 0.54)
+	var r: float = s * 0.30
 	var col := Color("1c7a2a")
-	var a1 := deg_to_rad(210.0)
-	draw_arc(c, r, deg_to_rad(-50.0), a1, 24, col, 2.5)
-	var head := c + Vector2(cos(a1), sin(a1)) * r
+	var tratto: float = maxf(2.0, s * 0.10)
+	var a0 := deg_to_rad(-40.0)
+	var a1 := deg_to_rad(225.0)
+	draw_arc(c, r, a0, a1, 28, col, tratto)
+	# la punta: in avanti lungo la tangente, larga a cavallo dell'arco
+	var radiale := Vector2(cos(a1), sin(a1))
+	var avanti := Vector2(-sin(a1), cos(a1))
+	var testa := c + radiale * r
+	var lun: float = s * 0.22
 	draw_colored_polygon(PackedVector2Array([
-		head + Vector2(-w * 0.12, -h * 0.02),
-		head + Vector2(w * 0.02, -h * 0.15),
-		head + Vector2(w * 0.07, h * 0.04),
+		testa + avanti * lun,
+		testa - radiale * lun * 0.75,
+		testa + radiale * lun * 0.75,
 	]), col)
 
 func _home(w: float, h: float) -> void:
@@ -484,12 +532,20 @@ func _print(w: float, h: float) -> void:
 	draw_rect(out, Color.WHITE)
 	_outline(out, Color("707070"))
 
+# Cerca: la lente. Ritoccata il 18/10/2026: come "aggiorna" aveva il tratto fisso (filo a
+# 48 px); ora cresce con l'icona, il vetro e' azzurrino col riflesso e il manico e' scuro
+# e piu' spesso -- una lente, non un cerchio con una riga.
 func _search(w: float, h: float) -> void:
-	var c := Vector2(w * 0.44, h * 0.42)
-	var r: float = min(w, h) * 0.24
+	var s: float = min(w, h)
+	var c := Vector2(w * 0.42, h * 0.40)
+	var r: float = s * 0.25
 	var col := Color("123a7a")
-	draw_arc(c, r, 0, TAU, 18, col, 2.5)
-	draw_line(c + Vector2(r * 0.7, r * 0.7), Vector2(w * 0.82, h * 0.82), col, 3.0)
+	draw_line(c + Vector2(r, r) * 0.72, Vector2(w * 0.84, h * 0.84), Color("2a2a2a"),
+			maxf(3.0, s * 0.13))
+	draw_circle(c, r, Color("cfe7f7"))
+	if s >= 24.0:
+		draw_arc(c, r * 0.6, deg_to_rad(200.0), deg_to_rad(260.0), 8, Color.WHITE, maxf(1.0, s * 0.04))
+	draw_arc(c, r, 0, TAU, 24, col, maxf(2.0, s * 0.07))
 
 # Il logo del sistema: la balena di "52-hz Whale". (Prima era una bandiera a
 # quattro riquadri, cioe' quella di Windows: il tema dell'OS e' un'altra cosa.)

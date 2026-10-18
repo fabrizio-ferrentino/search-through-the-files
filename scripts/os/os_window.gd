@@ -113,6 +113,16 @@ func set_title(t: String) -> void:
 		_title_label.text = t
 	title_changed.emit(self)
 
+# Cambia l'icona della barra del titolo; lo stesso segnale del titolo avvisa il desktop,
+# che aggiorna anche il pulsante nella barra delle applicazioni.
+func set_icon(kind: String) -> void:
+	if kind == icon_kind:
+		return
+	icon_kind = kind
+	if _icon:
+		_icon.set_kind(kind)
+	title_changed.emit(self)
+
 func set_active(v: bool) -> void:
 	active = v
 	queue_redraw()

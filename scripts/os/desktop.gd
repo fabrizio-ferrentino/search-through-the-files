@@ -477,6 +477,9 @@ func _on_window_closed(win: OSWindow) -> void:
 func _on_title_changed(win: OSWindow) -> void:
 	if taskbar_buttons.has(win):
 		taskbar_buttons[win].text = "      " + win.win_title
+		for c in taskbar_buttons[win].get_children():
+			if c is OSIcon:
+				(c as OSIcon).set_kind(win.icon_kind)   # anche l'icona (OSWindow.set_icon)
 
 func _update_taskbar() -> void:
 	for win in taskbar_buttons:

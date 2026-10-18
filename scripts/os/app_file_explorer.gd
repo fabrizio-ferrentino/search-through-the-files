@@ -235,8 +235,18 @@ func _refresh() -> void:
 	if window:
 		window.set_title(str(_folder.get("name", tr("SHELL_EXPLORER"))))
 	_addr.text = _path_string(_folder)
+	# La cartella che stai guardando e' APERTA, come in Win95: icona "folder_open" nella
+	# casella dell'indirizzo, nella barra del titolo e nel pulsante della barra delle
+	# applicazioni. (La casella partiva gia' con l'icona aperta, ma qui veniva subito
+	# rimessa quella chiusa: la cartella aperta non si vedeva mai -- proprietario,
+	# 18/10/2026.) Unita', Risorse del computer e Cestino tengono la loro.
+	var icona := str(_folder.get("icon", "folder"))
+	if icona == "folder":
+		icona = "folder_open"
 	if _combo_icon:
-		_combo_icon.set_kind(_folder.get("icon", "folder"))
+		_combo_icon.set_kind(icona)
+	if window:
+		window.set_icon(icona)
 	_selected = null
 	for c in _grid.get_children():
 		c.queue_free()
