@@ -61,6 +61,7 @@ const BATTERY_RECHARGE := 6.0       # ricarica al secondo (mentre la torcia e' s
 const WEAK_ENERGY_MUL := 0.22       # luminosita' del flash "scarico"
 
 func _ready() -> void:
+	add_to_group("regista_stanza")     # cosi' lo trova il pannello di debug (F12)
 	_rng.seed = GameManager.run_seed + 4242
 	_clown = load(CLOWN_SCENE).instantiate()
 	_clown.name = "Clown"
@@ -326,3 +327,44 @@ func _update_tell() -> void:
 func _reset_tell() -> void:
 	if _glitch_rect != null:
 		_glitch_rect.visible = false
+
+# ---------------- DEV-ONLY: il pannello di debug (F12) ----------------
+# Testi in inglese, come tutto il debug.
+
+const NOMI_STATO := ["GRACE", "WAIT", "PEEK", "SEEN", "CALM", "STOPPED"]
+
+# Il Clown si affaccia ADESSO (salta l'attesa). "" se e' uscito, se no il motivo.
+func forza_affaccio() -> String:
+	if _state == State.STOPPED:
+		return "the run is over"
+	if not GameManager.room_threats_enabled:
+		return "room threats are OFF (F11)"
+	if _state == State.PEEK or _state == State.SEEN:
+		return "the clown is already out"
+	_peek()
+	return "" if _state == State.PEEK else "no door found (group enemy_spots)"
+
+# Lo rimanda via senza morire: si riparte da una finestra sicura (CALM).
+func allontana() -> String:
+	if _state != State.PEEK and _state != State.SEEN:
+		return "the clown is not out"
+	_clown.dismiss()
+	_reset_tell()
+	_to_calm()
+	return ""
+
+func stato_debug() -> String:
+	var s: String = "Clown: " + NOMI_STATO[_state]
+	match _state:
+		State.GRACE:
+			s += " (start grace, %d s left)" % maxi(0, ceili(GRACE_TIME - _timer))
+		State.WAIT:
+			# l'intervallo vero ha un +-15% a caso a ogni controllo: qui la media
+			s += " (peek in ~%d s)" % maxi(0, ceili(lerpf(INTERVAL_CALM, INTERVAL_HOT, _heat) - _timer))
+		State.PEEK:
+			s += " (%s side, %.1f s to react)" % [_peek_zone, _react_left]
+		State.CALM:
+			s += " (safe for %d s)" % maxi(0, ceili(CALM_TIME - _timer))
+	if not GameManager.room_threats_enabled:
+		s += " - room threats OFF"
+	return s + "\n  heat %.2f  torch battery %d%%" % [_heat, roundi(_battery / BATTERY_MAX * 100.0)]

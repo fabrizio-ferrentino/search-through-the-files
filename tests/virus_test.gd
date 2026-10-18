@@ -11,10 +11,18 @@ extends Node
 #     aperto o a minacce del PC spente (F8 congela il conto; F11, la stanza, no); dopo
 #     uno, la pausa e' fra PAUSA_MIN e PAUSA_MAX; mai lo stesso due volte di fila, e
 #     tutti e tre escono;
-#   2 il MORTALE si veda -- sfondo rosso NEI PIXEL, la scritta tradotta, il sangue che
-#     cola sopra le finestre ma SOTTO barra e menu Avvio (la via d'uscita resta pulita) --
-#     e che spegnere salvi, dal menu Avvio E dal case: niente morte, ogni strato tolto,
-#     le finestre rimesse a posto; e che il ThreatDirector non si affacci intanto;
+#   1b le APPARIZIONI (18/10/2026, UNA FASE SOLA): ognuno dei sette tipi si VEDE davvero
+#     come falso allarme e poi SPARISCE DEL TUTTO entro Apparizione.SOGLIA_FALSO (strati,
+#     orologio all'ora vera, finestre a zero); le cinque PICCOLE stanno sotto icone e
+#     finestre (il proprietario le vuole "di poco conto"); il lampeggio rosso NON c'e' piu';
+#     il sangue del vero ha colate di lunghezze diverse e gocce che cadono; vero e falso
+#     partono IDENTICI; il vero RESTA (a 4 s e a DURATA * 0.8 c'e'
+#     ancora, sempre lo stesso tipo); il regista fa partire i falsi allarmi col loro conto
+#     (FALSO_MIN..MAX), mai sopra un altro virus, e dopo un falso il vero aspetta
+#     DOPO_FALSO; SHIFT+F9 vero ne forza uno;
+#   2 il MORTALE e' un'apparizione che resta, e spegnere salva -- dal menu Avvio E dal
+#     case: niente morte, ogni strato tolto, finestre a posto, orologio vero; e il
+#     ThreatDirector non si affaccia intanto;
 #   3 YouAreStupid apra la sua raffica (titolo e scritta in INGLESE in ogni lingua, dentro
 #     lo schermo, nella barra), NON SI POSSA IGNORARE -- sempre sopra le altre finestre
 #     anche cliccandole, niente "riduci" ne' dalla barra, il fuoco della tastiera rubato,
@@ -70,9 +78,11 @@ func _ready() -> void:
 		await get_tree().process_frame
 
 	await _prova_ritmo()
+	await _prova_apparizioni()
 	await _prova_mortale()
 	await _prova_stupido()
 	await _prova_schermo_blu()
+	await _prova_pannello()
 	await _prova_stop()
 	_prova_lingue()
 	await _prova_morte()
@@ -97,6 +107,7 @@ func _timeout() -> void:
 func _prova_ritmo() -> void:
 	_vd._tempo = 0.0
 	_vd._prossimo = _vd.PRIMO_VIRUS
+	_vd._prossimo_falso = 1.0e9        # i falsi allarmi hanno la loro sezione (1b)
 	_vd._in_pc_da = 10.0
 	_passi(_vd.PRIMO_VIRUS - 2.0)
 	_check("NIENTE_PRIMA", _vd.in_corso() == "",
@@ -171,48 +182,245 @@ func _chiudi_evento() -> void:
 	await get_tree().process_frame
 	_vd.avanza(0.1)
 
+# ---------- 1b: le apparizioni e i falsi allarmi ----------
+
+func _prova_apparizioni() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 33
+	var finestra: OSWindow = _os.open_app("notepad", {"name": "a.txt", "content": "ciao"})
+	finestra.position = Vector2(420, 260)
+	await _frame(2)
+
+	# ogni tipo, come FALSO ALLARME: si vede, poi sparisce del tutto
+	for tipo in Apparizione.TIPI:
+		var a := Apparizione.new()
+		_os.add_child(a)
+		a.setup(_os, tipo, rng)
+		a.durata = 2.0
+		a.set_process(false)
+		a.avanza(0.25)
+		await _frame(2)
+		var si_vede := false
+		var come := ""
+		match tipo:
+			"buio":
+				si_vede = a._velo != null and a._velo.color.a > 0.45
+				come = "alfa %.2f" % (a._velo.color.a if a._velo != null else -1.0)
+			"bambino":
+				si_vede = a._sfondo != null and _scuro_li(a)
+				come = "sagoma"
+			"occhi":
+				si_vede = a._occhi.size() >= 1
+				come = "%d coppie" % a._occhi.size()
+			"orologio":
+				come = _os.clock_label.text
+				si_vede = come != _os.ora_vera()
+			"scritte":
+				var testi := []
+				for k in Apparizione.SCRITTE:
+					testi.append(tr(k))
+				var l: Label = a._scritte[0] if not a._scritte.is_empty() else null
+				si_vede = l != null and testi.has(l.text) and not l.text.begins_with("VIRUS_") \
+						and l.modulate.a > 0.2
+				come = l.text if l != null else "-"
+			"sangue":
+				a.avanza(0.2)
+				var colate := a.colate()
+				si_vede = colate >= 5 and a._sangue.get_index() > _os.window_layer.get_index() \
+						and a._sangue.get_index() < _os.taskbar.get_index()
+				come = "%d colate" % colate
+			"tremito":
+				var mosso := false
+				for i in range(20):
+					a.avanza(0.01)
+					if _os.window_layer.position != Vector2.ZERO:
+						mosso = true
+				si_vede = mosso
+				come = "finestre mosse %s" % str(mosso)
+		_check("APPARE_" + tipo.to_upper(), si_vede, "falso allarme '%s' non si vede (%s)" % [tipo, come])
+		if Apparizione.PICCOLE.has(tipo):
+			_check("PICCOLA_" + tipo.to_upper(), _strati_sotto_le_icone(a) and _nomi_veri(),
+					"l'apparizione piccola '%s' esce dallo sfondo (strati sopra le icone o nomi cambiati)" % tipo)
+		_foto("virus_apparizione_%s.png" % tipo)
+		a.avanza(2.0)                          # oltre la sua durata
+		await _frame(2)
+		var resti := 0
+		for n in _os.find_children("Apparizione*", "", true, false):
+			if not n.is_queued_for_deletion():
+				resti += 1
+		_check("SPARISCE_" + tipo.to_upper(), not is_instance_valid(a) and resti == 0
+				and _orologio_giusto() and _os.window_layer.position == Vector2.ZERO,
+				"dopo il falso '%s': nodo vivo %s, strati %d, orologio '%s', finestre %s" % [tipo,
+				str(is_instance_valid(a)), resti, _os.clock_label.text, str(_os.window_layer.position)])
+
+	# niente lampeggio rosso: al proprietario non piaceva per niente, e' stato tolto
+	_check("NIENTE_LAMPEGGIO", not Apparizione.TIPI.has("lampeggio")
+			and Apparizione.PESI.size() == Apparizione.TIPI.size(),
+			"il lampeggio e' tornato fra le apparizioni, o PESI non e' allineato a TIPI")
+
+	# il sangue del VERO, dopo un po': colate di lunghezze DIVERSE (non un codice a barre),
+	# alcune ancora corte, qualcuna in fondo; e ogni tanto una goccia si stacca
+	var sg := Apparizione.new()
+	_os.add_child(sg)
+	sg.setup(_os, "sangue", rng)
+	sg.crescita = VirusMortale.DURATA
+	sg.set_process(false)
+	var staccate := 0
+	for i in range(20 * 30):                 # 20 s a 30 passi al secondo
+		sg.avanza(1.0 / 30.0)
+		staccate = maxi(staccate, sg._cadute.size())
+	var corte := 0
+	var lunghe := 0
+	for g in sg._gocce:
+		var l: float = g["lun"]
+		if l > 5.0 and l < 250.0:
+			corte += 1
+		elif l >= 500.0:
+			lunghe += 1
+	_check("SANGUE_VARIO", corte >= 5 and lunghe >= 2 and staccate >= 1,
+			"sangue a 20 s: %d colate corte, %d lunghe, al massimo %d gocce in caduta" % [corte, lunghe, staccate])
+	sg.pulisci()
+	await _frame(2)
+
+	# vero e falso partono IDENTICI (una piccola e una grave)
+	for tipo in ["bambino", "sangue"]:
+		var falso := Apparizione.new()
+		_os.add_child(falso)
+		falso.setup(_os, tipo, rng)
+		falso.durata = 1.0
+		falso.set_process(false)
+		var vero := Apparizione.new()
+		_os.add_child(vero)
+		vero.setup(_os, tipo, rng)
+		vero.crescita = VirusMortale.DURATA
+		vero.set_process(false)
+		falso.avanza(0.3)
+		vero.avanza(0.3)
+		_check("STESSA_PARTENZA_" + tipo.to_upper(), is_equal_approx(falso.comparsa(), vero.comparsa())
+				and absf(falso.intensita - vero.intensita) < 0.05,
+				"%s a 0.3 s: comparsa %.2f / %.2f, intensita' %.2f / %.2f" % [tipo, falso.comparsa(),
+				vero.comparsa(), falso.intensita, vero.intensita])
+		falso.pulisci()
+		vero.pulisci()
+	await _frame(2)
+
+	# il VERO resta, sempre lo stesso tipo (una piccola e una grave)
+	for tipo in ["buio", "sangue"]:
+		var v := VirusMortale.new()
+		_os.add_child(v)
+		v.setup(_os, rng, tipo)
+		v.set_process(false)
+		var app := v.apparizione()
+		_porta_a(v, 4.0)                     # oltre la SOGLIA_FALSO: un falso qui non c'e' piu'
+		var a3: bool = app != null and is_instance_valid(app) and app.attiva()
+		_porta_a(v, v.DURATA * 0.8)
+		var a20: bool = app != null and is_instance_valid(app) and app.attiva() and app.tipo == tipo
+		_check("IL_VERO_RESTA_" + tipo.to_upper(), a3 and a20 and not v._finito,
+				"vero '%s': a 4 s %s, a %.0f s %s" % [tipo, str(a3), v.DURATA * 0.8, str(a20)])
+		await _frame(2)                      # la foto deve vedere lo stato di adesso
+		_foto("virus_vero_%s.png" % tipo)
+		v.pulisci()
+		await _frame(2)
+
+	# il regista: un falso allarme parte col suo conto, finisce da solo, e sposta il prossimo
+	_vd._in_pc_da = 10.0
+	_vd._prossimo = _vd._tempo + 1.0e6
+	_vd._prossimo_falso = _vd._tempo
+	_vd.avanza(0.1)
+	var f = _vd._nodo
+	_check("REGISTA_FALSO", _vd.in_corso() == "falso" and f is Apparizione
+			and f.durata < Apparizione.SOGLIA_FALSO,
+			"regista: evento '%s', durata %s" % [_vd.in_corso(), str(f.durata if f is Apparizione else -1)])
+	if f is Apparizione:
+		f.set_process(false)
+		for i in range(40):                  # 4 s: oltre qualsiasi FALSO_DURATA
+			if is_instance_valid(f):
+				f.avanza(0.1)
+	_vd.avanza(0.1)
+	var falso_dopo: float = _vd._prossimo_falso - _vd._tempo
+	_check("FALSO_FINISCE", _vd.in_corso() == "" and not GameManager._game_over_active
+			and falso_dopo >= _vd.FALSO_MIN - 0.5 and falso_dopo <= _vd.FALSO_MAX + 0.5,
+			"dopo il falso: evento '%s', prossimo falso fra %.0f s" % [_vd.in_corso(), falso_dopo])
+	_vd._prossimo = _vd._tempo
+	_vd._evento = "falso"
+	_vd._fine()
+	_check("DOPO_FALSO_ASPETTA", _vd._prossimo >= _vd._tempo + _vd.DOPO_FALSO - 0.01,
+			"dopo un falso il virus vero e' fra %.1f s" % (_vd._prossimo - _vd._tempo))
+
+	# mai sopra un altro virus
+	_vd._ultimo = ""
+	_vd.forza("stupido")
+	_vd._prossimo_falso = _vd._tempo
+	_vd.avanza(0.1)
+	_check("MAI_SOPRA_UN_VIRUS", _vd.in_corso() == "stupido", "durante YouAreStupid e' partito '%s'" % _vd.in_corso())
+	await _chiudi_evento()
+
+	# SHIFT+F9 vero
+	_vd._prossimo = _vd._tempo + 1.0e6
+	_vd._prossimo_falso = 1.0e9
+	await _tasto(KEY_F9, "", true)
+	_check("SHIFT_F9_FALSO", _vd.in_corso() == "falso", "SHIFT+F9 ha fatto partire '%s'" % _vd.in_corso())
+	if _vd._nodo is Apparizione:
+		_vd._nodo.pulisci()
+	_vd.avanza(0.1)
+	_vd._prossimo_falso = 1.0e9
+	if is_instance_valid(finestra):
+		finestra.close()
+	await _frame(2)
+
+# C'e' qualcosa di scuro dove pende il bambino? (sagoma vera nei pixel, non solo un nodo)
+# Il bambino si vede DAVVERO nei pixel: lungo il suo asse (il collo e' spostato del nodo)
+# il colore non e' piu' quello della carta da parati (e' una sagoma scura).
+func _scuro_li(a: Apparizione) -> bool:
+	var img: Image = _player._os_viewport.get_texture().get_image()
+	var base: Color = Win95.C_DESKTOP
+	var x := int(a._bambino.x - Apparizione.NODO.x * Apparizione.SCALA_BAMBINO)
+	var y0 := int(a._bambino.y)
+	var diversi := 0
+	for dy in range(10, 220, 6):
+		var c := img.get_pixel(clampi(x, 0, img.get_width() - 1), clampi(y0 + dy, 0, img.get_height() - 1))
+		if absf(c.r - base.r) + absf(c.g - base.g) + absf(c.b - base.b) > 0.25:
+			diversi += 1
+	return diversi >= 12
+
+# L'orologio della barra mostra l'ora VERA? Prima lo si aggiorna: la barra lo riscrive a
+# intervalli, e se il minuto scatta durante il test l'etichetta resta indietro di un attimo
+# (rosso a caso, visto alle 19:31). Non nasconde niente: con un'ora finta ancora attiva
+# _update_clock rimette quella, e il controllo resta rosso.
+func _orologio_giusto() -> bool:
+	_os._update_clock()
+	return _os.clock_label.text == _os.ora_vera()
+
+# Gli strati di un'apparizione piccola stanno tutti SOTTO le icone (e quindi le finestre)?
+func _strati_sotto_le_icone(a: Apparizione) -> bool:
+	var icone: int = _os.icons_layer.get_index()
+	for n in [a._velo, a._sfondo] + a._scritte:
+		if n != null and is_instance_valid(n) and (n as Node).get_parent() == _os \
+				and (n as Node).get_index() >= icone:
+			return false
+	return _os.window_layer.position == Vector2.ZERO
+
+# Le icone del desktop mostrano i loro nomi veri?
+func _nomi_veri() -> bool:
+	for it in _os.icons_layer.get_children():
+		var item := it as DesktopItem
+		if item != null and (not item._label.visible or item._label.text != str(item.data.get("name", ""))):
+			return false
+	return true
+
 # ---------- 2: il virus mortale ----------
 
 func _prova_mortale() -> void:
 	var finestra: OSWindow = _os.open_app("notepad", {"name": "x.txt", "content": "ciao"})
 	finestra.position = Vector2(500, 300)
 	await get_tree().process_frame
-	var prima := _pixel_sfondo()
 	_check("PARTE_MORTALE", _vd.forza("mortale"), "forza('mortale') rifiutato a desktop libero")
 	var v: VirusMortale = _vd._nodo
 	v.set_process(false)
-	_avanza_virus(v, v.DURATA * 0.3)
-	await _frame(2)
-	var dopo := _pixel_sfondo()
-	_check("SFONDO_ROSSO", dopo.r > dopo.g * 2.5 and dopo.r > dopo.b * 2.5 and prima.g > prima.r,
-			"sfondo prima %s, durante il virus %s: non e' diventato rosso" % [str(prima), str(dopo)])
-	_check("SCRITTA", v._scritta.text == tr("VIRUS_CURSE_MSG") and v._scritta.modulate.a > 0.5
-			and v._scritta.text != "VIRUS_CURSE_MSG",
-			"la scritta e' '%s' (alfa %.2f)" % [v._scritta.text, v._scritta.modulate.a])
-	var colate := 0
-	for g in v._gocce:
-		if float(g[4]) > 5.0:
-			colate += 1
-	_check("SANGUE_COLA", colate > 5, "al 30%% del virus colano solo %d gocce" % colate)
-	var i_sangue: int = v._sangue.get_index()
-	_check("STRATI", v._tinta.get_index() < _os.icons_layer.get_index()
-			and i_sangue > _os.window_layer.get_index()
-			and i_sangue < _os.taskbar.get_index() and i_sangue < _os.start_menu.get_index(),
-			"ordine: sfondo %d icone %d finestre %d sangue %d barra %d menu %d" % [v._tinta.get_index(),
-			_os.icons_layer.get_index(), _os.window_layer.get_index(), i_sangue,
-			_os.taskbar.get_index(), _os.start_menu.get_index()])
-	_check("SANGUE_NON_PRENDE_IL_MOUSE", v._sangue.mouse_filter == Control.MOUSE_FILTER_IGNORE
-			and v._tinta.mouse_filter == Control.MOUSE_FILTER_IGNORE, "uno strato del virus prende il mouse")
-	_foto("virus_mortale_1.png")
-	_avanza_virus(v, v.DURATA * 0.55)
-	var mosso := false
-	for i in range(30):
-		v.avanza(0.05)
-		if _os.window_layer.position != Vector2.ZERO:
-			mosso = true
-	_check("TREMA", mosso, "alla fine del virus le finestre non tremano")
-	await _frame(2)
-	_foto("virus_mortale_2.png")
+	var app := v.apparizione()
+	_porta_a(v, v.DURATA * 0.5)
+	_check("MORTALE_E_UN_APPARIZIONE", app != null and is_instance_valid(app) and app.attiva()
+			and app.crescita == v.DURATA, "il virus mortale non porta un'apparizione che resta")
 
 	# il Clown non si affaccia durante il virus mortale
 	var td = _player._threats
@@ -231,11 +439,11 @@ func _prova_mortale() -> void:
 	_vd.avanza(0.1)
 	await _frame(2)
 	_check("SALVATO_DAL_MENU", _vd.in_corso() == "" and not GameManager._game_over_active
-			and not is_instance_valid(v) and _os.window_layer.position == Vector2.ZERO
-			and _os.find_child("VirusSangue", true, false) == null
-			and _os.find_child("VirusSfondo", true, false) == null,
-			"dopo Arresta: evento '%s', morte %s, strati rimasti %s" % [_vd.in_corso(),
-			str(GameManager._game_over_active), str(_os.find_child("VirusSangue", true, false) != null)])
+			and not is_instance_valid(v) and not is_instance_valid(app)
+			and _os.window_layer.position == Vector2.ZERO and _orologio_giusto()
+			and _os.find_children("Apparizione*", "", true, false).is_empty(),
+			"dopo Arresta: evento '%s', morte %s, apparizione %s" % [_vd.in_corso(),
+			str(GameManager._game_over_active), str(is_instance_valid(app))])
 	await _riaccendi()
 
 	# ...e dal pulsante del case, dalla stanza
@@ -243,7 +451,7 @@ func _prova_mortale() -> void:
 	_vd.forza("mortale")
 	v = _vd._nodo
 	v.set_process(false)
-	_avanza_virus(v, v.DURATA * 0.8)
+	_porta_a(v, v.DURATA * 0.8)
 	_player._exit_pc()
 	for i in range(300):
 		if not _player.entering and not _player._in_pc:
@@ -321,7 +529,17 @@ func _prova_stupido() -> void:
 	# la X su una finestra che si MUOVE: premuta e rilasciata nello stesso punto, deve chiudere
 	var vagante: OSWindow = s.vive()[1]
 	vagante.position = Vector2(80, 300)
+	# solo LEI si muove, e in primo piano, e nel frattempo non ne nascono altre: un'altra
+	# finestra del virus che le passa sopra si prenderebbe il clic, e il controllo
+	# misurerebbe la sfortuna (succedeva sempre, cambiata la sequenza casuale) invece del
+	# difetto che cerca
+	for w in s._vel.keys():
+		s._vel.erase(w)
 	s._vel[vagante] = Vector2(500, 0)
+	s._in_coda = 0
+	s._ignorate = -100.0
+	_os.focus_window(vagante)
+	await get_tree().process_frame
 	var x: Vector2 = vagante._btn_close.get_global_rect().get_center()
 	_premi_mouse(x, true)
 	await get_tree().process_frame
@@ -332,6 +550,7 @@ func _prova_stupido() -> void:
 	await _frame(2)
 	_check("X_SU_VAGANTE", not is_instance_valid(vagante),
 			"la X di una finestra in movimento si preme ma non chiude")
+	s._ignorate = 0.0                        # di nuovo come in gioco: il prossimo controllo lo prova
 
 	var posizioni := {}
 	for w in s._vel.keys():
@@ -507,6 +726,103 @@ func _prova_schermo_blu() -> void:
 
 # ---------- 5: la vittoria ferma tutto ----------
 
+# ---------- 4b: il pannello di debug (F12) ----------
+# Il proprietario non riusciva a far comparire a comando tutte le minacce: ogni pulsante
+# del pannello deve far partire QUELLA cosa (quale apparizione compresa), dire perche' se
+# non puo', e un clic sul pannello dentro il PC NON deve arrivare anche all'OS sotto.
+
+func _prova_pannello() -> void:
+	await _attendi_desktop_libero()
+	if not GameManager.debug_aperto():
+		GameManager.toggle_keys_panel()
+	await _frame(2)
+	var p: DebugPanel = GameManager._keys_panel
+	var sbagliati := []
+	for tipo in Apparizione.TIPI:
+		for vero in [true, false]:
+			var bottoni := p.riga_apparizione(tipo)
+			if bottoni.size() != 2:
+				sbagliati.append("%s: %d pulsanti" % [tipo, bottoni.size()])
+				continue
+			(bottoni[0 if vero else 1] as Button).pressed.emit()
+			var atteso := "mortale" if vero else "falso"
+			var app = null
+			if _vd.in_corso() == "mortale" and is_instance_valid(_vd._nodo):
+				app = _vd._nodo.apparizione()
+			elif _vd.in_corso() == "falso":
+				app = _vd._nodo
+			if _vd.in_corso() != atteso or app == null or app.tipo != tipo:
+				sbagliati.append("%s %s -> '%s' %s" % ["REAL" if vero else "FALSE", tipo, _vd.in_corso(),
+						app.tipo if app != null else "-"])
+			p.pulsante("Stop current").pressed.emit()
+			await _frame(1)
+			if _vd.in_corso() != "":
+				sbagliati.append("Stop current lascia '%s'" % _vd.in_corso())
+	_check("PANNELLO_OGNI_APPARIZIONE", sbagliati.is_empty(), str(sbagliati))
+
+	for coppia in [["YouAreStupid", "stupido"], ["Blue screen", "crash"]]:
+		p.pulsante(coppia[0]).pressed.emit()
+		var partito: String = _vd.in_corso()
+		p.pulsante("Stop current").pressed.emit()
+		await _frame(3)
+		_check("PANNELLO_" + str(coppia[1]).to_upper(), partito == coppia[1] and _vd.in_corso() == ""
+				and not _os.schermo_blu_aperto(), "'%s' -> '%s', dopo Stop '%s'" % [coppia[0], partito, _vd.in_corso()])
+
+	# un rifiuto si spiega: con le minacce del PC spente non parte niente, e il pannello dice perche'
+	p.pulsante("PC threats: ON").pressed.emit()
+	p.riga_apparizione("buio")[0].pressed.emit()
+	_check("PANNELLO_DICE_PERCHE", _vd.in_corso() == "" and p.testo().contains("refused: PC threats are OFF"),
+			"con F8 spento: evento '%s', esito '%s'" % [_vd.in_corso(), p._esito.text])
+	p.pulsante("PC threats: OFF").pressed.emit()
+	_check("PANNELLO_INTERRUTTORE", GameManager.pc_threats_enabled, "il pulsante non riaccende le minacce del PC")
+
+	# il Clown a comando (il test lo tiene fermo: lo si rimette in attesa solo qui)
+	var td = _player._threats
+	td._state = td.State.CALM
+	p.pulsante("Clown: peek now").pressed.emit()
+	var fuori: bool = td.in_agguato()
+	p.pulsante("Clown: go away").pressed.emit()
+	_check("PANNELLO_CLOWN", fuori and not td.in_agguato() and not GameManager._game_over_active,
+			"affaccio %s, poi in agguato %s" % [str(fuori), str(td.in_agguato())])
+	td.stop()
+
+	# un CLIC VERO dentro il PC sopra il pannello: lo prende il pannello, non l'OS sotto
+	p.pulsante("Lethal (random)").pressed.emit()
+	var ferma: Button = p.pulsante("Stop current")
+	await _frame(2)
+	var centro: Vector2 = ferma.get_global_rect().get_center()
+	var sotto: OSWindow = _os.open_app("notepad", {"name": "sotto.txt", "content": ""})
+	sotto.position = (centro - Vector2(240, 0) - Vector2(150, 60)).floor()
+	var davanti: OSWindow = _os.open_app("notepad", {"name": "davanti.txt", "content": ""})
+	davanti.position = Vector2(60, 500)
+	await _frame(2)
+	_os.focus_window(davanti)
+	await _frame(2)
+	var dentro_os := sotto.get_global_rect().has_point(centro - Vector2(240, 0))
+	var schermo: Vector2 = get_tree().root.get_final_transform() * centro
+	for giu in [true, false]:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = giu
+		e.position = schermo
+		e.global_position = schermo
+		Input.parse_input_event(e)
+		Input.flush_buffered_events()
+		await _frame(2)
+	_check("PANNELLO_CLIC_SUO", dentro_os and _vd.in_corso() == "" and _os.active_window == davanti,
+			"clic su Stop sopra una finestra: sotto c'era %s, virus '%s', attiva '%s'" % [str(dentro_os),
+			_vd.in_corso(), _os.active_window.win_title if _os.active_window != null else "-"])
+	sotto.close()
+	davanti.close()
+	_foto("debug_pannello.png")
+	GameManager.close_keys_panel()
+	await _frame(2)
+
+# Aspetta che lo schermo blu e il riavvio siano finiti, poi riporta il PC al desktop.
+func _attendi_desktop_libero() -> void:
+	_os.salta_al_desktop()
+	await _frame(3)
+
 func _prova_stop() -> void:
 	_vd._ultimo = ""
 	_vd.forza("mortale")
@@ -521,10 +837,10 @@ func _prova_stop() -> void:
 # ---------- 6: le lingue ----------
 
 func _prova_lingue() -> void:
-	var chiavi := ["VIRUS_STUPID_TITLE", "VIRUS_STUPID_MSG", "VIRUS_CURSE_MSG", "BSOD_HEADER",
+	var chiavi := ["VIRUS_STUPID_TITLE", "VIRUS_STUPID_MSG", "VIRUS_SCRITTA_1", "BSOD_HEADER",
 			"BSOD_TEXT", "BSOD_RESTART",
 			"DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
-	var tradotte := ["VIRUS_CURSE_MSG", "BSOD_TEXT", "BSOD_RESTART", "DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
+	var tradotte := ["VIRUS_SCRITTA_1", "BSOD_TEXT", "BSOD_RESTART", "DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
 	var mancano: Array = []
 	for k in chiavi:
 		var en := TranslationServer.get_translation_object("en").get_message(k)
@@ -566,6 +882,11 @@ func _passi(secondi: float) -> void:
 	var n := int(ceil(secondi))
 	for i in range(n):
 		_vd.avanza(1.0)
+
+# Porta il virus al secondo t (dall'inizio), a passi di 0.1.
+func _porta_a(v: VirusMortale, t: float) -> void:
+	while v._t < t - 0.001 and not v._finito:
+		v.avanza(minf(0.1, t - v._t))
 
 func _avanza_virus(v: VirusMortale, secondi: float) -> void:
 	var n := int(ceil(secondi / 0.1))
@@ -614,12 +935,13 @@ func _premi_mouse(p: Vector2, giu: bool) -> void:
 	e.global_position = p
 	_player._os_viewport.push_input(e, true)
 
-func _tasto(codice: Key, carattere := "") -> void:
+func _tasto(codice: Key, carattere := "", shift := false) -> void:
 	for giu in [true, false]:
 		var e := InputEventKey.new()
 		e.keycode = codice
 		e.physical_keycode = codice
 		e.pressed = giu
+		e.shift_pressed = shift
 		if giu and carattere != "":
 			e.unicode = carattere.unicode_at(0)
 		Input.parse_input_event(e)

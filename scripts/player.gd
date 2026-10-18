@@ -187,6 +187,13 @@ func is_in_pc() -> bool:
 func _input(event):
 	if entering:
 		return
+	# DEV-ONLY: il mouse sopra il pannello di debug (F12) e' del pannello. Senza, un clic su
+	# un suo pulsante arrivava anche al desktop sotto (o accendeva la torcia nella stanza).
+	# I RILASCI passano comunque: un trascinamento cominciato nell'OS e lasciato sopra il
+	# pannello deve finire, o la finestra resterebbe "presa".
+	if event is InputEventMouse and GameManager.debug_sotto_mouse((event as InputEventMouse).position) \
+			and not (event is InputEventMouseButton and not event.pressed):
+		return
 	# PAUSA (azione "pause" = P in project.godot). Va PRIMA del blocco della vista
 	# PC: la' dentro ogni tasto viene inoltrato all'OS e non tornerebbe mai qui.
 	# Ma se nell'OS il fuoco e' su un campo di testo la "p" e' una lettera che il
@@ -580,9 +587,11 @@ func _process(delta):
 	var r_left: Rect2 = arrow_left.get_global_rect()
 	var r_right: Rect2 = arrow_right.get_global_rect()
 	var r_down: Rect2 = arrow_down.get_global_rect()
-	var over_left: bool = arrow_left.visible and r_left.has_point(mp)
-	var over_right: bool = arrow_right.visible and r_right.has_point(mp)
-	var over_down: bool = arrow_down.visible and r_down.has_point(mp)
+	# sopra il pannello di debug (F12) le frecce non girano la visuale
+	var libero: bool = not GameManager.debug_sotto_mouse(mp)
+	var over_left: bool = libero and arrow_left.visible and r_left.has_point(mp)
+	var over_right: bool = libero and arrow_right.visible and r_right.has_point(mp)
+	var over_down: bool = libero and arrow_down.visible and r_down.has_point(mp)
 
 	# feedback visivo: il pulsante sotto il cursore si illumina (in entrambe le modalita')
 	arrow_left.hovered = over_left

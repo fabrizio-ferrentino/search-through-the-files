@@ -52,8 +52,9 @@ var pc_threats_enabled := true
 # mentre le piazzano (content.gd, web_runtime.gd) chiamando note_key(). Serve al
 # pannello di debug F12: senza, provare una partita vuol dire cercare alla cieca.
 var key_hints: Dictionary = {}
-var _keys_panel: CanvasLayer = null
-var _keys_label: Label = null
+var _keys_panel: DebugPanel = null   # il pannello di debug F12 (debug_panel.gd)
+var _keys_label: Label = null        # le sue righe delle chiavi
+var debug_compatto := false          # pannello ridotto alle sole chiavi (resta fra un F12 e l'altro)
 
 # ---------------- lingua ----------------
 # L'INGLESE e' la lingua base del gioco (scelta del proprietario, 19/09/2026), e va imposto
@@ -160,9 +161,10 @@ func finish_run() -> void:
 func restart() -> void:
 	start_new_run()
 
-# DEV-ONLY: F12 mostra chiavi e nascondigli, F10 forza il game over (per provare
-# jumpscare/flusso), F11 accende/spegne le minacce della STANZA, F8 quelle del PC (F9,
-# far partire un virus, sta in virus_director.gd). Da togliere prima del rilascio.
+# DEV-ONLY: F12 apre il PANNELLO DI DEBUG (scripts/debug_panel.gd: chiavi, stato delle
+# minacce, pulsanti per far partire ogni virus e apparizione), F10 forza il game over (per
+# provare jumpscare/flusso), F11 accende/spegne le minacce della STANZA, F8 quelle del PC
+# (F9, far partire un virus, sta in virus_director.gd). Da togliere prima del rilascio.
 # Tutto il testo di debug -- pannello e console -- e' in INGLESE, in ogni lingua del
 # gioco (richiesta del proprietario, 18/10/2026): non e' testo per chi gioca, e non passa
 # dal CSV. I nomi delle cose del gioco che compaiono nelle note (file, cartelle, siti)
@@ -177,13 +179,20 @@ func _input(event: InputEvent) -> void:
 			else:
 				print("[GameManager] F10 ignored: no run in progress")
 		elif event.keycode == KEY_F11:
-			room_threats_enabled = not room_threats_enabled
-			print("[GameManager] room threats (F11): ", _on_off(room_threats_enabled))
-			_refresh_keys_panel()
+			imposta_minacce_stanza(not room_threats_enabled)
 		elif event.keycode == KEY_F8:
-			pc_threats_enabled = not pc_threats_enabled
-			print("[GameManager] PC threats (F8): ", _on_off(pc_threats_enabled))
-			_refresh_keys_panel()
+			imposta_minacce_pc(not pc_threats_enabled)
+
+# I due interruttori del debug: li usano i tasti F11/F8 E i pulsanti del pannello.
+func imposta_minacce_stanza(on: bool) -> void:
+	room_threats_enabled = on
+	print("[GameManager] room threats (F11): ", _on_off(on))
+	_refresh_keys_panel()
+
+func imposta_minacce_pc(on: bool) -> void:
+	pc_threats_enabled = on
+	print("[GameManager] PC threats (F8): ", _on_off(on))
+	_refresh_keys_panel()
 
 static func _on_off(v: bool) -> String:
 	return "ON" if v else "OFF"
@@ -257,33 +266,10 @@ func toggle_keys_panel() -> void:
 		print("[GameManager] F12 ignored: no run in progress")
 		return
 	print("\n" + keys_report())
-	var layer := CanvasLayer.new()
-	layer.name = "DebugKeysLayer"
-	layer.layer = 30                      # sopra vista PC (10) e schermata di morte (20)
-	layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	var box := PanelContainer.new()
-	# in alto a DESTRA: a sinistra ci sono le icone del desktop
-	box.set_anchors_preset(Control.PRESET_TOP_RIGHT, true)
-	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	box.offset_top = 16
-	box.offset_right = -16
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.04, 0.06, 0.88)
-	sb.border_color = Color(0.9, 0.8, 0.2)
-	sb.set_border_width_all(2)
-	sb.set_content_margin_all(9)
-	box.add_theme_stylebox_override("panel", sb)
-	var lbl := Label.new()
-	lbl.add_theme_font_override("font", Win95.font("mono"))
-	lbl.add_theme_font_size_override("font_size", 17)
-	lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 0.8))
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(lbl)
-	layer.add_child(box)
-	get_tree().root.add_child(layer)
-	_keys_panel = layer
-	_keys_label = lbl
+	var p := DebugPanel.new()
+	get_tree().root.add_child(p)
+	_keys_panel = p
+	_keys_label = p.etichetta_chiavi
 	_refresh_keys_panel()
 
 # Chiude il pannello di debug, se aperto.
@@ -293,9 +279,20 @@ func close_keys_panel() -> void:
 	_keys_panel = null
 	_keys_label = null
 
-# Riscrive il testo del pannello (se aperto): lo usano anche F8 e F11, cosi' lo stato
-# delle minacce si vede cambiare sul momento.
+# Riscrive il pannello (se aperto): lo usano anche F8 e F11, cosi' lo stato delle minacce
+# si vede cambiare sul momento (il resto lo riscrive lui, quattro volte al secondo).
 func _refresh_keys_panel() -> void:
-	if _keys_label != null and is_instance_valid(_keys_label):
-		_keys_label.text = keys_report() \
-				+ "\nF8 PC threats  F9 start a virus  F10 die  F11 room threats  F12 close"
+	if debug_aperto():
+		_keys_panel.aggiorna()
+
+func debug_aperto() -> bool:
+	return _keys_panel != null and is_instance_valid(_keys_panel)
+
+# Il mouse e' sopra il pannello di debug? player.gd allora non lo gira ne' alla stanza ne'
+# al PC: e' del pannello.
+func debug_sotto_mouse(pos: Vector2) -> bool:
+	return debug_aperto() and _keys_panel.sotto(pos)
+
+# Tutto il testo del pannello ("" se chiuso): per i test.
+func debug_testo() -> String:
+	return _keys_panel.testo() if debug_aperto() else ""

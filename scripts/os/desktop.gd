@@ -59,6 +59,7 @@ var _ctx_vbox: VBoxContainer
 var _contorno: Control = null        # rettangolo tratteggiato di spostamento/ridimensionamento
 var _glitch_cartella: SecretGlitch = null   # il guasto del dialogo della cartella segreta
 var _schermo_blu: SchermoBlu = null  # lo schermo blu del crash (virus_director.gd), se c'e'
+var _orologio_finto := ""            # testo dell'orologio impazzito (orologio_finto), "" = ora vera
 var _contorno_rect := Rect2()
 var _booting := false                # avvio in corso: l'OS non accetta input
 var _boot_token := 0                 # cresce a ogni avvio/spegnimento: annulla la sequenza vecchia
@@ -888,8 +889,21 @@ func cursor_shape_at(pos: Vector2) -> int:
 # ---------------- util ----------------
 
 func _update_clock() -> void:
+	if _orologio_finto != "":
+		clock_label.text = _orologio_finto
+		return
+	clock_label.text = ora_vera()
+
+func ora_vera() -> String:
 	var t := Time.get_time_dict_from_system()
-	clock_label.text = "%02d:%02d" % [t.hour, t.minute]
+	return "%02d:%02d" % [t.hour, t.minute]
+
+# L'orologio IMPAZZITO di un'apparizione (apparizione.gd, tipo "orologio"): finche' il testo
+# non e' vuoto la barra mostra quello. "" = di nuovo l'ora vera, subito.
+func orologio_finto(testo: String) -> void:
+	_orologio_finto = testo
+	if clock_label != null:
+		_update_clock()
 
 func _folder_path(names: Array) -> Dictionary:
 	var cur := VFS.get_root()
@@ -924,6 +938,7 @@ func power_off() -> void:
 	_boot_token += 1           # ferma la sequenza di avvio, se ne stava girando una
 	_booting = false
 	_chiudi_schermo_blu()      # spegnere col case e' l'altro modo di uscire da un crash
+	orologio_finto("")         # e un'apparizione non sopravvive allo spegnimento
 	for w in windows.duplicate():
 		if is_instance_valid(w):
 			w.close()
@@ -1462,6 +1477,7 @@ func riavvia() -> void:
 	var token: int = _boot_token
 	_booting = true
 	GameManager.logged_in = false
+	orologio_finto("")
 	if start_menu != null:
 		start_menu.visible = false
 		start_btn.button_pressed = false
@@ -1601,3 +1617,13 @@ func _process(delta: float) -> void:
 		elif _no_signal_box.position.y >= max_y:
 			_no_signal_box.position.y = max_y
 			_no_signal_vel.y = -abs(_no_signal_vel.y)
+
+# DEV-ONLY (pannello di debug F12): il PC acceso e gia' sul desktop, senza avvio ne'
+# password -- per provare i virus senza aspettare ogni volta i 6 s di avvio.
+func salta_al_desktop() -> void:
+	_boot_token += 1           # ferma un avvio in corso
+	_booting = false
+	_chiudi_schermo_blu()
+	GameManager.pc_on = true
+	GameManager.logged_in = true
+	_clear_state()             # via "nessun segnale", avvio, nero del riavvio o login

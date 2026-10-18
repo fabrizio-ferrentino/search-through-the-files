@@ -273,7 +273,6 @@ FN_HR_ALONE,alone.txt,solo.txt
 FT_HR_ALONE,you're alone tonight.\ngood.\n\nfamilies are loud.\nfamilies leave.,stanotte sei solo.\nbene.\n\nle famiglie fanno rumore.\nle famiglie se ne vanno.
 VIRUS_STUPID_TITLE,YouAreStupid,YouAreStupid
 VIRUS_STUPID_MSG,YOU ARE STUPID,YOU ARE STUPID
-VIRUS_CURSE_MSG,don't switch me off,non spegnermi
 BSOD_HEADER,WHALE,WHALE
 BSOD_TEXT,A fatal exception {ECC} has occurred at {IND} in VXD {MOD}. The system has been halted and cannot continue.\n\n*  The computer will be restarted automatically.\n*  Any unsaved information in all applications will be lost.,Si e' verificata un'eccezione irreversibile {ECC} in {IND} in VXD {MOD}. Il sistema e' stato arrestato e non puo' continuare.\n\n*  Il computer verra' riavviato automaticamente.\n*  Le informazioni non salvate in tutte le applicazioni andranno perse.
 BSOD_RESTART,Restarting in {N} seconds...,Riavvio tra {N} secondi...
@@ -281,3 +280,9 @@ DEATH_VIRUS_1,You should have switched it off.,Dovevi spegnerlo.
 DEATH_VIRUS_2,It asked you not to switch it off. You listened.,Ti ha chiesto di non spegnerlo. L'hai ascoltato.
 DEATH_VIRUS_3,The screen was the only thing on. Now it is the only thing left.,Lo schermo era l'unica cosa accesa. Ora e' l'unica cosa rimasta.
 DEATH_VIRUS_4,It came out of the screen while you were reading.,E' uscito dallo schermo mentre leggevi.
+VIRUS_SCRITTA_1,i can see you,ti vedo
+VIRUS_SCRITTA_2,you're not alone,non sei solo
+VIRUS_SCRITTA_3,stay,resta
+VIRUS_SCRITTA_4,it's late,e' tardi
+VIRUS_SCRITTA_5,she won't come back tonight,stanotte lei non torna
+VIRUS_SCRITTA_6,nobody is coming,non viene nessuno

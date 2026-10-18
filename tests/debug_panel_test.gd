@@ -90,6 +90,40 @@ func _ready() -> void:
 			and _testo().contains("F8 PC threats"), "parole italiane nel debug: %s" % str(italiano))
 	GameManager.start_new_run(111)
 
+	# 2d) il pannello ha i PULSANTI (proprietario, 18/10/2026: "non riesco a ricreare tutti i
+	# bug"): ogni apparizione vera E falsa, nessun pulsante prende il fuoco (lo spazio scritto
+	# nel Blocco note lo premerebbe), si compatta alle sole chiavi, e qui fuori dalla stanza un
+	# pulsante risponde invece di rompersi
+	var p: DebugPanel = GameManager._keys_panel
+	var mancano := []
+	for t in Apparizione.TIPI:
+		var b := p.riga_apparizione(t)
+		if b.size() != 2 or (b[0] as Button).text != "REAL" or (b[1] as Button).text != "FALSE":
+			mancano.append(t)
+	for nome in ["Lethal (random)", "YouAreStupid", "Blue screen", "Stop current", "Clown: peek now",
+			"Boot to desktop"]:
+		if p.pulsante(nome) == null:
+			mancano.append(nome)
+	_check("PULSANTI_PER_TUTTO", mancano.is_empty(), "mancano i pulsanti di %s" % str(mancano))
+	var col_fuoco := []
+	for b in p.find_children("*", "Button", true, false):
+		if (b as Button).focus_mode != Control.FOCUS_NONE:
+			col_fuoco.append((b as Button).text)
+	_check("PULSANTI_SENZA_FUOCO", col_fuoco.is_empty(), "prendono il fuoco: %s" % str(col_fuoco))
+	p.riga_apparizione("sangue")[0].pressed.emit()
+	_check("FUORI_STANZA_RISPONDE", _testo().contains("refused: not in the room"),
+			"fuori dalla stanza il pulsante non lo dice: '%s'" % p._esito.text)
+	var alto_pieno: float = p._box.size.y
+	p.pulsante("-").pressed.emit()
+	await get_tree().process_frame
+	var alto_compatto: float = p._box.size.y
+	var destra: float = p._box.get_global_rect().end.x
+	_check("SI_COMPATTA", alto_compatto < alto_pieno * 0.5 and _testo().contains("KEYS")
+			and absf(destra - (p._box.get_viewport_rect().size.x - DebugPanel.MARGINE)) < 1.0,
+			"compatto: alto %.0f su %.0f, bordo destro a %.0f" % [alto_compatto, alto_pieno, destra])
+	p.pulsante("+").pressed.emit()
+	await get_tree().process_frame
+
 	# 3) partita nuova col pannello aperto: i dati devono aggiornarsi
 	GameManager.start_new_run(222)
 	await get_tree().process_frame
@@ -127,10 +161,9 @@ func _premi(codice: Key) -> void:
 func _aperto() -> bool:
 	return GameManager._keys_panel != null and is_instance_valid(GameManager._keys_panel)
 
+# tutto il testo del pannello (chiavi, stato, pulsanti, tasti)
 func _testo() -> String:
-	if GameManager._keys_label != null and is_instance_valid(GameManager._keys_label):
-		return GameManager._keys_label.text
-	return ""
+	return GameManager.debug_testo()
 
 # quante schermate di morte ci sono sulla radice
 func _quante_morti() -> int:
