@@ -1435,6 +1435,18 @@ func sopra_finestre(n: Control) -> void:
 	add_child(n)
 	move_child(n, window_layer.get_index() + 1)
 
+# Uno strato SOPRA TUTTO lo schermo, anche sopra cio' che si apre DOPO -- finestre, icone,
+# barra, menu Avvio, dialoghi (il buio del virus, 19/10/2026). Un CanvasLayer a parte: il menu
+# Avvio e i dialoghi si portano in primo piano (move_to_front) e un figlio normale finiva SOTTO
+# di loro ("rimangono invariati" - proprietario). Restituisce lo strato, da liberare insieme.
+func sopra_tutto(n: Control) -> CanvasLayer:
+	var strato := CanvasLayer.new()
+	strato.name = "Strato_" + n.name
+	strato.layer = 5
+	add_child(strato)
+	strato.add_child(n)
+	return strato
+
 # Il CRASH: lo schermo blu sopra a tutto, e dopo SchermoBlu.DURATA secondi il PC si
 # RIAVVIA da solo, come nella realta' (proprietario, 18/10/2026: "si spegne e riaccende il
 # pc", e niente tasto da premere): nero, BIOS, avvio, login, e tutte le finestre perse.

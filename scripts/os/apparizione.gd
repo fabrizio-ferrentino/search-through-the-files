@@ -11,27 +11,46 @@ extends Node
 #   2 all'inizio sono IDENTICI: stessa comparsa (COMPARSA), stesso posto -- solo il tempo li
 #     distingue (il vero cresce in "crescita" secondi, a 0.3 s la differenza non si vede);
 #   3 nessuna regola nascosta: cio' che il vero ha in piu' e' solo "di piu' dello stesso".
-# SETTE TIPI. Le cinque PICCOLE stanno SOLO nella carta da parati (sopra_sfondo: sotto icone e
+# SETTE TIPI. Le quattro PICCOLE stanno SOLO nella carta da parati (sopra_sfondo: sotto icone e
 # finestre) o nell'orologio -- il proprietario le vuole "di poco conto"; una versione che
-# spegneva tutto lo schermo, rinominava le icone e metteva il bambino sopra le finestre e'
-# stata provata e scartata perche' troppo invasiva:
-#   "buio"      la carta da parati si scurisce;
+# rinominava le icone e metteva il bambino sopra le finestre e' stata provata e scartata
+# perche' troppo invasiva:
 #   "bambino"   la maledizione si MOSTRA (GDD §2b: l'origine e' il ragazzo, il bambino e' la
 #               forma che prende): un BAMBINO (maschio: la maledizione e' maschile)
-#               impiccato, vicino al bordo destro dello sfondo, come SAGOMA SCURA -- ma con
-#               un contorno vero: proporzioni da bambino, capelli corti spettinati, orecchie,
-#               maniche, pantaloncini, pollici, piedi in punta, la testa piegata troppo, il
-#               nodo e la corda; bordi sfumati, un alone scuro attorno (la carta da parati
-#               si scurisce vicino a lui), un'ombra, e dondola e gira piano. Storia, perche'
-#               non torni: la prima sagoma, fatta di forme tonde, "era ridicola"; una figura
-#               realistica a colori (bambina in camicia da notte, poi bambino di spalle con
-#               la maglietta) "non fa paura" -- il proprietario vuole il buio, con la forma
-#               giusta. Mai il viso, niente di macabro. Se esiste IMMAGINE_BAMBINO si usa
-#               quella;
-#   "occhi"     due occhi piccoli e chiari nello sfondo, che guardano il cursore;
+#               impiccato, vicino al bordo destro dello sfondo, fatto di CARATTERI ASCII
+#               NERI, piccoli (proprietario, 19/10/2026, da un video di ASCII art): la
+#               sagoma -- proporzioni da bambino, capelli spettinati, orecchie, maniche,
+#               pantaloncini, piedi in punta, la testa piegata troppo, il nodo -- fa da STAMPO
+#               per una griglia di testo ferma (vedi ASCII_RAMPA), DETTAGLIATO come gli occhi:
+#               ogni parte col suo tono, ombra da un lato, linee dove i vestiti finiscono,
+#               pieghe (vedi _prepara_toni); la corda e' una colonna di ")(", attorno pochi
+#               simboli tenui. Dondola e gira piano, e i caratteri cambiano. Storia, perche'
+#               non torni:
+#               la prima sagoma, fatta di forme tonde, "era ridicola"; una figura realistica a
+#               colori (bambina in camicia da notte, poi bambino di spalle con la maglietta)
+#               "non fa paura"; la sagoma scura piena "non ancora perfetta"; la prima versione
+#               ASCII aveva una pozza di buio dietro -- "non mi piace": niente alone nero;
+#               i caratteri BIANCHI "si vedeva poco", anche col bordino nero: neri.
+#               Mai il viso, niente di macabro. Se esiste IMMAGINE_BAMBINO, lo stampo e' quella
+#               (la sua alfa);
+#   "occhi"     due occhi REALISTICI fatti di caratteri (palpebre, ciglia, iride, pupilla,
+#               riflesso): bianchi dove l'occhio e' chiaro, scuri dove e' scuro, niente attorno;
+#               l'iride segue il cursore, sbattono. (Due occhietti stilizzati "(%@@@@%)" sono
+#               stati scartati: il proprietario li voleva veri.)
 #   "orologio"  l'ora della barra sbaglia (all'indietro, 03:33, --:--);
-#   "scritte"   una frase della maledizione (VIRUS_SCRITTA_*) appena leggibile nello sfondo.
-# Le due GRAVI (scelte dal proprietario) sono apparizioni come le altre, stessa regola:
+#   "scritte"   una frase della maledizione (VIRUS_SCRITTA_*) che si DIGITA da sola nello
+#               sfondo, come una riga di terminale: prompt ">", cursore "_" che lampeggia,
+#               lettere bianche senza macchia scura dietro.
+# Le tre GRAVI sono apparizioni come le altre, stessa regola:
+#   "buio"      TUTTO lo schermo si scurisce -- finestre, icone, barra, e anche il menu Avvio e
+#               i dialoghi aperti DOPO, "Arresta il sistema" compreso (sopra_tutto: uno strato
+#               a parte, sempre sopra; il menu e i dialoghi si portano in primo piano e prima
+#               gli passavano sopra, "rimangono invariati" -- proprietario) -- e SFARFALLA come
+#               una LAMPADINA CHE STA PER SPEGNERSI (proprietario, 19/10/2026: era solo la carta
+#               da parati, poi un lampeggio che "non mi piace", poco naturale): vedi _sfarfalla.
+#               Mai piu' di 3 cali al secondo (BUIO_RAFFICA_MAX, poi BUIO_PAUSA_MIN di quiete):
+#               uno sfarfallio piu' fitto puo' far male a chi e' fotosensibile. Nel vero il buio
+#               cresce, lo sfarfallio resta lo stesso;
 #   "sangue"    cola dal bordo alto, sopra le finestre ma sotto barra e menu Avvio: un orlo
 #               che gonfia, colate che scendono a strappi (viscose, non pioggia) con la
 #               goccia in punta (fusa col corpo, mai una pallina), e ogni tanto una
@@ -45,9 +64,11 @@ extends Node
 signal finita
 
 const TIPI := ["buio", "bambino", "occhi", "orologio", "scritte", "sangue", "tremito"]
-const PICCOLE := ["buio", "bambino", "occhi", "orologio", "scritte"]
+const PICCOLE := ["bambino", "occhi", "orologio", "scritte"]
 const PESI := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]   # stesso ordine di TIPI
 const SOGLIA_FALSO := 3.0          # un falso allarme dura SEMPRE meno di questo
+const BUIO_RAFFICA_MAX := 3        # buio: al massimo tanti cali in una raffica...
+const BUIO_PAUSA_MIN := 1.0        # ...e poi almeno tanto di quiete: mai piu' di 3 cali al secondo
 const COMPARSA := 0.25             # secondi per comparire (uguale per vero e falso)
 const IMMAGINE_BAMBINO := "res://assets/textures/virus/bambino.png"
 const SCRITTE := ["VIRUS_SCRITTA_1", "VIRUS_SCRITTA_2", "VIRUS_SCRITTA_3",
@@ -57,12 +78,9 @@ const GOCCE := 28                  # colate (60 tutte uguali sembravano un codic
 const GOCCE_SUBITO := 9            # quelle che partono subito: anche un falso deve far vedere il sangue
 const PASSO_ORLO := 48.0           # l'orlo in alto: un punto ogni tanti px, raccordati
 const GRAVITA := 1400.0            # le gocce che si staccano
-const C_OMBRA := Color(0.03, 0.015, 0.02)
 # --- il bambino ---
-const SCALA_BAMBINO := 1.1           # la figura e' alta ~340 unita': ~370 px su uno schermo da 1080
-const C_SAGOMA := Color(0.022, 0.016, 0.02)       # quasi nero
-const C_CORDA := Color(0.14, 0.11, 0.08)          # la corda, scura in controluce
-const C_CORDA_SCURA := Color(0.05, 0.035, 0.025)
+const SCALA_BAMBINO := 1.35          # la figura e' alta ~350 unita': ~470 px (a 1.1, coi caratteri
+                                     # da 9 px, i dettagli non avevano spazio)
 const INCLINA_TESTA := 0.55          # piegata TROPPO: il collo non la regge
 const TESTA_RX := 25.5               # testa grande: e' un bambino
 const TESTA_RY := 30.0
@@ -99,6 +117,54 @@ const _COLLO := [Vector2(-9, 9), Vector2(9, 9), Vector2(12, -8), Vector2(6, -22)
 const _PARTI := ["gamba_sx", "gamba_dx", "piede_sx", "piede_dx", "calzoni", "collo", "maglia",
 		"manica_sx", "manica_dx", "braccio_sx", "braccio_dx", "pollice_sx", "pollice_dx", "testa",
 		"capelli", "orecchio_sx", "orecchio_dx"]
+# Il bambino e' fatto di CARATTERI (proprietario, 19/10/2026, da un video di ASCII art): la
+# sagoma qui sopra non si disegna, fa da STAMPO -- se ne misura il TONO cella per cella su una
+# griglia di testo FERMA e ogni cella prende il carattere della rampa che gli corrisponde. Il
+# tono non e' la sola copertura: e' piu' pieno lontano dal bordo (_distanza), cosi' la figura
+# ha VOLUME -- bordi in .:-=, il centro di busto, testa e arti in #%@ -- e non e' un blocco di
+# @. La griglia sta ferma e la figura dondola sotto: i caratteri cambiano, e il bordo frigge.
+# CARATTERI BIANCHI diretti sulla carta da parati, NIENTE ALONE NERO dietro (proprietario: la
+# prima versione aveva una pozza scura e "non mi piace"); piccoli, per avere dettaglio.
+const ASCII_RAMPA := " .:-=+*#%@"       # dal vuoto al pieno
+const ASCII_SPARSI := "`'.,:;!?|/\\(){}<>[]0123456789%&*+="
+const ASCII_FONT := "mono_b"            # grassetto: il tondo, sotto il CRT, diventava un filo
+const ASCII_PUNTI := 9                  # corpo del carattere: piccolo = piu' dettaglio (era 13)
+const ASCII_RIGA := 9.0                 # passo verticale stretto, come l'ASCII art vera
+const ASCII_PASSO := 0.09               # ogni quanto si ricompone (a scatti: e' un terminale)
+# Il bambino e' fatto di caratteri NERI (proprietario, 19/10: bianchi "si vedeva poco", anche
+# col bordino) e DETTAGLIATO come gli occhi: ogni parte ha il suo TONO (_prepara_toni) --
+# capelli e pantaloncini scuri, la maglia a meta', la pelle chiara (pochi punti) --, una linea
+# scura dove una parte finisce o ne copre un'altra (il braccio sulla maglia, la maglia sui
+# pantaloncini), la luce dall'alto a sinistra (il lato in ombra piu' fitto) e qualche piega
+# (_PIEGHE: colletto, maglia, cucitura, ginocchia). Mai il viso: la faccia e' solo pelle.
+const VOLUME_R := 10.0                  # a questa distanza dal bordo (unita') il tono e' pieno
+const C_BAMBINO := Color(0.02, 0.02, 0.03)
+const C_ASCII_CORDA := Color(0.10, 0.07, 0.04)
+const PELLE := 0.42                     # la pelle: chiara, pochi punti
+const _MATERIALE := {"capelli": 1.0, "calzoni": 0.88, "maglia": 0.68, "manica_sx": 0.68,
+		"manica_dx": 0.68}
+const ID_CORDA := 100                   # il cappio e le spire, nello stampo delle parti
+const LUCE := Vector2i(-1, -2)          # verso la luce, in campioni a meta' risoluzione
+# le pieghe, in coordinate locali (collo in 0,0): linee scure dentro la figura
+const _PIEGHE := [
+	[Vector2(-11, 9), Vector2(-5, 13), Vector2(5, 13), Vector2(11, 9)],       # il colletto
+	[Vector2(-24, 24), Vector2(-16, 44)], [Vector2(23, 25), Vector2(15, 46)],  # dalle ascelle
+	[Vector2(-14, 92), Vector2(-5, 112)], [Vector2(9, 96), Vector2(4, 114)],   # in fondo alla maglia
+	[Vector2(0, 124), Vector2(0, 146)],                                         # la cucitura
+	[Vector2(-21, 201), Vector2(-9, 202)], [Vector2(8, 196), Vector2(20, 197)], # le ginocchia
+]
+const C_ASCII := Color(1.0, 1.0, 1.0)                # occhi e scritte
+const C_ASCII_SCURO := Color(0.03, 0.025, 0.035)   # gli occhi: pupilla, ciglia, iride scura
+# le scritte: righe di terminale digitate da sole (vedi _aggiungi_scritta)
+const SCRITTA_PUNTI := [30, 38]
+const SCRITTA_DIGITA := 0.9             # secondi per scrivere la frase intera: il falso dura 2-2.5
+const C_SCRITTA_PROMPT := Color(0.62, 0.05, 0.08)
+# gli occhi: due occhi REALISTICI fatti di caratteri (proprietario: "preferirei degli occhi
+# realistici"), sulla stessa griglia piccola del bambino. OCCHIO_A = mezza larghezza di un
+# occhio (px), OCCHIO_B = mezza apertura; l'iride segue il cursore.
+const OCCHIO_A := 110.0                 # a 66 px erano 5 righe: non si capiva che fossero occhi
+const OCCHIO_B := 44.0
+const OCCHIO_DISTANZA := 150.0          # dal centro della coppia al centro di un occhio
 const C_SANGUE_SCURO := Color(0.19, 0.0, 0.015)    # in alto, dove si rapprende
 const C_SANGUE := Color(0.40, 0.0, 0.03)           # il corpo
 const C_SANGUE_VIVO := Color(0.60, 0.02, 0.05)     # la punta, fresca
@@ -114,16 +180,44 @@ var _t := 0.0
 var _fatta := false
 var _sfondo: Control = null        # piccole: uno strato sulla carta da parati
 var _velo: ColorRect = null        # buio
+var _velo_strato: CanvasLayer = null   # buio: lo strato sopra tutto che lo contiene
+var _luce := 1.0                   # buio: la "lampadina" (1 = al suo solito, 0 = spenta)
+var _luce_meta := 1.0              # buio: dove la luce sta andando
+var _luce_passo := 0.0             # buio: fra quanto cambia meta
+var _tau_su := 0.05                # buio: quanto ci mette a riprendersi (il filamento si riscalda)
+var _cali: Array = []              # buio: i prossimi passi della raffica, [meta, durata, tau_su]
+var _in_raffica := false
 var _scritte: Array = []           # scritte: le Label sulla carta da parati
+var _battute: Array = []           # scritte: per ognuna [nata a, secondi per lettera, passo]
 var _sangue: Control = null        # sangue: sopra le finestre
 var _passo := 0.0
 var _minuti := 0
-var _occhi: Array = []             # [centro, larghezza, fase del battito, nato a (s)]
+var _occhi: Array = []             # [centro della coppia, fase del battito, nato a (s)]
+var _celle_occhi: Array = []       # [posizione, carattere, colore], ricomposte ogni ASCII_PASSO
+var guarda_test: Variant = null    # SOLO i test: il punto che gli occhi guardano (se no il mouse)
 var _bambino := Vector2.ZERO       # dove sta il collo
 var _bambino_tex: Texture2D = null
 var _gruppo: CanvasGroup = null    # bambino: la figura si sfuma IN BLOCCO (vedi setup)
-var _figura_nodo: Node2D = null
 var _parti := {}                   # bambino: nome -> contorno pronto (PackedVector2Array)
+var _ascii_nodo: Node2D = null     # bambino: i caratteri, su una griglia ferma
+var _maschera := PackedFloat32Array()   # copertura 0..1 della figura, un campione per unita' locale
+var _m_org := Vector2.ZERO
+var _m_w := 0
+var _m_h := 0
+var _ids := PackedInt32Array()          # quale parte c'e' in ogni punto (indice in _PARTI + 1)
+var _id_h := PackedInt32Array()         # lo stesso a meta' risoluzione (-1 = fuori)
+var _toni := PackedFloat32Array()       # il tono pronto, a meta' risoluzione
+var _distanza := PackedFloat32Array()   # distanza dal bordo DELLA SUA PARTE (unita'), a meta' risoluzione
+var _d_w := 0
+var _d_h := 0
+var _alone := PackedFloat32Array()      # la stessa sfocata, a 1/4: dove spuntano i simboli sparsi
+var _a_w := 0
+var _a_h := 0
+var _cella := Vector2.ZERO
+var _griglia := Rect2()
+var _celle: Array = []                  # [posizione, carattere, colore]
+var _sparsi := {}                       # cella -> [carattere, soglia]: cambiano piano
+var _ascii_t := 0.0
 var _gocce: Array = []             # una Dictionary per colata (vedi setup)
 var _cadute: Array = []            # gocce staccate: [posizione, velocita']
 var _orlo: PackedFloat32Array = PackedFloat32Array()
@@ -153,7 +247,8 @@ func setup(os: OSDesktop, che_tipo: String, rng: RandomNumberGenerator) -> void:
 			_velo.name = "Apparizione_buio"
 			_velo.color = Color(0, 0, 0, 0)
 			_velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			os.sopra_sfondo(_velo)
+			_velo_strato = os.sopra_tutto(_velo)
+			_luce_passo = _rng.randf_range(0.3, 1.0)
 			_velo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		"bambino", "occhi":
 			_sfondo = Control.new()
@@ -174,13 +269,17 @@ func setup(os: OSDesktop, che_tipo: String, rng: RandomNumberGenerator) -> void:
 				_gruppo.name = "Figura"       # non "Apparizione*": i test contano quelli
 				_gruppo.self_modulate.a = 0.0
 				_sfondo.add_child(_gruppo)
-				_figura_nodo = Node2D.new()
-				_figura_nodo.draw.connect(_disegna_bambino)
-				_gruppo.add_child(_figura_nodo)
+				_ascii_nodo = Node2D.new()          # i caratteri, su una griglia ferma
+				_ascii_nodo.draw.connect(_disegna_ascii)
+				_gruppo.add_child(_ascii_nodo)
 				_prepara_bambino()
-				_figura_nodo.transform = _posa_bambino()
+				_prepara_maschera()
+				_prepara_griglia()
+				_componi_ascii()
 			else:
+				_sfondo.modulate.a = 0.0
 				_aggiungi_occhi()
+				_componi_occhi()
 		"orologio":
 			var t := Time.get_time_dict_from_system()
 			_minuti = int(t.hour) * 60 + int(t.minute)
@@ -244,15 +343,22 @@ func avanza(delta: float) -> void:
 		return
 	match tipo:
 		"buio":
-			_velo.color.a = clampf(0.55 * comparsa() + 0.4 * intensita, 0.0, 0.95)
+			_sfarfalla(delta)
 		"bambino":
 			# quasi piena da subito, piena nel vero
-			_gruppo.self_modulate.a = clampf(0.75 * comparsa() + 0.25 * intensita, 0.0, 1.0)
-			_figura_nodo.transform = _posa_bambino()
+			_gruppo.self_modulate.a = clampf(0.85 * comparsa() + 0.15 * intensita, 0.0, 1.0)
+			_ascii_t -= delta
+			if _ascii_t <= 0.0:
+				_ascii_t = ASCII_PASSO
+				_componi_ascii()
 		"occhi":
 			if intensita > 0.5 and _occhi.size() < 2:
 				_aggiungi_occhi()
-			_sfondo.queue_redraw()
+			_sfondo.modulate.a = clampf(0.85 * comparsa() + 0.15 * intensita, 0.0, 1.0)
+			_ascii_t -= delta
+			if _ascii_t <= 0.0:
+				_ascii_t = ASCII_PASSO
+				_componi_occhi()
 		"orologio":
 			_passo -= delta
 			if _passo <= 0.0:
@@ -260,9 +366,15 @@ func avanza(delta: float) -> void:
 		"scritte":
 			if intensita > 0.5 and _scritte.size() < 2:
 				_aggiungi_scritta()
-			for l in _scritte:
-				var lab := l as Label
-				lab.modulate.a = clampf(0.3 * comparsa() + 0.45 * intensita, 0.0, 0.8)
+			for i in range(_scritte.size()):
+				var lab := _scritte[i] as Label
+				lab.modulate.a = clampf(0.45 * comparsa() + 0.4 * intensita, 0.0, 0.85)
+				var b: Array = _battute[i]
+				var n := mini(lab.text.length(), int((_t - float(b[0])) / float(b[1])) + 1)
+				lab.visible_characters = n
+				var cur := lab.get_node("Cursore") as Label
+				cur.position.x = float(b[2]) * n
+				cur.visible = fmod(_t, 0.5) < 0.3 or n < lab.text.length()   # lampeggia a frase finita
 		"sangue":
 			_scorri_sangue(delta)
 			_sangue.queue_redraw()
@@ -273,6 +385,50 @@ func avanza(delta: float) -> void:
 						_rng.randf_range(-forza, forza)).round()
 
 # --- piccole ---
+
+# Il buio: lo scuro cresce col vero (fino a 0.85: Avvio deve restare trovabile) e la luce
+# sfarfalla come una LAMPADINA CHE STA PER SPEGNERSI (proprietario: "piu' naturale"). Quasi
+# sempre accesa al suo solito, con un tremolio appena; ogni tanto una RAFFICA di 2-3 cali brevi
+# (il filamento che perde contatto) oppure un calo LUNGO quasi al buio che si riprende piano
+# (il filamento che si raffredda e si riscalda); poi quiete. Niente scatti: la luce va verso la
+# meta con un'inerzia, scende in fretta e risale piu' lenta. Mai PIU' CHIARA del suo solito: la
+# prima versione tornava quasi normale a lampi, e sembrava un interruttore, non una lampadina.
+# Comparsa uguale per vero e falso: lo sfarfallio parte dopo, quando e' gia' buio.
+func _sfarfalla(delta: float) -> void:
+	var scuro: float = clampf(0.62 * comparsa() + 0.23 * intensita, 0.0, 0.85)
+	if _t >= COMPARSA + 0.1:
+		_luce_passo -= delta
+		if _luce_passo <= 0.0:
+			if not _cali.is_empty():
+				var c: Array = _cali.pop_front()
+				_luce_meta = c[0]
+				_luce_passo = c[1]
+				_tau_su = c[2]
+			elif _in_raffica:
+				_in_raffica = false                    # quiete: torna al suo solito
+				_luce_meta = 1.0
+				_luce_passo = _rng.randf_range(BUIO_PAUSA_MIN, 2.6)
+			else:
+				_prepara_raffica()
+				_luce_passo = 0.0
+	var tau: float = 0.025 if _luce_meta < _luce else _tau_su
+	_luce = lerpf(_luce, _luce_meta, 1.0 - exp(-delta / tau))
+	var tremolio: float = 1.0 - 0.02 * absf(sin(_t * 23.0) * sin(_t * 7.3))   # mai ferma, mai piu' chiara
+	_velo.color.a = clampf(1.0 - (1.0 - scuro) * _luce * tremolio, 0.0, 0.96)
+
+# Una raffica: 2-3 cali brevi con un mezzo ritorno fra l'uno e l'altro, oppure (una volta su
+# quattro) un calo lungo quasi al buio che si riprende lento.
+func _prepara_raffica() -> void:
+	_in_raffica = true
+	_cali.clear()
+	if _rng.randf() < 0.25:
+		_cali.append([_rng.randf_range(0.03, 0.12), _rng.randf_range(0.25, 0.6), 0.35])
+		return
+	var n := _rng.randi_range(2, BUIO_RAFFICA_MAX)
+	for i in range(n):
+		_cali.append([_rng.randf_range(0.15, 0.5), _rng.randf_range(0.04, 0.09), 0.05])
+		if i < n - 1:
+			_cali.append([_rng.randf_range(0.8, 1.0), _rng.randf_range(0.06, 0.16), 0.05])
 
 func _cambia_orologio() -> void:
 	if intensita >= 0.9:
@@ -288,8 +444,8 @@ func _cambia_orologio() -> void:
 
 func _aggiungi_occhi() -> void:
 	var area := Vector2(_os.size.x, _os.size.y - OSDesktop.TASKBAR_H)
-	_occhi.append([Vector2(_rng.randf_range(0.3, 0.9) * area.x, _rng.randf_range(0.15, 0.8) * area.y),
-			_rng.randf_range(30.0, 38.0), _rng.randf_range(0.0, 5.0), _t])   # a 20-28 px quasi non si vedevano
+	var c := Vector2(_rng.randf_range(0.35, 0.75) * area.x, _rng.randf_range(0.18, 0.78) * area.y)
+	_occhi.append([c, _rng.randf_range(0.0, 5.0), _t])
 
 func _aggiungi_scritta() -> void:
 	var usate := []
@@ -299,25 +455,51 @@ func _aggiungi_scritta() -> void:
 	for k in SCRITTE:
 		if not usate.has(tr(k)):
 			libere.append(k)
+	# Una riga di TERMINALE (come il bambino, la maledizione scrive coi caratteri del PC): il
+	# prompt, la frase che si DIGITA da sola lettera per lettera (visible_characters: il testo
+	# della Label resta la frase intera) e il cursore che lampeggia dopo l'ultima lettera. Lettere
+	# BIANCHE sulla carta da parati, senza macchia scura dietro (proprietario: niente alone).
 	var l := Label.new()
 	l.name = "Apparizione_scritta"
 	l.text = tr(libere[_rng.randi() % libere.size()])
-	l.add_theme_font_override("font", Win95.font("sans_b"))
-	l.add_theme_font_size_override("font_size", _rng.randi_range(40, 60))
-	l.add_theme_color_override("font_color", Color(0.3, 0.0, 0.03))
+	var dim := _rng.randi_range(SCRITTA_PUNTI[0], SCRITTA_PUNTI[1])
+	l.add_theme_font_override("font", Win95.font(ASCII_FONT))
+	l.add_theme_font_size_override("font_size", dim)
+	l.add_theme_color_override("font_color", C_ASCII)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.rotation = _rng.randf_range(-0.1, 0.1)
+	l.visible_characters = 0
 	l.modulate.a = 0.0
+	var adv: float = Win95.font(ASCII_FONT).get_char_size(ord("M"), dim).x
+	var prompt := Label.new()
+	prompt.text = ">"
+	prompt.add_theme_font_override("font", Win95.font(ASCII_FONT))
+	prompt.add_theme_font_size_override("font_size", dim)
+	prompt.add_theme_color_override("font_color", C_SCRITTA_PROMPT)
+	prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	prompt.position = Vector2(-adv * 2.0, 0.0)
+	l.add_child(prompt)
+	var cursore := Label.new()
+	cursore.name = "Cursore"
+	cursore.text = "_"
+	cursore.add_theme_font_override("font", Win95.font(ASCII_FONT))
+	cursore.add_theme_font_size_override("font_size", dim)
+	cursore.add_theme_color_override("font_color", C_ASCII)
+	cursore.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.add_child(cursore)
+	var largo: float = adv * (l.text.length() + 4)
 	_os.sopra_sfondo(l)
 	var area := Vector2(_os.size.x, _os.size.y - OSDesktop.TASKBAR_H)
 	l.position = Vector2(_rng.randf_range(0.25, 0.65) * area.x, _rng.randf_range(0.12, 0.8) * area.y).floor()
+	l.position.x = minf(l.position.x, area.x - largo - 60.0)    # le frasi lunghe restano dentro
 	_scritte.append(l)
+	_battute.append([_t, clampf(SCRITTA_DIGITA / maxf(1.0, l.text.length()), 0.025, 0.08), adv])
 
 func _disegna_sfondo() -> void:
 	if _sfondo == null or tipo != "occhi":
 		return
-	for o in _occhi:
-		_disegna_occhi(o[0], o[1], o[2], _t - float(o[3]))
+	var f := Win95.font(ASCII_FONT)
+	for k in _celle_occhi:
+		_sfondo.draw_char(f, k[0], k[1], ASCII_PUNTI, k[2])
 
 # --- il bambino ---
 
@@ -403,42 +585,349 @@ func _posa_bambino() -> Transform2D:
 	return Transform2D(dondola, perno) * Transform2D(0.0, Vector2(-NODO.x * s, _bambino.y)) \
 			* Transform2D(0.0, Vector2(gira * s, s), 0.0, Vector2.ZERO)
 
-# Tutta la figura in coordinate LOCALI (collo in 0,0), una volta sola.
-func _disegna_bambino() -> void:
-	var c := _figura_nodo
-	if c == null:
-		return
-	var cima := Vector2(NODO.x, -_bambino.y / SCALA_BAMBINO - 6.0)   # la corda esce dallo schermo
-	# l'ALONE: la carta da parati si scurisce attorno a lui, sfumando verso fuori
-	for anello in [[22.0, 0.012], [15.0, 0.016], [9.0, 0.02], [4.5, 0.028]]:
-		for i in range(10):
-			_sagoma(c, Vector2.from_angle(TAU * i / 10.0) * float(anello[0]),
-					Color(0, 0, 0, float(anello[1])), cima)
-	# l'ombra portata, giu' a destra
-	for o in [Vector2(13, 8), Vector2(16, 10)]:
-		_sagoma(c, o, Color(0, 0, 0, 0.12), cima)
+# Dove sta l'immagine del bambino (se c'e'), in coordinate locali.
+func _rett_immagine() -> Rect2:
+	var dim := _bambino_tex.get_size() * 0.35
+	return Rect2(Vector2(-dim.x * 0.5, -dim.y * 0.15), dim)
+
+# Lo STAMPO: quanto della figura copre ogni punto locale (1 campione per unita'). Dalle
+# parti con un riempimento a righe (pari/dispari: i contorni lisciati restano semplici), o
+# dall'alfa dell'immagine se c'e'. Una volta sola: e' l'unico conto pesante.
+func _prepara_maschera() -> void:
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
 	if _bambino_tex != null:
-		var dim := _bambino_tex.get_size() * 0.35
-		c.draw_texture_rect(_bambino_tex, Rect2(Vector2(-dim.x * 0.5, -dim.y * 0.15), dim), false)
-		c.draw_line(NODO, cima, C_CORDA, 3.4, true)
-		return
-	# il bordo morbido (quattro passate di mezzo pixel fuori), poi il pieno
-	for o in [Vector2(1.2, 0), Vector2(-1.2, 0), Vector2(0, 1.2), Vector2(0, -1.2)]:
-		_sagoma(c, o, Color(C_SAGOMA, 0.35), cima)
-	_sagoma(c, Vector2.ZERO, C_SAGOMA, cima)
-	# la corda, appena piu' chiara della sagoma, ma solo FUORI dal corpo: le spire del nodo
-	# e il tratto fino in cima, con la torsione (il cappio attorno al collo resta scuro: chiaro,
-	# staccava la testa dal corpo)
+		var r := _rett_immagine()
+		lo = r.position
+		hi = r.end
+	else:
+		for k in _PARTI:
+			for p in _parti[k]:
+				lo = lo.min(p)
+				hi = hi.max(p)
+	lo = lo.min(NODO + Vector2(-8, -2))
+	_m_org = (lo - Vector2(4, 4)).floor()
+	_m_w = int(ceil(hi.x - _m_org.x)) + 5
+	_m_h = int(ceil(hi.y - _m_org.y)) + 5
+	_maschera = PackedFloat32Array()
+	_maschera.resize(_m_w * _m_h)
+	_maschera.fill(0.0)
+	_ids = PackedInt32Array()
+	_ids.resize(_m_w * _m_h)
+	_ids.fill(0)
+	if _bambino_tex != null:
+		var img := _bambino_tex.get_image()
+		if img.is_compressed():
+			img.decompress()
+		var r := _rett_immagine()
+		img.resize(maxi(1, int(r.size.x)), maxi(1, int(r.size.y)), Image.INTERPOLATE_BILINEAR)
+		var alfa := img.detect_alpha() != Image.ALPHA_NONE
+		var ox := int(r.position.x - _m_org.x)
+		var oy := int(r.position.y - _m_org.y)
+		for y in range(img.get_height()):
+			for x in range(img.get_width()):
+				var col := img.get_pixel(x, y)
+				var v: float = col.a if alfa else 1.0 - col.get_luminance()
+				if ox + x >= 0 and ox + x < _m_w and oy + y >= 0 and oy + y < _m_h:
+					_maschera[(oy + y) * _m_w + ox + x] = v
+	else:
+		# nell'ordine di disegno: quella dopo copre quella prima (il braccio sulla maglia)
+		for i in range(_PARTI.size()):
+			_riempi(_parti[_PARTI[i]], i + 1)
+		_riempi_tratto(PackedVector2Array([Vector2(-17, -26), Vector2(-11, -12), Vector2(-3, -7),
+				Vector2(6, -7), Vector2(12, -12)]), 1.8, ID_CORDA)       # il cappio
 	for i in range(6):
-		var giro := _spira(i)
-		c.draw_colored_polygon(giro, C_CORDA)
-		giro.append(giro[0])
-		c.draw_polyline(giro, C_CORDA_SCURA, 1.0, true)
-	c.draw_line(NODO, cima, C_CORDA, 3.2, true)
-	var y := NODO.y - 4.0
-	while y > cima.y:
-		c.draw_line(Vector2(NODO.x - 1.5, y - 1.1), Vector2(NODO.x + 1.5, y + 1.1), C_CORDA_SCURA, 0.9, true)
-		y -= 5.5
+		_riempi(_spira(i), ID_CORDA)
+	_prepara_distanza()
+	_prepara_toni()
+	# l'alone: la stessa a 1/4, sfocata due volte (~12 unita')
+	_a_w = int(ceil(_m_w / 4.0))
+	_a_h = int(ceil(_m_h / 4.0))
+	_alone = PackedFloat32Array()
+	_alone.resize(_a_w * _a_h)
+	_alone.fill(0.0)
+	for y in range(_m_h):
+		for x in range(_m_w):
+			_alone[(y >> 2) * _a_w + (x >> 2)] += _maschera[y * _m_w + x] / 16.0
+	for _g in range(2):
+		_alone = _sfoca(_alone, _a_w, _a_h, 3)
+
+# La DISTANZA DAL BORDO di ogni punto (a meta' risoluzione, in unita'), con una trasformata a
+# smusso in due passate. Il bordo e' quello della SUA PARTE: dove la parte cambia (il braccio
+# sopra la maglia) c'e' un bordo anche dentro la figura -- da li' vengono le linee interne.
+func _prepara_distanza() -> void:
+	_d_w = int(ceil(_m_w / 2.0))
+	_d_h = int(ceil(_m_h / 2.0))
+	_id_h = PackedInt32Array()
+	_id_h.resize(_d_w * _d_h)
+	for y in range(_d_h):
+		for x in range(_d_w):
+			var mi := mini(y * 2, _m_h - 1) * _m_w + mini(x * 2, _m_w - 1)
+			_id_h[y * _d_w + x] = _ids[mi] if _maschera[mi] >= 0.5 else -1
+	var d := PackedFloat32Array()
+	d.resize(_d_w * _d_h)
+	var lontano := 1.0e6
+	for y in range(_d_h):
+		for x in range(_d_w):
+			var i := y * _d_w + x
+			var id := _id_h[i]
+			var bordo := id < 0 or x == 0 or y == 0 or x == _d_w - 1 or y == _d_h - 1
+			if not bordo:
+				bordo = _id_h[i - 1] != id or _id_h[i + 1] != id or _id_h[i - _d_w] != id \
+						or _id_h[i + _d_w] != id
+			d[i] = 0.0 if bordo else lontano
+	var dg := 1.4142
+	for y in range(_d_h):
+		for x in range(_d_w):
+			var i := y * _d_w + x
+			var v: float = d[i]
+			if v == 0.0:
+				continue
+			if x > 0:
+				v = minf(v, d[i - 1] + 1.0)
+			if y > 0:
+				v = minf(v, d[i - _d_w] + 1.0)
+				if x > 0:
+					v = minf(v, d[i - _d_w - 1] + dg)
+				if x < _d_w - 1:
+					v = minf(v, d[i - _d_w + 1] + dg)
+			d[i] = v
+	for y in range(_d_h - 1, -1, -1):
+		for x in range(_d_w - 1, -1, -1):
+			var i := y * _d_w + x
+			var v: float = d[i]
+			if v == 0.0:
+				continue
+			if x < _d_w - 1:
+				v = minf(v, d[i + 1] + 1.0)
+			if y < _d_h - 1:
+				v = minf(v, d[i + _d_w] + 1.0)
+				if x < _d_w - 1:
+					v = minf(v, d[i + _d_w + 1] + dg)
+				if x > 0:
+					v = minf(v, d[i + _d_w - 1] + dg)
+			d[i] = v
+	for i in range(d.size()):
+		d[i] *= 2.0                       # da celle a meta' risoluzione a unita'
+	_distanza = d
+
+# Il TONO di ogni punto (0..1, quanto e' scuro), una volta sola: il materiale della parte, piu'
+# scuro sul bordo e in ombra (la luce viene da LUCE), una linea piena dove la parte finisce e
+# sulle pieghe. Con l'immagine (IMMAGINE_BAMBINO) non ci sono parti: solo il volume.
+func _prepara_toni() -> void:
+	_toni = PackedFloat32Array()
+	_toni.resize(_d_w * _d_h)
+	_toni.fill(0.0)
+	var linee := PackedByteArray()
+	linee.resize(_d_w * _d_h)
+	linee.fill(0)
+	if _bambino_tex == null:
+		for pl in _PIEGHE:
+			for k in range(pl.size() - 1):
+				var a: Vector2 = pl[k]
+				var b: Vector2 = pl[k + 1]
+				var lo := ((a.min(b) - _m_org) / 2.0).floor() - Vector2.ONE
+				var hi := ((a.max(b) - _m_org) / 2.0).ceil() + Vector2.ONE
+				for y in range(maxi(0, int(lo.y)), mini(_d_h, int(hi.y) + 1)):
+					for x in range(maxi(0, int(lo.x)), mini(_d_w, int(hi.x) + 1)):
+						var p := _m_org + Vector2(x * 2 + 1, y * 2 + 1)
+						if Geometry2D.get_closest_point_to_segment(p, a, b).distance_to(p) <= 1.2:
+							linee[y * _d_w + x] = 1
+	for y in range(_d_h):
+		for x in range(_d_w):
+			var i := y * _d_w + x
+			var id := _id_h[i]
+			if id < 0:
+				continue
+			var d: float = _distanza[i]
+			var t: float
+			if _bambino_tex != null:
+				t = lerpf(0.45, 1.0, smoothstep(0.0, VOLUME_R, d))
+			elif d < 0.5 or linee[i] == 1:
+				t = 1.0                           # il bordo della parte, o una piega
+			else:
+				# il lato verso la luce e' piu' chiaro: andando verso la luce il bordo si avvicina
+				var luce: float = clampf((_dist_h(x - LUCE.x, y - LUCE.y) - _dist_h(x + LUCE.x, y + LUCE.y))
+						/ 9.0, -1.0, 1.0)
+				t = _materiale(id) * lerpf(1.15, 0.85, smoothstep(2.0, VOLUME_R, d)) - 0.25 * luce
+			_toni[i] = clampf(t, 0.1, 1.0)
+
+func _dist_h(x: int, y: int) -> float:
+	if x < 0 or y < 0 or x >= _d_w or y >= _d_h:
+		return 0.0
+	return _distanza[y * _d_w + x]
+
+func _materiale(id: int) -> float:
+	if id == ID_CORDA:
+		return 0.92
+	if id <= 0 or id > _PARTI.size():
+		return PELLE
+	return float(_MATERIALE.get(_PARTI[id - 1], PELLE))
+
+func _riempi(poli: PackedVector2Array, id := 0) -> void:
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for p in poli:
+		lo = lo.min(p)
+		hi = hi.max(p)
+	var n := poli.size()
+	for r in range(maxi(0, int(lo.y - _m_org.y) - 1), mini(_m_h, int(hi.y - _m_org.y) + 2)):
+		var yc := _m_org.y + r + 0.5
+		var xs := PackedFloat32Array()
+		for i in range(n):
+			var a := poli[i]
+			var b := poli[(i + 1) % n]
+			if (a.y <= yc) != (b.y <= yc):
+				xs.append(a.x + (yc - a.y) * (b.x - a.x) / (b.y - a.y))
+		xs.sort()
+		var k := 0
+		while k + 1 < xs.size():
+			var c0 := maxi(0, int(ceil(xs[k] - _m_org.x - 0.5)))
+			var c1 := mini(_m_w - 1, int(floor(xs[k + 1] - _m_org.x - 0.5)))
+			for c in range(c0, c1 + 1):
+				_maschera[r * _m_w + c] = 1.0
+				_ids[r * _m_w + c] = id
+			k += 2
+
+# Una linea spessa (il cappio) nello stampo.
+func _riempi_tratto(linea: PackedVector2Array, raggio: float, id := 0) -> void:
+	for i in range(linea.size() - 1):
+		var a := linea[i]
+		var b := linea[i + 1]
+		var lo := a.min(b) - Vector2(raggio, raggio) - _m_org
+		var hi := a.max(b) + Vector2(raggio, raggio) - _m_org
+		for y in range(maxi(0, int(lo.y)), mini(_m_h, int(hi.y) + 1)):
+			for x in range(maxi(0, int(lo.x)), mini(_m_w, int(hi.x) + 1)):
+				var p := _m_org + Vector2(x + 0.5, y + 0.5)
+				if Geometry2D.get_closest_point_to_segment(p, a, b).distance_to(p) <= raggio:
+					_maschera[y * _m_w + x] = 1.0
+					_ids[y * _m_w + x] = id
+
+# Sfocatura a scatola, orizzontale poi verticale.
+static func _sfoca(src: PackedFloat32Array, w: int, h: int, r: int) -> PackedFloat32Array:
+	var tmp := PackedFloat32Array()
+	tmp.resize(w * h)
+	for y in range(h):
+		for x in range(w):
+			var s := 0.0
+			for d in range(-r, r + 1):
+				s += src[y * w + clampi(x + d, 0, w - 1)]
+			tmp[y * w + x] = s / (2 * r + 1)
+	var out := PackedFloat32Array()
+	out.resize(w * h)
+	for y in range(h):
+		for x in range(w):
+			var s := 0.0
+			for d in range(-r, r + 1):
+				s += tmp[clampi(y + d, 0, h - 1) * w + x]
+			out[y * w + x] = s / (2 * r + 1)
+	return out
+
+func _copertura(p: Vector2) -> float:
+	var x := int(floor(p.x - _m_org.x))
+	var y := int(floor(p.y - _m_org.y))
+	if x < 0 or y < 0 or x >= _m_w or y >= _m_h:
+		return 0.0
+	return _maschera[y * _m_w + x]
+
+# Il TONO di un punto locale (0..1, quanto e' scuro): quello pronto di _prepara_toni.
+func _tono(p: Vector2) -> float:
+	var x := int(floor((p.x - _m_org.x) / 2.0))
+	var y := int(floor((p.y - _m_org.y) / 2.0))
+	if x < 0 or y < 0 or x >= _d_w or y >= _d_h:
+		return 0.0
+	return _toni[y * _d_w + x]
+
+func _alone_in(p: Vector2) -> float:
+	var x := int(floor((p.x - _m_org.x) / 4.0))
+	var y := int(floor((p.y - _m_org.y) / 4.0))
+	if x < 0 or y < 0 or x >= _a_w or y >= _a_h:
+		return 0.0
+	return _alone[y * _a_w + x]
+
+# La griglia di testo, FERMA sullo schermo: copre la figura in tutte le pose (dondola) e
+# sale fino in cima per la corda.
+func _prepara_griglia() -> void:
+	_misura_cella()
+	var s := SCALA_BAMBINO
+	var base := Vector2(_bambino.x - NODO.x * s, _bambino.y)
+	var lo := base + _m_org * s
+	var hi := base + (_m_org + Vector2(_m_w, _m_h)) * s
+	lo.x -= 40.0          # il dondolio (ai piedi ~25 px) e i simboli attorno
+	hi.x += 40.0
+	hi.y += 30.0
+	var x0 := floorf(lo.x / _cella.x) * _cella.x
+	_griglia = Rect2(Vector2(x0, 0.0), Vector2(ceilf((hi.x - x0) / _cella.x) * _cella.x,
+			ceilf(hi.y / _cella.y) * _cella.y))
+
+# Ricompone la griglia nella posa di adesso: per ogni cella il tono della figura (4 campioni)
+# -> un carattere della rampa, NERO. Il bordo frigge (un po' di rumore solo dove la cella e'
+# coperta a meta'), la corda e' una colonna di ")(", e attorno spuntano pochi simboli tenui -- di piu'
+# quando il vero cresce. Le celle che cadono lontano dalla figura si saltano subito (sopra la
+# testa c'e' solo la corda).
+func _componi_ascii() -> void:
+	if _ascii_nodo == null:
+		return
+	var tr2 := _posa_bambino()
+	var inv := tr2.affine_inverse()
+	var sub: Array = []
+	for i in range(2):
+		for j in range(2):
+			sub.append(inv.basis_xform(Vector2((i - 0.5) * _cella.x * 0.5, (j - 0.5) * _cella.y * 0.5)))
+	var nodo_s: Vector2 = tr2 * NODO
+	var cima_s: Vector2 = tr2 * Vector2(NODO.x, -_bambino.y / SCALA_BAMBINO - 6.0)
+	var f := Win95.font(ASCII_FONT)
+	var alza: float = (_cella.y + f.get_ascent(ASCII_PUNTI) - f.get_descent(ASCII_PUNTI)) * 0.5
+	var cols := int(_griglia.size.x / _cella.x)
+	var righe := int(_griglia.size.y / _cella.y)
+	var fitti: float = 0.25 + 0.3 * intensita
+	var n_rampa := ASCII_RAMPA.length()
+	var dentro := Rect2(_m_org, Vector2(_m_w, _m_h)).grow(14.0)
+	_celle.clear()
+	for r in range(righe):
+		var y: float = _griglia.position.y + (r + 0.5) * _cella.y
+		var corda := -1
+		if y < nodo_s.y - _cella.y * 0.5:
+			var u: float = (y - nodo_s.y) / (cima_s.y - nodo_s.y)
+			corda = int(floor((lerpf(nodo_s.x, cima_s.x, u) - _griglia.position.x) / _cella.x))
+		for c in range(cols):
+			var p: Vector2 = _griglia.position + Vector2((c + 0.5) * _cella.x, y - _griglia.position.y)
+			var dove := Vector2(_griglia.position.x + c * _cella.x, _griglia.position.y + r * _cella.y + alza)
+			var l: Vector2 = inv * p
+			if not dentro.has_point(l):
+				if c == corda:
+					_celle.append([dove, ")" if r % 2 == 0 else "(", C_ASCII_CORDA])
+				continue
+			var tono := 0.0
+			var cop := 0.0
+			for o in sub:
+				tono += _tono(l + o)
+				cop += _copertura(l + o)
+			tono *= 0.25
+			if cop > 0.0 and cop < 4.0:
+				tono = clampf(tono + _rng.randf_range(-0.07, 0.07), 0.0, 1.0)
+			if tono > 0.06:
+				var i := clampi(roundi(tono * (n_rampa - 1)), 1, n_rampa - 1)
+				_celle.append([dove, ASCII_RAMPA[i], Color(C_BAMBINO, lerpf(0.85, 1.0, tono))])
+			elif c == corda:
+				_celle.append([dove, ")" if r % 2 == 0 else "(", C_ASCII_CORDA])
+			else:
+				var a := _alone_in(l)
+				if a < 0.02:
+					continue
+				var chiave := r * 4096 + c
+				var s: Array = _sparsi.get(chiave, [])
+				if s.is_empty() or _rng.randf() < 0.05:
+					s = [ASCII_SPARSI[_rng.randi() % ASCII_SPARSI.length()], _rng.randf()]
+					_sparsi[chiave] = s
+				if float(s[1]) < a * fitti:
+					_celle.append([dove, s[0], Color(C_BAMBINO, 0.15 + 0.3 * a)])
+	_ascii_nodo.queue_redraw()
+
+func _disegna_ascii() -> void:
+	var f := Win95.font(ASCII_FONT)
+	for k in _celle:
+		_ascii_nodo.draw_char(f, k[0], k[1], ASCII_PUNTI, k[2])
 
 # Una spira del nodo (sei, impilate sul lato della testa).
 func _spira(i: int) -> PackedVector2Array:
@@ -449,43 +938,109 @@ func _spira(i: int) -> PackedVector2Array:
 		giro.append(centro + Vector2(cos(ang) * 6.0, sin(ang) * 2.6))
 	return giro
 
-# Tutta la sagoma in un colore, spostata di "sposta": il corpo, il cappio, il
-# nodo e la corda fino in cima. La usano l'alone, l'ombra, il bordo morbido e il pieno.
-func _sagoma(c: Node2D, sposta: Vector2, col: Color, cima: Vector2) -> void:
-	c.draw_set_transform(sposta, 0.0, Vector2.ONE)
-	for k in _PARTI:
-		c.draw_colored_polygon(_parti[k], col)
-	c.draw_polyline(PackedVector2Array([Vector2(-17, -26), Vector2(-11, -12), Vector2(-3, -7),
-			Vector2(6, -7), Vector2(12, -12)]), col, 3.6, true)
-	for i in range(6):
-		c.draw_colored_polygon(_spira(i), col)
-	c.draw_line(NODO, cima, col, 3.6, true)
-	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+# Gli OCCHI: per ogni cella della griglia (la stessa, piccola, del bambino) il tono di un
+# occhio vero, calcolato (_tono_occhio), con 4 campioni -> un carattere della rampa: BIANCO
+# dove il tono e' positivo (la sclera, il riflesso), SCURO dove e' negativo (pupilla, bordo
+# dell'iride, ciglia). Il nero sta solo DENTRO l'occhio: attorno niente alone.
+func _componi_occhi() -> void:
+	if _sfondo == null:
+		return
+	var cella := _misura_cella()
+	var f := Win95.font(ASCII_FONT)
+	var alza: float = (cella.y + f.get_ascent(ASCII_PUNTI) - f.get_descent(ASCII_PUNTI)) * 0.5
+	var guarda: Vector2 = guarda_test if guarda_test != null else _sfondo.get_local_mouse_position()
+	var n_rampa := ASCII_RAMPA.length()
+	_celle_occhi.clear()
+	for o in _occhi:
+		var coppia: Vector2 = o[0]
+		var eta: float = _t - float(o[2])
+		# si aprono, e ogni tanto sbattono (la palpebra scende e risale in ~0.2 s)
+		var aperto: float = smoothstep(0.0, 0.3, eta)
+		var b: float = fmod(_t + float(o[1]), 4.7)
+		if b < 0.2:
+			aperto = minf(aperto, absf(b - 0.1) / 0.1)
+		for lato in [-1.0, 1.0]:
+			var centro: Vector2 = coppia + Vector2(lato * OCCHIO_DISTANZA, 0.0)
+			# l'iride va verso il punto guardato, ma resta nell'occhio
+			var verso: Vector2 = guarda - centro
+			var iride := Vector2(clampf(verso.x / 420.0, -1.0, 1.0) * 0.30,
+					clampf(verso.y / 420.0, -1.0, 1.0) * 0.10)
+			var c0 := int(floor((centro.x - OCCHIO_A * 1.1) / cella.x))
+			var c1 := int(ceil((centro.x + OCCHIO_A * 1.1) / cella.x))
+			var r0 := int(floor((centro.y - OCCHIO_A * 0.78) / cella.y))
+			var r1 := int(ceil((centro.y + OCCHIO_A * 0.55) / cella.y))
+			for r in range(r0, r1):
+				for c in range(c0, c1):
+					var p := Vector2((c + 0.5) * cella.x, (r + 0.5) * cella.y)
+					var tono := 0.0
+					for dx in [-0.25, 0.25]:
+						for dy in [-0.25, 0.25]:
+							var q: Vector2 = (p + Vector2(dx * cella.x, dy * cella.y) - centro) / OCCHIO_A
+							tono += _tono_occhio(Vector2(q.x * lato, q.y), Vector2(iride.x * lato, iride.y), aperto, lato)
+					tono *= 0.25
+					if absf(tono) < 0.08:
+						continue
+					var i := clampi(roundi(absf(tono) * (n_rampa - 1)), 1, n_rampa - 1)
+					var col := C_ASCII if tono > 0.0 else C_ASCII_SCURO
+					_celle_occhi.append([Vector2(c * cella.x, r * cella.y + alza), ASCII_RAMPA[i],
+							Color(col, lerpf(0.55, 1.0, absf(tono)))])
+	_sfondo.queue_redraw()
 
-func _disegna_occhi(c: Vector2, largo: float, fase: float, eta: float) -> void:
-	var a: float = clampf(0.6 * comparsa() + 0.4 * intensita, 0.0, 1.0)
-	var mouse := _sfondo.get_local_mouse_position()
-	# un'ombra piccola attorno, sfumata (anelli leggeri: uno solo faceva una palla)
-	for i in range(8):
-		var r: float = largo * (1.7 - i * 0.1)
-		var pts := PackedVector2Array()
-		for j in range(24):
-			var ang: float = TAU * j / 24.0
-			pts.append(c + Vector2(cos(ang) * r, sin(ang) * r * 0.7))
-		_sfondo.draw_colored_polygon(pts, Color(C_OMBRA, 0.05 * a))
-	var aperti: float = smoothstep(0.0, 0.3, eta)
-	if fmod(_t + fase, 4.7) < 0.1:
-		aperti = 0.05                                   # ogni tanto sbattono
-	for lato in [-1.0, 1.0]:
-		var o := c + Vector2(lato * largo * 0.6, 0)
-		var bianco := PackedVector2Array()
-		for i in range(18):
-			var ang: float = TAU * i / 18.0
-			bianco.append(o + Vector2(cos(ang) * largo * 0.36, sin(ang) * largo * 0.16 * aperti))
-		_sfondo.draw_colored_polygon(bianco, Color(0.86, 0.82, 0.68, a))
-		if aperti > 0.3:
-			var verso: Vector2 = (mouse - o).limit_length(largo * 0.18)
-			_sfondo.draw_circle(o + verso * Vector2(1, 0.5), largo * 0.07, Color(0, 0, 0, a))
+# Il tono di un occhio nel punto q (unita' = mezza larghezza; x verso l'ESTERNO dell'occhio,
+# cosi' i due occhi sono speculari): + bianco, - scuro, 0 niente (la carta da parati).
+func _tono_occhio(q: Vector2, iride: Vector2, aperto: float, lato: float) -> float:
+	var u := q.x
+	var v := q.y
+	if absf(u) > 1.08:
+		return 0.0
+	var k := OCCHIO_B / OCCHIO_A
+	var w := maxf(0.0, 1.0 - u * u)
+	# le palpebre: quella di sopra ha la gobba verso l'interno, l'angolo esterno un po' piu' su
+	var su_aperta: float = -k * pow(w, 0.65) * (1.0 + 0.12 * u) - 0.03 * u
+	var giu: float = k * 0.72 * pow(w, 0.9)
+	var su: float = lerpf(giu - 0.01, su_aperta, aperto)
+	var piega: float = su_aperta - 0.20 * pow(w, 0.5)
+	# FUORI dall'apertura
+	if v < su or v > giu or absf(u) > 1.0:
+		var dsu := su - v                  # quanto sopra il bordo della palpebra
+		if absf(u) <= 1.0 and dsu >= 0.0 and dsu < 0.055:
+			return -0.9                    # la linea delle ciglia, spessa
+		if u > -0.55 and u < 0.95 and dsu >= 0.055 and dsu < 0.17 * (1.0 - absf(u) * 0.5):
+			# le ciglia: pochi tratti corti che piegano verso l'esterno (fitte facevano rumore)
+			var t: float = fposmod((u - dsu * 1.2) * 7.0, 1.0)
+			if t < 0.2:
+				return -0.6
+		if absf(u) < 0.8 and absf(v - piega) < 0.02:
+			return -0.15                   # la piega della palpebra, appena
+		if absf(u) < 0.9 and absf(v - giu - 0.02) < 0.025:
+			return -0.3                    # il bordo di sotto
+		return 0.0
+	# DENTRO: sclera, iride, pupilla, riflesso
+	var d := Vector2(u, v).distance_to(iride)
+	var raggio := k * 1.05
+	var pupilla := raggio * (0.36 + 0.18 * intensita)    # nel vero si dilata
+	# il riflesso sta dalla STESSA parte dello schermo in tutti e due (una luce sola)
+	var riflesso := Vector2(u, v).distance_to(iride + Vector2(-raggio * 0.35 * -lato, -raggio * 0.38))
+	if riflesso < raggio * 0.17:
+		return 1.0
+	var ombra: float = smoothstep(su, su + 0.16, v)      # sotto la palpebra di sopra e' piu' scuro
+	if d < pupilla:
+		return -1.0
+	if d < raggio:
+		# l'iride SCURA (chiara si perdeva nella sclera): fibre a raggiera, bordo piu' scuro
+		var ang := atan2(v - iride.y, u - iride.x)
+		var fibre: float = sin(ang * 13.0 + sin(ang * 5.0) * 2.0) * 0.5 + 0.5
+		var bordo: float = smoothstep(raggio * 0.72, raggio, d)
+		var tono: float = lerpf(lerpf(-0.35, -0.62, fibre), -0.85, bordo)
+		return lerpf(-0.9, tono, ombra)
+	var angoli: float = 1.0 - 0.55 * pow(absf(u), 2.0)  # piu' scura verso gli angoli
+	return 0.85 * angoli * lerpf(0.35, 1.0, ombra)
+
+# La cella del terminale (larghezza del carattere, passo delle righe), una volta sola.
+func _misura_cella() -> Vector2:
+	if _cella == Vector2.ZERO:
+		_cella = Vector2(ceilf(Win95.font(ASCII_FONT).get_char_size(ord("M"), ASCII_PUNTI).x), ASCII_RIGA)
+	return _cella
 
 # --- gravi ---
 
@@ -649,11 +1204,12 @@ func pulisci() -> void:
 			_os.orologio_finto("")
 		if tipo == "tremito" and _os.window_layer != null:
 			_os.window_layer.position = Vector2.ZERO
-	for n in [_sfondo, _velo, _sangue] + _scritte:
+	for n in [_sfondo, _velo, _velo_strato, _sangue] + _scritte:
 		if n != null and is_instance_valid(n):
 			(n as Node).queue_free()
 	_sfondo = null
 	_velo = null
+	_velo_strato = null
 	_sangue = null
 	_scritte.clear()
 	finita.emit()

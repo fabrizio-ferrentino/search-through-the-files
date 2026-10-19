@@ -13,7 +13,7 @@ extends Node
 #     tutti e tre escono;
 #   1b le APPARIZIONI (18/10/2026, UNA FASE SOLA): ognuno dei sette tipi si VEDE davvero
 #     come falso allarme e poi SPARISCE DEL TUTTO entro Apparizione.SOGLIA_FALSO (strati,
-#     orologio all'ora vera, finestre a zero); le cinque PICCOLE stanno sotto icone e
+#     orologio all'ora vera, finestre a zero); le quattro PICCOLE stanno sotto icone e
 #     finestre (il proprietario le vuole "di poco conto"); il lampeggio rosso NON c'e' piu';
 #     il sangue del vero ha colate di lunghezze diverse e gocce che cadono; vero e falso
 #     partono IDENTICI; il vero RESTA (a 4 s e a DURATA * 0.8 c'e'
@@ -207,8 +207,21 @@ func _prova_apparizioni() -> void:
 				si_vede = a._velo != null and a._velo.color.a > 0.45
 				come = "alfa %.2f" % (a._velo.color.a if a._velo != null else -1.0)
 			"bambino":
-				si_vede = a._sfondo != null and _scuro_li(a)
+				si_vede = a._sfondo != null and _si_vede_li(a)
 				come = "sagoma"
+				# niente alone nero (proprietario): attorno ai caratteri bianchi la carta da
+				# parati resta com'e', nessun pixel piu' scuro
+				# caratteri NERI (proprietario, 19/10), e niente alone: DENTRO le celle delle
+				# lettere, fra un tratto e l'altro, si vede ancora la carta da parati
+				var nere := 0
+				for k in a._celle:
+					if (k[2] as Color).r < 0.2:
+						nere += 1
+				var fra := _carta_fra_le_lettere(a)
+				_check("BAMBINO_NERO", a._celle.size() > 0 and nere == a._celle.size(),
+						"bambino: %d caratteri neri su %d" % [nere, a._celle.size()])
+				_check("BAMBINO_SENZA_ALONE", fra > 0.3,
+						"nelle celle del bambino solo %.0f%% dei pixel e' carta da parati (un alone?)" % (fra * 100.0))
 			"occhi":
 				si_vede = a._occhi.size() >= 1
 				come = "%d coppie" % a._occhi.size()
@@ -257,6 +270,201 @@ func _prova_apparizioni() -> void:
 	_check("NIENTE_LAMPEGGIO", not Apparizione.TIPI.has("lampeggio")
 			and Apparizione.PESI.size() == Apparizione.TIPI.size(),
 			"il lampeggio e' tornato fra le apparizioni, o PESI non e' allineato a TIPI")
+
+	# il buio copre TUTTO lo schermo, anche il menu Avvio e "Arresta il sistema" aperti DOPO
+	# (si portano in primo piano: lum_prima gli passavano sopra e "rimangono invariati")
+	var punti := {}
+	_os._toggle_start_menu()
+	await _frame(2)
+	punti["menu"] = Vector2i(_os.start_menu.global_position - _os.global_position + _os.start_menu.size * 0.6)
+	punti["barra"] = Vector2i(int(_os.size.x * 0.5), int(_os.size.y) - 4)
+	var lum_prima: Dictionary = await _luminanze(punti)
+	_os._toggle_start_menu()
+	_os._show_shutdown()
+	await _frame(2)
+	punti["dialogo"] = Vector2i(_os.size * 0.5)
+	var ld: Dictionary = await _luminanze(punti)
+	lum_prima["dialogo"] = ld["dialogo"]
+	_os._modal_layer.queue_free()
+	await _frame(2)
+	var bt := Apparizione.new()
+	_os.add_child(bt)
+	bt.setup(_os, "buio", rng)
+	bt.set_process(false)
+	bt.avanza(0.3)                              # buio fermo (lo sfarfallio parte lum_dopo)
+	_os._toggle_start_menu()
+	await _frame(2)
+	var lum_dopo: Dictionary = await _luminanze(punti)
+	_os._toggle_start_menu()
+	_os._show_shutdown()
+	await _frame(2)
+	var ld2: Dictionary = await _luminanze(punti)
+	lum_dopo["dialogo"] = ld2["dialogo"]
+	_os._modal_layer.queue_free()
+	await _frame(2)
+	var coperti := true
+	for k in lum_prima:
+		if float(lum_dopo[k]) > float(lum_prima[k]) * 0.6:
+			coperti = false
+	_check("BUIO_TUTTO_LO_SCHERMO", coperti and bt._velo.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+			"buio: luminanza lum_prima %s, lum_dopo %s" % [str(lum_prima), str(lum_dopo)])
+	bt.pulisci()
+	await _frame(2)
+
+	# il buio SFARFALLA come una lampadina che sta per spegnersi (proprietario, 19/10): mai piu'
+	# chiaro del suo solito, cali che arrivano quasi al buio, MORBIDI (niente scatti da
+	# interruttore), e mai piu' di 3 cali in un secondo (fotosensibilita')
+	var bu := Apparizione.new()
+	_os.add_child(bu)
+	bu.setup(_os, "buio", rng)
+	bu.set_process(false)
+	var alfe: Array = []
+	for i in range(9 * 30):                  # 9 s a 30 passi al secondo
+		bu.avanza(1.0 / 30.0)
+		if bu._t >= 0.5:
+			alfe.append(bu._velo.color.a)
+	bu.pulisci()
+	await _frame(2)
+	var solito := 0.62                         # lo scuro del falso, senza crescita
+	var alfa_min := 1.0
+	var alfa_max := 0.0
+	var salto := 0.0
+	var inizi: Array = []
+	var in_calo := false
+	for i in range(alfe.size()):
+		var al: float = alfe[i]
+		alfa_min = minf(alfa_min, al)
+		alfa_max = maxf(alfa_max, al)
+		if i > 0:
+			salto = maxf(salto, absf(al - float(alfe[i - 1])))
+		var calo := al > solito + 0.08
+		if calo and not in_calo:
+			inizi.append(i / 30.0)
+		in_calo = calo
+	var al_secondo := 0
+	for i in range(inizi.size()):
+		var n := 0
+		for j in range(i, inizi.size()):
+			if float(inizi[j]) - float(inizi[i]) < 1.0:
+				n += 1
+		al_secondo = maxi(al_secondo, n)
+	_check("BUIO_LAMPADINA", alfa_min >= solito - 0.03 and alfa_max >= 0.78 and inizi.size() >= 2
+			and al_secondo <= 3 and salto <= 0.25,
+			"buio: alfa fra %.2f e %.2f (il solito %.2f), %d cali, al massimo %d in un secondo, salto massimo %.2f"
+			% [alfa_min, alfa_max, solito, inizi.size(), al_secondo, salto])
+
+	# il bambino e' fatto di CARATTERI (proprietario, 19/10: ASCII art) e la griglia, ferma,
+	# cambia mentre lui dondola sotto: non e' un'immagine di testo incollata
+	var bb := Apparizione.new()
+	_os.add_child(bb)
+	bb.setup(_os, "bambino", rng)
+	bb.crescita = VirusMortale.DURATA
+	bb.set_process(false)
+	bb.avanza(0.3)
+	var ammessi := Apparizione.ASCII_RAMPA + Apparizione.ASCII_SPARSI + "()"
+	var quanti := bb._celle.size()
+	var prima := ""
+	for k in bb._celle:
+		prima += str(k[1])
+	var solo_ascii := true
+	for k in bb._celle:
+		if not ammessi.contains(str(k[1])):
+			solo_ascii = false
+	for i in range(30):
+		bb.avanza(0.1)
+	var dopo := ""
+	for k in bb._celle:
+		dopo += str(k[1])
+	# DETTAGLIATO come gli occhi, non un blocco: i capelli piu' scuri del viso, una linea scura
+	# dove la maglia finisce sui pantaloncini, piu' scura del busto
+	var capelli := Apparizione._in_testa(Vector2(0.0, -Apparizione.TESTA_RY * 0.7))
+	var viso := Apparizione._in_testa(Vector2(0.0, Apparizione.TESTA_RY * 0.6))
+	var orlo := Vector2(0.0, 120.0)
+	var busto := Vector2(0.0, 70.0)
+	_check("BAMBINO_DETTAGLI", bb._tono(capelli) > bb._tono(viso) + 0.12
+			and bb._tono(orlo) > bb._tono(busto) + 0.2 and bb._tono(viso) > 0.0,
+			"toni: capelli %.2f, viso %.2f, orlo della maglia %.2f, busto %.2f" % [bb._tono(capelli),
+			bb._tono(viso), bb._tono(orlo), bb._tono(busto)])
+	_check("BAMBINO_ASCII", quanti >= 60 and solo_ascii and prima != dopo,
+			"bambino: %d caratteri, solo ASCII %s, cambia mentre dondola %s" % [quanti, str(solo_ascii), str(prima != dopo)])
+	bb.pulisci()
+
+	# le scritte si DIGITANO da sole, lettera per lettera, col cursore che lampeggia
+	var sc := Apparizione.new()
+	_os.add_child(sc)
+	sc.setup(_os, "scritte", rng)
+	sc.durata = 2.0
+	sc.set_process(false)
+	sc.avanza(0.05)
+	var riga: Label = sc._scritte[0]
+	var all_inizio: int = riga.visible_characters
+	sc.avanza(1.2)
+	_check("SCRITTA_DIGITATA", all_inizio < riga.text.length()
+			and riga.visible_characters == riga.text.length()
+			and riga.get_node_or_null("Cursore") != null,
+			"scritta '%s': %d lettere a 0.05 s, %d a 1.25 s, cursore %s" % [riga.text, all_inizio,
+			riga.visible_characters, str(riga.get_node_or_null("Cursore") != null)])
+	# niente macchia scura dietro la frase (proprietario: niente alone)
+	var fondi := 0
+	for ch in riga.get_children():
+		if ch is CanvasItem and (ch as CanvasItem).show_behind_parent:
+			fondi += 1
+	# la stessa zona con la scritta nascosta e visibile: quello che la scritta SCURISCE (la
+	# frase cade dove capita, anche sopra una finestra: i pixel scuri di quella non contano)
+	var zona_s := Rect2(riga.position, riga.size).grow(20.0)
+	riga.visible = false
+	await _frame(2)
+	await RenderingServer.frame_post_draw
+	var senza: Image = _player._os_viewport.get_texture().get_image()
+	riga.visible = true
+	await _frame(2)
+	await RenderingServer.frame_post_draw
+	var con: Image = _player._os_viewport.get_texture().get_image()
+	var tot_s := 0
+	var piu_scuri := 0
+	for y in range(maxi(0, int(zona_s.position.y)), mini(con.get_height(), int(zona_s.end.y)), 2):
+		for x in range(maxi(0, int(zona_s.position.x)), mini(con.get_width(), int(zona_s.end.x)), 2):
+			tot_s += 1
+			if con.get_pixel(x, y).get_luminance() < senza.get_pixel(x, y).get_luminance() - 0.05:
+				piu_scuri += 1
+	var scuri_s := float(piu_scuri) / maxf(1.0, float(tot_s))
+	_check("SCRITTA_SENZA_FONDO", fondi == 0 and scuri_s < 0.01,
+			"dietro la scritta: %d fondi, %.1f%% di pixel piu' scuri" % [fondi, scuri_s * 100.0])
+	sc.pulisci()
+	await _frame(2)
+
+	# gli OCCHI sono occhi veri fatti di caratteri: bianchi (sclera, riflesso) E scuri (pupilla,
+	# iride, ciglia); la pupilla -- le "@" scure -- va dove guardano; quando sbattono sparisce
+	var oc := Apparizione.new()
+	_os.add_child(oc)
+	oc.setup(_os, "occhi", rng)
+	oc.durata = 2.0
+	oc.set_process(false)
+	oc.avanza(0.5)
+	var coppia: Vector2 = oc._occhi[0][0]
+	oc._occhi[0][1] = 3.0                          # niente battito adesso (fase lontana)
+	oc.guarda_test = coppia + Vector2(-600, 0)
+	oc._componi_occhi()
+	var bianchi := 0
+	var neri := 0
+	for k in oc._celle_occhi:
+		if (k[2] as Color).r > 0.5:
+			bianchi += 1
+		else:
+			neri += 1
+	var a_sinistra := _pupille(oc)
+	oc.guarda_test = coppia + Vector2(600, 0)
+	oc._componi_occhi()
+	var a_destra := _pupille(oc)
+	oc._occhi[0][1] = 4.7 - fmod(oc._t, 4.7) + 0.1    # adesso e' a meta' battito: chiusi
+	oc._componi_occhi()
+	var chiusi := _pupille(oc)
+	_check("OCCHI_REALISTICI", bianchi >= 80 and neri >= 40 and a_sinistra.y > 0 and a_destra.y > 0
+			and a_destra.x > a_sinistra.x + 8.0 and chiusi.y == 0,
+			"occhi: %d celle bianche, %d scure; pupille a sinistra %s, a destra %s, chiusi %s"
+			% [bianchi, neri, str(a_sinistra), str(a_destra), str(chiusi)])
+	oc.pulisci()
+	await _frame(2)
 
 	# il sangue del VERO, dopo un po': colate di lunghezze DIVERSE (non un codice a barre),
 	# alcune ancora corte, qualcuna in fondo; e ogni tanto una goccia si stacca
@@ -368,20 +576,77 @@ func _prova_apparizioni() -> void:
 		finestra.close()
 	await _frame(2)
 
-# C'e' qualcosa di scuro dove pende il bambino? (sagoma vera nei pixel, non solo un nodo)
 # Il bambino si vede DAVVERO nei pixel: lungo il suo asse (il collo e' spostato del nodo)
-# il colore non e' piu' quello della carta da parati (e' una sagoma scura).
-func _scuro_li(a: Apparizione) -> bool:
+# il colore non e' piu' quello della carta da parati. I caratteri sono bianchi e radi, quindi
+# per ogni riga si guarda una STRISCIA larga una cella attorno all'asse, non un pixel solo
+# (una colonna puo' cadere fra due lettere).
+func _si_vede_li(a: Apparizione) -> bool:
 	var img: Image = _player._os_viewport.get_texture().get_image()
 	var base: Color = Win95.C_DESKTOP
 	var x := int(a._bambino.x - Apparizione.NODO.x * Apparizione.SCALA_BAMBINO)
 	var y0 := int(a._bambino.y)
 	var diversi := 0
 	for dy in range(10, 220, 6):
-		var c := img.get_pixel(clampi(x, 0, img.get_width() - 1), clampi(y0 + dy, 0, img.get_height() - 1))
-		if absf(c.r - base.r) + absf(c.g - base.g) + absf(c.b - base.b) > 0.25:
-			diversi += 1
+		for dx in range(-6, 7):
+			var c := img.get_pixel(clampi(x + dx, 0, img.get_width() - 1), clampi(y0 + dy, 0, img.get_height() - 1))
+			if absf(c.r - base.r) + absf(c.g - base.g) + absf(c.b - base.b) > 0.25:
+				diversi += 1
+				break
 	return diversi >= 12
+
+# Dentro le celle che il bambino occupa, che frazione dei pixel e' ancora la carta da
+# parati? Le lettere coprono una parte della cella; un alone scuro dietro la porterebbe a 0.
+func _carta_fra_le_lettere(a: Apparizione) -> float:
+	var img: Image = _player._os_viewport.get_texture().get_image()
+	var base: Color = Win95.C_DESKTOP
+	var tot := 0
+	var carta := 0
+	for k in a._celle:
+		var pos: Vector2 = k[0]
+		var cella := Rect2(pos.x, pos.y - a._cella.y * 0.8, a._cella.x, a._cella.y)
+		for y in range(int(cella.position.y), int(cella.end.y)):
+			for x in range(int(cella.position.x), int(cella.end.x)):
+				if x < 0 or y < 0 or x >= img.get_width() or y >= img.get_height():
+					continue
+				var c := img.get_pixel(x, y)
+				tot += 1
+				if absf(c.r - base.r) + absf(c.g - base.g) + absf(c.b - base.b) < 0.06:
+					carta += 1
+	return float(carta) / maxf(1.0, float(tot))
+
+# La luminanza di alcuni punti dello schermo del PC (nome -> valore).
+func _luminanze(punti: Dictionary) -> Dictionary:
+	await RenderingServer.frame_post_draw
+	var img: Image = _player._os_viewport.get_texture().get_image()
+	var out := {}
+	for k in punti:
+		var p: Vector2i = punti[k]
+		out[k] = img.get_pixelv(p.clamp(Vector2i.ZERO, img.get_size() - Vector2i.ONE)).get_luminance()
+	return out
+
+# Che frazione dei pixel di un rettangolo dello schermo del PC e' PIU' SCURA della carta da
+# parati? (un alone nero la alzerebbe; i caratteri bianchi no)
+func _scuri_in(r: Rect2) -> float:
+	var img: Image = _player._os_viewport.get_texture().get_image()
+	var base: float = Win95.C_DESKTOP.get_luminance()
+	var tot := 0
+	var scuri := 0
+	for y in range(maxi(0, int(r.position.y)), mini(img.get_height(), int(r.end.y)), 2):
+		for x in range(maxi(0, int(r.position.x)), mini(img.get_width(), int(r.end.x)), 2):
+			tot += 1
+			if img.get_pixel(x, y).get_luminance() < base - 0.05:
+				scuri += 1
+	return float(scuri) / maxf(1.0, float(tot))
+
+# Il baricentro delle PUPILLE (le "@" scure) negli occhi composti: x medio, e quante sono.
+func _pupille(a: Apparizione) -> Vector2:
+	var somma := 0.0
+	var n := 0
+	for k in a._celle_occhi:
+		if str(k[1]) == "@" and (k[2] as Color).r < 0.5:
+			somma += (k[0] as Vector2).x
+			n += 1
+	return Vector2(somma / maxf(1.0, float(n)), float(n))
 
 # L'orologio della barra mostra l'ora VERA? Prima lo si aggiorna: la barra lo riscrive a
 # intervalli, e se il minuto scatta durante il test l'etichetta resta indietro di un attimo
