@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://doi56xa6y5f2x" path="res://assets/textures/3d/door/Door.glb" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://0yl7nprafrno" path="res://scenes/corridor.tscn" id="9_corr"]
 [ext_resource type="Script" uid="uid://brc1ca1jykros" path="res://scripts/nav_arrow.gd" id="nav_arrow"]
+[ext_resource type="PackedScene" path="res://scenes/window_left.tscn" id="10_finestra"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
 size = Vector3(0.89, 0.01, 0.77)
@@ -212,3 +213,6 @@ transform = Transform3D(0.3940054, 0, 0.30783075, 0, 0.5, 0, -0.30783075, 0, 0.3
 [node name="Soffitto" type="MeshInstance3D" parent="." unique_id=727239062]
 transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, -0.99999994, 0, 0.99999994, -4.3711385e-08, 2.5825639, 2.2204325, 1.0148585)
 mesh = SubResource("QuadMesh_85g3d")
+
+[node name="WindowLeft" parent="." instance=ExtResource("10_finestra")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1.6, 1.35, -0.75)
