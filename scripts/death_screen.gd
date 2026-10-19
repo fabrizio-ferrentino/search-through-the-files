@@ -26,6 +26,11 @@ const JESTER_SUBTITLES := [
 	"DEATH_JESTER_4",
 ]
 
+# Battute di HaloMan (cause == "halo": non hai spento il PC) e di Ghosty (cause ==
+# "ghosty": non ti sei girato), M4 19/10/2026.
+const HALO_SUBTITLES := ["DEATH_HALO_1", "DEATH_HALO_2", "DEATH_HALO_3", "DEATH_HALO_4"]
+const GHOSTY_SUBTITLES := ["DEATH_GHOSTY_1", "DEATH_GHOSTY_2", "DEATH_GHOSTY_3"]
+
 # Battute del virus mortale del PC (M5): cause == "virus".
 const VIRUS_SUBTITLES := [
 	"DEATH_VIRUS_1",
@@ -171,10 +176,14 @@ func _show_gameover() -> void:
 	create_tween().tween_property(vb, "modulate:a", 1.0, 0.6)
 
 # Sottotitolo della schermata GAME OVER, scelto in base alla causa (il nemico).
-# Il Jester e il virus mortale hanno battute proprie; le altre cause usano il set generico.
+# Ogni nemico e il virus mortale hanno battute proprie; le altre cause usano il set generico.
 func _pick_subtitle(cause: String) -> String:
 	if cause == "jester":
 		return JESTER_SUBTITLES[randi() % JESTER_SUBTITLES.size()]
+	if cause == "halo":
+		return HALO_SUBTITLES[randi() % HALO_SUBTITLES.size()]
+	if cause == "ghosty":
+		return GHOSTY_SUBTITLES[randi() % GHOSTY_SUBTITLES.size()]
 	if cause == "virus":
 		return VIRUS_SUBTITLES[randi() % VIRUS_SUBTITLES.size()]
 	return SUBTITLES[randi() % SUBTITLES.size()]

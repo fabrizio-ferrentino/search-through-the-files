@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/threats/halo_man.gd" id="1_halo"]
+
+[sub_resource type="StandardMaterial3D" id="m_corpo"]
+albedo_color = Color(0.045, 0.04, 0.05, 1)
+roughness = 0.95
+
+[sub_resource type="CapsuleMesh" id="corpo"]
+radius = 0.22
+height = 1.75
+
+[sub_resource type="SphereMesh" id="testa"]
+radius = 0.14
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="m_aureola"]
+albedo_color = Color(1, 0.92, 0.7, 1)
+emission_enabled = true
+emission = Color(1, 0.9, 0.65, 1)
+emission_energy_multiplier = 9.0
+
+[sub_resource type="TorusMesh" id="aureola"]
+inner_radius = 0.14
+outer_radius = 0.19
+
+[node name="HaloMan" type="Node3D"]
+editor_description = "HaloMan (M4): SEGNAPOSTO. Radice = halo_man.gd (logica in NemicoAffaccio + ThreatDirector). Il figlio Model si sostituira' col modello vero e le sue animazioni; tieni il nodo LuceAureola (lo script la fa pulsare) o togli pure la pulsazione."
+script = ExtResource("1_halo")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Corpo" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
+mesh = SubResource("corpo")
+material_override = SubResource("m_corpo")
+
+[node name="Testa" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.86, 0)
+mesh = SubResource("testa")
+material_override = SubResource("m_corpo")
+
+[node name="Aureola" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.08, 0)
+mesh = SubResource("aureola")
+material_override = SubResource("m_aureola")
+
+[node name="LuceAureola" type="OmniLight3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.05, 0.05)
+light_color = Color(1, 0.88, 0.62, 1)
+light_energy = 3.0
+omni_range = 3.5

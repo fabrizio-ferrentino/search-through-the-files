@@ -139,8 +139,11 @@ func _costruisci() -> void:
 	_sezione("PC")
 	_riga([_bottone("Boot to desktop", _al_desktop), _bottone("Power off", _spegni)])
 
-	_sezione("ROOM")
-	_riga([_bottone("Jester: peek now", _affaccio), _bottone("Jester: go away", _via)])
+	_sezione("ROOM  (Jester and HaloMan never together; Ghosty comes from behind)")
+	_riga([_bottone("Jester: peek now", _affaccio.bind("jester")),
+			_bottone("HaloMan: peek now", _affaccio.bind("halo")),
+			_bottone("Peek: send away", _via)])
+	_riga([_bottone("Ghosty: come now", _ghosty), _bottone("Ghosty: go away", _ghosty_via)])
 
 	_sezione("VIRUSES  (start now, skipping the wait)")
 	_riga([_bottone("Lethal (random)", _virus.bind("mortale", "")),
@@ -214,7 +217,7 @@ func _testo_stato() -> String:
 		dove = "inside the PC" if vd.player.is_in_pc() else "in the room, looking " + vd.player.current_view()
 	righe.append("PC: %s  |  player: %s" % [pc, dove])
 	var td = _regista_stanza()
-	righe.append(td.stato_debug() if td != null else "Jester: - (not in the room)")
+	righe.append(td.stato_debug() if td != null else "Room: - (not in the room)")
 	righe.append(vd.stato_debug() if vd != null else "PC virus: - (not in the room)")
 	return "\n".join(righe)
 
@@ -269,11 +272,11 @@ func _spegni() -> void:
 		os.power_off()
 		_dici("PC off", true)
 
-func _affaccio() -> void:
+func _affaccio(chi: String) -> void:
 	var td = _regista_stanza()
-	var no: String = "not in the room" if td == null else td.forza_affaccio()
+	var no: String = "not in the room" if td == null else td.forza_affaccio(chi)
 	if no == "":
-		_dici("the jester peeks now", true)
+		_dici("%s peeks now" % ("HaloMan" if chi == "halo" else "the jester"), true)
 	else:
 		_dici("refused: " + no, false)
 
@@ -281,7 +284,23 @@ func _via() -> void:
 	var td = _regista_stanza()
 	var no: String = "not in the room" if td == null else td.allontana()
 	if no == "":
-		_dici("the jester went away (safe window)", true)
+		_dici("sent away (safe window)", true)
+	else:
+		_dici("refused: " + no, false)
+
+func _ghosty() -> void:
+	var td = _regista_stanza()
+	var no: String = "not in the room" if td == null else td.ghosty_forza()
+	if no == "":
+		_dici("Ghosty is coming (turn around and light it)", true)
+	else:
+		_dici("refused: " + no, false)
+
+func _ghosty_via() -> void:
+	var td = _regista_stanza()
+	var no: String = "not in the room" if td == null else td.ghosty_allontana()
+	if no == "":
+		_dici("Ghosty went away", true)
 	else:
 		_dici("refused: " + no, false)
 

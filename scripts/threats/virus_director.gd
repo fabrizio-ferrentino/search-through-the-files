@@ -100,9 +100,10 @@ func avanza(delta: float) -> void:
 # _in_pc_da conta solo DENTRO il PC (fuori torna a zero), quindi dice anche "e' dentro".
 func _pronto() -> bool:
 	return GameManager.run_active and os.pronto_per_virus() \
-			and _in_pc_da >= ENTRATA_MIN and not _jester_in_agguato()
+			and _in_pc_da >= ENTRATA_MIN and not _affaccio_in_corso()
 
-func _jester_in_agguato() -> bool:
+# Qualcuno (Jester o HaloMan) si sta affacciando nella stanza?
+func _affaccio_in_corso() -> bool:
 	var t = player.get("_threats")
 	return t != null and t.has_method("in_agguato") and t.in_agguato()
 

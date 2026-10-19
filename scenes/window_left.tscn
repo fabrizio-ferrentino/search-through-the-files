@@ -19,14 +19,30 @@ roughness = 0.05
 [sub_resource type="QuadMesh" id="vano"]
 size = Vector2(1.1, 1)
 
+[sub_resource type="QuadMesh" id="cielo"]
+size = Vector2(9, 5)
+
+[sub_resource type="PlaneMesh" id="prato"]
+size = Vector2(9, 5)
+
+[sub_resource type="StandardMaterial3D" id="m_prato"]
+albedo_color = Color(0.02, 0.025, 0.03, 1)
+roughness = 1.0
+
 [node name="WindowLeft" type="Node3D"]
-editor_description = "SEGNAPOSTO della finestra sulla parete sinistra (M4). Origine = centro del vano, sulla faccia interna del muro; +Z guarda dentro la stanza. La parete NON e' bucata: il buio di fuori e' un piano appena davanti al muro. Quando arriva la grafica 3D vera, sostituisci questa scena (o il suo contenuto) e buca la parete."
+editor_description = "SEGNAPOSTO della finestra sulla parete sinistra (M4). Origine = centro del vano, sulla faccia interna del muro; +Z guarda dentro la stanza. La parete E' BUCATA (main.tscn, wallLeft/BucoFinestra): fuori c'e' un prato buio (Terreno) e un cielo notturno lontano (Notte). Il Jester si affaccia da qui (SpotFinestra)."
 
 [node name="Notte" type="MeshInstance3D" parent="."]
-editor_description = "Il fuori: un piano scuro senza luce propria (unshaded), cosi' si legge come un'apertura anche nella stanza buia."
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.003)
-mesh = SubResource("vano")
+editor_description = "Il cielo: un piano scuro LONTANO, senza luce propria (unshaded), cosi' dalla finestra si legge come un fuori anche nella stanza buia."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, -4)
+mesh = SubResource("cielo")
 material_override = SubResource("m_notte")
+
+[node name="Terreno" type="MeshInstance3D" parent="."]
+editor_description = "Il prato fuori, all'altezza del pavimento: e' dove poggia i piedi il Jester quando si affaccia."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.24, -2.6)
+mesh = SubResource("prato")
+material_override = SubResource("m_prato")
 
 [node name="Vetro" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.03)
@@ -77,6 +93,6 @@ shadow_enabled = true
 spot_range = 5.0
 spot_angle = 40.0
 
-[node name="SpotFinestra" type="Marker3D" parent="." groups=["spot_left"]]
-editor_description = "Dove si affaccera' un nemico alla finestra (Intruder/Ghost, M4). E' SOLO nel gruppo spot_left: il ThreatDirector cerca i punti nel gruppo enemy_spots, quindi per ora il Jester NON usa la finestra. Per attivarla aggiungi anche enemy_spots (e buca la parete, o il nemico resta dietro al muro)."
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, -0.5)
+[node name="SpotFinestra" type="Marker3D" parent="." groups=["enemy_spots", "spot_left"]]
+editor_description = "Dove si affacciano Jester e HaloMan alla finestra: i PIEDI, fuori, sul prato. enemy_spots = il ThreatDirector lo usa come le porte del corridoio; spot_left = la zona e' la sinistra (la torcia va puntata da questa parte)."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.24, -0.75)

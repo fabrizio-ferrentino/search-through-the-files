@@ -111,6 +111,7 @@ func _ready() -> void:
 		if b.size() != 2 or (b[0] as Button).text != "REAL" or (b[1] as Button).text != "FALSE":
 			mancano.append(t)
 	for nome in ["Lethal (random)", "YouAreStupid", "Blue screen", "Stop current", "Jester: peek now",
+			"HaloMan: peek now", "Peek: send away", "Ghosty: come now", "Ghosty: go away",
 			"Boot to desktop"]:
 		if p.pulsante(nome) == null:
 			mancano.append(nome)

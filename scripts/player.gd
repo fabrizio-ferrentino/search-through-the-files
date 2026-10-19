@@ -233,11 +233,16 @@ func _input(event):
 				# schermo del monitor: entra nel PC (se spento si vedra' "nessun segnale")
 				_enter_pc()
 		elif _threats != null and target_yaw != pos_center:
-			# torcia: solo guardando a destra/sinistra/dietro e cliccando al centro schermo
+			# torcia: solo guardando a destra/sinistra/dietro e premendo al centro schermo.
+			# Resta accesa finche' tieni premuto (vedi il rilascio qui sotto).
 			var vp_size := get_viewport().get_visible_rect().size
 			var center_dist := (mouse_pos - vp_size * 0.5).length()
 			if center_dist < vp_size.x * 0.15:
-				_threats.torch_flash()
+				_threats.torch_accendi()
+	# rilasciando il tasto la torcia si spegne, ovunque sia il mouse
+	if _threats != null and event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		_threats.torch_spegni()
 
 # Ricava il nome del CollisionShape3D colpito (CollisionShape3D = schermo, Computer = case).
 func _hit_part(body, shape_idx: int) -> String:

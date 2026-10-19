@@ -781,7 +781,7 @@ func _prova_pannello() -> void:
 	td._state = td.State.CALM
 	p.pulsante("Jester: peek now").pressed.emit()
 	var fuori: bool = td.in_agguato()
-	p.pulsante("Jester: go away").pressed.emit()
+	p.pulsante("Peek: send away").pressed.emit()
 	_check("PANNELLO_JESTER", fuori and not td.in_agguato() and not GameManager._game_over_active,
 			"affaccio %s, poi in agguato %s" % [str(fuori), str(td.in_agguato())])
 	td.stop()

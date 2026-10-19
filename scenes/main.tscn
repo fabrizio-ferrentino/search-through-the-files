@@ -77,11 +77,16 @@ mesh = SubResource("BoxMesh_ig7tw")
 skin = SubResource("Skin_ig7tw")
 surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
 
-[node name="wallLeft" type="MeshInstance3D" parent="." unique_id=585122192]
+[node name="wallLeft" type="CSGBox3D" parent="." unique_id=585122192]
+editor_description = "Parete sinistra. E' un CSGBox3D (era un MeshInstance3D con lo stesso BoxMesh 7x2x0.5) per poterla BUCARE: il figlio BucoFinestra toglie il vano della finestra (scenes/window_left.tscn), da cui si affaccia il Jester. Se sposti la finestra, sposta anche il buco."
 transform = Transform3D(-0.007539794, -0.017207608, 0.9998235, 1.15732646e-10, 0.99985194, 0.017208098, -0.99997157, 0.00012974546, -0.0075386763, -1.862, 1.2, 0.9693164)
-mesh = SubResource("BoxMesh_ig7tw")
-skin = SubResource("Skin_ig7tw")
-surface_material_override/0 = SubResource("StandardMaterial3D_0xm2m")
+size = Vector3(7, 2, 0.5)
+material = SubResource("StandardMaterial3D_0xm2m")
+
+[node name="BucoFinestra" type="CSGBox3D" parent="wallLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.717, 0.145, 0)
+operation = 2
+size = Vector3(1.1, 1, 2)
 
 [node name="Desk" type="Node3D" parent="." unique_id=594763906]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.444794, 1.182103, 18.783127)
@@ -216,3 +221,11 @@ mesh = SubResource("QuadMesh_85g3d")
 
 [node name="WindowLeft" parent="." instance=ExtResource("10_finestra")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1.6, 1.35, -0.75)
+
+[node name="GhostyLontano" type="Marker3D" parent="." groups=["ghosty_lontano"]]
+editor_description = "Ghosty: dove compare, in fondo alla stanza dietro di te. Il ThreatDirector lo fa avanzare in linea retta fino a GhostyVicino."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 4)
+
+[node name="GhostyVicino" type="Marker3D" parent="." groups=["ghosty_vicino"]]
+editor_description = "Ghosty: l'ultimo passo, subito alle tue spalle. Arrivato qui ti prende."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 1.05)
