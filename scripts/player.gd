@@ -40,7 +40,7 @@ var _poll_accum := 0.0
 var _home_transform: Transform3D       # posa "a riposo" della telecamera (centro stanza)
 var _home_fov := 75.0
 
-# --- minaccia stanza (M4): regista + corridoio + nemico (Clown) ---
+# --- minaccia stanza (M4): regista + corridoio + nemico (Jester) ---
 var _threats = null                    # ThreatDirector (spawnato a runtime)
 var _virus = null                      # VirusDirector (M5): i virus dentro il PC
 
@@ -152,7 +152,7 @@ func _setup_atmosphere() -> void:
 # con le porte (Marker3D nel gruppo "enemy_spots") e' un'istanza dentro main.tscn,
 # cosi' lo sposti/rifinisci nell'editor: il regista lo trova via gruppo, non gli
 # serve sapere dov'e'. Il regista gira SEMPRE (anche dentro il PC) e, al fallimento,
-# chiama GameManager.game_over("clown").
+# chiama GameManager.game_over("jester").
 func _spawn_threats() -> void:
 	var director = load("res://scripts/threats/threat_director.gd").new()
 	director.name = "ThreatDirector"

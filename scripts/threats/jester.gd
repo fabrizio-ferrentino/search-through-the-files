@@ -1,8 +1,8 @@
 extends Node3D
 
-# Clown / Slender (M4): nemico che si AFFACCIA da una porta. NON avanza verso di te:
+# Jester / Slender (M4): nemico che si AFFACCIA da una porta. NON avanza verso di te:
 # compare a uno "spot" (una porta), e se non lo inquadri in tempo il regista chiama
-# game_over. Questo script vive sulla RADICE del prefab clown.tscn; il modello 3D e'
+# game_over. Questo script vive sulla RADICE del prefab jester.tscn; il modello 3D e'
 # un figlio ("Model"), cosi' puoi rifinire texture/scala in editor senza toccare la
 # logica. La finestra di reazione e l'heat stanno nel ThreatDirector.
 

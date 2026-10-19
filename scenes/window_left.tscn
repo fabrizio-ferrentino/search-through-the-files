@@ -78,5 +78,5 @@ spot_range = 5.0
 spot_angle = 40.0
 
 [node name="SpotFinestra" type="Marker3D" parent="." groups=["spot_left"]]
-editor_description = "Dove si affaccera' un nemico alla finestra (Intruder/Ghost, M4). E' SOLO nel gruppo spot_left: il ThreatDirector cerca i punti nel gruppo enemy_spots, quindi per ora il Clown NON usa la finestra. Per attivarla aggiungi anche enemy_spots (e buca la parete, o il nemico resta dietro al muro)."
+editor_description = "Dove si affaccera' un nemico alla finestra (Intruder/Ghost, M4). E' SOLO nel gruppo spot_left: il ThreatDirector cerca i punti nel gruppo enemy_spots, quindi per ora il Jester NON usa la finestra. Per attivarla aggiungi anche enemy_spots (e buca la parete, o il nemico resta dietro al muro)."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, -0.5)

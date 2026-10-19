@@ -2,7 +2,7 @@ extends Node
 
 # Test dei VIRUS (M5, richiesta del proprietario: "bisogna creare dei cattivi anche nel
 # mondo 2d, non devono essere troppo invasivi"). La stanza vera, dentro il PC, col
-# VirusDirector vero; il regista della stanza viene fermato, cosi' il Clown non si
+# VirusDirector vero; il regista della stanza viene fermato, cosi' il Jester non si
 # affaccia in mezzo al test. Il tempo dei virus lo fa scorrere il test (avanza), non
 # l'orologio: i minuti di attesa diventano un ciclo.
 # Si pretende che:
@@ -65,7 +65,7 @@ func _ready() -> void:
 	get_tree().root.add_child(_room)
 	await get_tree().create_timer(1.6).timeout       # la dissolvenza d'ingresso della stanza
 	_player = _room.find_child("Camera3D", true, false)
-	_player._threats.stop()          # niente Clown durante il test
+	_player._threats.stop()          # niente Jester durante il test
 	_player._show_pc_overlay()
 	_os = _player._os
 	_vd = _player._virus
@@ -422,13 +422,13 @@ func _prova_mortale() -> void:
 	_check("MORTALE_E_UN_APPARIZIONE", app != null and is_instance_valid(app) and app.attiva()
 			and app.crescita == v.DURATA, "il virus mortale non porta un'apparizione che resta")
 
-	# il Clown non si affaccia durante il virus mortale
+	# il Jester non si affaccia durante il virus mortale
 	var td = _player._threats
 	var stato_td: int = td._state
 	td._state = td.State.WAIT
 	td._timer = 1.0e6
 	td._process(0.016)
-	_check("CLOWN_ASPETTA", not td.in_agguato(), "il nemico si e' affacciato durante il virus mortale")
+	_check("JESTER_ASPETTA", not td.in_agguato(), "il nemico si e' affacciato durante il virus mortale")
 	td._state = stato_td
 
 	# salvato dal menu Avvio > Arresta > Si'
@@ -776,13 +776,13 @@ func _prova_pannello() -> void:
 	p.pulsante("PC threats: OFF").pressed.emit()
 	_check("PANNELLO_INTERRUTTORE", GameManager.pc_threats_enabled, "il pulsante non riaccende le minacce del PC")
 
-	# il Clown a comando (il test lo tiene fermo: lo si rimette in attesa solo qui)
+	# il Jester a comando (il test lo tiene fermo: lo si rimette in attesa solo qui)
 	var td = _player._threats
 	td._state = td.State.CALM
-	p.pulsante("Clown: peek now").pressed.emit()
+	p.pulsante("Jester: peek now").pressed.emit()
 	var fuori: bool = td.in_agguato()
-	p.pulsante("Clown: go away").pressed.emit()
-	_check("PANNELLO_CLOWN", fuori and not td.in_agguato() and not GameManager._game_over_active,
+	p.pulsante("Jester: go away").pressed.emit()
+	_check("PANNELLO_JESTER", fuori and not td.in_agguato() and not GameManager._game_over_active,
 			"affaccio %s, poi in agguato %s" % [str(fuori), str(td.in_agguato())])
 	td.stop()
 

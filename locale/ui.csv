@@ -11,10 +11,10 @@ DEATH_SUB_3,The signal went out. So did you.,Il segnale si e' spento. Anche il t
 DEATH_SUB_4,Something inside the screen saw you.,Qualcosa dentro lo schermo ti ha visto.
 DEATH_SUB_5,Nobody ever answers at 52 Hz.,A 52 Hz non risponde mai nessuno.
 DEATH_SUB_6,The room was not that empty.,La stanza non era cosi' vuota.
-DEATH_CLOWN_1,The smile was the last thing you saw.,Il sorriso era l'ultima cosa che hai visto.
-DEATH_CLOWN_2,You should not have stopped watching the corridor.,Non dovevi smettere di guardare il corridoio.
-DEATH_CLOWN_3,It reached the end while you were reading.,E' arrivato in fondo mentre tu leggevi.
-DEATH_CLOWN_4,You should have looked it in the eyes.,Avresti dovuto guardarlo negli occhi.
+DEATH_JESTER_1,The smile was the last thing you saw.,Il sorriso era l'ultima cosa che hai visto.
+DEATH_JESTER_2,You should not have stopped watching the corridor.,Non dovevi smettere di guardare il corridoio.
+DEATH_JESTER_3,It reached the end while you were reading.,E' arrivato in fondo mentre tu leggevi.
+DEATH_JESTER_4,You should have looked it in the eyes.,Avresti dovuto guardarlo negli occhi.
 MENU_FILE,&File,&File
 MENU_EDIT,&Edit,&Modifica
 MENU_VIEW,&View,&Visualizza

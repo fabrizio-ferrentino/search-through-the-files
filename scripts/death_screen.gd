@@ -18,12 +18,12 @@ const SUBTITLES := [
 	"DEATH_SUB_6",
 ]
 
-# Battute specifiche del Clown (M4): scelte quando cause == "clown".
-const CLOWN_SUBTITLES := [
-	"DEATH_CLOWN_1",
-	"DEATH_CLOWN_2",
-	"DEATH_CLOWN_3",
-	"DEATH_CLOWN_4",
+# Battute specifiche del Jester (M4): scelte quando cause == "jester".
+const JESTER_SUBTITLES := [
+	"DEATH_JESTER_1",
+	"DEATH_JESTER_2",
+	"DEATH_JESTER_3",
+	"DEATH_JESTER_4",
 ]
 
 # Battute del virus mortale del PC (M5): cause == "virus".
@@ -171,10 +171,10 @@ func _show_gameover() -> void:
 	create_tween().tween_property(vb, "modulate:a", 1.0, 0.6)
 
 # Sottotitolo della schermata GAME OVER, scelto in base alla causa (il nemico).
-# Il Clown e il virus mortale hanno battute proprie; le altre cause usano il set generico.
+# Il Jester e il virus mortale hanno battute proprie; le altre cause usano il set generico.
 func _pick_subtitle(cause: String) -> String:
-	if cause == "clown":
-		return CLOWN_SUBTITLES[randi() % CLOWN_SUBTITLES.size()]
+	if cause == "jester":
+		return JESTER_SUBTITLES[randi() % JESTER_SUBTITLES.size()]
 	if cause == "virus":
 		return VIRUS_SUBTITLES[randi() % VIRUS_SUBTITLES.size()]
 	return SUBTITLES[randi() % SUBTITLES.size()]

@@ -5,8 +5,8 @@ extends CanvasLayer
 # un'etichetta con le chiavi; il proprietario (18/10/2026) non riusciva a far comparire a
 # comando tutte le minacce -- F9 gira fra i tre virus e l'apparizione del mortale esce a
 # caso -- quindi ora ha i PULSANTI: ogni apparizione vera o falsa, ogni virus, l'affaccio
-# del Clown, gli interruttori delle minacce, il PC dritto al desktop; e uno STATO che si
-# aggiorna da solo (cosa fa il Clown, fra quanto il prossimo virus, e PERCHE' un virus
+# del Jester, gli interruttori delle minacce, il PC dritto al desktop; e uno STATO che si
+# aggiorna da solo (cosa fa il Jester, fra quanto il prossimo virus, e PERCHE' un virus
 # adesso non puo' partire), piu' una riga con l'esito dell'ultimo pulsante.
 # Tutto il testo e' in INGLESE, come tutto il debug, e non passa dal CSV.
 # Il mouse sopra il pannello e' del pannello: player.gd lo chiede a
@@ -140,7 +140,7 @@ func _costruisci() -> void:
 	_riga([_bottone("Boot to desktop", _al_desktop), _bottone("Power off", _spegni)])
 
 	_sezione("ROOM")
-	_riga([_bottone("Clown: peek now", _affaccio), _bottone("Clown: go away", _via)])
+	_riga([_bottone("Jester: peek now", _affaccio), _bottone("Jester: go away", _via)])
 
 	_sezione("VIRUSES  (start now, skipping the wait)")
 	_riga([_bottone("Lethal (random)", _virus.bind("mortale", "")),
@@ -214,7 +214,7 @@ func _testo_stato() -> String:
 		dove = "inside the PC" if vd.player.is_in_pc() else "in the room, looking " + vd.player.current_view()
 	righe.append("PC: %s  |  player: %s" % [pc, dove])
 	var td = _regista_stanza()
-	righe.append(td.stato_debug() if td != null else "Clown: - (not in the room)")
+	righe.append(td.stato_debug() if td != null else "Jester: - (not in the room)")
 	righe.append(vd.stato_debug() if vd != null else "PC virus: - (not in the room)")
 	return "\n".join(righe)
 
@@ -273,7 +273,7 @@ func _affaccio() -> void:
 	var td = _regista_stanza()
 	var no: String = "not in the room" if td == null else td.forza_affaccio()
 	if no == "":
-		_dici("the clown peeks now", true)
+		_dici("the jester peeks now", true)
 	else:
 		_dici("refused: " + no, false)
 
@@ -281,7 +281,7 @@ func _via() -> void:
 	var td = _regista_stanza()
 	var no: String = "not in the room" if td == null else td.allontana()
 	if no == "":
-		_dici("the clown went away (safe window)", true)
+		_dici("the jester went away (safe window)", true)
 	else:
 		_dici("refused: " + no, false)
 

@@ -110,7 +110,7 @@ func _ready() -> void:
 		var b := p.riga_apparizione(t)
 		if b.size() != 2 or (b[0] as Button).text != "REAL" or (b[1] as Button).text != "FALSE":
 			mancano.append(t)
-	for nome in ["Lethal (random)", "YouAreStupid", "Blue screen", "Stop current", "Clown: peek now",
+	for nome in ["Lethal (random)", "YouAreStupid", "Blue screen", "Stop current", "Jester: peek now",
 			"Boot to desktop"]:
 		if p.pulsante(nome) == null:
 			mancano.append(nome)

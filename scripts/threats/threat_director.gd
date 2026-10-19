@@ -4,14 +4,14 @@ extends Node
 # dentro il PC (le minacce crescono mentre investighi). Design "FNAF / affaccio":
 #   GRACE -> WAIT (conta verso la prossima apparizione) -> PEEK (il nemico si affaccia
 #   a una porta a caso; hai una finestra di reazione) -> se lo INQUADRI in tempo torni
-#   a WAIT, altrimenti -> GameManager.game_over("clown").
+#   a WAIT, altrimenti -> GameManager.game_over("jester").
 # Le "porte" sono i Marker3D nel gruppo "enemy_spots" (vedi scenes/corridor.tscn): il
 # regista non sa nulla della geometria, quindi puoi spostarle/aggiungerne liberamente.
 
 var player = null         # la Camera3D (player.gd): posa per la mira + is_in_pc()
 var virus = null          # il VirusDirector (M5): niente affacci durante il virus mortale
 
-var _clown = null
+var _jester = null
 var _spots: Array = []
 var _glitch_layer: CanvasLayer = null
 var _glitch_rect: ColorRect = null
@@ -35,7 +35,7 @@ var _bat_bg: ColorRect = null
 var _bat_fill: ColorRect = null
 var _rng := RandomNumberGenerator.new()
 
-const CLOWN_SCENE := "res://scenes/enemies/clown.tscn"
+const JESTER_SCENE := "res://scenes/enemies/jester.tscn"
 
 # --- Tuning ---
 const GRACE_TIME := 30.0            # calma iniziale a inizio run (s)
@@ -63,10 +63,10 @@ const WEAK_ENERGY_MUL := 0.22       # luminosita' del flash "scarico"
 func _ready() -> void:
 	add_to_group("regista_stanza")     # cosi' lo trova il pannello di debug (F12)
 	_rng.seed = GameManager.run_seed + 4242
-	_clown = load(CLOWN_SCENE).instantiate()
-	_clown.name = "Clown"
-	add_child(_clown)          # Node3D sotto Node: global == local, va bene
-	_clown.dismiss()
+	_jester = load(JESTER_SCENE).instantiate()
+	_jester.name = "Jester"
+	add_child(_jester)          # Node3D sotto Node: global == local, va bene
+	_jester.dismiss()
 	_refresh_spots()
 	_setup_glitch()
 	_setup_torch()
@@ -81,8 +81,8 @@ func _refresh_spots() -> void:
 # Ferma del tutto la minaccia (lo chiama il player alla vittoria).
 func stop() -> void:
 	_state = State.STOPPED
-	if _clown != null:
-		_clown.dismiss()
+	if _jester != null:
+		_jester.dismiss()
 	if _torch != null:
 		_torch.visible = false
 	if _bat_layer != null:
@@ -98,8 +98,8 @@ func _process(delta: float) -> void:
 	# Torcia e batteria restano attive. Si resta in CALM cosi' riattivando si riparte
 	# da una finestra sicura (mai un PEEK "congelato" che ti uccide al riavvio).
 	if not GameManager.room_threats_enabled:
-		if _clown != null and _clown.visible:
-			_clown.dismiss()
+		if _jester != null and _jester.visible:
+			_jester.dismiss()
 		_reset_tell()
 		_state = State.CALM
 		_timer = 0.0
@@ -120,14 +120,14 @@ func _process(delta: float) -> void:
 		# si scaccia SOLO illuminando con la torcia la zona del nemico (torch_flash);
 		# qui resta solo il fallimento per tempo scaduto.
 		if _react_left <= 0.0:
-			_clown.dismiss()
+			_jester.dismiss()
 			_reset_tell()
 			_state = State.STOPPED
-			GameManager.game_over("clown")
+			GameManager.game_over("jester")
 	elif _state == State.SEEN:
 		_seen_left -= delta
 		if _seen_left <= 0.0:
-			_clown.dismiss()
+			_jester.dismiss()
 			_to_calm()
 	elif _state == State.CALM:
 		_timer += delta            # finestra di esplorazione garantita
@@ -153,7 +153,7 @@ func _peek() -> void:
 	_last_spot = spot
 	_peek_spot = spot
 	_peek_zone = _zone_of(spot)
-	_clown.appear_at(spot.global_position, player.global_transform.origin)
+	_jester.appear_at(spot.global_position, player.global_transform.origin)
 	_react_total = _react_time()
 	_react_left = _react_total
 	_state = State.PEEK
@@ -333,28 +333,28 @@ func _reset_tell() -> void:
 
 const NOMI_STATO := ["GRACE", "WAIT", "PEEK", "SEEN", "CALM", "STOPPED"]
 
-# Il Clown si affaccia ADESSO (salta l'attesa). "" se e' uscito, se no il motivo.
+# Il Jester si affaccia ADESSO (salta l'attesa). "" se e' uscito, se no il motivo.
 func forza_affaccio() -> String:
 	if _state == State.STOPPED:
 		return "the run is over"
 	if not GameManager.room_threats_enabled:
 		return "room threats are OFF (F11)"
 	if _state == State.PEEK or _state == State.SEEN:
-		return "the clown is already out"
+		return "the jester is already out"
 	_peek()
 	return "" if _state == State.PEEK else "no door found (group enemy_spots)"
 
 # Lo rimanda via senza morire: si riparte da una finestra sicura (CALM).
 func allontana() -> String:
 	if _state != State.PEEK and _state != State.SEEN:
-		return "the clown is not out"
-	_clown.dismiss()
+		return "the jester is not out"
+	_jester.dismiss()
 	_reset_tell()
 	_to_calm()
 	return ""
 
 func stato_debug() -> String:
-	var s: String = "Clown: " + NOMI_STATO[_state]
+	var s: String = "Jester: " + NOMI_STATO[_state]
 	match _state:
 		State.GRACE:
 			s += " (start grace, %d s left)" % maxi(0, ceili(GRACE_TIME - _timer))
