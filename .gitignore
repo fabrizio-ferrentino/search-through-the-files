@@ -1,10 +1,15 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
-# Da rimuovere quando raggunto una versione stabile del gioco
-CLAUDE.MD
-README.md
-/docs/
-/assets/textures/3d/jester/
+
+# Asset che restano solo in locale: le foto del puzzle (personali) e il modello
+# provvisorio del Jester (scaricato, di un autore esterno). Il gioco li usa dal disco;
+# senza le foto, chi clona il repo ha le foto procedurali di ripiego.
 /assets/textures/photos/
-web/
+/assets/textures/3d/jester/
+
+# Impostazioni locali di Claude Code (permessi di questa macchina)
+.claude/settings.local.json
+
+# Cache di Python degli strumenti in tools/
+__pycache__/
