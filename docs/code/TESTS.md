@@ -170,6 +170,13 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   user://finestra_sinistra.png / finestra_centro.png, to judge the
   placeholder window by eye),
 
+- stanza_check.tscn/.gd (dev tool, WINDOWED, 2026-10-22: the real room
+  (room.tscn) with threats off, photographed from the four views as
+  the player sees it (centro, sinistra, destra, dietro) ->
+  user://stanza_<vista>.png, and again with the ambient light raised
+  (1.2) -> user://stanza_<vista>_luce.png, plus user://stanza_alto_luce.png
+  from above. To judge the furniture and walls by eye; no asserts),
+
 - crt_look_check.tscn/.gd (dev tool, WINDOWED: the REAL room, into
   the PC, and photos of what the player sees - full view, a x4
   zoom, the room with the 3D monitor - plus three numbers: the

@@ -1,0 +1,1327 @@
+[gd_scene load_steps=144 format=3]
+
+[ext_resource type="Material" path="res://assets/materials/carta_da_parati.tres" id="1_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/pavimento_legno.tres" id="2_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/soffitto.tres" id="3_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/legno_scuro.tres" id="4_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/legno_mobili.tres" id="5_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/door/Door.glb" id="6_ext"]
+
+[sub_resource type="BoxMesh" id="box_1"]
+size = Vector3(4.212, 0.1, 6.28)
+
+[sub_resource type="BoxMesh" id="box_2"]
+size = Vector3(4.612, 0.1, 6.68)
+
+[sub_resource type="BoxMesh" id="box_3"]
+size = Vector3(4.612, 2.6, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="m_4"]
+resource_name = "IntonacoEsterno"
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_5"]
+size = Vector3(0.2, 0.01, 1.1)
+
+[sub_resource type="BoxMesh" id="box_6"]
+size = Vector3(0.2, 1, 0.01)
+
+[sub_resource type="BoxMesh" id="box_7"]
+size = Vector3(4.212, 0.08, 0.015)
+
+[sub_resource type="BoxMesh" id="box_8"]
+size = Vector3(0.015, 0.08, 6.28)
+
+[sub_resource type="BoxMesh" id="box_9"]
+size = Vector3(0.015, 0.08, 0.29)
+
+[sub_resource type="BoxMesh" id="box_10"]
+size = Vector3(0.015, 0.08, 4.54)
+
+[sub_resource type="BoxMesh" id="box_11"]
+size = Vector3(0.03, 2.18, 0.08)
+
+[sub_resource type="BoxMesh" id="box_12"]
+size = Vector3(0.03, 0.08, 1.61)
+
+[sub_resource type="BoxMesh" id="box_13"]
+size = Vector3(0.2, 2.1, 0.01)
+
+[sub_resource type="BoxMesh" id="box_14"]
+size = Vector3(0.2, 0.01, 1.45)
+
+[sub_resource type="StandardMaterial3D" id="m_15"]
+resource_name = "Plastica"
+albedo_color = Color(0.62, 0.6, 0.54, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="box_16"]
+size = Vector3(0.015, 0.11, 0.075)
+
+[sub_resource type="StandardMaterial3D" id="m_17"]
+resource_name = "TappetoBordo"
+albedo_color = Color(0.07, 0.08, 0.15, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_18"]
+size = Vector3(1.8, 0.012, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="m_19"]
+resource_name = "TappetoCampo"
+albedo_color = Color(0.3, 0.085, 0.065, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_20"]
+size = Vector3(1.56, 0.014, 1.16)
+
+[sub_resource type="StandardMaterial3D" id="m_21"]
+resource_name = "VerniceTermosifone"
+albedo_color = Color(0.55, 0.53, 0.48, 1)
+roughness = 0.55
+metallic = 0.2
+
+[sub_resource type="BoxMesh" id="box_22"]
+size = Vector3(0.09, 0.55, 0.075)
+
+[sub_resource type="BoxMesh" id="box_23"]
+size = Vector3(0.05, 0.04, 0.86)
+
+[sub_resource type="BoxMesh" id="box_24"]
+size = Vector3(0.06, 0.13, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="m_25"]
+resource_name = "Stoffa"
+albedo_color = Color(0.24, 0.1, 0.085, 1)
+roughness = 1
+
+[sub_resource type="StandardMaterial3D" id="m_26"]
+resource_name = "StoffaPiega"
+albedo_color = Color(0.2, 0.08, 0.07, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_27"]
+size = Vector3(0.025, 0.025, 2.2)
+
+[sub_resource type="BoxMesh" id="box_28"]
+size = Vector3(0.035, 1.5, 0.13)
+
+[sub_resource type="BoxMesh" id="box_29"]
+size = Vector3(0.3, 1.7, 0.03)
+
+[sub_resource type="BoxMesh" id="box_30"]
+size = Vector3(0.3, 0.03, 0.9)
+
+[sub_resource type="BoxMesh" id="box_31"]
+size = Vector3(0.28, 0.08, 0.84)
+
+[sub_resource type="BoxMesh" id="box_32"]
+size = Vector3(0.015, 1.7, 0.9)
+
+[sub_resource type="BoxMesh" id="box_33"]
+size = Vector3(0.28, 0.025, 0.84)
+
+[sub_resource type="StandardMaterial3D" id="m_34"]
+resource_name = "Libro1"
+albedo_color = Color(0.32, 0.08, 0.06, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="m_35"]
+resource_name = "Libro2"
+albedo_color = Color(0.1, 0.15, 0.27, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="m_36"]
+resource_name = "Libro3"
+albedo_color = Color(0.13, 0.22, 0.12, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="m_37"]
+resource_name = "Libro4"
+albedo_color = Color(0.45, 0.4, 0.3, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="m_38"]
+resource_name = "Libro5"
+albedo_color = Color(0.16, 0.15, 0.14, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="m_39"]
+resource_name = "Libro6"
+albedo_color = Color(0.38, 0.26, 0.12, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="box_40"]
+size = Vector3(0.2063, 0.2354, 0.025)
+
+[sub_resource type="BoxMesh" id="box_41"]
+size = Vector3(0.1798, 0.2566, 0.05)
+
+[sub_resource type="BoxMesh" id="box_42"]
+size = Vector3(0.1724, 0.2646, 0.03)
+
+[sub_resource type="BoxMesh" id="box_43"]
+size = Vector3(0.184, 0.2147, 0.025)
+
+[sub_resource type="BoxMesh" id="box_44"]
+size = Vector3(0.1772, 0.2522, 0.05)
+
+[sub_resource type="BoxMesh" id="box_45"]
+size = Vector3(0.1819, 0.2144, 0.05)
+
+[sub_resource type="BoxMesh" id="box_46"]
+size = Vector3(0.2121, 0.2302, 0.04)
+
+[sub_resource type="BoxMesh" id="box_47"]
+size = Vector3(0.1938, 0.2764, 0.025)
+
+[sub_resource type="BoxMesh" id="box_48"]
+size = Vector3(0.1884, 0.2723, 0.035)
+
+[sub_resource type="BoxMesh" id="box_49"]
+size = Vector3(0.177, 0.287, 0.05)
+
+[sub_resource type="BoxMesh" id="box_50"]
+size = Vector3(0.2167, 0.2078, 0.035)
+
+[sub_resource type="BoxMesh" id="box_51"]
+size = Vector3(0.2159, 0.2623, 0.035)
+
+[sub_resource type="BoxMesh" id="box_52"]
+size = Vector3(0.185, 0.2489, 0.025)
+
+[sub_resource type="BoxMesh" id="box_53"]
+size = Vector3(0.1867, 0.213, 0.05)
+
+[sub_resource type="BoxMesh" id="box_54"]
+size = Vector3(0.2031, 0.256, 0.035)
+
+[sub_resource type="BoxMesh" id="box_55"]
+size = Vector3(0.2036, 0.2584, 0.03)
+
+[sub_resource type="BoxMesh" id="box_56"]
+size = Vector3(0.1924, 0.2511, 0.035)
+
+[sub_resource type="BoxMesh" id="box_57"]
+size = Vector3(0.2148, 0.202, 0.025)
+
+[sub_resource type="BoxMesh" id="box_58"]
+size = Vector3(0.175, 0.2331, 0.05)
+
+[sub_resource type="BoxMesh" id="box_59"]
+size = Vector3(0.1951, 0.2208, 0.03)
+
+[sub_resource type="BoxMesh" id="box_60"]
+size = Vector3(0.1897, 0.2855, 0.025)
+
+[sub_resource type="BoxMesh" id="box_61"]
+size = Vector3(0.2085, 0.2012, 0.04)
+
+[sub_resource type="BoxMesh" id="box_62"]
+size = Vector3(0.1937, 0.2822, 0.025)
+
+[sub_resource type="BoxMesh" id="box_63"]
+size = Vector3(0.2166, 0.2421, 0.04)
+
+[sub_resource type="BoxMesh" id="box_64"]
+size = Vector3(0.2179, 0.2939, 0.025)
+
+[sub_resource type="BoxMesh" id="box_65"]
+size = Vector3(0.218, 0.2098, 0.035)
+
+[sub_resource type="BoxMesh" id="box_66"]
+size = Vector3(0.1704, 0.2736, 0.04)
+
+[sub_resource type="BoxMesh" id="box_67"]
+size = Vector3(0.21, 0.2931, 0.03)
+
+[sub_resource type="BoxMesh" id="box_68"]
+size = Vector3(0.2187, 0.2487, 0.05)
+
+[sub_resource type="BoxMesh" id="box_69"]
+size = Vector3(0.2188, 0.2296, 0.025)
+
+[sub_resource type="BoxMesh" id="box_70"]
+size = Vector3(0.1881, 0.2283, 0.05)
+
+[sub_resource type="BoxMesh" id="box_71"]
+size = Vector3(0.1804, 0.2459, 0.03)
+
+[sub_resource type="BoxMesh" id="box_72"]
+size = Vector3(0.2085, 0.2355, 0.05)
+
+[sub_resource type="BoxMesh" id="box_73"]
+size = Vector3(0.204, 0.2883, 0.04)
+
+[sub_resource type="BoxMesh" id="box_74"]
+size = Vector3(0.2119, 0.2878, 0.025)
+
+[sub_resource type="BoxMesh" id="box_75"]
+size = Vector3(0.2039, 0.2066, 0.025)
+
+[sub_resource type="BoxMesh" id="box_76"]
+size = Vector3(0.218, 0.2494, 0.035)
+
+[sub_resource type="BoxMesh" id="box_77"]
+size = Vector3(0.2077, 0.2293, 0.035)
+
+[sub_resource type="BoxMesh" id="box_78"]
+size = Vector3(0.1757, 0.2568, 0.04)
+
+[sub_resource type="BoxMesh" id="box_79"]
+size = Vector3(0.2131, 0.2619, 0.035)
+
+[sub_resource type="BoxMesh" id="box_80"]
+size = Vector3(0.2094, 0.2809, 0.025)
+
+[sub_resource type="BoxMesh" id="box_81"]
+size = Vector3(0.1817, 0.2686, 0.05)
+
+[sub_resource type="BoxMesh" id="box_82"]
+size = Vector3(0.2024, 0.2392, 0.025)
+
+[sub_resource type="BoxMesh" id="box_83"]
+size = Vector3(0.2111, 0.2673, 0.04)
+
+[sub_resource type="BoxMesh" id="box_84"]
+size = Vector3(0.197, 0.2562, 0.05)
+
+[sub_resource type="BoxMesh" id="box_85"]
+size = Vector3(0.1716, 0.2523, 0.03)
+
+[sub_resource type="BoxMesh" id="box_86"]
+size = Vector3(0.2045, 0.2574, 0.025)
+
+[sub_resource type="BoxMesh" id="box_87"]
+size = Vector3(0.219, 0.243, 0.03)
+
+[sub_resource type="BoxMesh" id="box_88"]
+size = Vector3(0.2, 0.035, 0.24)
+
+[sub_resource type="BoxMesh" id="box_89"]
+size = Vector3(0.2069, 0.2334, 0.025)
+
+[sub_resource type="BoxMesh" id="box_90"]
+size = Vector3(0.1828, 0.1946, 0.05)
+
+[sub_resource type="BoxMesh" id="box_91"]
+size = Vector3(0.1816, 0.2004, 0.05)
+
+[sub_resource type="BoxMesh" id="box_92"]
+size = Vector3(0.1832, 0.1886, 0.04)
+
+[sub_resource type="BoxMesh" id="box_93"]
+size = Vector3(0.1903, 0.1949, 0.025)
+
+[sub_resource type="BoxMesh" id="box_94"]
+size = Vector3(0.212, 0.2078, 0.035)
+
+[sub_resource type="BoxMesh" id="box_95"]
+size = Vector3(0.2124, 0.2083, 0.035)
+
+[sub_resource type="BoxMesh" id="box_96"]
+size = Vector3(0.2053, 0.2262, 0.03)
+
+[sub_resource type="BoxMesh" id="box_97"]
+size = Vector3(0.213, 0.2386, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="m_98"]
+resource_name = "Pomolo"
+albedo_color = Color(0.5, 0.42, 0.22, 1)
+roughness = 0.35
+metallic = 0.8
+
+[sub_resource type="BoxMesh" id="box_99"]
+size = Vector3(0.51, 0.06, 1.16)
+
+[sub_resource type="BoxMesh" id="box_100"]
+size = Vector3(0.55, 1.89, 1.2)
+
+[sub_resource type="BoxMesh" id="box_101"]
+size = Vector3(0.59, 0.05, 1.26)
+
+[sub_resource type="BoxMesh" id="box_102"]
+size = Vector3(0.006, 1.8, 0.008)
+
+[sub_resource type="BoxMesh" id="box_103"]
+size = Vector3(0.025, 0.06, 0.022)
+
+[sub_resource type="BoxMesh" id="box_104"]
+size = Vector3(0.45, 0.5, 0.4)
+
+[sub_resource type="BoxMesh" id="box_105"]
+size = Vector3(0.39, 0.004, 0.006)
+
+[sub_resource type="BoxMesh" id="box_106"]
+size = Vector3(0.05, 0.02, 0.02)
+
+[sub_resource type="StandardMaterial3D" id="m_107"]
+resource_name = "PlasticaScura"
+albedo_color = Color(0.06, 0.06, 0.065, 1)
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="box_108"]
+size = Vector3(0.13, 0.08, 0.06)
+
+[sub_resource type="BoxMesh" id="box_109"]
+size = Vector3(0.72, 0.52, 0.03)
+
+[sub_resource type="StandardMaterial3D" id="m_110"]
+resource_name = "QuadroCielo"
+albedo_color = Color(0.24, 0.28, 0.34, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="box_111"]
+size = Vector3(0.62, 0.26, 0.01)
+
+[sub_resource type="StandardMaterial3D" id="m_112"]
+resource_name = "QuadroPrato"
+albedo_color = Color(0.17, 0.22, 0.13, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="box_113"]
+size = Vector3(0.62, 0.16, 0.01)
+
+[sub_resource type="StandardMaterial3D" id="m_114"]
+resource_name = "QuadroColle"
+albedo_color = Color(0.12, 0.17, 0.1, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="box_115"]
+size = Vector3(0.3, 0.06, 0.011)
+
+[sub_resource type="BoxMesh" id="box_116"]
+size = Vector3(0.84, 0.58, 0.025)
+
+[sub_resource type="StandardMaterial3D" id="m_117"]
+resource_name = "Sughero"
+albedo_color = Color(0.48, 0.35, 0.2, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_118"]
+size = Vector3(0.76, 0.5, 0.01)
+
+[sub_resource type="StandardMaterial3D" id="m_119"]
+resource_name = "Carta"
+albedo_color = Color(0.7, 0.68, 0.6, 1)
+roughness = 1
+
+[sub_resource type="StandardMaterial3D" id="m_120"]
+resource_name = "CartaGialla"
+albedo_color = Color(0.7, 0.62, 0.35, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_121"]
+size = Vector3(0.16, 0.22, 0.003)
+
+[sub_resource type="BoxMesh" id="box_122"]
+size = Vector3(0.13, 0.13, 0.003)
+
+[sub_resource type="BoxMesh" id="box_123"]
+size = Vector3(0.2, 0.15, 0.003)
+
+[sub_resource type="BoxMesh" id="box_124"]
+size = Vector3(0.12, 0.17, 0.003)
+
+[sub_resource type="StandardMaterial3D" id="m_125"]
+resource_name = "Cartone"
+albedo_color = Color(0.42, 0.3, 0.18, 1)
+roughness = 1
+
+[sub_resource type="StandardMaterial3D" id="m_126"]
+resource_name = "Nastro"
+albedo_color = Color(0.5, 0.4, 0.25, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="box_127"]
+size = Vector3(0.55, 0.4, 0.45)
+
+[sub_resource type="BoxMesh" id="box_128"]
+size = Vector3(0.56, 0.005, 0.06)
+
+[sub_resource type="BoxMesh" id="box_129"]
+size = Vector3(0.4, 0.3, 0.35)
+
+[sub_resource type="BoxMesh" id="box_130"]
+size = Vector3(0.41, 0.005, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="m_131"]
+resource_name = "MetalloScuro"
+albedo_color = Color(0.12, 0.12, 0.13, 1)
+roughness = 0.5
+metallic = 0.5
+
+[sub_resource type="CylinderMesh" id="cil_132"]
+top_radius = 0.13
+bottom_radius = 0.105
+height = 0.3
+radial_segments = 16
+rings = 1
+
+[sub_resource type="CylinderMesh" id="cil_133"]
+top_radius = 0.06
+bottom_radius = 0.06
+height = 0.03
+radial_segments = 16
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="m_134"]
+resource_name = "Ottone"
+albedo_color = Color(0.45, 0.38, 0.2, 1)
+roughness = 0.4
+metallic = 0.8
+
+[sub_resource type="CylinderMesh" id="cil_135"]
+top_radius = 0.008
+bottom_radius = 0.008
+height = 0.1
+radial_segments = 16
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="m_136"]
+resource_name = "VetroOpaco"
+albedo_color = Color(0.7, 0.68, 0.6, 1)
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="cil_137"]
+top_radius = 0.12
+bottom_radius = 0.22
+height = 0.14
+radial_segments = 16
+rings = 1
+
+[node name="Stanza" type="Node3D"]
+editor_description = "La STANZA: guscio (pavimento, muri, soffitto) e arredo, in coordinate di mondo (questa scena sta all'origine di main.tscn). Interno: x da -1.61 (finestra) a 2.6 (corridoio), z da -1.98 (scrivania) a 4.30 (letto), pavimento a y = 0, soffitto a 2.5. Scrivania, monitor, lampada, letto, finestra, corridoio e i marker dei nemici restano in main.tscn. I materiali condivisi sono in assets/materials/: cambiali li' e cambiano anche nel corridoio. Solo grafica: nessun nodo qui e' letto dal codice."
+
+[node name="Guscio" type="Node3D" parent="."]
+
+[node name="Pavimento" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, -0.05, 1.16)
+mesh = SubResource("box_1")
+material_override = ExtResource("2_ext")
+
+[node name="Soffitto" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 2.55, 1.16)
+mesh = SubResource("box_2")
+material_override = ExtResource("3_ext")
+
+[node name="MuroDavanti" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 1.2, -2.08)
+mesh = SubResource("box_3")
+material_override = ExtResource("1_ext")
+
+[node name="MuroDietro" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 1.2, 4.4)
+mesh = SubResource("box_3")
+material_override = ExtResource("1_ext")
+
+[node name="MuroSinistro" type="CSGBox3D" parent="Guscio"]
+editor_description = "Muro della finestra, bucato dal figlio BucoFinestra (CSG). Se sposti WindowLeft in main.tscn, sposta anche il buco."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.2, 1.16)
+size = Vector3(0.2, 2.6, 6.28)
+material = ExtResource("1_ext")
+
+[node name="BucoFinestra" type="CSGBox3D" parent="Guscio/MuroSinistro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.91)
+operation = 2
+size = Vector3(1, 1, 1.1)
+
+[node name="MuroDestro" type="CSGBox3D" parent="Guscio"]
+editor_description = "Muro del corridoio, bucato dal figlio BucoPorta (CSG) largo quanto il corridoio: gli affacci alle porte del corridoio devono vedersi dalla sedia."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.2, 1.16)
+size = Vector3(0.2, 2.6, 6.28)
+material = ExtResource("1_ext")
+
+[node name="BucoPorta" type="CSGBox3D" parent="Guscio/MuroDestro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -2.125)
+operation = 2
+size = Vector3(1, 2.3, 1.45)
+
+[node name="SpalleFinestra" type="Node3D" parent="Guscio"]
+
+[node name="Sopra" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.845, -0.75)
+mesh = SubResource("box_5")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Sotto" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 0.855, -0.75)
+mesh = SubResource("box_5")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Avanti" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.35, -1.295)
+mesh = SubResource("box_6")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Dietro" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.35, -0.205)
+mesh = SubResource("box_6")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Battiscopa" type="Node3D" parent="Guscio"]
+
+[node name="Davanti" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 0.04, -1.9725)
+mesh = SubResource("box_7")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="Dietro" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 0.04, 4.2925)
+mesh = SubResource("box_7")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="Sinistra" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6045, 0.04, 1.16)
+mesh = SubResource("box_8")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="DestraA" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 0.04, -1.835)
+mesh = SubResource("box_9")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="DestraB" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 0.04, 2.03)
+mesh = SubResource("box_10")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="VanoPorta" type="Node3D" parent="Guscio"]
+
+[node name="StipiteAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 1.09, -1.73)
+mesh = SubResource("box_11")
+material_override = ExtResource("4_ext")
+
+[node name="StipiteDietro" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 1.09, -0.2)
+mesh = SubResource("box_11")
+material_override = ExtResource("4_ext")
+
+[node name="Architrave" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 2.14, -0.965)
+mesh = SubResource("box_12")
+material_override = ExtResource("4_ext")
+
+[node name="SpallaAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.05, -1.685)
+mesh = SubResource("box_13")
+material_override = ExtResource("4_ext")
+
+[node name="SpallaDietro" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.05, -0.245)
+mesh = SubResource("box_13")
+material_override = ExtResource("4_ext")
+
+[node name="SpallaSopra" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.095, -0.965)
+mesh = SubResource("box_14")
+material_override = ExtResource("4_ext")
+
+[node name="Interruttore" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 1.1, -0.02)
+mesh = SubResource("box_16")
+material_override = SubResource("m_15")
+
+[node name="Arredo" type="Node3D" parent="."]
+
+[node name="Tappeto" type="Node3D" parent="Arredo"]
+
+[node name="Bordo" type="MeshInstance3D" parent="Arredo/Tappeto"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.006, 0.6)
+mesh = SubResource("box_18")
+material_override = SubResource("m_17")
+cast_shadow = 0
+
+[node name="Campo" type="MeshInstance3D" parent="Arredo/Tappeto"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.007, 0.6)
+mesh = SubResource("box_20")
+material_override = SubResource("m_19")
+cast_shadow = 0
+
+[node name="Termosifone" type="Node3D" parent="Arredo"]
+
+[node name="Elemento1" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -1.15)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento2" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -1.05)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento3" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.95)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento4" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.85)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento5" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.75)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento6" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.65)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento7" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.55)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento8" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.45)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento9" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.35)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="TuboSopra" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.64, -0.75)
+mesh = SubResource("box_23")
+material_override = SubResource("m_21")
+
+[node name="TuboSotto" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.16, -0.75)
+mesh = SubResource("box_23")
+material_override = SubResource("m_21")
+
+[node name="PiedeA" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.065, -1.13)
+mesh = SubResource("box_24")
+material_override = SubResource("m_21")
+
+[node name="PiedeB" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.065, -0.37)
+mesh = SubResource("box_24")
+material_override = SubResource("m_21")
+
+[node name="Tende" type="Node3D" parent="Arredo"]
+
+[node name="Bastone" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.472, 2.02, -0.75)
+mesh = SubResource("box_27")
+material_override = ExtResource("4_ext")
+
+[node name="TendaAvanti1" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, -1.74)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="TendaAvanti2" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.492, 1.25, -1.62)
+mesh = SubResource("box_28")
+material_override = SubResource("m_26")
+
+[node name="TendaAvanti3" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, -1.5)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="TendaDietro1" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, 0)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="TendaDietro2" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.492, 1.25, 0.12)
+mesh = SubResource("box_28")
+material_override = SubResource("m_26")
+
+[node name="TendaDietro3" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, 0.24)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="Libreria" type="Node3D" parent="Arredo"]
+
+[node name="FiancoAvanti" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 0.85, 0.415)
+mesh = SubResource("box_29")
+material_override = ExtResource("5_ext")
+
+[node name="FiancoDietro" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 0.85, 1.285)
+mesh = SubResource("box_29")
+material_override = ExtResource("5_ext")
+
+[node name="Cielo" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.685, 0.85)
+mesh = SubResource("box_30")
+material_override = ExtResource("5_ext")
+
+[node name="Zoccolo" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 0.04, 0.85)
+mesh = SubResource("box_31")
+material_override = ExtResource("4_ext")
+
+[node name="Schienale" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6045, 0.85, 0.85)
+mesh = SubResource("box_32")
+material_override = ExtResource("4_ext")
+
+[node name="Ripiano1" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 0.4475, 0.85)
+mesh = SubResource("box_33")
+material_override = ExtResource("5_ext")
+
+[node name="Ripiano2" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 0.8475, 0.85)
+mesh = SubResource("box_33")
+material_override = ExtResource("5_ext")
+
+[node name="Ripiano3" type="MeshInstance3D" parent="Arredo/Libreria"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.2475, 0.85)
+mesh = SubResource("box_33")
+material_override = ExtResource("5_ext")
+
+[node name="Libri" type="Node3D" parent="Arredo/Libreria"]
+
+[node name="Libro1" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4889, 0.1977, 0.4525)
+mesh = SubResource("box_40")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro2" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5021, 0.2083, 0.52)
+mesh = SubResource("box_41")
+material_override = SubResource("m_38")
+cast_shadow = 0
+
+[node name="Libro3" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5058, 0.2123, 0.564)
+mesh = SubResource("box_42")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro4" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.1874, 0.5955)
+mesh = SubResource("box_43")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro5" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5034, 0.2061, 0.637)
+mesh = SubResource("box_44")
+material_override = SubResource("m_34")
+cast_shadow = 0
+
+[node name="Libro6" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5011, 0.1872, 0.691)
+mesh = SubResource("box_45")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro7" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4859, 0.1951, 0.74)
+mesh = SubResource("box_46")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro8" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4951, 0.2182, 0.7765)
+mesh = SubResource("box_47")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro9" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4978, 0.2161, 0.8105)
+mesh = SubResource("box_48")
+material_override = SubResource("m_38")
+cast_shadow = 0
+
+[node name="Libro10" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5035, 0.2235, 0.857)
+mesh = SubResource("box_49")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro11" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4836, 0.1839, 0.9295)
+mesh = SubResource("box_50")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro12" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4841, 0.2111, 0.9685)
+mesh = SubResource("box_51")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro13" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4995, 0.2045, 1.0025)
+mesh = SubResource("box_52")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro14" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4987, 0.1865, 1.07)
+mesh = SubResource("box_53")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro15" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4905, 0.208, 1.1425)
+mesh = SubResource("box_54")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro16" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4902, 0.2092, 1.179)
+mesh = SubResource("box_55")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro17" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4958, 0.2055, 1.2155)
+mesh = SubResource("box_56")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro18" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4846, 0.561, 0.4525)
+mesh = SubResource("box_57")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro19" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5045, 0.5766, 0.494)
+mesh = SubResource("box_58")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro20" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4945, 0.5704, 0.538)
+mesh = SubResource("box_59")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro21" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4971, 0.6028, 0.5695)
+mesh = SubResource("box_60")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro22" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4878, 0.5606, 0.632)
+mesh = SubResource("box_61")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro23" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4952, 0.6011, 0.6685)
+mesh = SubResource("box_62")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro24" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4837, 0.581, 0.705)
+mesh = SubResource("box_63")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro25" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.483, 0.6069, 0.7415)
+mesh = SubResource("box_64")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro26" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.483, 0.5649, 0.7755)
+mesh = SubResource("box_65")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro27" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5068, 0.5968, 0.817)
+mesh = SubResource("box_66")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro28" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.487, 0.6066, 0.856)
+mesh = SubResource("box_67")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro29" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4827, 0.5844, 0.9)
+mesh = SubResource("box_68")
+material_override = SubResource("m_38")
+cast_shadow = 0
+
+[node name="Libro30" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4826, 0.5748, 0.9415)
+mesh = SubResource("box_69")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro31" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.498, 0.5742, 0.983)
+mesh = SubResource("box_70")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro32" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5018, 0.5829, 1.053)
+mesh = SubResource("box_71")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro33" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4878, 0.5777, 1.097)
+mesh = SubResource("box_72")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro34" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.49, 0.6041, 1.146)
+mesh = SubResource("box_73")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro35" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4861, 0.6039, 1.1825)
+mesh = SubResource("box_74")
+material_override = SubResource("m_34")
+cast_shadow = 0
+
+[node name="Libro36" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.49, 0.9633, 0.4525)
+mesh = SubResource("box_75")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro37" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.483, 0.9847, 0.4865)
+mesh = SubResource("box_76")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Libro38" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4882, 0.9746, 0.5255)
+mesh = SubResource("box_77")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro39" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5041, 0.9884, 0.567)
+mesh = SubResource("box_78")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro40" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4855, 0.9909, 0.6085)
+mesh = SubResource("box_79")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro41" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4873, 1.0005, 0.6425)
+mesh = SubResource("box_80")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro42" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5011, 0.9943, 0.684)
+mesh = SubResource("box_81")
+material_override = SubResource("m_37")
+cast_shadow = 0
+
+[node name="Libro43" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4908, 0.9796, 0.7255)
+mesh = SubResource("box_82")
+material_override = SubResource("m_38")
+cast_shadow = 0
+
+[node name="Libro44" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4864, 0.9937, 0.762)
+mesh = SubResource("box_83")
+material_override = SubResource("m_38")
+cast_shadow = 0
+
+[node name="Libro45" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4935, 0.9881, 0.811)
+mesh = SubResource("box_84")
+material_override = SubResource("m_38")
+cast_shadow = 0
+
+[node name="Libro46" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5062, 0.9861, 0.855)
+mesh = SubResource("box_85")
+material_override = SubResource("m_34")
+cast_shadow = 0
+
+[node name="Libro47" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4897, 0.9887, 0.8865)
+mesh = SubResource("box_86")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro48" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4825, 0.9815, 0.918)
+mesh = SubResource("box_87")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro49" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.482, 0.8775, 1.11)
+mesh = SubResource("box_88")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro50" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.482, 0.9125, 1.11)
+mesh = SubResource("box_88")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro51" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4885, 1.3767, 0.4525)
+mesh = SubResource("box_89")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro52" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5006, 1.3573, 0.494)
+mesh = SubResource("box_90")
+material_override = SubResource("m_34")
+cast_shadow = 0
+
+[node name="Libro53" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5012, 1.3602, 0.548)
+mesh = SubResource("box_91")
+material_override = SubResource("m_36")
+cast_shadow = 0
+
+[node name="Libro54" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5004, 1.3543, 0.597)
+mesh = SubResource("box_92")
+material_override = SubResource("m_34")
+cast_shadow = 0
+
+[node name="Libro55" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4969, 1.3574, 0.6595)
+mesh = SubResource("box_93")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro56" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.486, 1.3639, 0.6935)
+mesh = SubResource("box_94")
+material_override = SubResource("m_35")
+cast_shadow = 0
+
+[node name="Libro57" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4858, 1.3641, 0.7325)
+mesh = SubResource("box_95")
+material_override = SubResource("m_34")
+cast_shadow = 0
+
+[node name="Libro58" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4893, 1.3731, 0.769)
+mesh = SubResource("box_96")
+material_override = SubResource("m_38")
+cast_shadow = 0
+
+[node name="Libro59" type="MeshInstance3D" parent="Arredo/Libreria/Libri"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4855, 1.3793, 0.813)
+mesh = SubResource("box_97")
+material_override = SubResource("m_39")
+cast_shadow = 0
+
+[node name="Armadio" type="Node3D" parent="Arredo"]
+
+[node name="Zoccolo" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.345, 0.03, 2.9)
+mesh = SubResource("box_99")
+material_override = ExtResource("4_ext")
+
+[node name="Corpo" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.325, 1.005, 2.9)
+mesh = SubResource("box_100")
+material_override = ExtResource("5_ext")
+
+[node name="Cornice" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.305, 1.975, 2.9)
+mesh = SubResource("box_101")
+material_override = ExtResource("4_ext")
+
+[node name="Fessura" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.047, 1, 2.9)
+mesh = SubResource("box_102")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="PomoloA" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0375, 1.05, 2.855)
+mesh = SubResource("box_103")
+material_override = SubResource("m_98")
+cast_shadow = 0
+
+[node name="PomoloB" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0375, 1.05, 2.945)
+mesh = SubResource("box_103")
+material_override = SubResource("m_98")
+cast_shadow = 0
+
+[node name="Comodino" type="Node3D" parent="Arredo"]
+
+[node name="Corpo" type="MeshInstance3D" parent="Arredo/Comodino"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.342, 0.25, 4.08)
+mesh = SubResource("box_104")
+material_override = ExtResource("5_ext")
+
+[node name="Cassetto" type="MeshInstance3D" parent="Arredo/Comodino"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.342, 0.36, 3.877)
+mesh = SubResource("box_105")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="Pomolo" type="MeshInstance3D" parent="Arredo/Comodino"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.342, 0.42, 3.87)
+mesh = SubResource("box_106")
+material_override = SubResource("m_98")
+cast_shadow = 0
+
+[node name="Sveglia" type="MeshInstance3D" parent="Arredo/Comodino"]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, -1.292, 0.54, 4.06)
+mesh = SubResource("box_108")
+material_override = SubResource("m_107")
+
+[node name="PortaRipostiglio" parent="Arredo" instance=ExtResource("6_ext")]
+editor_description = "Il modello della porta (assets/textures/3d/door/Door.glb), chiusa, sul muro di fondo. Prima stava accanto all'imbocco del corridoio; li' ora c'e' il vano aperto, largo quanto il corridoio (le sue porte devono vedersi)."
+transform = Transform3D(-0.65, 0, 0, 0, 0.65, 0, 0, 0, -0.65, 1.72, 0, 4.26)
+
+[node name="Quadro" type="Node3D" parent="Arredo"]
+
+[node name="Cornice" type="MeshInstance3D" parent="Arredo/Quadro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 1.62, 4.285)
+mesh = SubResource("box_109")
+material_override = ExtResource("4_ext")
+
+[node name="Cielo" type="MeshInstance3D" parent="Arredo/Quadro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 1.7, 4.268)
+mesh = SubResource("box_111")
+material_override = SubResource("m_110")
+cast_shadow = 0
+
+[node name="Prato" type="MeshInstance3D" parent="Arredo/Quadro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 1.49, 4.268)
+mesh = SubResource("box_113")
+material_override = SubResource("m_112")
+cast_shadow = 0
+
+[node name="Colle" type="MeshInstance3D" parent="Arredo/Quadro"]
+transform = Transform3D(0.9903, -0.1392, 0, 0.1392, 0.9903, 0, 0, 0, 1, 0.05, 1.59, 4.267)
+mesh = SubResource("box_115")
+material_override = SubResource("m_114")
+cast_shadow = 0
+
+[node name="Bacheca" type="Node3D" parent="Arredo"]
+
+[node name="Cornice" type="MeshInstance3D" parent="Arredo/Bacheca"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -1.9675)
+mesh = SubResource("box_116")
+material_override = ExtResource("4_ext")
+
+[node name="Sughero" type="MeshInstance3D" parent="Arredo/Bacheca"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -1.95)
+mesh = SubResource("box_118")
+material_override = SubResource("m_117")
+cast_shadow = 0
+
+[node name="Foglio1" type="MeshInstance3D" parent="Arredo/Bacheca"]
+transform = Transform3D(0.9976, 0.0698, 0, -0.0698, 0.9976, 0, 0, 0, 1, 1.26, 1.56, -1.943)
+mesh = SubResource("box_121")
+material_override = SubResource("m_119")
+cast_shadow = 0
+
+[node name="Foglio2" type="MeshInstance3D" parent="Arredo/Bacheca"]
+transform = Transform3D(0.9986, -0.0523, 0, 0.0523, 0.9986, 0, 0, 0, 1, 1.48, 1.6, -1.943)
+mesh = SubResource("box_122")
+material_override = SubResource("m_120")
+cast_shadow = 0
+
+[node name="Foglio3" type="MeshInstance3D" parent="Arredo/Bacheca"]
+transform = Transform3D(0.9945, -0.1045, 0, 0.1045, 0.9945, 0, 0, 0, 1, 1.7, 1.52, -1.943)
+mesh = SubResource("box_123")
+material_override = SubResource("m_119")
+cast_shadow = 0
+
+[node name="Foglio4" type="MeshInstance3D" parent="Arredo/Bacheca"]
+transform = Transform3D(0.9994, 0.0349, 0, -0.0349, 0.9994, 0, 0, 0, 1, 1.53, 1.37, -1.943)
+mesh = SubResource("box_124")
+material_override = SubResource("m_119")
+cast_shadow = 0
+
+[node name="Scatoloni" type="Node3D" parent="Arredo"]
+
+[node name="Grande" type="MeshInstance3D" parent="Arredo/Scatoloni"]
+transform = Transform3D(0.9976, 0, 0.0698, 0, 1, 0, -0.0698, 0, 0.9976, 1.62, 0.2, -1.71)
+mesh = SubResource("box_127")
+material_override = SubResource("m_125")
+
+[node name="NastroGrande" type="MeshInstance3D" parent="Arredo/Scatoloni"]
+transform = Transform3D(0.9976, 0, 0.0698, 0, 1, 0, -0.0698, 0, 0.9976, 1.62, 0.4025, -1.71)
+mesh = SubResource("box_128")
+material_override = SubResource("m_126")
+cast_shadow = 0
+
+[node name="Piccolo" type="MeshInstance3D" parent="Arredo/Scatoloni"]
+transform = Transform3D(0.9816, 0, -0.1908, 0, 1, 0, 0.1908, 0, 0.9816, 1.58, 0.55, -1.7)
+mesh = SubResource("box_129")
+material_override = SubResource("m_125")
+
+[node name="NastroPiccolo" type="MeshInstance3D" parent="Arredo/Scatoloni"]
+transform = Transform3D(0.9816, 0, -0.1908, 0, 1, 0, 0.1908, 0, 0.9816, 1.58, 0.7025, -1.7)
+mesh = SubResource("box_130")
+material_override = SubResource("m_126")
+cast_shadow = 0
+
+[node name="Cestino" type="MeshInstance3D" parent="Arredo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.92, 0.15, -1.55)
+mesh = SubResource("cil_132")
+material_override = SubResource("m_131")
+
+[node name="Plafoniera" type="Node3D" parent="Arredo"]
+
+[node name="Rosone" type="MeshInstance3D" parent="Arredo/Plafoniera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.485, 1)
+mesh = SubResource("cil_133")
+material_override = SubResource("m_15")
+
+[node name="Stelo" type="MeshInstance3D" parent="Arredo/Plafoniera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.42, 1)
+mesh = SubResource("cil_135")
+material_override = SubResource("m_134")
+
+[node name="Paralume" type="MeshInstance3D" parent="Arredo/Plafoniera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.3, 1)
+mesh = SubResource("cil_137")
+material_override = SubResource("m_136")

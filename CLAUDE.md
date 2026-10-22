@@ -70,7 +70,7 @@ switches. Overlay layers: PC view 10, win 20, debug 30, death 50, pause 60. Full
 ```
 project.godot            autoload GameManager; "pause" action; translations (fallback "en")
 locale/ui.csv            THE translation table (keys,en,it): every player-facing string. --import after editing
-scenes/                  main_menu (main scene), main (room), corridor, window_left, enemies/*, fade_transition,
+scenes/                  main_menu (main scene), main (room), room (shell+furniture), corridor, window_left, enemies/*, fade_transition,
                          ComputerMode (DEV-ONLY OS harness, not in the live flow)
 scripts/
   GameManager.gd         run lifecycle, keys, language, debug switches, F8-F12 dev keys
@@ -136,8 +136,8 @@ Implemented (details in the area docs):
 - PC threats: lethal apparitions, false alarms, YouAreStupid, blue screen.
 - Game over with per-cause lines; F12 debug panel (dev-only) with every threat on a button.
 
-NOT implemented yet: real enemy models/animations (placeholders, owner's art comes last); real
-3D room layout; sound; options beyond language; the planned ending (GDD §2b); other PC threats
+NOT implemented yet: real enemy models/animations (placeholders, owner's art comes last); the final
+3D room (today a furnished starter room from primitives + owner's models); sound; options beyond language; the planned ending (GDD §2b); other PC threats
 (self-opening windows, corrupted files, hunting cursor). Cut on purpose: PC session persistence.
 "Continue the game" = the next item in ROADMAP.md.
 

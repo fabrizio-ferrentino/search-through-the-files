@@ -27,7 +27,66 @@ Start screen (this is the main scene).
 
 ### `scenes/main.tscn`
 
-The 3D room. Camera3D runs player.gd.
+The 3D room. Camera3D runs player.gd. The shell and furniture are NOT
+here any more: they are the instance "Stanza" (scenes/room.tscn) at the
+origin. main.tscn keeps the desk/PC/monitor, Bed, lights, the Corridor
+instance, WindowLeft, the enemies' markers.
+
+2026-10-22 (owner: "sistemare la stanza, il mondo 3d, nulla di troppo
+incredibile... rimanere coerente con il tutto"): the room was rebuilt
+from primitives + the owner's models, scenes only (no script touched).
+Old main.tscn nodes removed: floor, wall, wallLeft (+BucoFinestra),
+wallBack, wallRight, Soffitto, the "Root Scene" door. Why: the old walls
+were rotated ~1 degree and started 9 cm above the floor, and the floor
+top was at y = 0.112 (desk legs sunk 12 cm, bed 22 cm, Ghosty's markers
+below the floor). Now the floor top is y = 0.
+
+Main.tscn changes: Bed y = 0; Corridor rotated exactly -90 degrees (was
+~-92.8) with its mouth on the right wall, Transform3D(0,0,-1, 0,1,0,
+1,0,0, 2.6, -0.0125, -0.69); CornerShadow moved to (2, 2.2, 1.5) (it
+was inside the new ceiling); DeskLamp is an editable instance with
+Lamp_with_shade cast_shadow = off (the shade threw a huge black blob on
+the wall). Known, left as is: Ghosty's path (markers z 4 -> 1.05, x 0)
+still crosses the bed.
+
+### `scenes/room.tscn`
+
+The room SHELL and FURNITURE in world coordinates, instanced in main.tscn
+as "Stanza". PURE GRAPHICS: no node in it is read by code. Interior
+x -1.61 (window wall) .. 2.6 (corridor wall), z -1.98 (desk wall) ..
+4.30 (bed wall), floor top y = 0, ceiling 2.5. Walls are 20 cm thick
+and straight.
+- Guscio: Pavimento, Soffitto, MuroDavanti, MuroDietro, MuroSinistro
+  (CSG; child BucoFinestra = the window hole, move it together with
+  WindowLeft), MuroDestro (CSG; child BucoPorta = the opening to the
+  corridor, z -1.69..-0.24, h 2.1 - it MUST be as wide as the corridor,
+  or the corridor peek spots are hidden from the seat), SpalleFinestra
+  (dark lining of the window reveal: a 50 cm LIT reveal looked like a
+  grey box outside the window), Battiscopa, VanoPorta (casing, wood
+  lining, light switch).
+- Arredo: Tappeto, Termosifone, Tende, Libreria (books), Armadio,
+  Comodino (+ alarm clock, off), PortaRipostiglio (the owner's Door.glb,
+  closed, on the back wall right of the bed; before it stood rotated
+  beside the corridor mouth), Quadro, Bacheca (cork board, papers
+  without text), Scatoloni, Cestino, Plafoniera (off).
+
+### `assets/materials/` (shared by room.tscn AND corridor.tscn)
+
+carta_da_parati.tres (faint vertical stripes: a GradientTexture2D with
+world triplanar), pavimento_legno.tres (planks, same trick),
+soffitto.tres, legno_scuro.tres (same colour as the window frame),
+legno_mobili.tres. Change one, both room and corridor follow.
+
+### `scenes/corridor.tscn`
+
+Floor and Ceiling now start at the mouth (z = 0) instead of entering the
+room (it z-fought); floor/walls/ceiling use the shared materials. The
+black side "rooms" (m_room) are unchanged.
+
+### `scenes/window_left.tscn`
+
+2026-10-22: added "Alberi", three unshaded fir silhouettes behind
+SpotFinestra, against the night plane.
 
 ### `scenes/ComputerMode.tscn`
 

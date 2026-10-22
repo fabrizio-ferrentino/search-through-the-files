@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3]
+
+[sub_resource type="Gradient" id="righe"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.62)
+colors = PackedColorArray(0.33, 0.3, 0.24, 1, 0.295, 0.265, 0.21, 1)
+
+[sub_resource type="GradientTexture2D" id="tex_righe"]
+gradient = SubResource("righe")
+width = 64
+height = 4
+
+[resource]
+resource_name = "CartaDaParati"
+albedo_texture = SubResource("tex_righe")
+roughness = 0.95
+uv1_scale = Vector3(6, 6, 6)
+uv1_triplanar = true
+uv1_world_triplanar = true

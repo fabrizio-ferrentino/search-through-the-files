@@ -25,6 +25,34 @@ size = Vector2(9, 5)
 [sub_resource type="PlaneMesh" id="prato"]
 size = Vector2(9, 5)
 
+[sub_resource type="StandardMaterial3D" id="m_sagome"]
+shading_mode = 0
+albedo_color = Color(0.012, 0.014, 0.022, 1)
+
+[sub_resource type="BoxMesh" id="tronco"]
+size = Vector3(0.14, 1, 0.14)
+
+[sub_resource type="CylinderMesh" id="chioma_a"]
+top_radius = 0.0
+bottom_radius = 0.75
+height = 2.4
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="chioma_b"]
+top_radius = 0.0
+bottom_radius = 1.0
+height = 3.2
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="chioma_c"]
+top_radius = 0.0
+bottom_radius = 0.6
+height = 1.8
+radial_segments = 8
+rings = 1
+
 [sub_resource type="StandardMaterial3D" id="m_prato"]
 albedo_color = Color(0.02, 0.025, 0.03, 1)
 roughness = 1.0
@@ -96,3 +124,36 @@ spot_angle = 40.0
 [node name="SpotFinestra" type="Marker3D" parent="." groups=["enemy_spots", "spot_left"]]
 editor_description = "Dove si affacciano Jester e HaloMan alla finestra: i PIEDI, fuori, sul prato. enemy_spots = il ThreatDirector lo usa come le porte del corridoio; spot_left = la zona e' la sinistra (la torcia va puntata da questa parte)."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.24, -0.75)
+
+[node name="Alberi" type="Node3D" parent="."]
+editor_description = "Sagome di abeti contro il cielo, senza luce propria (unshaded) come Notte: si leggono solo come forme piu' scure. Stanno dietro SpotFinestra, non coprono chi si affaccia."
+
+[node name="TroncoA" type="MeshInstance3D" parent="Alberi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, -0.74, -3)
+mesh = SubResource("tronco")
+material_override = SubResource("m_sagome")
+
+[node name="ChiomaA" type="MeshInstance3D" parent="Alberi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 0.66, -3)
+mesh = SubResource("chioma_a")
+material_override = SubResource("m_sagome")
+
+[node name="TroncoB" type="MeshInstance3D" parent="Alberi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, -0.74, -3.5)
+mesh = SubResource("tronco")
+material_override = SubResource("m_sagome")
+
+[node name="ChiomaB" type="MeshInstance3D" parent="Alberi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 1.06, -3.5)
+mesh = SubResource("chioma_b")
+material_override = SubResource("m_sagome")
+
+[node name="TroncoC" type="MeshInstance3D" parent="Alberi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, -0.74, -3.8)
+mesh = SubResource("tronco")
+material_override = SubResource("m_sagome")
+
+[node name="ChiomaC" type="MeshInstance3D" parent="Alberi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.36, -3.8)
+mesh = SubResource("chioma_c")
+material_override = SubResource("m_sagome")

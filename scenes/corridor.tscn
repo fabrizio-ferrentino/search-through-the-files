@@ -1,56 +1,55 @@
 [gd_scene format=3 uid="uid://0yl7nprafrno"]
 
-[sub_resource type="StandardMaterial3D" id="m_floor"]
-albedo_color = Color(0.08, 0.08, 0.09, 1)
+[ext_resource type="Material" path="res://assets/materials/pavimento_legno.tres" id="m_floor"]
+[ext_resource type="Material" path="res://assets/materials/carta_da_parati.tres" id="m_wall"]
+[ext_resource type="Material" path="res://assets/materials/soffitto.tres" id="m_ceiling"]
 
 [sub_resource type="BoxMesh" id="box"]
-
-[sub_resource type="StandardMaterial3D" id="m_wall"]
-albedo_color = Color(0.12, 0.12, 0.14, 1)
 
 [sub_resource type="StandardMaterial3D" id="m_room"]
 albedo_color = Color(0.04, 0.04, 0.05, 1)
 
 [node name="Corridor" type="Node3D" unique_id=541986947]
+editor_description = "Il corridoio a destra. Origine = imbocco (z = 0, sul muro destro della stanza), -Z va verso il fondo. Pavimento e soffitto partono dall'imbocco: non devono entrare nella stanza. I materiali sono quelli della stanza (assets/materials/)."
 
 [node name="Floor" type="MeshInstance3D" parent="." unique_id=1813885056]
-transform = Transform3D(2.75, 0, 0, 0, 0.125, 0, 0, 0, 5, 0, -0.05, -1.8)
-material_override = SubResource("m_floor")
+transform = Transform3D(2.75, 0, 0, 0, 0.125, 0, 0, 0, 4.3, 0, -0.05, -2.15)
+material_override = ExtResource("m_floor")
 mesh = SubResource("box")
 
 [node name="Ceiling" type="MeshInstance3D" parent="." unique_id=1407597964]
-transform = Transform3D(2.2, 0, 0, 0, 0.1, 0, 0, 0, 4, 0, 2.45, -1.8)
-material_override = SubResource("m_wall")
+transform = Transform3D(2.2, 0, 0, 0, 0.1, 0, 0, 0, 3.8, 0, 2.45, -1.9)
+material_override = ExtResource("m_ceiling")
 mesh = SubResource("box")
 
 [node name="BackWall" type="MeshInstance3D" parent="." unique_id=587779812]
 transform = Transform3D(2.2, 0, 0, 0, 2.5, 0, 0, 0, 0.1, 0, 1.25, -3.85)
-material_override = SubResource("m_wall")
+material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="LeftA" type="MeshInstance3D" parent="." unique_id=1752441789]
 transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.4, -1.05, 1.2, -0.2)
-material_override = SubResource("m_wall")
+material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="LeftB" type="MeshInstance3D" parent="." unique_id=965503595]
 transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 2.45, -1.05, 1.2, -2.625)
-material_override = SubResource("m_wall")
+material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="RightA" type="MeshInstance3D" parent="." unique_id=1005019157]
 transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.5, 0.5, 1.2, -0.25)
-material_override = SubResource("m_wall")
+material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="RightB" type="MeshInstance3D" parent="." unique_id=1415642037]
 transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.6, 0.5, 1.2, -0.842)
-material_override = SubResource("m_wall")
+material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="RightC" type="MeshInstance3D" parent="." unique_id=2126349759]
 transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.75, 0.5, 1.2, -3.475)
-material_override = SubResource("m_wall")
+material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="RoomL1" type="MeshInstance3D" parent="." unique_id=29044227]
@@ -91,5 +90,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0213723, 0, -2.9215245)
 
 [node name="RightC2" type="MeshInstance3D" parent="." unique_id=82359547]
 transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.75, 0.5, 1.2, -2.732)
-material_override = SubResource("m_wall")
+material_override = ExtResource("m_wall")
 mesh = SubResource("box")
