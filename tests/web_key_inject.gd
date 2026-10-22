@@ -17,27 +17,21 @@ extends Node
 #   6 le posizioni siano VARIE: e' il motivo di tutto il lavoro.
 # Dal 18/10/2026 le chiavi web sono DUE (proprietario): tutto quanto sopra vale per
 # OGNUNA, e in piu' si pretende che
-#   7 stiano sempre su due siti DIVERSI, che escano tutte e quattro le combinazioni di
-#     modo (visibile/sorgente x visibile/sorgente), e che la PRIMA sia rimasta quella di
-#     prima del cambio (BASE: misurata sul codice vecchio, sito + modo + frase) -- i semi
-#     gia' giocati non devono cambiare sotto i piedi.
+#   7 stiano sempre su due siti DIVERSI e che escano tutte e quattro le combinazioni di
+#     modo (visibile/sorgente x visibile/sorgente).
+# Fino al 19/10/2026 c'era anche PRIMA_CHIAVE_INVARIATA: la prima chiave di 8 semi fissata
+# (sito + modo + frase), perche' i semi gia' giocati non cambiassero. E' stata TOLTA quando
+# il web e' passato al catalogo dei siti: il catalogo cresce a lotti, e ogni sito aggiunto
+# cambia l'estrazione di tutti i semi -- andava rifissata a ogni lotto senza proteggere
+# niente. Quello che conta, stesso seme = stessa partita, lo controlla RIPRODUCIBILE.
+# Dal 19/10/2026 un portatore e' una PAGINA ("sito/pagina"), non piu' un sito di una
+# pagina sola: la chiave puo' stare in una qualunque pagina dei siti del catalogo.
 #
 # Va eseguito come SCENA (non con -s): serve l'autoload GameManager.
 #   & $godot --headless --path $proj res://tests/web_key_inject.tscn
 # ============================================================
 
 const SEMI := 60
-const POOL := ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri"]
-# La chiave web di questi semi PRIMA che diventassero due (in italiano): sito, modo, frase
-# col codice al posto di "#".
-const BASE := {
-	1: ["mail", false, "build-key=#"], 7: ["meteo", false, "temporary-key=#"],
-	42: ["meteo", false, "why are u doing this #"], 111: ["mail", false, "#"],
-	4242: ["forum", false, "# i just want to be happy"],
-	5150: ["giochi", false, "# i just want to be happy"],
-	8080: ["news", true, "you want this #"], 12345: ["misteri", true, "#"],
-}
-
 var _fails: Array = []
 var _combinazioni: Dictionary = {}  # "vis/src" della coppia -> quante volte
 var _tipi: Dictionary = {}          # tipo -> quante volte
@@ -55,7 +49,6 @@ func _ready() -> void:
 
 	_check("ESCONO_TUTTE_LE_COPPIE", _combinazioni.size() == 4,
 			"combinazioni di modo uscite: %s" % str(_combinazioni))
-	_prova_base()
 
 	_censimento()
 	_check("TIPI_VARI", _tipi.size() >= 8,
@@ -80,29 +73,14 @@ func _prova(seme: int) -> void:
 	if WebRuntime.quanti_posti() != 2:
 		_ko(seme, "%d chiavi web invece di 2" % WebRuntime.quanti_posti())
 		return
-	if WebRuntime.carrier(0) == WebRuntime.carrier(1):
-		_ko(seme, "le due chiavi web sono sullo stesso sito (%s)" % WebRuntime.carrier(0))
+	if WebRuntime.sito_di(WebRuntime.carrier(0)) == WebRuntime.sito_di(WebRuntime.carrier(1)):
+		_ko(seme, "le due chiavi web sono sullo stesso sito (%s, %s)" % [WebRuntime.carrier(0),
+				WebRuntime.carrier(1)])
 	var coppia := "%s/%s" % ["vis" if WebRuntime.is_visible(0) else "src",
 			"vis" if WebRuntime.is_visible(1) else "src"]
 	_combinazioni[coppia] = int(_combinazioni.get(coppia, 0)) + 1
 	for n in range(2):
 		_prova_chiave(seme, n)
-
-# La prima chiave e' quella di prima del cambio.
-func _prova_base() -> void:
-	var lingua: String = GameManager.lingua
-	GameManager.set_lingua("it", false)
-	var diverse := []
-	for seme in BASE:
-		GameManager.start_new_run(int(seme))
-		var b: Array = BASE[seme]
-		var codice: String = GameManager.key_label(WebRuntime.indice(0))
-		var ora := [WebRuntime.carrier(0), WebRuntime.is_visible(0),
-				WebRuntime.key_text(0).replace(codice, "#")]
-		if ora != b:
-			diverse.append("seme %d: %s invece di %s" % [seme, str(ora), str(b)])
-	GameManager.set_lingua(lingua, false)
-	_check("PRIMA_CHIAVE_INVARIATA", diverse.is_empty(), "; ".join(diverse))
 
 func _prova_chiave(seme: int, n: int) -> void:
 	var kl: String = GameManager.key_label(WebRuntime.indice(n))
@@ -113,8 +91,8 @@ func _prova_chiave(seme: int, n: int) -> void:
 	if kl == "" or port == "":
 		_ko(seme, "nessuna chiave o nessun portatore")
 		return
-	if not POOL.has(port):
-		_ko(seme, "portatore fuori dal pool: %s" % port)
+	if not _pool().has(port) or not WebRuntime.in_partita(port):
+		_ko(seme, "portatore fuori dai siti della partita: %s" % port)
 		return
 	if tipo == WebAnchor.RIPIEGO or tipo == "":
 		_ko(seme, "nessuna ancora trovata in %s (tipo=%s)" % [port, tipo])
@@ -149,7 +127,7 @@ func _prova_chiave(seme: int, n: int) -> void:
 	if vis:
 		if con.find(kl) < 0:
 			_ko(seme, "modalita' visibile ma la chiave non arriva a schermo (%s, %s)" % [port, tipo])
-		elif str(d[1]).find(str(info["reso"])) < 0:
+		elif con.find(str(info["reso"])) < 0 or pulito.find(str(info["reso"])) >= 0:
 			_ko(seme, "a schermo non compare il testo atteso (%s)" % tipo)
 	else:
 		if con.find(kl) >= 0:
@@ -157,9 +135,9 @@ func _prova_chiave(seme: int, n: int) -> void:
 		elif str(d[1]).strip_edges() != "":
 			_ko(seme, "la pagina cambia pur essendo solo sorgente (%s)" % tipo)
 
-	# una sola pagina del pool porta la chiave
+	# una sola pagina dei siti porta la chiave
 	var quante := 0
-	for f in POOL:
+	for f in _pool():
 		if WebRuntime.source_html(f, BrowserApp.read_page(f)).find(kl) >= 0:
 			quante += 1
 	if quante != 1:
@@ -173,6 +151,14 @@ func _prova_chiave(seme: int, n: int) -> void:
 	_tipi[tipo] = int(_tipi.get(tipo, 0)) + 1
 	var punto := "%s@%d" % [port, int(info["pos"])]
 	_punti[punto] = int(_punti.get(punto, 0)) + 1
+
+# Tutte le pagine di tutti i siti del catalogo ("sito/pagina").
+func _pool() -> Array:
+	var out: Array = []
+	for c in CatalogoSiti.SITI:
+		for pg in c["pagine"]:
+			out.append(str(c["id"]) + "/" + str(pg))
+	return out
 
 # Fotografia della scelta per un seme: serve alla prova di riproducibilita'.
 func _scatto(seme: int) -> String:

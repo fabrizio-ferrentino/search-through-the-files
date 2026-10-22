@@ -167,7 +167,8 @@ func _prova_ancore() -> void:
 			if str(a["tipo"]) != WA.CODA_CELLA:
 				continue
 			var bg := _fondo_di(raw, int(a["pos"])).to_lower()
-			if FONDI_SCURI.has(bg):
+			# su una pagina SCURA (testo chiaro: la pagina del ragazzo) una cella nera si legge
+			if FONDI_SCURI.has(bg) and not _testo_chiaro(raw):
 				_fails.append("cella_scura_" + nome)
 				print("FAIL  cella_scura_%s -- %s su fondo %s" % [nome, str(a["nota"]), bg])
 				break
@@ -176,6 +177,14 @@ func _prova_ancore() -> void:
 			_invariante(nome, raw, a, true)
 		for a in src:
 			_invariante(nome, raw, a, false)
+
+# Il testo della pagina (<body text>) e' chiaro? Allora il fondo scuro e' voluto e si legge.
+func _testo_chiaro(raw: String) -> bool:
+	var b := raw.findn("<body")
+	if b < 0:
+		return false
+	var c := HtmlBB._attr(raw.substr(b, raw.find(">", b) - b), "text")
+	return c != "" and Color.html_is_valid(HtmlBB._col(c)) and Color.html(HtmlBB._col(c)).get_luminance() > 0.5
 
 # Iniettata la chiave in questa ancora, la pagina deve rendere IDENTICA a prima a
 # meno di quello che si e' aggiunto. Si confronta il BBCode COMPILATO (i tag non
@@ -197,8 +206,11 @@ func _invariante(pagina: String, raw: String, anc: Dictionary, visibile: bool) -
 		print("FAIL  perso_%s -- la pagina perde: %s" % [etichetta, perso.substr(0, 60)])
 		return
 	if visibile:
+		# la frase c'e' a schermo CON la chiave e non senza. Non si cerca nel solo "aggiunto"
+		# del confronto prefisso/suffisso: se la frase comincia con la stessa lettera del testo
+		# che la segue ("Promemoria..." prima di "Page 1 of 47") il prefisso comune se la mangia
 		var reso := str(r["reso"])
-		if reso == "" or aggiunto.find(reso) < 0:
+		if reso == "" or con.find(reso) < 0 or pulito.find(reso) >= 0:
 			_fails.append("reso_" + etichetta)
 			print("FAIL  reso_%s -- a schermo non arriva il testo (aggiunto: '%s')"
 					% [etichetta, aggiunto.substr(0, 60)])
@@ -249,8 +261,8 @@ func _fondo_di(raw: String, pos: int) -> String:
 			return bg
 	return ""
 
-# Le pagine d'autore stanno in web/pages/<lingua>/: il censimento le passa in
-# rassegna TUTTE, in ogni lingua. Una pagina tradotta che non offre piu' nascondigli
+# Le pagine d'autore stanno in web/pages/<lingua>/ e, dal 19/10/2026, nelle cartelle dei
+# siti, web/pages/<lingua>/<sito>/: il censimento le passa in rassegna TUTTE, in ogni lingua. Una pagina tradotta che non offre piu' nascondigli
 # (o che ha perso una tabella per strada) e' un difetto che si vedrebbe solo giocando
 # in quella lingua, cioe' mai da qui.
 func _pagine() -> Array:
@@ -265,6 +277,13 @@ func _pagine() -> Array:
 		for f in dir.get_files():
 			if f.ends_with(".html"):
 				out.append(d + "/" + f.substr(0, f.length() - 5))
+		for sito in dir.get_directories():
+			var sd := DirAccess.open(PAGINE + d + "/" + sito)
+			if sd == null:
+				continue
+			for f in sd.get_files():
+				if f.ends_with(".html"):
+					out.append(d + "/" + sito + "/" + f.substr(0, f.length() - 5))
 	out.sort()
 	return out
 

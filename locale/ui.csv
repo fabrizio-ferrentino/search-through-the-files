@@ -137,22 +137,66 @@ FC_3,backup copy %s,copia di sicurezza %s
 FC_4,%s - roll 3,%s - rullino 3
 FC_5,proof %s - to print,provino %s - da stampare
 FC_6,personal archive %s,archivio personale %s
-WS_NEWS,NewsToday,NewsOggi
-WS_NEWS_D,"News and technology, updated every day.","Cronaca e tecnologia, aggiornate ogni giorno."
-WS_WEATHER,WeatherNow,MeteoNow
-WS_WEATHER_D,Hour-by-hour weather forecasts.,Previsioni del tempo ora per ora.
-WS_GAMES,PlayWeb,GiocaWeb
-WS_GAMES_D,Shareware games to download over the modem.,Giochi shareware da scaricare col modem.
-WS_BLOG,Jack99's secret blog,Il blog segreto di Jack99
-WS_BLOG_D,Personal page. Theories and loose notes.,Pagina personale. Teorie e appunti sparsi.
 WS_FORUM,RetroForum - Message board,RetroForum - Bacheca
 WS_FORUM_D,"Floppies, 56k modems and other nostalgia.","Floppy, modem 56k e altre nostalgie."
-WS_SHOP,BuyItAll - Deals,CompraTutto - Offerte
-WS_SHOP_D,Mail order shopping at shock prices.,Acquisti per corrispondenza a prezzi shock.
-WS_MAIL,WebMail,WebMail
-WS_MAIL_D,Your mailbox. Almost out of space.,La tua casella di posta. Spazio quasi esaurito.
-WS_MYST,Mysteries.NET,Misteri.NET
-WS_MYST_D,Truths they don't want you to know.,Verita' che non vogliono farti sapere.
+WS_WHALE,~whale52,~balena52
+WS_WHALE_D,Personal page. Under construction.,Pagina personale. In costruzione.
+WS_SHOP,BuyItAll,CompraTutto
+WS_SHOP_D,Mail order shopping delivered to your door.,Vendita per corrispondenza con consegna a casa.
+WS_HERALD,The County Herald - Archive,La Gazzetta della Provincia - Archivio
+WS_HERALD_D,The local daily puts its archive online.,Il quotidiano locale mette online il suo archivio.
+WS_KITCHEN,The Kitchen Table,Il Tavolo di Cucina
+WS_KITCHEN_D,A forum for parents: pull up a chair and talk.,Il forum dei genitori: ci si siede e si parla.
+WS_NEWS,NewsToday,NotizieOggi
+WS_NEWS_D,"The news of the day, every morning at seven.","Le notizie del giorno, ogni mattina alle sette."
+WS_WEATHER,WeatherNow,MeteoNow
+WS_WEATHER_D,"The sky, an hour ahead.","Il cielo, con un'ora di anticipo."
+WS_GAMES,PlayWeb,GiocaWeb
+WS_GAMES_D,"Shareware, demos and cheats for those who never switch off.","Shareware, demo e trucchi per chi non spegne mai."
+WS_MAIL,WebNet WebMail,WebNet WebMail
+WS_MAIL_D,"Your mail, wherever you are.","La tua posta, ovunque tu sia."
+WS_JACK,~jack99,~jack99
+WS_JACK_D,Jack's page. Under construction since forever!,La pagina di Jack. In costruzione da sempre!
+WS_LIBRARY,Millbrook Public Library,Biblioteca Civica di San Vito
+WS_LIBRARY_D,"Opening hours, new books and events.","Orari, novita' e appuntamenti."
+WS_GRANNY,Granny Rose's Kitchen,La cucina di nonna Rosa
+WS_GRANNY_D,"Family recipes, written the way I make them.","Ricette di famiglia, scritte come le faccio."
+WS_FOOTBALL,Griffins Fan Club,Fan Club Grifoni
+WS_FOOTBALL_D,"Red and blue, in the rain and in the mud.","Rossoblu, sotto la pioggia e nel fango."
+WS_TV,CouchGuide,TeleGuida
+WS_TV_D,"What's on, before you switch on.","Cosa c'e', prima di accendere."
+WS_MIDI,MidiMania,MidiWorld
+WS_MIDI_D,MIDI files and lyrics of your favourite songs.,MIDI e testi delle tue canzoni preferite.
+WS_TRAVEL,Sun & Sea Travel,Viaggi Sole e Mare
+WS_TRAVEL_D,Last-minute offers and family holidays.,Offerte last minute e vacanze in famiglia.
+WS_TOWN,Town of Millbrook,Comune di San Vito al Lago
+WS_TOWN_D,"Offices, notices and events of the town council.","Uffici, avvisi ed eventi dell'amministrazione comunale."
+WS_SCHOOL,Millbrook High School,Liceo Scientifico G. Galilei
+WS_SCHOOL_D,"Circulars, school trips and the school paper.","Circolari, gite e il giornalino della scuola."
+WS_DRIVERS,DriverZone,DriverZone
+WS_DRIVERS_D,"The driver you lost with the box, found again.","Il driver che hai perso con la scatola, ritrovato."
+WS_SHELTER,Faithful Friend Animal Shelter,Rifugio Amico Fedele
+WS_SHELTER_D,Dogs and cats waiting for someone. Maybe you.,Cani e gatti che aspettano qualcuno. Magari te.
+WS_STARS,The Stars,Le Stelle
+WS_STARS_D,Madame Celeste reads the sky for you every Monday.,Madame Celeste legge il cielo per voi ogni lunedi'.
+WS_MYST,Hidden Truths,Verita' Nascoste
+WS_MYST_D,What they do not tell you.,Quello che non vi dicono.
+WS_ADS,FreeAds Board,AnnunciGratis
+WS_ADS_D,"Buy, sell, swap, meet. Free for everyone.","Compra, vendi, scambia, conosci. Gratis per tutti."
+WS_CHAT,ChatPoint,ChatPoint
+WS_CHAT_D,"Talk to the whole world, live.","Parla con il mondo intero, in diretta."
+WS_JOBS,JobFinder,CercoLavoro
+WS_JOBS_D,"Job offers, advice and a forum for job seekers.","Offerte, consigli e un forum per chi cerca lavoro."
+WS_METHOD,The Winner Method,Il Metodo Vincente
+WS_METHOD_D,Stop waiting. Start winning.,Smetti di aspettare. Comincia a vincere.
+WS_LISTEN,Someone Listens,Qualcuno Ascolta
+WS_LISTEN_D,A listening line for people who are alone.,Una linea d'ascolto per chi e' solo.
+WS_REPAIR,PC Doctor at Home,Il Dottore del PC
+WS_REPAIR_D,"Computer repairs at your home, within 24 hours.","Assistenza computer a domicilio, entro 24 ore."
+WS_MARKET,Used PC Market,Mercatino PC
+WS_MARKET_D,Second-hand computers between private people.,Computer usati fra privati.
+WS_NOBODY,nobody,nessuno
+WS_NOBODY_D,you came by yourself.,sei venuto da solo.
 WEB_HOME_TITLE,Welcome to WebNet Gateway v3.1,Benvenuto su WebNet Gateway v3.1
 WEB_HOME_TAGLINE,Your on-ramp to the Information Superhighway,Il tuo punto d'accesso all'Autostrada dell'Informazione
 WEB_HOME_FAVS,YOUR BOOKMARKS:,I TUOI PREFERITI:

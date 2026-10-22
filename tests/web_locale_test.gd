@@ -1,7 +1,7 @@
 extends Node
 
 # Test del WEB PER LINGUA. Il gioco nasce in inglese e l'italiano e' la prima
-# traduzione: le pagine d'autore stanno in web/pages/<lingua>/, i nomi delle pagine
+# traduzione: le pagine d'autore stanno in web/pages/<lingua>/<sito>/, i nomi delle pagine
 # sono identificatori (non testo) e i DOMINI seguono la lingua, perche' un sito
 # inglese su un .it si nota subito -- l'indirizzo e' la prima cosa che si legge.
 #
@@ -9,15 +9,15 @@ extends Node
 #   1 ci siano davvero TUTTE le pagine (il ripiego su "en" di read_page non deve
 #     mascherare una pagina non tradotta: in partita si vedrebbe una pagina inglese
 #     dentro un gioco italiano, e il test resterebbe verde);
-#   2 ogni LINK dentro le pagine porti da qualche parte -- a una pagina che c'e', o
-#     a un indirizzo della tabella (i link morti voluti, come la discussione
-#     rimossa del forum, che devono comunque mostrare un indirizzo vero nella
-#     barra). E' il controllo che prende l'errore facile: un href italiano lasciato
-#     dentro una pagina inglese;
+#   2 ogni LINK dentro le pagine porti da qualche parte -- a una pagina che c'e', al
+#     portale, o a un link morto VOLUTO e dichiarato nel catalogo ("morti": la discussione
+#     rimossa del forum, che mostra comunque un indirizzo vero nella barra). E' il
+#     controllo che prende l'errore facile: un href italiano lasciato dentro una pagina
+#     inglese;
 #   3 la wiki generata sia tradotta e COERENTE: nessun segnaposto {…} rimasto,
 #     nessuna chiave di traduzione in chiaro (WS_/WEB_HOME_) e nessun dominio
 #     dell'altra lingua;
-#   4 indirizzo -> pagina -> indirizzo sia un giro chiuso per tutta la tabella;
+#   4 indirizzo -> pagina -> indirizzo sia un giro chiuso per OGNI pagina di ogni sito;
 #   5 la chiave web finisca su un portatore che esiste in QUESTA lingua, e la frase
 #     che la porta sia tradotta (non la chiave "WK_V_…");
 #   6 le due lingue diano davvero pagine e wiki DIVERSE (se la traduzione non venisse
@@ -28,7 +28,7 @@ extends Node
 # ============================================================
 
 const LINGUE := ["en", "it"]
-const EXTRA := ["404", "forum_thread"]      # pagine fuori pool, raggiunte dai link
+const EXTRA := ["404", WebRuntime.NONSERVER]      # pagine fuori dai siti
 const SEMI := 12
 
 var _fails: Array = []
@@ -77,8 +77,8 @@ func _prova_lingua(loc: String) -> void:
 	for f in _tutte_le_pagine():
 		var raw := _leggi(loc, str(f))
 		for href in _href(raw):
-			var nome := _nome_pagina(href)
-			if BrowserApp.read_page(nome) != "" or WebRuntime.siti().has(nome):
+			var nome := WebRuntime.risolvi_link(href, str(f))
+			if nome == WebRuntime.HOME or (nome != "" and BrowserApp.read_page(nome) != "") 					or _morto_voluto(nome) or (nome == "" and _esterno_morto(href, str(f))):
 				continue
 			rotti.append("%s -> %s" % [str(f), href])
 	_check("LINK_" + loc, rotti.is_empty(), "link che non portano da nessuna parte: %s"
@@ -110,8 +110,8 @@ func _prova_lingua(loc: String) -> void:
 		if nome.begins_with("WS_") or desc.begins_with("WS_"):
 			_ko("POOL_" + loc, "il sito %s non e' tradotto" % str(s.get("file", "")))
 
-	# 4. indirizzo -> pagina -> indirizzo, per tutta la tabella
-	for p in WebRuntime.siti():
+	# 4. indirizzo -> pagina -> indirizzo, per ogni pagina di ogni sito (e il portale)
+	for p in _tutte_le_pagine().slice(0, _tutte_le_pagine().size() - EXTRA.size()) + [WebRuntime.HOME]:
 		var url := WebRuntime.display_url(str(p))
 		var indietro := WebRuntime.page_of(url)
 		if indietro != str(p):
@@ -146,7 +146,7 @@ func _prova_lingua(loc: String) -> void:
 			"su %d semi nessuna chiave visibile: le frasi tradotte non sono state provate" % SEMI)
 
 	GameManager.start_new_run(4242)
-	_pagine[loc] = _leggi(loc, "forum")
+	_pagine[loc] = _leggi(loc, "forum/index")
 	print("   pagine %d, domini %d, wiki %d byte, semi visibili %d/%d"
 			% [_tutte_le_pagine().size(), WebRuntime.siti().size(), wiki.length(), visibili, SEMI])
 
@@ -164,12 +164,19 @@ func _confronta_lingue() -> void:
 
 # ---------------- utilita' ----------------
 
+# Tutte le pagine di tutti i siti del catalogo ("sito/pagina"), poi le EXTRA.
 func _tutte_le_pagine() -> Array:
 	var out: Array = []
-	for s in WebRuntime._pool():
-		out.append(str(s["file"]))
+	for s in CatalogoSiti.SITI:
+		for pg in s["pagine"]:
+			out.append(str(s["id"]) + "/" + str(pg))
 	out.append_array(EXTRA)
 	return out
+
+# Un link morto VOLUTO, dichiarato nel catalogo (campo "morti" del sito)?
+func _morto_voluto(nome: String) -> bool:
+	var c := CatalogoSiti.sito(WebRuntime.sito_di(nome))
+	return not c.is_empty() and (c.get("morti", []) as Array).has(nome.get_slice("/", 1))
 
 func _leggi(loc: String, nome: String) -> String:
 	var f := FileAccess.open("res://web/pages/%s/%s.html" % [loc, nome], FileAccess.READ)
@@ -187,17 +194,12 @@ func _href(raw: String) -> Array:
 		i = raw.findn("href=\"", j)
 	return out
 
-# Come BrowserApp._norm: prima un indirizzo vero, poi il nome del file.
-func _nome_pagina(href: String) -> String:
-	var p := WebRuntime.page_of(href)
-	if p != "":
-		return p
-	var u := href.strip_edges().to_lower()
-	u = u.trim_prefix("http://").trim_prefix("https://").trim_suffix("/").get_file()
-	u = u.trim_suffix(".html").trim_suffix(".htm")
-	if u == "" or u == "start" or u == "index":
-		u = WebRuntime.HOME
-	return u
+# Un indirizzo ESTERNO morto voluto (la pagina sparita di un amico), dichiarato fra i
+# "morti" del sito della pagina che lo contiene.
+func _esterno_morto(href: String, pagina: String) -> bool:
+	var c := CatalogoSiti.sito(WebRuntime.sito_di(pagina))
+	var h := href.strip_edges().to_lower().trim_prefix("http://").trim_suffix("/")
+	return not c.is_empty() and (c.get("morti", []) as Array).has(h)
 
 # I domini che esistono SOLO nelle altre lingue (quelli in comune non sono intrusi).
 func _host_altrui(loc: String) -> Array:
@@ -205,11 +207,13 @@ func _host_altrui(loc: String) -> Array:
 	for p in WebRuntime.siti():
 		miei.append(str(WebRuntime.siti()[p]))
 	var altrui: Array = []
-	for tab in [WebRuntime.SITI_EN, WebRuntime.SITI_IT]:
-		for p in tab:
-			var host := str(tab[p])
-			if not miei.has(host) and not altrui.has(host):
-				altrui.append(host)
+	var tutti: Array = [WebRuntime.HOME_EN, WebRuntime.HOME_IT]
+	for c in CatalogoSiti.SITI:
+		tutti.append(str(c["en"]))
+		tutti.append(str(c["it"]))
+	for host in tutti:
+		if not miei.has(host) and not altrui.has(host):
+			altrui.append(host)
 	return altrui
 
 func _check(nome: String, ok: bool, perche: String) -> void:

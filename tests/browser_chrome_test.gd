@@ -34,6 +34,7 @@ func _ready() -> void:
 	get_tree().create_timer(120.0).timeout.connect(func(): print("RISULTATO: FAIL -> timeout"); get_tree().quit(1))
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)
+	GameManager.debug_tutti_i_siti = true   # le pagine sono fisse: devono rispondere in ogni partita
 	BrowserApp.attesa_scala = 0.05        # qui il caricamento non e' l'oggetto del test
 
 	_sub = SubViewport.new()
@@ -138,7 +139,7 @@ func _prova_preferiti() -> void:
 	_check("SITI_DEL_RUN", siti.size() > 0, "WebRuntime non elenca nessun sito")
 
 	# serve comunque una navigazione per le prove sulla cronologia qui sotto
-	_app._go("misteri")
+	_app._go("balena/index")
 	await _app.attendi_caricamento()
 	await get_tree().process_frame
 
@@ -157,7 +158,7 @@ func _prova_stato_pulsanti() -> void:
 	# "interrompi" solo mentre si carica
 	_check("INTERROMPI_SPENTO_A_RIPOSO", _app._btn_stop.disabled,
 			"'interrompi' e' attivo a pagina ferma")
-	_app._go("forum")
+	_app._go("forum/index")
 	_check("INTERROMPI_ATTIVO_IN_CARICA", not _app._btn_stop.disabled,
 			"'interrompi' e' grigio mentre la pagina carica")
 	await _app.attendi_caricamento()

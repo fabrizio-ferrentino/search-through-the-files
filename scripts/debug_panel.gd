@@ -36,6 +36,7 @@ var _stato: Label = null
 var _esito: Label = null
 var _btn_stanza: Button = null
 var _btn_pc: Button = null
+var _btn_siti: Button = null
 var _btn_compatto: Button = null
 var _passo := 0.0
 
@@ -84,6 +85,7 @@ func aggiorna() -> void:
 	etichetta_chiavi.text = GameManager.keys_report()
 	_btn_stanza.text = "Room threats: " + ("ON" if GameManager.room_threats_enabled else "OFF")
 	_btn_pc.text = "PC threats: " + ("ON" if GameManager.pc_threats_enabled else "OFF")
+	_btn_siti.text = "All sites: " + ("ON" if GameManager.debug_tutti_i_siti else "OFF")
 	_corpo.visible = not GameManager.debug_compatto
 	_btn_compatto.text = "+" if GameManager.debug_compatto else "-"
 	_stato.text = _testo_stato()
@@ -138,6 +140,10 @@ func _costruisci() -> void:
 
 	_sezione("PC")
 	_riga([_bottone("Boot to desktop", _al_desktop), _bottone("Power off", _spegni)])
+
+	_sezione("WEB  (all sites = the whole catalog answers and the portal lists it)")
+	_btn_siti = _bottone("", _cambia_siti)
+	_riga([_btn_siti, _bottone("Open the portal", _apri_portale)])
 
 	_sezione("ROOM  (Jester and HaloMan never together; Ghosty comes from behind)")
 	_riga([_bottone("Jester: peek now", _affaccio.bind("jester")),
@@ -250,6 +256,23 @@ func _cambia_stanza() -> void:
 func _cambia_pc() -> void:
 	GameManager.imposta_minacce_pc(not GameManager.pc_threats_enabled)
 	_dici("PC threats " + ("ON" if GameManager.pc_threats_enabled else "OFF"), true)
+
+# Tutti i siti del catalogo raggiungibili (e nel portale), non solo quelli estratti: per
+# guardarli tutti in una partita sola. Le pagine gia' aperte si aggiornano con "Aggiorna".
+func _cambia_siti() -> void:
+	GameManager.debug_tutti_i_siti = not GameManager.debug_tutti_i_siti
+	_dici("all sites " + ("ON: %d sites answer" % CatalogoSiti.SITI.size()
+			if GameManager.debug_tutti_i_siti else "OFF: only tonight's %d" % WebRuntime.sites().size()), true)
+
+func _apri_portale() -> void:
+	var os = _os()
+	if os == null:
+		_dici("refused: not in the room", false)
+	elif not GameManager.pc_on or not GameManager.logged_in or os._booting:
+		_dici("refused: the PC is not at the desktop (use Boot to desktop)", false)
+	else:
+		os.open_app("browser", "start")
+		_dici("browser opened on the portal", true)
 
 func _muori() -> void:
 	GameManager.game_over("debug")

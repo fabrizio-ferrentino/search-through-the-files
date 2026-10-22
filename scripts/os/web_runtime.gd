@@ -2,29 +2,38 @@ class_name WebRuntime
 extends RefCounted
 
 # ============================================================
-# Stato web del run per il browser a Controlli. Dal seme del run sceglie ~5 siti a caso
-# da un POOL (riproducibile), genera la HOME (gateway) che li elenca, e inietta la CHIAVE
-# web in UNO dei 5 scelti (in chiaro nel testo, o come commento nel sorgente). Nessun IO
-# file: le pagine dei siti sono file d'autore in web/pages/, la home e' generata qui.
+# Stato web del run per il browser a Controlli. Dal seme del run sceglie da SITI_MIN a
+# SITI_MAX siti dal CATALOGO (catalogo_siti.gd), di cui da LORE_MIN a LORE_MAX di lore
+# (riproducibile), genera la HOME (gateway) che li elenca, e inietta le due CHIAVI web in
+# due pagine di due siti diversi (in chiaro nel testo, o come commento nel sorgente).
+# Nessun IO file: le pagine dei siti sono file d'autore in web/pages/<lingua>/<sito>/, la
+# home e' generata qui.
+#
+# UNA PAGINA si chiama "<sito>/<pagina>" ("forum/index", "forum/thread"): il sito e' la
+# cartella, la pagina il file senza ".html". Le pagine fuori dai siti (la HOME generata, la
+# 404, "server non trovato") hanno un nome solo.
 # ============================================================
 
 const SITE_SALT := 2002
-const SITE_COUNT := 5
+# Quanti siti per partita (proprietario, 19/10/2026: una trentina in tutto, 10-15 a
+# partita) e quanti di lore fra questi ("2 sono troppo pochi": 4-5). Se il catalogo ne ha
+# meno, si prendono tutti quelli che ci sono.
+const SITI_MIN := 10
+const SITI_MAX := 15
+const LORE_MIN := 4
+const LORE_MAX := 5
+const NONSERVER := "nonserver"      # la pagina "impossibile trovare il server"
 
-# Pool dei siti: ogni voce { file (pagina in web/pages/), name, desc, featured }.
-# featured = mostrato in "I TUOI PREFERITI"; gli altri in "DI RECENTE". Per aggiungere un
-# sito: crea web/pages/<file>.html e aggiungi una riga qui.
+# Pool dei siti, dal catalogo: { file (l'id del sito, cioe' la cartella), name, desc,
+# featured, tipo, voce, pagine, stato }. featured = mostrato in "I TUOI PREFERITI"; gli altri
+# in "DI RECENTE". Per aggiungere un sito: scripts/os/catalogo_siti.gd.
 static func _pool() -> Array:
-	return [
-		{"file": "news", "name": _t("WS_NEWS"), "desc": _t("WS_NEWS_D"), "featured": true},
-		{"file": "meteo", "name": _t("WS_WEATHER"), "desc": _t("WS_WEATHER_D"), "featured": true},
-		{"file": "giochi", "name": _t("WS_GAMES"), "desc": _t("WS_GAMES_D"), "featured": true},
-		{"file": "blog", "name": _t("WS_BLOG"), "desc": _t("WS_BLOG_D"), "featured": false},
-		{"file": "forum", "name": _t("WS_FORUM"), "desc": _t("WS_FORUM_D"), "featured": false},
-		{"file": "shop", "name": _t("WS_SHOP"), "desc": _t("WS_SHOP_D"), "featured": false},
-		{"file": "mail", "name": _t("WS_MAIL"), "desc": _t("WS_MAIL_D"), "featured": false},
-		{"file": "misteri", "name": _t("WS_MYST"), "desc": _t("WS_MYST_D"), "featured": false},
-	]
+	var out: Array = []
+	for c in CatalogoSiti.SITI:
+		out.append({"file": str(c["id"]), "name": _t(str(c["nome"])), "desc": _t(str(c["desc"])),
+				"featured": bool(c["featured"]), "tipo": str(c["tipo"]), "voce": str(c["voce"]),
+				"pagine": (c["pagine"] as Array).duplicate(), "stato": str(c["stato"])})
+	return out
 
 # ---------------- lingua ----------------
 # Il codice a due lettere della lingua in corso ("en", "it"): il locale di sistema
@@ -62,12 +71,12 @@ const _COMMENT := [
 	"%s i just want to be happy", 
 ]
 
-static var _chosen: Array = []       # i 5 siti del run (dizionari del pool)
+static var _chosen: Array = []       # i siti del run (dizionari del pool)
 # Le chiavi web del run: DUE dal 18/10/2026 (proprietario), su due siti DIVERSI, ognuna
 # col suo modo (visibile o solo nel sorgente) tirato a caso. Un Dictionary per chiave:
 #   indice   l'indice della chiave (OSContent.KEY_WEB_1 / KEY_WEB_2)
 #   key      la sua etichetta ("2-ABCD")
-#   carrier  il file del sito che la ospita
+#   carrier  la PAGINA che la ospita ("sito/pagina")
 #   visible  nel testo della pagina (true) o solo nel sorgente (false)
 #   text     la frase / il commento col codice gia' dentro
 #   frac_tipo, frac_fessura   DOVE finisce: due frazioni (0..1) e non una posizione,
@@ -77,24 +86,20 @@ static var _chosen: Array = []       # i 5 siti del run (dizionari del pool)
 static var _posti: Array = []
 static var _built_seed := -9999
 
-# Sceglie i 5 siti del run + portatore/modalita'/chiave dal seme. La chiama
+# Sceglie i siti del run + portatore/modalita'/chiave dal seme. La chiama
 # BrowserApp.reset_pages() (da GameManager.start_new_run); _ensure() la rifa' se serve.
 static func build() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = GameManager.run_seed + SITE_SALT
-	_chosen = _shuffled(_pool(), rng)
-	if _chosen.size() > SITE_COUNT:
-		_chosen = _chosen.slice(0, SITE_COUNT)
+	_chosen = _scegli_siti(_pool(), rng)
 	_posti.clear()
-	# la PRIMA chiave fa le estrazioni nello stesso ordine di quando ce n'era una sola:
-	# cosi' i semi gia' giocati tengono il suo portatore, modo e frase
 	var a := _posto(OSContent.KEY_WEB_1, rng, _chosen)
 	_posti.append(a)
-	# la SECONDA si estrae dopo, IN CODA, fra i siti del run tranne quello della prima:
-	# due chiavi sulla stessa pagina sarebbero una chiave sola da cercare
+	# la SECONDA fra i siti del run tranne quello della prima: due chiavi sullo stesso sito
+	# sarebbero un posto solo da frugare
 	var altri: Array = []
 	for c in _chosen:
-		if str(c["file"]) != str(a["carrier"]):
+		if str(c["file"]) != sito_di(str(a["carrier"])):
 			altri.append(c)
 	_posti.append(_posto(OSContent.KEY_WEB_2, rng, altri))
 	_built_seed = GameManager.run_seed
@@ -102,7 +107,44 @@ static func build() -> void:
 		if str(p["key"]) != "" and str(p["carrier"]) != "":
 			GameManager.note_key(int(p["indice"]), _hint(p), "WEB")
 
-# Estrae dove va UNA chiave web, fra i siti dati.
+# I siti della partita: da SITI_MIN a SITI_MAX, di cui da LORE_MIN a LORE_MAX di lore (o
+# tutti quelli che ci sono). Se ci sono, almeno un sito di lore sul PADRE e uno sul RAGAZZO
+# (la voce del catalogo): la storia ha due meta' e una partita deve toccarle tutte e due.
+# L'ordine finale e' mescolato: e' l'ordine in cui il portale li elenca.
+static func _scegli_siti(pool: Array, rng: RandomNumberGenerator) -> Array:
+	var lore: Array = []
+	var normali: Array = []
+	for c in _shuffled(pool, rng):
+		if str(c["tipo"]) == "lore":
+			lore.append(c)
+		else:
+			normali.append(c)
+	var quanti := mini(rng.randi_range(SITI_MIN, SITI_MAX), pool.size())
+	var quanti_lore := mini(rng.randi_range(LORE_MIN, LORE_MAX), lore.size())
+	var presi: Array = []
+	for voce in ["padre", "ragazzo"]:
+		for c in lore:
+			if str(c["voce"]) == voce and presi.size() < quanti_lore:
+				presi.append(c)
+				break
+	for c in lore:
+		if presi.size() >= quanti_lore:
+			break
+		if not presi.has(c):
+			presi.append(c)
+	for c in normali:
+		if presi.size() >= quanti:
+			break
+		presi.append(c)
+	# pochi normali nel catalogo: si riempie con altra lore, pur di arrivare al numero
+	for c in lore:
+		if presi.size() >= quanti:
+			break
+		if not presi.has(c):
+			presi.append(c)
+	return _shuffled(presi, rng)
+
+# Estrae dove va UNA chiave web, fra i siti dati: un sito, poi una sua pagina.
 static func _posto(indice: int, rng: RandomNumberGenerator, siti: Array) -> Dictionary:
 	var p := {"indice": indice, "key": GameManager.key_label(indice), "carrier": "",
 			"visible": false, "text": "", "frac_tipo": 0.0, "frac_fessura": 0.0, "ancora": {}}
@@ -111,7 +153,8 @@ static func _posto(indice: int, rng: RandomNumberGenerator, siti: Array) -> Dict
 	# il portatore e' sempre un SITO d'autore: la wiki generata non puo' esserlo,
 	# cosi' la chiave non finisce mai nell'indice (come in WTTG2)
 	var c: Dictionary = siti[rng.randi_range(0, siti.size() - 1)]
-	p["carrier"] = "" if str(c["file"]) == HOME else str(c["file"])
+	var pagine: Array = c.get("pagine", ["index"])
+	p["carrier"] = str(c["file"]) + "/" + str(pagine[rng.randi_range(0, pagine.size() - 1)])
 	p["visible"] = rng.randf() < 0.5
 	var key: String = p["key"]
 	if key != "":
@@ -119,9 +162,6 @@ static func _posto(indice: int, rng: RandomNumberGenerator, siti: Array) -> Dict
 			p["text"] = _frase(_VISIBLE[rng.randi_range(0, _VISIBLE.size() - 1)], key)
 		else:
 			p["text"] = _COMMENT[rng.randi_range(0, _COMMENT.size() - 1)] % key
-	# NB: questi due sorteggi stanno IN CODA di proposito. Metterli piu' su
-	# cambierebbe la sequenza dell'RNG, e con essa portatore/modalita'/frase di
-	# tutti i semi giocati finora.
 	p["frac_tipo"] = rng.randf()
 	p["frac_fessura"] = rng.randf()
 	return p
@@ -142,7 +182,7 @@ static func _ensure() -> void:
 # ============================================================
 # LA WIKI (home del browser)
 # ------------------------------------------------------------
-# E' il "gateway" da cui il giocatore parte: elenca i 5 siti estratti per questo
+# E' il "gateway" da cui il giocatore parte: elenca i siti estratti per questo
 # run e nient'altro. Modellata sul mockup scritto a mano dal proprietario del
 # progetto (web/webnet.html): logo WEBNET, riquadro bianco al 70% centrato su
 # sfondo grigio, sezione PREFERITI + sezione SITI VISITATI DI RECENTE in Courier,
@@ -150,7 +190,7 @@ static func _ensure() -> void:
 #
 # Le CHIAVI del run non finiscono MAI qui: la wiki e' solo un indice (come in WTTG2).
 # Vivono su DUE dei siti elencati — vedi source_html() — e i portatori si scelgono fra
-# i file del pool, mai fra le pagine generate.
+# le pagine dei siti, mai fra le pagine generate.
 #
 # Il riquadro e' al 70% grazie a <table width="70%">, che il compilatore realizza
 # con una spacer trasparente (vedi HtmlBB._spacer_row): serve che il browser passi
@@ -160,91 +200,146 @@ static func _ensure() -> void:
 const HOME := "home"          # nome di pagina della wiki (non e' un file)
 
 # ============================================================
-# INDIRIZZI. Unica fonte di verita': nome interno della pagina -> dominio da
-# mostrare. Prima la barra diceva "http://news", cioe' il nome del file: niente
-# suffisso, niente che somigliasse a un indirizzo vero. Qui i domini sono quelli
-# della rete di fine anni '90 -- .it per i siti italiani, .com per il negozio e i
-# giochi, .net per il sito di misteri, la pagina personale ospitata dall'ISP sotto
-# ~utente (era la norma: Geocities, Tripod, il "webspace" del provider) e la
-# webmail su un sottodominio del provider.
-# La HOME e' il portale dell'ISP (quello del footer della wiki), percio' ha un
-# indirizzo anche lei.
-# AGGIUNGERE UN SITO = una riga qui + una in _pool() + il file in web/pages/.
-# I domini seguono la LINGUA: un sito inglese su un .it (o viceversa) si nota
-# subito, ed e' l'indirizzo la prima cosa che il giocatore legge nella barra.
-const SITI_EN := {
-	HOME: "www.webnet.com",
-	"news": "www.newstoday.com",
-	"meteo": "www.weathernow.com",
-	"giochi": "www.playweb.com",
-	"blog": "www.webnet.com/~jack99",
-	"forum": "www.retroforum.com",
-	"shop": "www.buyitall.com",
-	"mail": "webmail.webnet.com",
-	"misteri": "www.mysteries.net",
-	# pagine non del pool, raggiungibili solo dai link interni
-	"forum_thread": "www.retroforum.com/thread.html",
-	"removed": "www.retroforum.com/removed.html",
-}
-const SITI_IT := {
-	HOME: "www.webnet.it",
-	"news": "www.newsoggi.it",
-	"meteo": "www.meteonow.it",
-	"giochi": "www.giocaweb.com",
-	"blog": "www.webnet.it/~jack99",
-	"forum": "www.retroforum.it",
-	"shop": "www.compratutto.com",
-	"mail": "webmail.webnet.it",
-	"misteri": "www.misteri.net",
-	# pagine non del pool, raggiungibili solo dai link interni
-	"forum_thread": "www.retroforum.it/discussione.html",
-	"thread_rimosso": "www.retroforum.it/rimosso.html",
-}
+# INDIRIZZI. I domini stanno nel catalogo (catalogo_siti.gd), uno per lingua: un sito
+# inglese su un .it si nota subito, ed e' l'indirizzo la prima cosa che il giocatore legge
+# nella barra. Quelli della rete di fine anni '90: .it per i siti italiani, .com per il
+# negozio e i giochi, .net per il sito di misteri, la pagina personale ospitata dall'ISP
+# sotto ~utente (era la norma: Geocities, Tripod, il "webspace" del provider) e la webmail
+# su un sottodominio del provider.
+# L'indirizzo di una pagina e' il dominio del sito piu' "/<pagina>.html" (l'index e' il
+# dominio nudo). La HOME e' il portale dell'ISP (quello del footer della wiki).
+# ============================================================
+const HOME_EN := "www.webnet.com"
+const HOME_IT := "www.webnet.it"
 
-# La tabella della lingua in corso. Le pagine d'autore (e quindi i link relativi
-# dentro di loro) cambiano con la lingua, gli indirizzi devono seguirle.
+# Il dominio di un sito nella lingua data ("" se il sito non c'e').
+static func dominio(sito: String, lng := "") -> String:
+	var c := CatalogoSiti.sito(sito)
+	if c.is_empty():
+		return ""
+	return str(c["it"]) if (lng if lng != "" else lingua()) == "it" else str(c["en"])
+
+# I siti con il loro dominio nella lingua in corso (piu' la HOME): { id: dominio }.
 static func siti() -> Dictionary:
-	return SITI_IT if lingua() == "it" else SITI_EN
+	var out := {HOME: HOME_IT if lingua() == "it" else HOME_EN}
+	for c in CatalogoSiti.SITI:
+		out[str(c["id"])] = dominio(str(c["id"]))
+	return out
+
+# Il sito di una pagina ("forum/thread" -> "forum"; "" per le pagine fuori dai siti).
+static func sito_di(page: String) -> String:
+	return page.get_slice("/", 0) if page.find("/") > 0 else ""
+
+# La pagina e' di un sito estratto in questa partita? Quelle fuori dai siti (home, 404)
+# si', sempre. Un sito del catalogo che stanotte non c'e' risponde "server non trovato".
+static func in_partita(page: String) -> bool:
+	var s := sito_di(page)
+	if s == "":
+		return true
+	for c in raggiungibili():
+		if str(c["file"]) == s:
+			return true
+	return false
+
+# I siti che stanotte RISPONDONO e che il portale elenca: quelli estratti, oppure -- col
+# debug "tutti i siti" del pannello F12 -- tutto il catalogo, nel suo ordine. Le chiavi non
+# si spostano: restano sui siti estratti (_chosen), che il debug non tocca.
+static func raggiungibili() -> Array:
+	_ensure()
+	if GameManager.debug_tutti_i_siti:
+		return _pool()
+	return _chosen
+
+static func _estratto(id: String) -> bool:
+	for c in _chosen:
+		if str(c["file"]) == id:
+			return true
+	return false
 
 # L'indirizzo da mostrare nella barra per quella pagina.
 static func display_url(page: String) -> String:
-	return "http://" + str(siti().get(page, page))
+	return "http://" + host_of(page)
 
-# Solo il dominio (senza "http://"), per scriverlo dentro le pagine.
+# Dominio + percorso (senza "http://"), per la barra e per scriverlo dentro le pagine.
 static func host_of(page: String) -> String:
-	return str(siti().get(page, page))
+	if page == HOME:
+		return HOME_IT if lingua() == "it" else HOME_EN
+	var s := sito_di(page)
+	if s == "" or dominio(s) == "":
+		return page
+	var nome := page.get_slice("/", 1)
+	return dominio(s) if nome == "index" else dominio(s) + "/" + nome + ".html"
 
-# Da un indirizzo digitato o cliccato al nome della pagina ("" se non e' dei
-# nostri). Tollerante come i browser dell'epoca: "http://www.newsoggi.it/",
-# "www.newsoggi.it", "newsoggi.it" e "newsoggi" portano tutti allo stesso posto,
-# e resta valido anche il vecchio nome interno ("news").
+# Da un indirizzo digitato o cliccato alla pagina ("" se non e' dei nostri). Tollerante
+# come i browser dell'epoca: "http://www.newsoggi.it/", "www.newsoggi.it", "newsoggi.it" e
+# "newsoggi" portano tutti allo stesso posto; il percorso ("/regole.html") sceglie la
+# pagina del sito. Si cercano i domini di TUTTE le lingue: un indirizzo dell'altra lingua
+# non deve dare errore (e' tolleranza, non una scorciatoia: porta alla stessa pagina).
 static func page_of(url: String) -> String:
 	var u := url.strip_edges().to_lower()
 	u = u.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
 	if u == "":
 		return ""
-	# prima la lingua in corso, poi le altre: un indirizzo dell'altra lingua non
-	# deve dare 404 (e' tolleranza, non una scorciatoia: porta alla stessa pagina)
-	for tabella in [siti(), SITI_EN, SITI_IT]:
-		var p := _cerca(tabella, u)
-		if p != "":
-			return p
+	# il nome interno ("forum", "forum/regole"), per compatibilita'
+	if CatalogoSiti.sito(u.get_slice("/", 0)).size() > 0 and u.find(".") < 0:
+		return u if u.find("/") > 0 else u + "/index"
+	if u == HOME:
+		return HOME
+	# il sito il cui indirizzo (dominio ed eventuale percorso, ~jack99) combacia di piu'
+	var meglio := ""
+	var resto := ""
+	var lungo := -1
+	for c in CatalogoSiti.SITI:
+		for lng in ["en", "it"]:
+			var base := str(c[lng]).to_lower()
+			for forma in [base, base.trim_prefix("www.")]:
+				var r := _resto(u, forma)
+				if r != "?" and forma.length() > lungo:
+					meglio = str(c["id"])
+					resto = r
+					lungo = forma.length()
+	if meglio != "":
+		return meglio + "/" + _pagina(resto)
+	for h in [HOME_EN, HOME_IT]:
+		if u == h or u == h.trim_prefix("www.") or u == h.trim_prefix("www.").get_slice(".", 0):
+			return HOME
+	# "newsoggi" da solo: il primo pezzo di un dominio senza percorso
+	for c in CatalogoSiti.SITI:
+		for lng in ["en", "it"]:
+			var base := str(c[lng]).to_lower()
+			if base.find("/") < 0 and u == base.trim_prefix("www.").get_slice(".", 0):
+				return str(c["id"]) + "/index"
 	return ""
 
-static func _cerca(tabella: Dictionary, u: String) -> String:
-	if tabella.has(u):
-		return u                      # il nome interno, per compatibilita'
-	for p in tabella:
-		var host := str(tabella[p]).to_lower()
-		if u == host or u == host.trim_prefix("www.") or u == "www." + host:
-			return str(p)
-		# "newsoggi" da solo: solo per i domini senza percorso, o "webnet"
-		# porterebbe alla pagina personale invece che al portale
-		if host.find("/") < 0:
-			var nudo := host.trim_prefix("www.")
-			if u == nudo.get_slice(".", 0):
-				return str(p)
-	return ""
+# Se l'indirizzo u e' la base o sta sotto la base, il pezzo che resta ("" = la base);
+# altrimenti "?".
+static func _resto(u: String, base: String) -> String:
+	if u == base:
+		return ""
+	if u.begins_with(base + "/"):
+		return u.substr(base.length() + 1)
+	return "?"
+
+# Da un percorso ("regole.html", "", "index.htm") al nome della pagina.
+static func _pagina(percorso: String) -> String:
+	var p := percorso.trim_prefix("./").trim_suffix("/").get_file()
+	p = p.trim_suffix(".html").trim_suffix(".htm")
+	return "index" if p == "" else p
+
+# Un LINK cliccato nella pagina "corrente": assoluto (un altro sito, il portale) passa da
+# page_of; RELATIVO ("regole.html") resta nello stesso sito, che e' come sono scritti gli
+# href fra le pagine di un sito d'autore. "" se non porta da nessuna parte di nostro.
+static func risolvi_link(href: String, corrente: String) -> String:
+	var h := href.strip_edges()
+	var basso := h.to_lower()
+	var primo := basso.get_slice("/", 0)
+	var assoluto := basso.begins_with("http:") or basso.begins_with("https:") \
+			or basso.begins_with("www.") \
+			or (primo.find(".") >= 0 and not primo.ends_with(".html") and not primo.ends_with(".htm"))
+	var s := sito_di(corrente)
+	if assoluto or s == "":
+		return page_of(h)
+	return s + "/" + _pagina(h)
 
 # Le scritte sono TRADOTTE e il template usa {segnaposto} con String.format, non
 # l'operatore % (che qui obbligherebbe a raddoppiare ogni "%" delle larghezze).
@@ -285,7 +380,7 @@ static func _header_row(testo: String, colore: String) -> String:
 
 # Voce dei PREFERITI: nome in grassetto + descrizione grigia.
 static func _fav_row(sito: Dictionary) -> String:
-	var file := str(sito["file"])
+	var file := str(sito["file"]) + "/index"
 	# link ASSOLUTO: la wiki e' un indice di SITI, non pagine dello stesso sito
 	var r := "  <tr><td>&nbsp;<font face=\"Arial\" size=\"3\"><a href=\"" + display_url(file) + "\"><b>" + str(sito["name"]) + "</b></a></font><br>
 "
@@ -302,7 +397,7 @@ static func fake_kb(page: String) -> int:
 # Voce della CRONOLOGIA: peso finto, nome, indirizzo digitabile, descrizione.
 # L'indirizzo in chiaro serve anche da promemoria: si puo' scrivere nella barra.
 static func _recent_row(sito: Dictionary) -> String:
-	var file := str(sito["file"])
+	var file := str(sito["file"]) + "/index"
 	var kb := fake_kb(file)
 	var r := "  <tr><td><font face=\"Courier New\" size=\"2\">"
 	r += "[" + str(kb) + " KB] &raquo; <a href=\"" + display_url(file) + "\"><b>" + str(sito["name"]) + "</b></a><br>
@@ -313,13 +408,18 @@ static func _recent_row(sito: Dictionary) -> String:
 "
 	return r
 
-# Costruisce la wiki dai 5 siti del run: i "featured" fra i preferiti, gli altri
+# Costruisce la wiki dai siti del run: i "featured" fra i preferiti, gli altri
 # nella cronologia. Niente link morti: si elencano solo i siti estratti.
 static func home_html() -> String:
 	_ensure()
 	var featured: Array = []
 	var recent: Array = []
-	for s in _chosen:
+	for s0 in raggiungibili():
+		var s: Dictionary = s0
+		if GameManager.debug_tutti_i_siti and not _estratto(str(s["file"])):
+			# DEV-ONLY, in inglese come tutto il debug: chi prova vede quali stanotte non ci sono
+			s = s.duplicate()
+			s["desc"] = str(s.get("desc", "")) + " [DEBUG: not in tonight's run]"
 		if bool(s.get("featured", false)):
 			featured.append(s)
 		else:
@@ -378,7 +478,7 @@ static func _hint(p: Dictionary) -> String:
 
 # ---------------- stato del run (serve ai test) ----------------
 
-# I 5 siti del run (dizionari del pool: file, name, desc, featured). Li usa il menu
+# I siti del run (dizionari del pool: file = id del sito, name, desc, featured, ...). Li usa il menu
 # "Preferiti" del browser, che elenca esattamente quelli che la wiki elenca: un menu
 # Preferiti con dentro siti non raggiungibili sarebbe una bugia visibile.
 static func sites() -> Array:

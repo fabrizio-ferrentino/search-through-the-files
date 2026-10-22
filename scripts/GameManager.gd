@@ -58,6 +58,10 @@ var key_kinds: Dictionary = {}
 var _keys_panel: DebugPanel = null   # il pannello di debug F12 (debug_panel.gd)
 var _keys_label: Label = null        # le sue righe delle chiavi
 var debug_compatto := false          # pannello ridotto alle sole chiavi (resta fra un F12 e l'altro)
+# DEV-ONLY (20/10/2026, proprietario: "fai in modo che io li possa vedere tutti"): il web
+# risponde con TUTTI i siti del catalogo e il portale li elenca tutti, non solo quelli
+# estratti stanotte. Le chiavi restano dove il seme le ha messe. Pulsante nel pannello F12.
+var debug_tutti_i_siti := false
 
 # ---------------- lingua ----------------
 # L'INGLESE e' la lingua base del gioco (scelta del proprietario, 19/09/2026), e va imposto

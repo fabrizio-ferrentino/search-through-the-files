@@ -8,7 +8,7 @@ extends RefCounted
 # DATI, separati da chi li costruisce/mostra (vfs.gd, app_browser.gd, image viewer).
 #
 # Parte 2 (generatore seminato): dal seme del run (GameManager.run_seed) si decide in
-# modo RIPRODUCIBILE quali ~5 siti del pool entrano nel run e DOVE finiscono le
+# modo RIPRODUCIBILE quali siti del catalogo entrano nel run e DOVE finiscono le
 # chiavi. Mappa indice->categoria FISSA (vedi KEY_*), decisa dal proprietario il
 # 18/10/2026 (prima erano file / cartella / web / immagine, una per tecnica):
 #   * chiave 1 DISCO    -> a caso, meta' delle volte un FILE portatore (nome + testo a

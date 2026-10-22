@@ -27,8 +27,8 @@ extends Node
 # ============================================================
 
 const VP_SIZE := Vector2i(1440, 1080)
-const TABELLE := "forum"        # pagina ricca: tabelle, link, righe colorate
-const PARAGRAFI := "blog"       # pagina a paragrafi semplici su sfondo chiaro
+const TABELLE := "forum/index"        # pagina ricca: tabelle, link, righe colorate
+const PARAGRAFI := "cronaca/tragedia" # pagina a paragrafi semplici su sfondo chiaro
 
 var _sub: SubViewport
 var _browser: BrowserApp
@@ -40,6 +40,7 @@ func _ready() -> void:
 	get_tree().create_timer(90.0).timeout.connect(_timeout)   # salvagente
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)
+	GameManager.debug_tutti_i_siti = true   # le pagine sono fisse: devono rispondere in ogni partita
 	# il caricamento della pagina resta (velo, barra di stato, segnale) ma quasi
 	# istantaneo: qui si provano i clic, non l'attesa (quella e' page_load_test)
 	BrowserApp.attesa_scala = 0.05

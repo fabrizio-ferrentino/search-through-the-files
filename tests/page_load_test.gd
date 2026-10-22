@@ -38,6 +38,9 @@ func _ready() -> void:
 	get_tree().create_timer(120.0).timeout.connect(func(): print("RISULTATO: FAIL -> timeout"); get_tree().quit(1))
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)
+	# i siti che apre sono fissi, ma una partita ne estrae 10-15 su 30: col debug "tutti i
+	# siti" rispondono tutti, e il test prova il caricamento invece di "server non trovato"
+	GameManager.debug_tutti_i_siti = true
 	BrowserApp.attesa_scala = 1.0        # qui l'attesa vera E' l'oggetto del test
 	# Gli interruttori li decide il proprietario nel file, e questo test NON deve dipendere
 	# da dove li ha lasciati: quasi tutto quello che c'e' qui prova il comportamento con
@@ -67,7 +70,7 @@ func _ready() -> void:
 
 	# ---------- 1) appena aperta, la pagina e' coperta ----------
 	var t_inizio := Time.get_ticks_msec()
-	_browser._load("forum")
+	_browser._load("forum/index")
 	_check("CARICA_SUBITO", _browser.is_loading(), "il caricamento non parte nemmeno")
 	_check("VELO_SOPRA", _browser._velo.visible
 			and _browser._velo.get_index() > _browser._rtl.get_index()
@@ -87,12 +90,12 @@ func _ready() -> void:
 			"sotto il mouse c'e' %s invece del velo" % str(sopra))
 
 	# ---------- 2) cosa dice la barra di stato ----------
-	var kb := WebRuntime.fake_kb("forum")
+	var kb := WebRuntime.fake_kb("forum/index")
 	_check("KB_COERENTI", str(WebRuntime._recent_row({"file": "forum", "name": "x", "desc": ""})).find("[%d KB]" % kb) >= 0,
 			"i KB della barra di stato non sono quelli che elenca la wiki")
 	# si confronta con la frase TRADOTTA, non con una parola italiana
-	_check("STATO_CONNESSIONE", _browser._stato_lbl.text.find(WebRuntime.host_of("forum")) >= 0
-			and _browser._stato_lbl.text == tr("BR_CONNECTING") % WebRuntime.host_of("forum"),
+	_check("STATO_CONNESSIONE", _browser._stato_lbl.text.find(WebRuntime.host_of("forum/index")) >= 0
+			and _browser._stato_lbl.text == tr("BR_CONNECTING") % WebRuntime.host_of("forum/index"),
 			"all'inizio la barra dice: '%s'" % _browser._stato_lbl.text)
 	var visto_kb := false
 	var visto_blocchi := false
@@ -134,18 +137,18 @@ func _ready() -> void:
 			"%.2f s: praticamente istantaneo" % durata)
 	var durate: Array = []
 	for i in range(4):
-		var d := await _carica_e_cronometra("misteri")
+		var d := await _carica_e_cronometra("balena/index")
 		durate.append(snappedf(d, 0.01))
 	var diverse: Dictionary = {}
 	for d in durate:
 		diverse[d] = true
-	print("   quattro aperture di misteri: %s" % str(durate))
+	print("   quattro aperture di balena: %s" % str(durate))
 	_check("ATTESA_CASUALE", diverse.size() >= 2,
 			"sempre la stessa durata: %s" % str(durate))
 
 	# ---------- 4) la pagina si scopre DALL'ALTO man mano che arriva ----------
 	# Non e' un vezzo: e' quello che rende onesto il pulsante "interrompi" (sotto).
-	_browser._load("news")
+	_browser._load("cronaca/index")
 	var scoperto: Array = []
 	var t1 := Time.get_ticks_msec()
 	while _browser.is_loading() and (Time.get_ticks_msec() - t1) < int(LIMITE * 1000.0):
@@ -167,7 +170,7 @@ func _ready() -> void:
 	# Prima scopriva tutta la pagina di colpo: bastava premerlo per saltare l'attesa, e
 	# l'attesa non e' un fastidio da saltare -- e' tensione, perche' le minacce nella stanza
 	# continuano a girare mentre guardi la barra. Qui si pretende che NON regali il resto.
-	_browser._load("forum")
+	_browser._load("forum/index")
 	_check("INTERROMPI_PARTE", _browser.is_loading(), "non sta caricando: la prova non vale")
 	# si aspetta che sia arrivato un pezzo, altrimenti la prova non distingue niente
 	var t2 := Time.get_ticks_msec()
@@ -188,21 +191,21 @@ func _ready() -> void:
 	_check("INTERROMPI_LO_DICE", _browser._stato_lbl.text == tr("BR_STOPPED"),
 			"la barra di stato dice: '%s'" % _browser._stato_lbl.text)
 	# ...e ricaricando si deve poter avere la pagina intera: interrompere non blocca il gioco
-	_browser._load("forum")
+	_browser._load("forum/index")
 	await _browser.attendi_caricamento()
 	await get_tree().process_frame
 	_check("RICARICA_DOPO_INTERROMPI", not _browser._velo.visible,
 			"dopo aver ricaricato la pagina resta coperta")
 
 	# ---------- 6) cambiare pagina durante il caricamento ----------
-	_browser._load("meteo")
+	_browser._load("shop/index")
 	await get_tree().process_frame
-	_browser._load("giochi")
+	_browser._load("genitori/index")
 	_check("CAMBIO_A_META", _browser.is_loading(), "il secondo caricamento non parte")
 	var fine := Time.get_ticks_msec() + int(LIMITE * 1000.0)
 	while _browser.is_loading() and Time.get_ticks_msec() < fine:
 		await get_tree().process_frame
-	_check("CAMBIO_ARRIVA", not _browser._velo.visible and _browser._current == "giochi",
+	_check("CAMBIO_ARRIVA", not _browser._velo.visible and _browser._current == "genitori/index",
 			"pagina=%s velo=%s" % [_browser._current, str(_browser._velo.visible)])
 
 	# ---------- 7) i due interruttori ----------
@@ -220,7 +223,7 @@ func _ready() -> void:
 func _prova_interruttori() -> void:
 	# --- ATTESA_ATTIVA = false: le pagine si aprono istantanee ---
 	BrowserApp.ATTESA_ATTIVA = false
-	_browser._load("news")
+	_browser._load("cronaca/index")
 	_check("SENZA_ATTESA_ISTANTANEA", not _browser.is_loading(),
 			"con ATTESA_ATTIVA spento la pagina carica comunque")
 	_check("SENZA_ATTESA_NIENTE_VELO", not _browser._velo.visible,
@@ -232,7 +235,7 @@ func _prova_interruttori() -> void:
 
 	# --- SCOPERTA_GRADUALE = false: il velo copre tutto fino alla fine ---
 	BrowserApp.SCOPERTA_GRADUALE = false
-	_browser._load("forum")
+	_browser._load("forum/index")
 	var sempre_coperto := true
 	var t := Time.get_ticks_msec()
 	while _browser.is_loading() and (Time.get_ticks_msec() - t) < int(LIMITE * 1000.0):

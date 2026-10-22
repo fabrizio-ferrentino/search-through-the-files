@@ -240,21 +240,18 @@ func launch(arg) -> void:
 
 # ---------------- navigazione ----------------
 
-# Normalizza href/indirizzo in NOME pagina. Due strade, in quest'ordine:
-#   1 un INDIRIZZO vero ("http://www.newsoggi.it") -> WebRuntime.page_of;
-#   2 un link relativo fra pagine dello stesso sito ("forum_thread.html"), che e'
-#     come sono scritti gli href dentro le pagine d'autore.
+# Da un INDIRIZZO (digitato nella barra, o l'argomento con cui si apre il browser) al
+# nome della pagina ("sito/pagina"): WebRuntime.page_of. "start" e il vuoto sono la home;
+# un indirizzo che non e' di nessuno dei nostri siti e' "server non trovato", come
+# succedeva con un dominio scritto male. I LINK dentro le pagine passano da _on_meta.
 func _norm(s: String) -> String:
-	var dominio := WebRuntime.page_of(s)
-	if dominio != "":
-		return dominio
+	var pagina := WebRuntime.page_of(s)
+	if pagina != "":
+		return pagina
 	var u := s.strip_edges().to_lower()
-	u = u.trim_prefix("http://").trim_prefix("https://").trim_suffix("/")
-	u = u.get_file()
-	u = u.trim_suffix(".html").trim_suffix(".htm")
-	if u == "" or u == "start" or u == "index":
-		u = _home
-	return u
+	if u == "" or u == "start" or u == "index" or u == "home":
+		return _home
+	return WebRuntime.NONSERVER
 
 func _on_addr_submit(text: String) -> void:
 	# si ricorda il testo digitato: se non porta a nessuna pagina, la barra lo
@@ -306,9 +303,14 @@ func _load(name: String) -> void:
 	var chiesto := name        # quello che si voleva aprire: serve alla barra se e' una 404
 	var raw := ""
 	if name == _home:
-		# la HOME e' GENERATA per-run (5 siti a caso del pool), non un file
+		# la HOME e' GENERATA per-run (i siti estratti dal catalogo), non un file
 		raw = WebRuntime.home_html()
 	else:
+		# un sito del catalogo che stanotte NON e' fra quelli estratti non risponde: e' la
+		# pagina d'epoca "impossibile trovare il server" (non la 404, che e' "il sito c'e',
+		# la pagina no"), con l'indirizzo chiesto nella barra
+		if not WebRuntime.in_partita(name):
+			name = WebRuntime.NONSERVER
 		raw = read_page(name)
 		if raw == "":
 			var e404 := read_page("404") if name != "404" else ""
@@ -327,7 +329,7 @@ func _load(name: String) -> void:
 	# esiste resta scritto l'indirizzo CHIESTO -- quello digitato, o quello del link
 	# morto (il "thread rimosso" del forum) -- come in un browser vero; mostrare
 	# "http://404" sarebbe l'indirizzo della pagina d'errore, non della richiesta.
-	if name == "404" and chiesto != "404":
+	if name == WebRuntime.NONSERVER or (name == "404" and chiesto != "404"):
 		_addr.text = _digitato if _digitato != "" else WebRuntime.display_url(chiesto)
 	else:
 		_addr.text = WebRuntime.display_url(name)
@@ -366,9 +368,16 @@ func _on_page_resized() -> void:
 		return
 	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
 
+# Un link cliccato: relativo = una pagina dello STESSO sito, assoluto = un altro sito o il
+# portale (WebRuntime.risolvi_link). Se non porta da nessuna parte la barra mostra il link.
 func _on_meta(meta) -> void:
+	var dove := WebRuntime.risolvi_link(str(meta), _current)
 	_digitato = ""          # si e' cliccato un link: non c'e' niente di digitato
-	_go(_norm(str(meta)))
+	if dove == "":
+		var m := str(meta).strip_edges()
+		_digitato = m if m.begins_with("http://") else "http://" + m
+		dove = WebRuntime.NONSERVER
+	_go(dove)
 
 # Tasto destro = menu contestuale OVUNQUE nell'area pagina (l'RTL e' STOP e si
 # mangia il clic destro; _input gira prima della distribuzione gui, e cosi' la
@@ -948,7 +957,7 @@ func _voci_preferiti() -> Array:
 		var f := str(sito.get("file", ""))
 		if f == "":
 			continue
-		v.append([str(sito.get("name", f)), func(): _go(f)])
+		v.append([str(sito.get("name", f)), func(): _go(f + "/index")])
 	if v.size() == 2:
 		v.append([tr("BR_NO_SITES"), Callable()])
 	return v

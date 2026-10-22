@@ -26,6 +26,9 @@ func _ready() -> void:
 	# lingua sia completa e coerente lo prova web_locale_test.
 	GameManager.set_lingua(GameManager.LINGUA_BASE, false)
 	GameManager.start_new_run(12345)   # seme fisso: run riproducibile
+	# le pagine che apre sono fisse, ma una partita estrae 10-15 siti su 30: col debug "tutti
+	# i siti" rispondono tutti (lo si spegne solo per SITO_FUORI_PARTITA, qui sotto)
+	GameManager.debug_tutti_i_siti = true
 	# caricamento quasi istantaneo: il percorso e' lo stesso, l'attesa no
 	# (l'attesa vera la prova page_load_test)
 	BrowserApp.attesa_scala = 0.05
@@ -53,35 +56,42 @@ func _ready() -> void:
 			"la home generata non porta il marchio WEBNET GATEWAY: '%s'" % txt.substr(0, 60))
 
 	# --- forum (vetrina complessa) ---
-	_browser._load("forum")
+	_browser._load("forum/index")
 	await _browser.attendi_caricamento()
 	txt = await _snap("web_forum.png")
-	_check("FORUM", txt.find("RetroForum") >= 0 and txt.find("scratched floppy") >= 0, "forum.html non renderizzato")
+	_check("FORUM", txt.find("RetroForum") >= 0 and txt.find("scratched floppy") >= 0, "forum/index non renderizzato")
 
-	# --- pagina thread (avatar <img> + blockquote) ---
-	_browser._load("forum_thread")
+	# --- pagina thread (avatar <img> + blockquote), raggiunta con un LINK RELATIVO ---
+	_browser._on_meta("thread.html")
 	await _browser.attendi_caricamento()
 	txt = await _snap("web_thread.png")
-	_check("THREAD", txt.find("mario_64") >= 0 and txt.find("DISKCOPY") >= 0, "forum_thread.html non renderizzato")
+	_check("THREAD", _browser._current == "forum/thread" and txt.find("mario_64") >= 0
+			and txt.find("DISKCOPY") >= 0, "forum/thread non raggiunto o non renderizzato (%s)" % _browser._current)
 
-	# --- misteri (vetrina scura minimale) ---
-	_browser._load("misteri")
+	# --- la pagina del ragazzo (sito di lore, scuro) ---
+	_browser._load("balena/thoughts")
 	await _browser.attendi_caricamento()
-	txt = await _snap("web_misteri.png")
-	_check("MISTERI", txt.find("THEY ARE WATCHING") >= 0, "misteri.html non renderizzato")
+	txt = await _snap("web_balena.png")
+	_check("BALENA", txt.find("whale") >= 0 and txt.find("twelve windows") >= 0,
+			"balena/thoughts non renderizzato")
+
+	# --- una pagina NERA (l'ultimo aggiornamento del ragazzo: body bgcolor nero) ---
+	_browser._load("balena/update")
+	await _browser.attendi_caricamento()
+	txt = await _snap("web_pagina_nera.png")
+	_check("PAGINA_NERA", txt.find("the counter has stopped") >= 0, "balena/update non renderizzato")
 	# lo sfondo pagina deve essere nero (body bgcolor)
 	await RenderingServer.frame_post_draw
 	var img := _sub.get_texture().get_image()
 	var c := img.get_pixel(720, 700)
-	_check("MISTERI_SCURA", c.r < 0.15 and c.g < 0.15 and c.b < 0.15, "sfondo non scuro: %s" % str(c))
+	_check("PAGINA_NERA_SCURA", c.r < 0.15 and c.g < 0.15 and c.b < 0.15, "sfondo non scuro: %s" % str(c))
 
-	# --- blog: il banner <table width="92%"> deve arrivare davvero al 92% della
-	# pagina (la larghezza delle [table] BBCode e' guidata dal contenuto: la impone
-	# la "spacer" trasparente di HtmlBB._spacer_row) ---
-	_browser._load("blog")
+	# --- il banner <table width="100%"> del forum deve arrivare davvero a tutta la pagina
+	# (la larghezza delle [table] BBCode e' guidata dal contenuto: la impone la "spacer"
+	# trasparente di HtmlBB._spacer_row) ---
+	_browser._load("forum/index")
 	await _browser.attendi_caricamento()
-	txt = await _snap("web_blog.png")
-	_check("BLOG", txt.find("Jack99") >= 0, "blog.html non renderizzato")
+	txt = await _snap("web_banner.png")
 	await RenderingServer.frame_post_draw
 	var bimg := _sub.get_texture().get_image()
 	var banda := 0
@@ -89,10 +99,10 @@ func _ready() -> void:
 		var conta := 0
 		for x in range(0, VP_SIZE.x):
 			var bp := bimg.get_pixel(x, y)
-			if absf(bp.r - 0.188) < 0.07 and absf(bp.g - 0.188) < 0.07 and absf(bp.b - 0.188) < 0.07:
+			if absf(bp.r - 0.227) < 0.07 and absf(bp.g - 0.353) < 0.07 and absf(bp.b - 0.184) < 0.07:
 				conta += 1
 		banda = maxi(banda, conta)
-	_check("TABELLA_LARGHEZZA", banda > 1100, "il banner width=92%% risulta largo %d px su %d" % [banda, VP_SIZE.x])
+	_check("TABELLA_LARGHEZZA", banda > 1100, "il banner width=100%% risulta largo %d px su %d" % [banda, VP_SIZE.x])
 
 	# --- la WIKI (home) non deve MAI contenere la chiave del run ---
 	_browser._load("home")
@@ -107,7 +117,7 @@ func _ready() -> void:
 				"la chiave %s compare nella wiki" % kl0)
 
 	# --- selezione col drag sulla pagina del forum ---
-	_browser._load("forum")
+	_browser._load("forum/index")
 	await _browser.attendi_caricamento()
 	for i in range(4):
 		await get_tree().process_frame
@@ -155,7 +165,7 @@ func _ready() -> void:
 		print("chiave %s su '%s' -- %s (%s)" % [kl, portatore,
 				"visibile" if visibile else "solo sorgente", str(ancora["nota"])])
 		var trovate := 0
-		for f in ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri"]:
+		for f in _tutte_le_pagine():
 			_browser._load(f)
 			await _browser.attendi_caricamento()
 			for i in range(2):
@@ -220,7 +230,12 @@ func _ready() -> void:
 	var tld := ["it", "com", "net", "org"]
 	var malfatti: Array = []
 	var giro: Array = []
-	for f in ["news", "meteo", "giochi", "blog", "forum", "shop", "mail", "misteri", WebRuntime.HOME]:
+	var siti_e_home: Array = [WebRuntime.HOME]
+	for cs in CatalogoSiti.SITI:
+		siti_e_home.append(str(cs["id"]) + "/index")
+	siti_e_home.append("forum/rules")
+	siti_e_home.append("balena/thoughts")
+	for f in siti_e_home:
 		var url := WebRuntime.display_url(f)
 		var dominio := url.trim_prefix("http://").get_slice("/", 0)
 		if dominio.find(".") < 0 or not tld.has(dominio.get_extension()):
@@ -238,17 +253,17 @@ func _ready() -> void:
 
 	# forme tolleranti: senza http://, senza www., solo il nome
 	var alias: Array = []
-	for s in ["www.newsoggi.it", "newsoggi.it", "newsoggi", "http://www.newsoggi.it/"]:
-		if WebRuntime.page_of(s) != "news":
+	for s in ["www.retroforum.it", "retroforum.it", "retroforum", "http://www.retroforum.it/"]:
+		if WebRuntime.page_of(s) != "forum/index":
 			alias.append(s)
 	_check("INDIRIZZI_TOLLERANTI", alias.is_empty(), "forme non riconosciute: %s" % str(alias))
 
-	# i link relativi DENTRO le pagine d'autore devono continuare a funzionare
-	_check("LINK_RELATIVI", _browser._norm("forum_thread.html") == "forum_thread"
-			and _browser._norm("home.html") == WebRuntime.HOME,
+	# i link relativi DENTRO le pagine d'autore restano nel loro sito
+	_check("LINK_RELATIVI", WebRuntime.risolvi_link("thread.html", "forum/index") == "forum/thread"
+			and WebRuntime.risolvi_link("http://www.webnet.it", "forum/index") == WebRuntime.HOME,
 			"i link interni non si risolvono piu'")
 
-	# la wiki elenca gli indirizzi dei 5 siti del run (link assoluti)
+	# la wiki elenca gli indirizzi dei siti del run (link assoluti)
 	_browser._load(WebRuntime.HOME)
 	await _browser.attendi_caricamento()
 	for i in range(3):
@@ -257,32 +272,53 @@ func _ready() -> void:
 	var wiki_txt2: String = _browser._rtl.get_parsed_text()
 	var mancanti: Array = []
 	for s in WebRuntime._chosen:
-		var u := WebRuntime.display_url(str(s["file"]))
+		var u := WebRuntime.display_url(str(s["file"]) + "/index")
 		if wiki.find(u) < 0:
 			mancanti.append(u)
 	_check("WIKI_CON_INDIRIZZI", mancanti.is_empty(), "la wiki non elenca: %s" % str(mancanti))
 	_check("WIKI_NIENTE_NOMI_FILE", wiki_txt2.find("http://news") < 0 and wiki_txt2.find("http://forum") < 0,
 			"nella wiki si leggono ancora i nomi dei file come indirizzi")
 
-	# indirizzo inesistente: 404, e la barra tiene quello che si e' digitato
+	# indirizzo che non e' di nessuno: "server non trovato", e la barra tiene quello digitato
 	_browser._on_addr_submit("http://www.nonesiste.it")
 	await _browser.attendi_caricamento()
 	for i in range(3):
 		await get_tree().process_frame
-	_check("INDIRIZZO_SBAGLIATO", _browser._current == "404"
+	_check("INDIRIZZO_SBAGLIATO", _browser._current == WebRuntime.NONSERVER
 			and _browser._addr.text == "http://www.nonesiste.it",
 			"pagina=%s barra=%s" % [_browser._current, _browser._addr.text])
 	await _snap("web_indirizzo.png")
 
-	# link MORTO (il "thread rimosso" del forum): 404, e la barra mostra
-	# l'indirizzo chiesto, non quello della pagina d'errore
-	_browser._on_meta("thread_rimosso.html")
+	# link MORTO (la discussione rimossa del forum): il sito c'e', la pagina no -> 404, e la
+	# barra mostra l'indirizzo chiesto, non quello della pagina d'errore
+	_browser._load("forum/hardware")
+	await _browser.attendi_caricamento()
+	_browser._on_meta("removed.html")
 	await _browser.attendi_caricamento()
 	for i in range(3):
 		await get_tree().process_frame
 	_check("LINK_MORTO", _browser._current == "404"
-			and _browser._addr.text == WebRuntime.display_url("thread_rimosso"),
+			and _browser._addr.text == WebRuntime.display_url("forum/removed"),
 			"pagina=%s barra=%s" % [_browser._current, _browser._addr.text])
+
+	# un sito del catalogo che stanotte NON e' fra quelli estratti: "server non trovato", con
+	# l'indirizzo del sito nella barra
+	GameManager.debug_tutti_i_siti = false
+	var tolto := "shop"
+	var restano: Array = []
+	for sc in WebRuntime._chosen:
+		if str(sc["file"]) != tolto:
+			restano.append(sc)
+	WebRuntime._chosen = restano
+	_browser._on_addr_submit(WebRuntime.display_url(tolto + "/index"))
+	await _browser.attendi_caricamento()
+	for i in range(3):
+		await get_tree().process_frame
+	_check("SITO_FUORI_PARTITA", _browser._current == WebRuntime.NONSERVER
+			and _browser._addr.text == WebRuntime.display_url(tolto + "/index"),
+			"pagina=%s barra=%s" % [_browser._current, _browser._addr.text])
+	await _snap("web_server_non_trovato.png")
+	WebRuntime.build()
 
 	# --- esito ---
 	if _fails.is_empty():
@@ -290,6 +326,14 @@ func _ready() -> void:
 	else:
 		print("RISULTATO: FAIL -> " + ", ".join(_fails))
 	get_tree().quit(0 if _fails.is_empty() else 1)
+
+# Tutte le pagine di tutti i siti del catalogo ("sito/pagina").
+func _tutte_le_pagine() -> Array:
+	var out: Array = []
+	for c in CatalogoSiti.SITI:
+		for pg in c["pagine"]:
+			out.append(str(c["id"]) + "/" + str(pg))
+	return out
 
 # Il titolo del file d'autore, senza passare da WebRuntime: serve a provare che
 # l'iniezione non ha toccato <title> (finirebbe nella barra della finestra).
