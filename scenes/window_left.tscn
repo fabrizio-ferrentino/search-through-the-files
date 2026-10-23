@@ -8,6 +8,9 @@
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Dead Tree B.glb" id="seccoB"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Fence.glb" id="steccato"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Bush.glb" id="cespuglio"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Mountains.glb" id="montagne"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/House A.glb" id="casaA"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/House B.glb" id="casaB"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Grass Clumps.glb" id="erba"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Tall Grass.glb" id="erbaalta"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Grass Wispy.glb" id="erbasecca"]
@@ -25,7 +28,7 @@ roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="m_notte"]
 shading_mode = 0
-albedo_color = Color(0.035, 0.045, 0.085, 1)
+albedo_color = Color(0.048, 0.058, 0.11, 1)
 
 [sub_resource type="StandardMaterial3D" id="m_vetro"]
 transparency = 1
@@ -60,6 +63,10 @@ albedo_color = Color(0.55, 0.58, 0.68, 1)
 
 [sub_resource type="QuadMesh" id="stella"]
 size = Vector2(0.045, 0.045)
+
+[sub_resource type="StandardMaterial3D" id="m_montagne"]
+shading_mode = 0
+albedo_color = Color(0.02, 0.025, 0.048, 1)
 
 [sub_resource type="StandardMaterial3D" id="m_prato"]
 albedo_color = Color(0.07, 0.085, 0.055, 1)
@@ -149,16 +156,16 @@ transform = Transform3D(0.6062, 0, 0.35, 0, 0.7, 0, -0.35, 0, 0.6062, 2.4, -1.24
 transform = Transform3D(0.5168, 0, -0.1881, 0, 0.55, 0, 0.1881, 0, 0.5168, -0.9, -1.24, -2.1)
 
 [node name="Secco1" parent="Esterno" instance=ExtResource("seccoB")]
-transform = Transform3D(0.4078, 0, 0.1902, 0, 0.45, 0, -0.1902, 0, 0.4078, 2.9, -1.24, -4.3)
+transform = Transform3D(0.4078, 0, 0.1902, 0, 0.45, 0, -0.1902, 0, 0.4078, 5.9, -1.24, -4.6)
 
 [node name="Secco2" parent="Esterno" instance=ExtResource("seccoA")]
 transform = Transform3D(0.3064, 0, -0.2571, 0, 0.4, 0, 0.2571, 0, 0.3064, -0.3, -1.24, -5.6)
 
 [node name="Pino1" parent="Esterno" instance=ExtResource("pinoA")]
-transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, -0, 0, 0.9, 1, -1.24, -8.5)
+transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, 0, 0, 0.9, -1.2, -1.24, -8.2)
 
 [node name="Pino2" parent="Esterno" instance=ExtResource("pinoC")]
-transform = Transform3D(0.4, 0, 0.6928, 0, 0.8, 0, -0.6928, 0, 0.4, 4.7, -1.24, -9.6)
+transform = Transform3D(0.4, 0, 0.6928, 0, 0.8, 0, -0.6928, 0, 0.4, 8.6, -1.24, -10.2)
 
 [node name="Pino3" parent="Esterno" instance=ExtResource("pinoD")]
 transform = Transform3D(-0.45, 0, 0.7794, 0, 0.9, 0, -0.7794, 0, -0.45, -2, -1.24, -9)
@@ -167,7 +174,7 @@ transform = Transform3D(-0.45, 0, 0.7794, 0, 0.9, 0, -0.7794, 0, -0.45, -2, -1.2
 transform = Transform3D(-0.7987, 0, -0.2907, 0, 0.85, 0, 0.2907, 0, -0.7987, 7.2, -1.24, -8)
 
 [node name="Pino5" parent="Esterno" instance=ExtResource("pinoA")]
-transform = Transform3D(0.5745, 0, 0.4821, 0, 0.75, 0, -0.4821, 0, 0.5745, 2.9, -1.24, -11.2)
+transform = Transform3D(0.5745, 0, 0.4821, 0, 0.75, 0, -0.4821, 0, 0.5745, 0.2, -1.24, -11.6)
 
 [node name="Pino6" parent="Esterno" instance=ExtResource("pinoD")]
 transform = Transform3D(0.7878, 0, 0.1389, 0, 0.8, 0, -0.1389, 0, 0.7878, -4.5, -1.24, -11.5)
@@ -554,3 +561,39 @@ cast_shadow = 0
 [editable path="Esterno/Cielo/NuvolaB1"]
 
 [editable path="Esterno/Cielo/NuvolaA2"]
+
+[node name="Lontano" type="Node3D" parent="Esterno"]
+editor_description = "Lo sfondo lontano (Quaternius, CC0): una catena di montagne contro il cielo (materiale unshaded scuro, appena piu' chiaro degli alberi e piu' scuro del cielo: fa da quinta) e due case lontane, BUIE (nessuna finestra accesa, nessuna luce). Davanti a Notte (z -15)."
+
+[node name="Montagne1" parent="Esterno/Lontano" instance=ExtResource("montagne")]
+transform = Transform3D(4.2, 0, 0, 0, 3.6, 0, 0, 0, 0.45, 0.5, -1.24, -13.6)
+
+[node name="Montagne2" parent="Esterno/Lontano" instance=ExtResource("montagne")]
+transform = Transform3D(-3.6, 0, 0, 0, 3, 0, 0, 0, -0.45, 13, -1.24, -13.9)
+
+[node name="Montagne3" parent="Esterno/Lontano" instance=ExtResource("montagne")]
+transform = Transform3D(-3.4, 0, 0, 0, 2.6, 0, 0, 0, -0.45, -10, -1.24, -13.9)
+
+[node name="CasaA" parent="Esterno/Lontano" instance=ExtResource("casaA")]
+transform = Transform3D(0.6344, 0, 0.2958, 0, 0.7, 0, -0.2958, 0, 0.6344, 2.4, -1.24, -12.4)
+
+[node name="CasaB" parent="Esterno/Lontano" instance=ExtResource("casaB")]
+transform = Transform3D(0.4915, 0, -0.3441, 0, 0.6, 0, 0.3441, 0, 0.4915, 5.9, -1.24, -12.2)
+
+[node name="Mountain_Group_1" parent="Esterno/Lontano/Montagne1/RootNode" index="0"]
+material_override = SubResource("m_montagne")
+cast_shadow = 0
+
+[node name="Mountain_Group_1" parent="Esterno/Lontano/Montagne2/RootNode" index="0"]
+material_override = SubResource("m_montagne")
+cast_shadow = 0
+
+[node name="Mountain_Group_1" parent="Esterno/Lontano/Montagne3/RootNode" index="0"]
+material_override = SubResource("m_montagne")
+cast_shadow = 0
+
+[editable path="Esterno/Lontano/Montagne1"]
+
+[editable path="Esterno/Lontano/Montagne2"]
+
+[editable path="Esterno/Lontano/Montagne3"]

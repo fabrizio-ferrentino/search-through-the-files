@@ -20,3 +20,6 @@ Downloaded 2026-10-23 from static.poly.pizza; renamed (original title in quotes)
 - Rock Medium.glb - "Rock Medium" - https://poly.pizza/m/s1OJ3bBzqc
 - Cloud A.glb - "Cloud" - https://poly.pizza/m/KdFNOVn1Gf
 - Cloud B.glb - "Cloud" - https://poly.pizza/m/pjiBiLJwAl
+- Mountains.glb - "Mountains" - https://poly.pizza/m/w9VBrh7Nz0
+- House A.glb - "House" - https://poly.pizza/m/roqiHdrpgc
+- House B.glb - "House" - https://poly.pizza/m/HeHDd2rTpX

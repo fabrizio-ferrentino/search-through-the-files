@@ -203,8 +203,14 @@ a Luna (unshaded sphere, NOT a light; placed by projecting a free patch of
 sky in the seat's left view onto the sky plane - elsewhere it hid behind
 the window frame) and 45 unshaded star quads on the sky plane. The outside
 has NO light of its own (owner: "mi piaceva che fosse buio fuori" - a lit
-street light was tried and removed the same day); no distant house either
-(neighbours would weaken "alone tonight").
+street light was tried and removed the same day).
+Esterno/Lontano (owner: "lo sfondo sembra ancora troppo piatto, aggiungi
+delle case in lontananza, o delle montagne"): three Quaternius "Mountains"
+(squashed in depth, z ~-13.7, unshaded material m_montagne slightly darker
+than the sky, which was brightened a little for the contrast) and two
+small DARK houses (no lit window, no light) at z ~-12.3. From the seat only
+a strip of horizon shows (window-local x ~-0.5..9 at z -15), so two pines
+and a dead tree were moved aside to open a gap where the houses sit.
 
 ### `scenes/ComputerMode.tscn`
 
