@@ -371,11 +371,18 @@ names, web pages) is generated when the run starts, so changing
 it mid-game would not rewrite the PC.
 VIDEO rows (2026-10-23, owner: "impostazioni video risoluzione, v sync,
 fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size: a DROP-DOWN
-(OptionButton "Risoluzione", styled with the same frames, popup
-included) over GameManager.risoluzioni_possibili() - too many for a row
-of buttons (owner: "vorrei piu' risoluzioni"); an arrow selector "< >"
-was tried and the owner wanted a drop-down. Visibly DISABLED in
-fullscreen, where the window is the screen. A window not in the list shows the largest size that fits it. At the bottom, next to
+over GameManager.risoluzioni_possibili() - too many for a row of
+buttons (owner: "vorrei piu' risoluzioni"; an arrow selector "< >" was
+rejected). It is HAND-MADE, not Godot's OptionButton: that popup had its
+own look (radio dots, tiny arrow) and always opened downwards, off the
+screen when the window is as big as the screen (owner: "si vede
+malissimo e va fuori dallo schermo"). "Risoluzione" is a Button with a
+drawn triangle; _apri_elenco_ris() adds "ElencoRisoluzioni" (a clear
+veil that closes it on any click outside; ESC closes it first) with a
+framed list of buttons, below the field if it fits in the VISIBLE part
+of the window (_area_visibile: window rect intersected with the screen's
+usable rect, mapped to canvas coords), otherwise on the roomier side,
+scrolling if needed. Visibly DISABLED in fullscreen. A window not in the list shows the largest size that fits it. At the bottom, next to
 Back, a "Credits" button opens credits_screen.gd ON TOP (layer + 1);
 ESC then closes the credits first. Rows sit in a 2-column
 GridContainer (labels right-aligned | buttons) so they line up;

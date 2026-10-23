@@ -24,8 +24,10 @@ signal chiusa
 # scelto}. _aggiorna_selezione() le ridisegna tutte.
 var _righe: Array[Dictionary] = []
 var _pulsanti: Dictionary = {}       # codice lingua -> Button (la riga della lingua)
-var _tendina_ris: OptionButton      # la dimensione della finestra (menu a tendina)
-var _lista_ris: Array[Vector2i] = [] # le dimensioni nella tendina, nello stesso ordine
+var _tendina_ris: Button            # la dimensione della finestra: apre l'elenco sotto
+var _lista_ris: Array[Vector2i] = [] # le dimensioni nell'elenco, nello stesso ordine
+var _elenco_ris: Control = null      # l'elenco aperto (con il velo che lo chiude), o null
+var _radice: Control
 var _etichette: Dictionary = {}      # Label -> chiave di locale/ui.csv
 var _testi_si_no: Array[Button] = [] # i pulsanti Si'/No, ritradotti col cambio di lingua
 var _titolo: Label
@@ -40,6 +42,10 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if _schermata_crediti != null and is_instance_valid(_schermata_crediti):
 		return                                 # ESC chiude prima i Riconoscimenti, sopra
+	if _elenco_ris != null and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()  # ESC chiude prima l'elenco delle dimensioni
+		_chiudi_elenco_ris()
+		return
 	if event.is_action_pressed("ui_cancel"):   # ESC: come il pulsante Indietro
 		get_viewport().set_input_as_handled()
 		chiudi()
@@ -52,6 +58,7 @@ func chiudi() -> void:
 
 func _costruisci() -> void:
 	var radice := Control.new()
+	_radice = radice
 	radice.name = "Radice"
 	radice.set_anchors_preset(Control.PRESET_FULL_RECT)
 	radice.mouse_filter = Control.MOUSE_FILTER_STOP   # nessun clic ai pulsanti del menu sotto
@@ -162,34 +169,135 @@ func _scelte_si_no(nome: String, attuale: Callable, su_scelta: Callable) -> Arra
 	_righe.append({"pulsanti": pulsanti, "attuale": attuale})
 	return pulsanti.values()
 
-# La dimensione della FINESTRA: un menu a tendina (sono troppe per una fila di pulsanti;
-# le frecce < > al proprietario non piacevano), solo quelle che stanno nello schermo. A
-# schermo intero non conta (la finestra e' lo schermo) e la tendina si spegne, visibilmente.
+# La dimensione della FINESTRA: una tendina (sono troppe per una fila di pulsanti; le frecce
+# < > al proprietario non piacevano), solo quelle che stanno nello schermo. A schermo intero
+# non conta (la finestra e' lo schermo) e la tendina si spegne, visibilmente.
+# NON e' l'OptionButton di Godot: il suo elenco aveva un altro aspetto (pallini, freccetta
+# minuscola) e si apriva sempre in giu', anche fuori dallo schermo quando la finestra e'
+# grande quanto lo schermo (proprietario: "si vede malissimo e va fuori dallo schermo").
+# Questo elenco ha i riquadri degli altri pulsanti e si apre dove c'e' posto (_apri_elenco_ris).
 func _tendina_risoluzione() -> Array:
-	_tendina_ris = OptionButton.new()
+	_tendina_ris = Button.new()
 	_tendina_ris.name = "Risoluzione"
 	_tendina_ris.custom_minimum_size = Vector2(360, 96)
+	_tendina_ris.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_tendina_ris.add_theme_font_size_override("font_size", 40)
-	var elenco := _tendina_ris.get_popup()
-	elenco.add_theme_font_size_override("font_size", 36)
-	elenco.add_theme_stylebox_override("panel", _cornice(false))
-	elenco.add_theme_stylebox_override("hover", _cornice(true))
-	elenco.add_theme_constant_override("v_separation", 12)
 	for voce in ["normal", "focus", "disabled"]:
 		_tendina_ris.add_theme_stylebox_override(voce, _cornice(false))
 	for voce in ["hover", "pressed"]:       # sotto il mouse si accende: si capisce che si apre
 		_tendina_ris.add_theme_stylebox_override(voce, _cornice(true))
 	_tendina_ris.add_theme_color_override("font_disabled_color", Color(0.3, 0.3, 0.3))
-	_lista_ris = GameManager.risoluzioni_possibili()
-	for r in _lista_ris:
-		_tendina_ris.add_item("")         # il testo lo scrive _aggiorna_testi()
-	_tendina_ris.item_selected.connect(_su_risoluzione)
+	_tendina_ris.draw.connect(_disegna_freccia)
+	_tendina_ris.pressed.connect(_apri_elenco_ris)
 	return [_tendina_ris]
 
+# Il triangolino della tendina, disegnato (un glifo non e' detto che ci sia nel font).
+func _disegna_freccia() -> void:
+	var s := _tendina_ris.size
+	var col := Color(0.3, 0.3, 0.3) if _tendina_ris.disabled else Color(0.85, 0.85, 0.85)
+	var c := Vector2(s.x - 34, s.y / 2)
+	_tendina_ris.draw_colored_polygon(PackedVector2Array([
+			c + Vector2(-12, -6), c + Vector2(12, -6), c + Vector2(0, 8)]), col)
+
+# Apre l'elenco delle dimensioni sotto la tendina, o sopra se sotto non c'e' posto nella
+# parte VISIBILE della finestra (una finestra grande quanto lo schermo ha il fondo sotto la
+# barra delle applicazioni); se non ci sta da nessuna parte, scorre. Un velo trasparente
+# dietro lo chiude cliccando fuori.
+func _apri_elenco_ris() -> void:
+	if _elenco_ris != null:
+		_chiudi_elenco_ris()
+		return
+	_lista_ris = GameManager.risoluzioni_possibili()
+	var scelto := _indice_risoluzione(_lista_ris)
+	var velo := Control.new()
+	velo.name = "ElencoRisoluzioni"
+	velo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	velo.mouse_filter = Control.MOUSE_FILTER_STOP
+	velo.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed:
+			_chiudi_elenco_ris())
+	_radice.add_child(velo)
+	_elenco_ris = velo
+
+	var pannello := PanelContainer.new()
+	var fondo := _cornice(false)
+	fondo.bg_color = Color(0.05, 0.05, 0.05)
+	fondo.border_color = Color(0.6, 0.6, 0.6)
+	fondo.set_content_margin_all(8)
+	pannello.add_theme_stylebox_override("panel", fondo)
+	velo.add_child(pannello)
+	var scorri := ScrollContainer.new()
+	scorri.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pannello.add_child(scorri)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	scorri.add_child(vb)
+	var voce_scelta: Button = null
+	for k in _lista_ris.size():
+		var b := Button.new()
+		b.name = "Ris%dx%d" % [_lista_ris[k].x, _lista_ris[k].y]
+		b.text = tr("UI_RESOLUTION_FMT") % [_lista_ris[k].x, _lista_ris[k].y]
+		b.custom_minimum_size = Vector2(_tendina_ris.size.x - 16, 68)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.add_theme_font_size_override("font_size", 36)
+		var questa := k == scelto
+		var col := Color(1, 1, 1) if questa else Color(0.7, 0.7, 0.7)
+		for v in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+			b.add_theme_color_override(v, col)
+		for v in ["normal", "focus"]:
+			b.add_theme_stylebox_override(v, _cornice(questa))
+		for v in ["hover", "pressed"]:
+			b.add_theme_stylebox_override(v, _cornice(true))
+		b.pressed.connect(_su_risoluzione.bind(k))
+		vb.add_child(b)
+		if questa:
+			voce_scelta = b
+
+	# dove metterlo: sotto se ci sta, altrimenti dalla parte con piu' spazio, e se serve scorre
+	var area := _area_visibile().grow(-12)
+	var r := _tendina_ris.get_global_rect()
+	var alto := 16.0 + _lista_ris.size() * 74.0 - 6.0
+	var sotto := area.end.y - (r.end.y + 4)
+	var sopra := (r.position.y - 4) - area.position.y
+	var h := alto
+	var y := r.end.y + 4
+	if alto > sotto:
+		if sopra >= sotto:
+			h = minf(alto, sopra)
+			y = r.position.y - 4 - h
+		else:
+			h = sotto
+	scorri.custom_minimum_size = Vector2(0, h - 16)
+	pannello.position = Vector2(r.position.x, y)
+	pannello.size = Vector2(r.size.x, h)
+	if voce_scelta != null:
+		scorri.ensure_control_visible.call_deferred(voce_scelta)
+
+func _chiudi_elenco_ris() -> void:
+	if _elenco_ris != null:
+		_elenco_ris.queue_free()
+		_elenco_ris = null
+
+# La parte della finestra che si vede davvero (dentro lo spazio utile dello schermo), in
+# coordinate di questa schermata. Se non si riesce a calcolarla: tutta la finestra.
+func _area_visibile() -> Rect2:
+	var vp := get_viewport().get_visible_rect()
+	var win := Rect2(DisplayServer.window_get_position(), DisplayServer.window_get_size())
+	var utile := Rect2(DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen()))
+	var vis := win.intersection(utile)
+	if vis.size.x <= 0.0 or vis.size.y <= 0.0:
+		return vp
+	var inv := get_viewport().get_screen_transform().affine_inverse()
+	var a: Vector2 = inv * (vis.position - win.position)
+	var b: Vector2 = inv * (vis.end - win.position)
+	var out := Rect2(a, b - a).intersection(vp)
+	return out if out.size.y > 200.0 else vp
+
 func _su_risoluzione(indice: int) -> void:
+	_chiudi_elenco_ris()
 	if _lista_ris[indice] != GameManager.risoluzione_attuale():
 		GameManager.set_risoluzione(_lista_ris[indice])
-		_aggiorna_selezione()
+	_aggiorna_selezione()
 
 # Dove sta la finestra di adesso nella lista; se non c'e' (mai scelta, finestra trascinata),
 # la piu' grande che non la supera.
@@ -226,9 +334,12 @@ func _pulsanti_lingua() -> Array:
 # accanto a uno vero. Tutte le varianti (premuto, sopra, fuoco) prendono lo stesso
 # aspetto, o passarci il mouse cambierebbe il significato di quello che si vede.
 func _aggiorna_selezione() -> void:
-	# la tendina della finestra: segna quella di adesso, spenta a schermo intero
-	_tendina_ris.select(_indice_risoluzione(_lista_ris))
+	# la tendina della finestra: scrive quella di adesso, spenta a schermo intero
+	var lista := GameManager.risoluzioni_possibili()
+	var i := _indice_risoluzione(lista)
+	_tendina_ris.text = tr("UI_RESOLUTION_FMT") % [lista[i].x, lista[i].y]
 	_tendina_ris.disabled = GameManager.schermo_intero
+	_tendina_ris.queue_redraw()   # la freccia cambia colore se spenta
 	for riga in _righe:
 		var scelto = riga["attuale"].call()
 		for valore in riga["pulsanti"]:
@@ -292,7 +403,5 @@ func _aggiorna_testi() -> void:
 		(et as Label).text = tr(_etichette[et])
 	for b in _testi_si_no:
 		b.text = tr(str(b.get_meta("chiave")))
-	for k in _lista_ris.size():
-		_tendina_ris.set_item_text(k, tr("UI_RESOLUTION_FMT") % [_lista_ris[k].x, _lista_ris[k].y])
 	_crediti.text = tr("UI_CREDITS")
 	_indietro.text = tr("UI_BACK")
