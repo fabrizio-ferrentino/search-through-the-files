@@ -25,7 +25,7 @@ func _ready() -> void:
 	_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_label.add_theme_constant_override("outline_size", 4)
 	add_child(_label)
-	_aggiorna()
+	_label.text = "FPS --"   # al primo frame il conteggio non c'e' ancora (dava "FPS 1" in rosso)
 
 func _process(delta: float) -> void:
 	_attesa += delta

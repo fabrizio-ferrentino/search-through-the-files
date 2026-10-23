@@ -212,9 +212,9 @@ WK_V_6,Side note: the code is %s.,Nota a margine: il codice e' %s.
 WK_V_7,P.S. I wrote down %s so I would not forget.,P.S. ho segnato %s per non scordarlo.
 WK_V_8,To log on remember: %s.,Per accedere ricordarsi di: %s.
 UI_START,Start,Avvia
-UI_OPTIONS,Options,Opzioni
+UI_OPTIONS,Settings,Impostazioni
 UI_QUIT,Quit,Esci
-UI_OPTIONS_TITLE,OPTIONS,OPZIONI
+UI_OPTIONS_TITLE,SETTINGS,IMPOSTAZIONI
 UI_LANGUAGE,Language,Lingua
 UI_BACK,Back,Indietro
 UI_CREDITS,Credits,Riconoscimenti

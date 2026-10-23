@@ -161,12 +161,17 @@ func set_risoluzione(r: Vector2i) -> void:
 	_applica_video()
 	_salva_video()
 
-# Le risoluzioni che stanno nello schermo su cui e' la finestra (le altre la farebbero uscire).
+# Le dimensioni che stanno DAVVERO nello schermo come finestra: dentro lo spazio utile (senza
+# la barra delle applicazioni) e con posto per la barra del titolo. Una finestra grande quanto
+# lo schermo (1920x1080 su uno schermo 1920x1080) lo copre tutto e sembra a schermo intero
+# (proprietario, 23/10/2026: "se metto 1920x1080 ... esce full screen lo stesso").
+const BARRA_TITOLO := 40
+
 func risoluzioni_possibili() -> Array[Vector2i]:
-	var schermo := DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
+	var utile := DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen()).size
 	var out: Array[Vector2i] = []
 	for r in RISOLUZIONI:
-		if r.x <= schermo.x and r.y <= schermo.y:
+		if r.x <= utile.x and r.y + BARRA_TITOLO <= utile.y:
 			out.append(r)
 	if out.is_empty():
 		out.append(RISOLUZIONI[0])
@@ -184,11 +189,16 @@ func _applica_video() -> void:
 		return
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	if risoluzione != Vector2i.ZERO:
+		# una scelta salvata che non sta piu' (schermo cambiato, o salvata prima di questo
+		# controllo): la piu' grande che sta
+		var possibili := risoluzioni_possibili()
+		if not possibili.has(risoluzione):
+			risoluzione = possibili[possibili.size() - 1]
 		DisplayServer.window_set_size(risoluzione)
 		# ricentrata nello schermo, o allargandosi uscirebbe a destra e in basso
-		var sc := DisplayServer.window_get_current_screen()
-		var pos := DisplayServer.screen_get_position(sc) + (DisplayServer.screen_get_size(sc) - risoluzione) / 2
-		DisplayServer.window_set_position(pos)
+		var utile := DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
+		DisplayServer.window_set_position(utile.position + (utile.size - risoluzione) / 2
+				+ Vector2i(0, BARRA_TITOLO / 2))
 
 func _carica_video() -> void:
 	var cfg := ConfigFile.new()

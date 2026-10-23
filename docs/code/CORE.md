@@ -23,12 +23,12 @@ characters \n (read back with c_unescape, see OSContent._testo).
 
 ### `scenes/main_menu.tscn`
 
-Start screen (this is the main scene). Four buttons in a column
-(Start, Options, Credits, Quit), all at x 1150-1750 and 110 px tall
-on a 130 px pitch: FLAT buttons, plain text, grey with white on
-hover/focus, no box (2026-10-23, owner: "non devono avere questa grande
-hud ... ora sono storti" - they were big grey boxes, each at a different
-x and width). Focus stylebox is empty (a clicked button kept an outline).
+Start screen (this is the main scene). Three boxed buttons (Start,
+Settings, Quit), all the SAME box: x 1050-1770, 200 px tall, at y 290 /
+520 / 750 (2026-10-23, owner: they were "storti", each at a different x
+and width; a flat text-only version was tried and the owner wanted the
+boxes back: "rimetti i pulsanti mi piacevano"). Focus stylebox empty (a
+clicked button kept an outline).
 
 ### `scenes/main.tscn`
 
@@ -240,7 +240,11 @@ _ready but APPLIED only by applica_video_salvato(), which main_menu.gd
 calls once per launch: tests and main.tscn run from the editor keep the
 project window whatever the player chose. set_schermo_intero /
 set_vsync / set_risoluzione apply + save; windowed sizes are re-centred
-on the screen; risoluzioni_possibili() = RISOLUZIONI that fit.
+in the usable area. risoluzioni_possibili() = RISOLUZIONI that fit the
+screen's USABLE rect (no taskbar) with BARRA_TITOLO (40 px) to spare: a
+1920x1080 window on a 1920x1080 screen covered it and looked fullscreen
+(owner: "se metto 1920x1080 ... esce full screen lo stesso"). A saved
+size that no longer fits falls back to the largest that does.
 
 Autoload. Global run state + run lifecycle
 (start_new_run / game_over / restart) + the LANGUAGE:
@@ -338,18 +342,19 @@ into the SubViewport.
 
 Menu buttons + fade to the room. _ready() first calls
 GameManager.applica_video_salvato() (see GameManager video settings).
-_etichette() assigns the four button labels from tr()
-(UI_START/UI_OPTIONS/UI_CREDITS/UI_QUIT):
+_etichette() assigns the three button labels from tr()
+(UI_START/UI_OPTIONS/UI_QUIT):
 the buttons live in the SCENE (authored by the owner), so the
 text is set in code and the scene is left alone. It is called
 again on the options screen's "lingua_cambiata", or the menu
 would stay in the language it was built in.
-"Options" opens options_screen.gd, "Credits" credits_screen.gd (one
-screen at a time each).
+"Settings" opens options_screen.gd (one screen at a time).
 
 ### `scripts/options_screen.gd`
 
-OPTIONS overlay (2026-09-19): a CanvasLayer built in code like
+SETTINGS overlay (2026-09-19; shown as "Settings"/"Impostazioni" since
+2026-10-23, owner: "forse e' meglio rinominarla impostazioni" - the
+code and keys keep "options"): a CanvasLayer built in code like
 the other overlays, spawned by main_menu.gd. Holds ONE setting,
 the LANGUAGE: a toggle button per GameManager.LINGUE showing the
 ENDONYM ("Italiano", not "Italian" - in a language list each one
@@ -365,8 +370,10 @@ names, web pages) is generated when the run starts, so changing
 it mid-game would not rewrite the PC.
 VIDEO rows (2026-10-23, owner: "impostazioni video risoluzione, v sync,
 fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size (only the
-GameManager.RISOLUZIONI that fit the current screen; visibly DISABLED in
-fullscreen, where the window is the screen). Rows sit in a 2-column
+sizes GameManager.risoluzioni_possibili() returns; visibly DISABLED in
+fullscreen, where the window is the screen). At the bottom, next to
+Back, a "Credits" button opens credits_screen.gd ON TOP (layer + 1);
+ESC then closes the credits first. Rows sit in a 2-column
 GridContainer (labels right-aligned | buttons) so they line up;
 _aggiungi_riga() adds one, _pulsante_scelta() makes a choice button,
 and every row is registered in _righe so _aggiorna_selezione() draws all
@@ -378,7 +385,8 @@ Test: options_test.tscn (language only; it never touches video).
 ### `scripts/credits_screen.gd`
 
 CREDITS overlay (2026-10-23, owner: "aggiungere anche i credits per gli
-asset"): built like OptionsScreen (black, title, Back + ESC), a
+asset"; then "i crediti mettili in opzioni"): opened from the Settings
+screen, which sets its layer. Built like OptionsScreen (black, title, Back + ESC), a
 ScrollContainer listing SEZIONI = [section key, [line keys]], all CR_*
 keys in locale/ui.csv. Game author, 3D models (Household Props/
 CreativeTrio CC0, Retro Computer Setup/Brandon Westlake Sketchfab

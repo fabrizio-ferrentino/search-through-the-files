@@ -1,7 +1,7 @@
 class_name OptionsScreen
 extends CanvasLayer
 
-# Schermata OPZIONI del menu principale. Costruita in CODICE come le altre
+# Schermata IMPOSTAZIONI del menu principale (nel codice resta "options"). Costruita in CODICE come le altre
 # sovrimpressioni del gioco (pause_screen.gd, death_screen.gd) e non nella scena del
 # menu: quella scena e' del proprietario, e il menu si limita ad aprire questa.
 #
@@ -29,12 +29,16 @@ var _etichette: Dictionary = {}      # Label -> chiave di locale/ui.csv
 var _testi_si_no: Array[Button] = [] # i pulsanti Si'/No, ritradotti col cambio di lingua
 var _titolo: Label
 var _indietro: Button
+var _crediti: Button
+var _schermata_crediti: CreditsScreen = null   # i Riconoscimenti, se aperti sopra questa
 
 func _ready() -> void:
 	layer = 10                                 # il menu non usa layer: qui sopra e' libero
 	_costruisci()
 
 func _input(event: InputEvent) -> void:
+	if _schermata_crediti != null and is_instance_valid(_schermata_crediti):
+		return                                 # ESC chiude prima i Riconoscimenti, sopra
 	if event.is_action_pressed("ui_cancel"):   # ESC: come il pulsante Indietro
 		get_viewport().set_input_as_handled()
 		chiudi()
@@ -92,13 +96,23 @@ func _costruisci() -> void:
 
 	vb.add_child(_stacco(60))
 
+	# in fondo: i Riconoscimenti (scripts/credits_screen.gd) e Indietro
+	var fondo := HBoxContainer.new()
+	fondo.alignment = BoxContainer.ALIGNMENT_CENTER
+	fondo.add_theme_constant_override("separation", 40)
+	vb.add_child(fondo)
+	_crediti = Button.new()
+	_crediti.name = "Riconoscimenti"
+	_crediti.custom_minimum_size = Vector2(420, 96)
+	_crediti.add_theme_font_size_override("font_size", 44)
+	_crediti.pressed.connect(_apri_crediti)
+	fondo.add_child(_crediti)
 	_indietro = Button.new()
 	_indietro.name = "Indietro"
 	_indietro.custom_minimum_size = Vector2(360, 96)
-	_indietro.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_indietro.add_theme_font_size_override("font_size", 44)
 	_indietro.pressed.connect(chiudi)
-	vb.add_child(_indietro)
+	fondo.add_child(_indietro)
 
 	_aggiorna_testi()
 	_aggiorna_selezione()
@@ -223,6 +237,14 @@ func _stacco(altezza: int) -> Control:
 
 # ---------------- reazioni ----------------
 
+# I Riconoscimenti si aprono SOPRA le Impostazioni (layer piu' alto); chiusi, si torna qui.
+func _apri_crediti() -> void:
+	if _schermata_crediti != null and is_instance_valid(_schermata_crediti):
+		return
+	_schermata_crediti = CreditsScreen.new()
+	_schermata_crediti.layer = layer + 1
+	add_child(_schermata_crediti)
+
 func _su_schermo_intero(on: bool) -> void:
 	GameManager.set_schermo_intero(on)
 
@@ -248,4 +270,5 @@ func _aggiorna_testi() -> void:
 	for r in _pulsanti_ris:
 		var ris: Vector2i = r
 		(_pulsanti_ris[r] as Button).text = tr("UI_RESOLUTION_FMT") % [ris.x, ris.y]
+	_crediti.text = tr("UI_CREDITS")
 	_indietro.text = tr("UI_BACK")

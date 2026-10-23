@@ -1,7 +1,7 @@
 class_name CreditsScreen
 extends CanvasLayer
 
-# Schermata RICONOSCIMENTI del menu principale (23/10/2026): chi ha fatto gli asset presi da
+# Schermata RICONOSCIMENTI, aperta dalle Impostazioni (23/10/2026): chi ha fatto gli asset presi da
 # fuori e con che licenza. Costruita in codice come OptionsScreen, con la stessa faccia.
 # I modelli CC-BY (il quadro e i tre libri) DEVONO essere citati: e' la condizione della
 # licenza. Gli altri (CC0, Sketchfab Standard, OFL) si citano per correttezza.
@@ -21,8 +21,7 @@ const SEZIONI := [
 ]
 
 func _ready() -> void:
-	layer = 10                                 # come le Opzioni: sopra il menu
-	_costruisci()
+	_costruisci()   # layer: lo fissa chi la apre (le Impostazioni, una sopra di se')
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):   # ESC: come il pulsante Indietro
