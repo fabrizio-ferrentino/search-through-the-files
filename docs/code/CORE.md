@@ -276,13 +276,14 @@ emissive to compensate) was tried on 2026-10-23 and rejected by the owner
 front of the lamp, right above the mug: the pens threw radial "rays" and the
 mug's shadow looked fake ("ancora finta"). Now it sits next to the shade,
 so the mug's shadow falls forward, short and soft (light_size 0.12,
-shadow_blur 1.5, shadow_opacity 0.8; project soft_shadow_filter_quality 4
-removes the dithered grain). light_specular 0: with a light size the
+shadow_blur 1.5, shadow_opacity 0.8). The project soft_shadow_filter_quality
+stays at the default (2): 4 removed a faint grain but HALVED the frame rate
+(measured 2026-10-23: 459 -> 253 fps; the owner noticed the lag). light_specular 0: with a light size the
 highlight became a big bright oval on the desk and a yellow disc reflected
 in the window glass (the glass also has specular_mode disabled).
 The room Environment (player.gd _setup_atmosphere) has SSAO with
 light_affect 0.5: contact shadows under the mug, books and boxes, also
-where the lamp shines.
+where the lamp shines (about 10% of the frame time).
 The desk lamp ("Light") had range 3 m and lit the Jester at the window
 (~1.7 m away) through the glass even with the torch off: range 1.5 m now
 (owner, 2026-10-23), so at the window he is only a dark shape against the
