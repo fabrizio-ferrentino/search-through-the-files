@@ -275,12 +275,16 @@ emissive to compensate) was tried on 2026-10-23 and rejected by the owner
 ("si vede malissimo"); so was moving the mug. It used to float 34 cm in
 front of the lamp, right above the mug: the pens threw radial "rays" and the
 mug's shadow looked fake ("ancora finta"). Now it sits next to the shade,
-so the mug's shadow falls forward, short and soft (light_size 0.12,
-shadow_blur 1.5, shadow_opacity 0.8). The project soft_shadow_filter_quality
-stays at the default (2): 4 removed a faint grain but HALVED the frame rate
-(measured 2026-10-23: 459 -> 253 fps; the owner noticed the lag). light_specular 0: with a light size the
-highlight became a big bright oval on the desk and a yellow disc reflected
-in the window glass (the glass also has specular_mode disabled).
+so the mug's shadow falls forward. It is a SHARP shadow (no light_size,
+default shadow_blur, shadow_opacity 0.8 so it is never pitch black): the
+owner preferred it ("perfetta nitida, si vedeva anche il buco delle
+forbici") to the soft one, and it is also the cheapest. A light_size (soft
+PCSS shadows) cost frames, and the project soft_shadow_filter_quality 4
+used to hide its grain HALVED the frame rate (measured 2026-10-23: 459 ->
+253 fps; the owner noticed the lag): both are gone. light_specular 0: with
+a light size the highlight became a big bright oval on the desk and a
+yellow disc reflected in the window glass (the glass also has
+specular_mode disabled).
 The room Environment (player.gd _setup_atmosphere) has SSAO with
 light_affect 0.5: contact shadows under the mug, books and boxes, also
 where the lamp shines (about 10% of the frame time).
