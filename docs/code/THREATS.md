@@ -99,7 +99,16 @@ left/right/back, near the centre of the screen) and torch_spegni
 on release; BATTERY_DRAIN 12/s while lit (~8 s), RECHARGE 6/s
 while off, empty -> off and no relight under BATTERIA_RIACCENDE
 15, flickers under 20; the beam follows the camera every frame
-(_punta_torcia). TELLS inside the PC: a peek (either enemy) =
+(_punta_torcia: from the hand, 0.2 right / 0.05 below the eye, aimed
+at a point 3 m ahead and 0.2 m ABOVE the eye - except facing the
+corridor (_facing_zone("right")), where it aims 6 m ahead at eye height;
+2026-10-23, owner "sistema la luce della torcia per la finestra": it used
+to aim 8 m ahead and 0.2 m below, so at the window, 1.6 m away, the beam
+landed on the radiator; then, aimed up everywhere, it lit the corridor's
+ceiling ("sembra ora che punti al soffitto").
+The window glass is near-black (scenes/window_left.tscn m_vetro) so the
+beam no longer turns it into a milky disc over the Jester, and the lawn
+and the firs outside take the light). TELLS inside the PC: a peek (either enemy) =
 the glitch.gdshader pulse, which does not say WHO (go and look);
 Ghosty = a different, LIGHT tell - the screen edges cool and darken
 as he closes in (inline shader, forza_velo_ghosty, from

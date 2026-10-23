@@ -108,13 +108,41 @@ centre x.
   (dark lining of the window reveal: a 50 cm LIT reveal looked like a
   grey box outside the window), Battiscopa, VanoPorta (casing, wood
   lining, light switch).
-- Arredo: Tappeto, Termosifone, Tende, Libreria (books), Armadio,
-  Comodino (+ alarm clock, off), PortaRipostiglio (the owner's Door.glb,
-  closed, on the back wall right of the bed; before it stood rotated
-  beside the corridor mouth), Quadro, Bacheca (cork board, papers
-  without text), Scatoloni (2026-10-22: moved against the right wall
-  between the door and the wardrobe, z ~1.2, because the bedroom door
-  swings through the corner where they stood), Cestino, Plafoniera (off).
+- Arredo: Tappeto, Termosifone, Tende, Armadio, Plafoniera (off) and the
+  doors are still primitives (no equivalent in the bundle). PortaRipostiglio
+  = the owner's Door.glb, closed, on the back wall right of the bed (before
+  it stood rotated beside the corridor mouth). 2026-10-23 (owner: improve the
+  3D graphics with free poly.pizza models): the other props became instances
+  of the "Household Props 001" models (all models have the origin at the base centre and face +Z; at scale 1.4,
+  the desk's scale, they reach real sizes):
+  Libreria = Bookshelf + one different book model per level (shelf tops at
+  y 0.014/0.378/0.728/1.092/1.456 at scale 1.4). Each level is split by two
+  staggered uprights into three compartments; books go ONLY in the middle
+  one (0.41 x 0.22 m, centre (-1.507, y, 0.857)) - placed by eye, rows hung
+  out of the shelf ("ci sono dei libri che escono dalla libreria"). From the
+  bottom: the bundle's Books row, "Books Row", "Book Stack", "Books
+  Leaning", the bundle's Books row turned round. The same row copied on
+  every shelf "faceva uno strano effetto" (owner, 2026-10-23), so the three
+  middle levels use models from assets/textures/3d/books/ (CC-BY 3.0:
+  ATTRIBUTION REQUIRED, see CREDITS.md there). Comodino = End
+  Table (scale 1.2) + Alarm Clock (off); Quadro = "Op Art" by Ryan Murray
+  (assets/textures/3d/wallart/, CC-BY 3.0: ATTRIBUTION REQUIRED in the game's
+  credits, see the CREDITS.md there; centred model facing -Z, scale 0.21 =
+  0.80 x 0.60 m; chosen 2026-10-23 among three the owner proposed: its cold
+  concentric "tunnel" echoes the corridor; it replaced the bundle's
+  Painting, which is now unused); Bacheca = Wall Corkboard (1.2); Scatoloni =
+  "Cardboard Boxes" by Quaternius (CC0, assets/textures/3d/quaternius/, a
+  single closed stack 1.42 x 1.75 x 0.99 in the model, scale 0.6 = about
+  1.05 m tall; 0.9 was "troppo grandi") against the right wall between the
+  doorway and the clock (z 0.5..1.35); it
+  replaced two stacked open Empty Box, the top one of which floated (owner:
+  "c'e' una scatola che vola"). ScatolaAperta = one Empty Box alone on the
+  floor between the bookshelf and the bed. Cestino = Trash Bin. NEW: Pendola = Grandfathers Clock on the
+  right wall at z 1.95 (owner's choice; meant for a ticking sound later);
+  Arredo/Scrivania = Mug With Office Tool + Desk Fan on the desk top (y 0.74).
+  The desk itself is in main.tscn: if you move it, move these two.
+  room.tscn and corridor.tscn were first written by one-off scripts that are
+  NOT in the repo: they are now ordinary scenes, edit them in the Godot editor.
 - PortaCamera (2026-10-22, owner: "mi pare strano che la stanza da letto
   non abbia una porta sul corridoio"): the bedroom door, OPEN into the room
   toward the front-right corner. The node is the HINGE (pivot on the jamb
@@ -134,7 +162,7 @@ legno_mobili.tres. Change one, both room and corridor follow.
 
 ### `scenes/corridor.tscn`
 
-REBUILT 2026-10-23 (generated; owner: "si vede poco il corridoio, e'
+REBUILT 2026-10-23 (owner: "si vede poco il corridoio, e'
 troppo piccolo, e quindi fa poco paura"; chosen: straight longer corridor,
 normal door, NO light at the end, narrower room). Straight, 6.5 m long
 (lz 0..-6.5), width 1.45 (inner faces lx -1.0 / 0.45, axis -0.275), height
@@ -342,6 +370,16 @@ New"). Loaded via Win95.font(); add Tinos-*.ttf for a serif.
 ### `assets/textures/`
 
 Wallpapers, the 3D models (computer, desk, lamp), the arrow sprite.
+
+`3d/household/` (2026-10-23): 21 .glb from the poly.pizza bundle "Household
+Props 001" (CreativeTrio, CC0), downloaded from static.poly.pizza; its
+`CREDITS.md` lists source, author, license and each model's page. Desk.glb,
+Bed.glb and Lamp With Shade.glb are byte-identical to the bundle's; Door.glb
+is NOT from it (source unknown). Used in room.tscn: Bookshelf, Books, End
+Table, Alarm Clock, Painting, Wall Corkboard, Empty Box, Trash Bin,
+Grandfathers Clock, Mug With Office Tool, Desk Fan. Downloaded, NOT used yet:
+Cabinet, Chandelier, Ceiling Fan, Rocking Chair, Coat Rack, Potted Plant,
+Globe, Armchair, Chair, Dresser.
 
 ### `docs/`
 
