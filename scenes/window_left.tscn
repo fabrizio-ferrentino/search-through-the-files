@@ -8,6 +8,16 @@
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Dead Tree B.glb" id="seccoB"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Fence.glb" id="steccato"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Bush.glb" id="cespuglio"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Grass Clumps.glb" id="erba"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Tall Grass.glb" id="erbaalta"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Grass Wispy.glb" id="erbasecca"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Small Plant.glb" id="pianta"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Rock Small.glb" id="sasso"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Rock Pile.glb" id="sassi"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Rock Medium.glb" id="masso"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Cloud A.glb" id="nuvolaA"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Cloud B.glb" id="nuvolaB"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Street Light.glb" id="lampione"]
 
 [sub_resource type="BoxMesh" id="box"]
 
@@ -33,6 +43,33 @@ size = Vector2(44, 18)
 
 [sub_resource type="PlaneMesh" id="prato"]
 size = Vector2(44, 15)
+
+[sub_resource type="StandardMaterial3D" id="m_nuvola"]
+shading_mode = 0
+albedo_color = Color(0.1, 0.11, 0.16, 1)
+
+[sub_resource type="StandardMaterial3D" id="m_luna"]
+shading_mode = 0
+albedo_color = Color(0.86, 0.84, 0.74, 1)
+
+[sub_resource type="SphereMesh" id="luna"]
+radius = 0.45
+height = 0.9
+
+[sub_resource type="StandardMaterial3D" id="m_stella"]
+shading_mode = 0
+albedo_color = Color(0.55, 0.58, 0.68, 1)
+
+[sub_resource type="QuadMesh" id="stella"]
+size = Vector2(0.045, 0.045)
+
+[sub_resource type="StandardMaterial3D" id="m_lampadina"]
+shading_mode = 0
+albedo_color = Color(1, 0.85, 0.55, 1)
+
+[sub_resource type="SphereMesh" id="lampadina"]
+radius = 0.1
+height = 0.2
 
 [sub_resource type="StandardMaterial3D" id="m_prato"]
 albedo_color = Color(0.07, 0.085, 0.055, 1)
@@ -144,3 +181,402 @@ transform = Transform3D(0.5745, 0, 0.4821, 0, 0.75, 0, -0.4821, 0, 0.5745, 2.9, 
 
 [node name="Pino6" parent="Esterno" instance=ExtResource("pinoD")]
 transform = Transform3D(0.7878, 0, 0.1389, 0, 0.8, 0, -0.1389, 0, 0.7878, -4.5, -1.24, -11.5)
+
+[node name="Prato" type="Node3D" parent="Esterno"]
+editor_description = "Erba, piante basse e sassi (Quaternius, CC0), piu' fitti vicino allo steccato dove arriva la torcia. Niente davanti a SpotFinestra (z -0.75): tutto da z -1.4 in giu'."
+
+[node name="Erba1" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.5909, 0, 0.1042, 0, 0.6, 0, -0.1042, 0, 0.5909, 0.5, -1.24, -1.6)
+
+[node name="Erba2" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.1881, 0, 0.5168, 0, 0.55, 0, -0.5168, 0, 0.1881, 1.6, -1.24, -1.9)
+
+[node name="Erba3" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.5196, 0, -0.3, 0, 0.6, 0, 0.3, 0, 0.5196, 3.3, -1.24, -2.2)
+
+[node name="Erba4" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(-0.25, 0, 0.433, 0, 0.5, 0, -0.433, 0, -0.25, -0.4, -1.24, -1.8)
+
+[node name="Erba5" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 4.5, -1.24, -3.4)
+
+[node name="Erba6" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.4243, 0, 0.4243, 0, 0.6, 0, -0.4243, 0, 0.4243, 1.2, -1.24, -3.6)
+
+[node name="Erba7" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.35, 0, -0.6062, 0, 0.7, 0, 0.6062, 0, 0.35, 2.2, -1.24, -5)
+
+[node name="Erba8" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.6761, 0, 0.1812, 0, 0.7, 0, -0.1812, 0, 0.6761, 5.6, -1.24, -4.6)
+
+[node name="Erba9" parent="Esterno/Prato" instance=ExtResource("erba")]
+transform = Transform3D(0.1216, 0, 0.6894, 0, 0.7, 0, -0.6894, 0, 0.1216, 0.1, -1.24, -6.2)
+
+[node name="ErbaAlta1" parent="Esterno/Prato" instance=ExtResource("erbaalta")]
+transform = Transform3D(0.3289, 0, 0.1197, 0, 0.35, 0, -0.1197, 0, 0.3289, 0.9, -1.24, -2.3)
+
+[node name="ErbaAlta2" parent="Esterno/Prato" instance=ExtResource("erbaalta")]
+transform = Transform3D(0.2298, 0, -0.1928, 0, 0.3, 0, 0.1928, 0, 0.2298, 3.8, -1.24, -2.35)
+
+[node name="ErbaAlta3" parent="Esterno/Prato" instance=ExtResource("erbaalta")]
+transform = Transform3D(0.175, 0, 0.3031, 0, 0.35, 0, -0.3031, 0, 0.175, -0.2, -1.24, -3)
+
+[node name="ErbaAlta4" parent="Esterno/Prato" instance=ExtResource("erbaalta")]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 2, -1.24, -6.4)
+
+[node name="ErbaSecca1" parent="Esterno/Prato" instance=ExtResource("erbasecca")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 2.9, -1.24, -1.7)
+
+[node name="ErbaSecca2" parent="Esterno/Prato" instance=ExtResource("erbasecca")]
+transform = Transform3D(0, 0, 0.45, 0, 0.45, 0, -0.45, 0, 0, -0.7, -1.24, -3.4)
+
+[node name="ErbaSecca3" parent="Esterno/Prato" instance=ExtResource("erbasecca")]
+transform = Transform3D(0.4763, 0, 0.275, 0, 0.55, 0, -0.275, 0, 0.4763, 3.6, -1.24, -5.8)
+
+[node name="ErbaSecca4" parent="Esterno/Prato" instance=ExtResource("erbasecca")]
+transform = Transform3D(0.5638, 0, -0.2052, 0, 0.6, 0, 0.2052, 0, 0.5638, 1, -1.24, -7)
+
+[node name="Pianta1" parent="Esterno/Prato" instance=ExtResource("pianta")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 1.9, -1.24, -1.5)
+
+[node name="Pianta2" parent="Esterno/Prato" instance=ExtResource("pianta")]
+transform = Transform3D(0.2893, 0, 0.3447, 0, 0.45, 0, -0.3447, 0, 0.2893, 4.1, -1.24, -2)
+
+[node name="Sasso1" parent="Esterno/Prato" instance=ExtResource("sasso")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0.2, -1.24, -2.1)
+
+[node name="Sasso2" parent="Esterno/Prato" instance=ExtResource("sasso")]
+transform = Transform3D(0.6156, 0, 1.6914, 0, 1.8, 0, -1.6914, 0, 0.6156, 2.6, -1.24, -3.1)
+
+[node name="Sassi" parent="Esterno/Prato" instance=ExtResource("sassi")]
+transform = Transform3D(0.7518, 0, 0.2736, 0, 0.8, 0, -0.2736, 0, 0.7518, 5.2, -1.24, -3)
+
+[node name="Masso1" parent="Esterno/Prato" instance=ExtResource("masso")]
+transform = Transform3D(0.2598, 0, 0.15, 0, 0.3, 0, -0.15, 0, 0.2598, -1.6, -1.24, -4)
+
+[node name="Masso2" parent="Esterno/Prato" instance=ExtResource("masso")]
+transform = Transform3D(0.225, 0, -0.2681, 0, 0.35, 0, 0.2681, 0, 0.225, 6.2, -1.24, -6.5)
+
+[node name="Cielo" type="Node3D" parent="Esterno"]
+editor_description = "Nuvole (Quaternius, CC0, con un materiale scuro), luna e stelle: tutto unshaded, contro Notte (z -15). La luna e' un disco, NON una luce: non illumina niente."
+
+[node name="NuvolaA1" parent="Esterno/Cielo" instance=ExtResource("nuvolaA")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 6, 4.7, -13.8)
+
+[node name="NuvolaB1" parent="Esterno/Cielo" instance=ExtResource("nuvolaB")]
+transform = Transform3D(1.3787, 0, 0.2431, 0, 1.4, 0, -0.2431, 0, 1.3787, 1.6, 5.4, -14)
+
+[node name="NuvolaA2" parent="Esterno/Cielo" instance=ExtResource("nuvolaA")]
+transform = Transform3D(-1.0337, 0, -0.3762, 0, 1.1, 0, 0.3762, 0, -1.0337, 9.5, 3.4, -13.5)
+
+[node name="Luna" type="MeshInstance3D" parent="Esterno/Cielo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.29, 5.12, -14.6)
+mesh = SubResource("luna")
+material_override = SubResource("m_luna")
+cast_shadow = 0
+
+[node name="Stelle" type="Node3D" parent="Esterno/Cielo"]
+
+[node name="Stella1" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 10.7403, 1.3271, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella2" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 9.2615, 3.2261, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella3" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 10.0309, 1.9549, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella4" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 8.9667, 6.7915, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella5" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 6.5696, 1.2052, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella6" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2553, 2.4235, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella7" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0435, 2.3838, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella8" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 4.8627, 3.9946, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella9" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 9.2893, 6.391, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella10" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3721, 4.4552, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella11" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5245, 1.8537, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella12" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 2.3602, 2.9329, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella13" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 8.7486, 4.9394, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella14" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.1861, 2.2112, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella15" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 6.8584, 4.1777, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella16" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6051, 5.3397, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella17" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0461, 4.7842, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella18" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 2.6851, 4.3291, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella19" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1296, 2.0145, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella20" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7967, 6.7584, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella21" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.8392, 3.7181, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella22" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 8.7496, 2.4341, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella23" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 5.3488, 5.0271, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella24" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 7.0497, 5.9209, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella25" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6897, 6.4141, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella26" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1426, 3.4349, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella27" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 5.2005, 1.9356, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella28" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.0023, 5.0268, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella29" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6092, 6.9158, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella30" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5693, 5.7607, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella31" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0686, 5.4455, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella32" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.883, 2.2499, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella33" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3298, 1.824, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella34" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.257, 1.5451, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella35" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7453, 2.956, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella36" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5026, 2.77, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella37" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 7.1643, 2.5504, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella38" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6733, 5.2177, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella39" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.9646, 5.301, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella40" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 2.1318, 5.7729, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella41" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 6.7831, 4.4853, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella42" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 2.2167, 4.9339, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella43" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 10.0715, 1.6975, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella44" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5184, 6.2899, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Stella45" type="MeshInstance3D" parent="Esterno/Cielo/Stelle"]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 9.7986, 4.6542, -14.9)
+mesh = SubResource("stella")
+material_override = SubResource("m_stella")
+cast_shadow = 0
+
+[node name="Lampione" parent="Esterno" instance=ExtResource("lampione")]
+editor_description = "Lampione lontano (Quaternius, CC0) acceso, fra i pini: a ~7 m dalla finestra, davanti ai pini; la sua luce (LuceLampione, portata 4 m) non arriva a chi si affaccia."
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 2.2, -1.24, -7.2)
+
+[node name="Lampadina" type="MeshInstance3D" parent="Esterno"]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 2.146, 1.92, -6.072)
+mesh = SubResource("lampadina")
+material_override = SubResource("m_lampadina")
+cast_shadow = 0
+
+[node name="LuceLampione" type="OmniLight3D" parent="Esterno"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.146, 1.75, -6.072)
+light_color = Color(1, 0.8, 0.5, 1)
+light_energy = 1.5
+omni_range = 4.0
+
+[node name="Cloud1" parent="Esterno/Cielo/NuvolaA1/RootNode" index="0"]
+material_override = SubResource("m_nuvola")
+cast_shadow = 0
+
+[node name="Cloud2" parent="Esterno/Cielo/NuvolaB1/RootNode" index="0"]
+material_override = SubResource("m_nuvola")
+cast_shadow = 0
+
+[node name="Cloud1" parent="Esterno/Cielo/NuvolaA2/RootNode" index="0"]
+material_override = SubResource("m_nuvola")
+cast_shadow = 0
+
+[editable path="Esterno/Cielo/NuvolaA1"]
+
+[editable path="Esterno/Cielo/NuvolaB1"]
+
+[editable path="Esterno/Cielo/NuvolaA2"]

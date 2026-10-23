@@ -11,3 +11,13 @@ Downloaded 2026-10-23 from static.poly.pizza; renamed (original title in quotes)
 - Dead Tree B.glb - "Dead Tree" - https://poly.pizza/m/MlmK5488ou
 - Fence.glb - "Fence" - https://poly.pizza/m/e02PFKKhbr
 - Bush.glb - "Bush" - https://poly.pizza/m/ooG6CkLyE8
+- Grass Clumps.glb - "Grass" - https://poly.pizza/m/UGTOzcO3P2
+- Tall Grass.glb - "Tall Grass" - https://poly.pizza/m/JSIYtscPmP
+- Grass Wispy.glb - "Grass Wispy" - https://poly.pizza/m/Msr9zx66VU
+- Small Plant.glb - "Small Plant" - https://poly.pizza/m/MZdeiQApSb
+- Rock Small.glb - "Rocks" - https://poly.pizza/m/OQvi8PIZ40
+- Rock Pile.glb - "Rock" - https://poly.pizza/m/RtLRqYjfMs
+- Rock Medium.glb - "Rock Medium" - https://poly.pizza/m/s1OJ3bBzqc
+- Cloud A.glb - "Cloud" - https://poly.pizza/m/KdFNOVn1Gf
+- Cloud B.glb - "Cloud" - https://poly.pizza/m/pjiBiLJwAl
+- Street Light.glb - "Street Light" - https://poly.pizza/m/nFwrlcLvM5

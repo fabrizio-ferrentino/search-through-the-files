@@ -195,6 +195,17 @@ z -0.1 to -15.1) were enlarged and pushed back to contain them. With the
 torch off the trees read as black shapes against the sky; the torch shows
 their colours. Glass m_vetro is near-black on purpose (see THREATS.md,
 torch). Window-local axes: +Z into the room, X along the wall.
+More detail, same day (owner: "erba, nuvole ... fai tu"), all Quaternius
+CC0 in outdoor/: Esterno/Prato = grass tufts, tall and dry grass, small
+plants, rocks, from z -1.4 back (none in front of the peek); Esterno/Cielo =
+three clouds (editable instances, unshaded dark-blue material override),
+a Luna (unshaded sphere, NOT a light; placed by projecting a free patch of
+sky in the seat's left view onto the sky plane - elsewhere it hid behind
+the window frame) and 45 unshaded star quads on the sky plane. Lampione: a
+street light at ~7 m, in front of the pines, with a tiny unshaded bulb and
+LuceLampione (OmniLight3D, warm, range 4 m): it never reaches the window,
+so with the torch off the Jester is a black silhouette AGAINST its light.
+No distant house on purpose (neighbours would weaken "alone tonight").
 
 ### `scenes/ComputerMode.tscn`
 
