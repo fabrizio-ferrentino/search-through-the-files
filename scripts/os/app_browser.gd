@@ -243,6 +243,7 @@ func launch(arg) -> void:
 
 	_musica = AudioStreamPlayer.new()
 	_musica.volume_db = MUSICA_DB
+	_musica.bus = AudioPC.bus()           # gli altoparlanti del PC: volume, muto, posizione
 	add_child(_musica)
 
 	# Il VELO: mentre la pagina "arriva" non si deve poter leggere ne' cliccare

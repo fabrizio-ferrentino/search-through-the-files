@@ -11,7 +11,29 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - Dev test scripts (run with -s or as scene, see WEB_AUTHORING.md):
 
 - html_bb_test.gd (compiler unit test + the per-page census of
-  hiding spots, over EVERY language folder, headless),
+  hiding spots, over EVERY language folder, headless). 2026-10-23, section
+  _prova_varieta: the gif path, font families + the bold/italic FILES, <td width>
+  px and %, a nested table's width relative to its cell, bordercolor, marquee
+  (incl. the in-cell and too-long static fallback), blink, bgsound/embed in ctx and
+  the player links, anchors never inside moving text, tiled-background textures,
+
+- gif_test.gd (-s, headless, 2026-10-23: every web/img/*.gif decodes; frame
+  counts and delays, colours, transparency, disposal 2/3, the textures
+  (animated vs single frame), broken files rejected, interlace. Sabotaged:
+  LZW code-size growth broken - red),
+
+- midi_test.gd (-s, headless, 2026-10-23: a hand-built SMF with a tempo change,
+  running status and drums; the real melodies of web/audio parse; the render is
+  not silent, stays limited and ends in a silent tail; the stream loops and
+  the cache answers. Sabotaged: tempo changes ignored - red),
+
+- web_media_test.tscn/.gd (headless, 2026-10-23, the real BrowserApp: <bgsound>
+  starts only when the load ENDS and loops; navigating stops it; <embed
+  autostart=false> stays mute, its play/stop links work and do not navigate; the
+  tiled background shows, scrolls with the page and is removed on the next
+  page; marquee/blink leave no printed tags. Section 6 (PC audio): the music plays on
+  bus "PC"; inside the PC the sound is clean; in the room it is muffled, with echo and
+  quieter; monitor on the right -> pan right; back turned -> darker and quieter),
 
 - disco_casuale_test.tscn/.gd (the RANDOM disk, headless, and the
   guard for whoever edits the catalog: every entry translated in
@@ -86,7 +108,9 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   NIENTE_CONTROLLI (no input/form/select/textarea/button),
   NIENTE_DATE_RELATIVE and NIENTE_DATE_DOPO_1999, and DEBUG_TUTTI_I_SITI
   (the F12 switch opens every site, keeps the keys where they were,
-  and closes them again). Sabotaged: a relative link leaving its site,
+  and closes them again). 2026-10-23, check 10 MEDIA_ESISTONO: every file
+  referenced by an <img>, <embed>, <bgsound> or <body background> must exist
+  (MEDIA_ROTTI is the list of INTENDED broken images, empty today). Sabotaged: a relative link leaving its site,
   the pick without the lore rule, a complete site with 2 pages, a date
   in 2000, the debug switch ignored - all red; the three rules went red
   on the real defects before they were fixed),
@@ -95,6 +119,11 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   room through the CRT, maximized, on the sample pages or the ones
   after "--" (first the language: "-- en forum/index") ->
   user://sito_<site>_<page>.png, to judge a site by eye),
+
+- vassoio_check.tscn/.gd (dev tool, WINDOWED: the taskbar tray with the
+  volume popup open, then muted -> user://vassoio_volume.png and
+  user://vassoio_muto.png, the bottom-right corner at 2x, to judge by eye
+  that nothing overflows and that slider/checkbox match the Win95 theme),
 
 - web_locale_test.tscn/.gd (the game in every language: every page
   must EXIST in that language - read_page's fallback to "en" would
@@ -289,7 +318,9 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   never below the minimum, and past that the spinner appears and
   scrolls them - plus, at every count, the shown buttons must fit
   INSIDE the bar, which is the "they run off the screen" half of
-  the report),
+  the report). Section 6 (_prova_volume, 2026-10-23): the tray speaker icon exists,
+  its popup opens above the taskbar, Mute really mutes bus "PC" and swaps the icon to
+  "speaker_muto", the slider sets the volume, a click outside closes the popup),
 
 - finestre_contorno_test.tscn/.gd (WINDOWED - it reads pixels.
   The Win95 DRAG OUTLINE: while the bottom edge is being pulled the

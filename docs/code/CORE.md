@@ -247,6 +247,11 @@ purpose: it covers it and looks fullscreen - the owner was told and
 wants it (2026-10-23, "rimetti 1920x1080"). A saved size that no longer
 fits falls back to the largest that does.
 
+PC audio (2026-10-23): pc_volume (0.8) and pc_muto (false), set through
+AudioPC (scripts/os/audio_pc.gd, see OS.md) from the tray speaker. They are
+session-wide and NOT reset by start_new_run: whoever muted does not want the
+sound back next game. Not saved to disk.
+
 Autoload. Global run state + run lifecycle
 (start_new_run / game_over / restart) + the LANGUAGE:
 LINGUA_BASE "en", LINGUE ["en","it"], NOMI_LINGUA (the endonyms,
@@ -263,6 +268,14 @@ Camera3D: look-around, raycast clicks (incl. torch door-clicks),
 enter/exit PC, monitor quad, and the room's WorldEnvironment
 darkness (_setup_atmosphere: clean dark, NO fog — FNAF4 style;
 @export "Buio" group).
+PC audio (2026-10-23, owner: "quando sono nel pc va bene mono, ma poi deve
+arrivare da avanti, dal pc"): _process calls _aggiorna_audio_pc(delta) every
+frame: inside the PC -> AudioPC.dentro(delta); otherwise
+AudioPC.nella_stanza(global_transform.basis.inverse() * (_screen_point() -
+global_position), delta), i.e. the monitor's direction in camera space. Being
+every frame, the sound glides with the camera during enter/exit. The "PC" bus
+and its effects (Panner, LowPassFilter, Reverb) are created at runtime by
+AudioPC.
 Look positions: pos_right = -90 (2026-10-23, was -70: turning right you
 look straight down the corridor, which is on the eye axis). Everything
 reads the variable (threat_director _facing_zone, arrows, tests).

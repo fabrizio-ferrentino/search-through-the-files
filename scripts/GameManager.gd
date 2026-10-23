@@ -63,6 +63,13 @@ var debug_compatto := false          # pannello ridotto alle sole chiavi (resta 
 # estratti stanotte. Le chiavi restano dove il seme le ha messe. Pulsante nel pannello F12.
 var debug_tutti_i_siti := false
 
+# ---------------- gli altoparlanti del PC ----------------
+# Il volume e il muto dell'icona dell'altoparlante nella barra delle applicazioni del finto
+# OS (scripts/os/audio_pc.gd). Stanno qui perche' valgono per tutta la sessione: chi ha
+# zittito la musica delle pagine non vuole ritrovarsela accesa alla partita dopo.
+var pc_volume := 0.8
+var pc_muto := false
+
 # ---------------- lingua ----------------
 # L'INGLESE e' la lingua base del gioco (scelta del proprietario, 19/09/2026), e va imposto
 # a mano: Godot parte dalla lingua del SISTEMA, quindi su una macchina italiana il gioco

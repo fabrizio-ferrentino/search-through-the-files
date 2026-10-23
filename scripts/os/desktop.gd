@@ -42,6 +42,15 @@ var start_btn: Button
 var start_menu: Panel
 var clock_label: Label
 var icons_layer: Control
+# l'altoparlante del vassoio e il suo pannellino del volume (vedi _apri_volume)
+const VASSOIO_ICONA := 20
+const VOLUME_MARGINE := 12.0
+const VOLUME_CORSA := 140.0          # altezza del cursore del volume
+var _btn_volume: Button = null
+var _icona_volume: OSIcon = null
+var _volume_pop: Panel = null
+var _cursore_volume: VSlider = null
+var _casella_muto: CheckBox = null
 
 var windows: Array = []
 var taskbar_buttons: Dictionary = {}   # OSWindow -> Button
@@ -227,12 +236,26 @@ func _build_taskbar() -> void:
 	_task_spin.add_child(_freccia_barra(true))
 	_task_spin.add_child(_freccia_barra(false))
 
+	# Il "vassoio": l'altoparlante e l'orologio nello stesso incavo, come in Win98.
 	var clock_panel := Panel.new()
 	clock_panel.add_theme_stylebox_override("panel", Win95._sb(false, Win95.C_FACE, true, 8, 2, 8, 2))
-	clock_panel.custom_minimum_size = Vector2(86, 0)
+	clock_panel.custom_minimum_size = Vector2(86 + VASSOIO_ICONA + 6, 0)
 	hb.add_child(clock_panel)
+	_btn_volume = Button.new()
+	_btn_volume.flat = true
+	_btn_volume.focus_mode = Control.FOCUS_NONE
+	_btn_volume.tooltip_text = tr("TRAY_VOLUME")
+	_btn_volume.position = Vector2(6, (TASKBAR_H - 8 - VASSOIO_ICONA) / 2.0)
+	_btn_volume.size = Vector2(VASSOIO_ICONA, VASSOIO_ICONA)
+	_btn_volume.pressed.connect(_apri_volume)
+	clock_panel.add_child(_btn_volume)
+	_icona_volume = OSIcon.new()
+	_icona_volume.size = Vector2(VASSOIO_ICONA, VASSOIO_ICONA)
+	_btn_volume.add_child(_icona_volume)
+	_aggiorna_icona_volume()
 	clock_label = Label.new()
 	clock_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	clock_label.offset_left = VASSOIO_ICONA + 6
 	clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	clock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	clock_panel.add_child(clock_label)
@@ -243,6 +266,59 @@ func _build_taskbar() -> void:
 	t.timeout.connect(_update_clock)
 	add_child(t)
 	_update_clock()
+
+# ---------------- il volume (l'altoparlante del vassoio) ----------------
+# Come in Win98: un clic sull'altoparlante apre un pannellino con il cursore del volume e
+# la casella "Disattiva"; un clic fuori lo chiude. Vale per tutto quello che suona il PC
+# (AudioPC), oggi la musica delle pagine web. Era anche l'UNICO modo di zittire un sito:
+# i browser dell'epoca non avevano un pulsante per il suono.
+
+func _apri_volume() -> void:
+	if _volume_pop != null and is_instance_valid(_volume_pop):
+		_chiudi_volume()
+		return
+	# il pannello si misura sul CONTENUTO (prima era fisso, e "Disattiva" usciva dal bordo)
+	_volume_pop = Panel.new()
+	add_child(_volume_pop)
+	var vb := VBoxContainer.new()
+	vb.position = Vector2(VOLUME_MARGINE, VOLUME_MARGINE)
+	vb.add_theme_constant_override("separation", 8)
+	_volume_pop.add_child(vb)
+	var titolo := Label.new()
+	titolo.text = tr("TRAY_VOLUME")
+	titolo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(titolo)
+	_cursore_volume = VSlider.new()
+	_cursore_volume.min_value = 0.0
+	_cursore_volume.max_value = 100.0
+	_cursore_volume.step = 1.0
+	_cursore_volume.value = AudioPC.volume() * 100.0
+	_cursore_volume.custom_minimum_size = Vector2(30, VOLUME_CORSA)
+	_cursore_volume.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_cursore_volume.focus_mode = Control.FOCUS_NONE
+	_cursore_volume.value_changed.connect(func(v: float) -> void: AudioPC.imposta_volume(v / 100.0))
+	vb.add_child(_cursore_volume)
+	_casella_muto = CheckBox.new()
+	_casella_muto.text = tr("TRAY_MUTE")
+	_casella_muto.focus_mode = Control.FOCUS_NONE
+	_casella_muto.button_pressed = AudioPC.muto()
+	_casella_muto.toggled.connect(func(on: bool) -> void:
+		AudioPC.imposta_muto(on)
+		_aggiorna_icona_volume())
+	vb.add_child(_casella_muto)
+	vb.size = vb.get_combined_minimum_size()
+	_volume_pop.size = vb.size + Vector2(VOLUME_MARGINE, VOLUME_MARGINE) * 2.0
+	# sopra la barra, allineato a destra come il pannello del volume di Win98
+	_volume_pop.position = Vector2(size.x - _volume_pop.size.x - 4, size.y - TASKBAR_H - _volume_pop.size.y)
+
+func _chiudi_volume() -> void:
+	if _volume_pop != null and is_instance_valid(_volume_pop):
+		_volume_pop.queue_free()
+	_volume_pop = null
+
+func _aggiorna_icona_volume() -> void:
+	if _icona_volume != null:
+		_icona_volume.set_kind("speaker_muto" if AudioPC.muto() else "speaker")
 
 func _build_start_menu() -> void:
 	var item_h := 42
@@ -817,6 +893,11 @@ func _input(event: InputEvent) -> void:
 	# risponde solo se la sua finestra e' attiva) e serviva un clic in piu'.
 	if event is InputEventMouseButton and event.pressed 			and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT):
 		var mp := get_global_mouse_position()
+		# chiudi il pannello del volume se si clicca fuori (ne' sul pannello ne' sull'altoparlante)
+		if _volume_pop != null and is_instance_valid(_volume_pop) \
+				and not _volume_pop.get_global_rect().has_point(mp) \
+				and not _btn_volume.get_global_rect().has_point(mp):
+			_chiudi_volume()
 		# chiudi il menu Start se si clicca fuori
 		if start_menu and start_menu.visible:
 			if not start_menu.get_global_rect().has_point(mp) and not start_btn.get_global_rect().has_point(mp):

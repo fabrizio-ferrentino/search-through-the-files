@@ -77,6 +77,28 @@ available width must be computed as tasks_box.size.x PLUS the
 spinner when it is showing, or showing the spinner shrinks the
 area, which hides the spinner, which grows it back.
 Test: taskbar_test.tscn.
+TRAY VOLUME (2026-10-23, owner: "mettere un bottone per mutare la pagina,
+la musica sempre accesa puo' dare fastidio - come si faceva all'epoca?").
+Period answer: 1999 browsers had NO sound button; you left the page, or
+(IE) pressed Esc, or clicked the Windows SPEAKER ICON in the tray next to
+the clock (slider + "Mute"). We built exactly that: the clock panel holds a
+flat Button (_btn_volume) left of the clock with an OSIcon (_icona_volume,
+kinds "speaker" / "speaker_muto"). Click -> _apri_volume builds _volume_pop
+above the taskbar: a VSlider (volume 0-100) and a CheckBox "Mute"
+(TRAY_VOLUME / TRAY_MUTE in the CSV); both go through AudioPC
+(imposta_volume / imposta_muto) and the icon follows AudioPC.muto(). A click
+outside the popup (and outside the button) closes it, in desktop _input next
+to the Start-menu close. Esc was NOT used for muting because Esc leaves the
+PC. Values live in GameManager (pc_volume, pc_muto), see CORE.md and
+scripts/os/audio_pc.gd. Test: taskbar_test.tscn section 6 (_prova_volume).
+The popup is sized on its CONTENT (VBox minimum size + VOLUME_MARGINE): with
+a fixed 110 px "Disattiva" ran out of the panel (owner, 23/10/2026: "ci sono i
+pulsanti che escono dalla tab... stile uguale al resto dell'OS"). Slider and
+checkbox look Win95 because the THEME now styles them (Win95.make_theme:
+HSlider/VSlider = sunken thin channel + raised tile icon _tex_rilievo;
+CheckBox = sunken white square with a black tick _tex_casella, no button
+frame) - which also restyled the image viewer's sliders. Eyeball tool:
+tests/vassoio_check.tscn (windowed).
 boot/login/shutdown/"no signal" states. The BOOT is a period
 3-stage sequence, not a loading bar (see _play_boot): BIOS POST
 text screen (live memory count + a System Configuration table)
@@ -178,6 +200,34 @@ the SYSTEM LOGO, a 52-hz-whale side profile - NOT a Windows flag
 peduncle, spout. It must survive 18-26 px, so eye and mouth are
 dropped under 24 px and the spout drops to 2 thicker jets under
 30 px. "win" stays as an alias of "whale".
+"speaker" / "speaker_muto" (2026-10-23, _altoparlante(w, h, muto)) = the tray
+volume icon; the muted one is the same speaker drawn muted.
+
+### `scripts/os/audio_pc.gd`
+
+AudioPC (class_name, RefCounted, all static; 2026-10-23): the PC's speakers.
+Owns the audio bus "PC" -> Master, created AT RUNTIME the first time it is
+needed (the project has no default_bus_layout.tres), with three effects in
+this order: Panner (FX_PAN), LowPassFilter (FX_PASSA_BASSO), Reverb
+(FX_RIVERBERO). Everything the computer plays goes through it (today the web
+page music: BrowserApp._musica.bus = AudioPC.bus()).
+- imposta_volume / imposta_muto / volume / muto: backed by
+  GameManager.pc_volume (0.8) and pc_muto, session-wide and NOT reset per run
+  (whoever muted does not want it back next game).
+- dentro(delta): inside the PC the sound is clean and centred (cutoff
+  DENTRO_TAGLIO 20 kHz, no reverb). Owner, 2026-10-23: "quando sono nel pc va
+  bene mono, ma poi deve arrivare da avanti, dal pc".
+- nella_stanza(verso_monitor, delta): in the room the sound comes from the
+  desk. verso_monitor = direction of the monitor in CAMERA space: pan from the
+  side the monitor is on (x * STANZA_PAN 0.8), lowpass cutoff 5000 Hz facing
+  (STANZA_TAGLIO_FRONTE) down to 1600 Hz with the back turned
+  (STANZA_TAGLIO_SPALLE), -4 dB facing -> -9 dB behind, reverb wet
+  STANZA_ECO 0.18.
+- Smoothed (VELOCITA 6, cutoff interpolated in log scale) so the sound glides
+  with the camera, also during enter/exit. stato() returns the current values
+  for the tests.
+Called every frame by player.gd (_aggiorna_audio_pc). Tests: web_media_test
+section 6, taskbar_test section 6.
 "web" (aliases "ie"/"globe") is the NETWORK icon - desktop, Start
 menu, browser window, .html files and the throbber by the address
 bar all use it. It was a light-blue "e" with a yellow orbit ring,

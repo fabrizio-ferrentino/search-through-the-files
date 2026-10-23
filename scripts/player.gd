@@ -727,6 +727,7 @@ func _screen_point() -> Vector3:
 
 func _process(delta):
 	_aggiorna_luce_schermo(delta)
+	_aggiorna_audio_pc(delta)
 	if not _in_pc:
 		_poll_monitor(delta)   # tieni il monitor 3D aggiornato quando si e' in stanza
 	if entering or _in_pc:
@@ -782,6 +783,16 @@ func _process(delta):
 	_update_room_cursor(mp)
 	# Rotazione fluida
 	rotation_degrees.y = lerp(rotation_degrees.y, target_yaw, delta * move_speed)
+
+# Da dove arriva il suono del PC (AudioPC): dentro il PC pulito e centrato, nella stanza
+# dagli altoparlanti sulla scrivania -- la direzione del monitor vista dalla camera dice
+# se sta a destra, a sinistra o alle spalle. Anche durante l'entrata/uscita: il suono
+# scivola insieme all'inquadratura.
+func _aggiorna_audio_pc(delta: float) -> void:
+	if _in_pc:
+		AudioPC.dentro(delta)
+	else:
+		AudioPC.nella_stanza(global_transform.basis.inverse() * (_screen_point() - global_position), delta)
 
 # Cursore della stanza: POINTING_HAND se il mouse punta il Monitor (schermo
 # o case, entrambi cliccabili guardando il centro), altrimenti freccia normale.

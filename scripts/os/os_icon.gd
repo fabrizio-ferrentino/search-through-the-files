@@ -83,6 +83,10 @@ func _draw() -> void:
 			_print(w, h)
 		"search":
 			_search(w, h)
+		"speaker":
+			_altoparlante(w, h)
+		"speaker_muto":
+			_altoparlante(w, h, true)
 		_:
 			_file(w, h)
 
@@ -476,6 +480,31 @@ func _stop(w: float, h: float) -> void:
 	draw_circle(c, r, Color("c0241c"))
 	draw_line(c + Vector2(-r * 0.5, -r * 0.5), c + Vector2(r * 0.5, r * 0.5), Color.WHITE, 2.0)
 	draw_line(c + Vector2(r * 0.5, -r * 0.5), c + Vector2(-r * 0.5, r * 0.5), Color.WHITE, 2.0)
+
+# Altoparlante della barra (il volume, come in Win98): cassa grigia, cono nero e due onde.
+# Zittito: niente onde, e il cerchio rosso sbarrato sopra.
+func _altoparlante(w: float, h: float, muto := false) -> void:
+	var s: float = min(w, h)
+	var x0 := (w - s) * 0.5
+	var y0 := (h - s) * 0.5
+	var cassa := Rect2(x0 + s * 0.12, y0 + s * 0.36, s * 0.20, s * 0.28)
+	draw_rect(cassa, Color("c0c0c0"))
+	_outline(cassa, Color.BLACK)
+	draw_colored_polygon(PackedVector2Array([
+			Vector2(x0 + s * 0.32, y0 + s * 0.36), Vector2(x0 + s * 0.56, y0 + s * 0.14),
+			Vector2(x0 + s * 0.56, y0 + s * 0.86), Vector2(x0 + s * 0.32, y0 + s * 0.64)]), Color("202020"))
+	if not muto:
+		var c := Vector2(x0 + s * 0.56, y0 + s * 0.5)
+		var tratto: float = maxf(1.0, s * 0.07)
+		draw_arc(c, s * 0.18, -0.9, 0.9, 8, Color.BLACK, tratto)
+		draw_arc(c, s * 0.34, -0.9, 0.9, 10, Color.BLACK, tratto)
+		return
+	var cc := Vector2(x0 + s * 0.66, y0 + s * 0.62)
+	var r := s * 0.26
+	var rosso := Color("c0241c")
+	var spessore: float = maxf(1.5, s * 0.09)
+	draw_arc(cc, r, 0.0, TAU, 16, rosso, spessore)
+	draw_line(cc + Vector2(-r, -r) * 0.7, cc + Vector2(r, r) * 0.7, rosso, spessore)
 
 # Aggiorna: freccia circolare. Ritoccata il 18/10/2026: il tratto era fisso a 2.5 px
 # (filo sottile a 48 px) e la punta minuscola, quindi a 16 px si leggeva una "U". Ora
