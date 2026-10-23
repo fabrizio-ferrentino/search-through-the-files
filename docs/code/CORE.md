@@ -350,6 +350,13 @@ text is set in code and the scene is left alone. It is called
 again on the options screen's "lingua_cambiata", or the menu
 would stay in the language it was built in.
 "Settings" opens options_screen.gd (one screen at a time).
+After "Start" the menu is LOCKED for the fade (2026-10-23, owner: during
+the fade the other buttons still worked - Settings opened, Quit closed the
+game mid-load, a second Start re-rolled the run): _blocca_pulsanti() sets
+every button to mouse IGNORE + FOCUS_NONE (not disabled: they would turn
+grey for that second) and the three callbacks return while _in_partenza().
+The fade veil cannot block clicks: Fade_transition is mouse IGNORE on
+purpose, the room reuses it.
 
 ### `scripts/options_screen.gd`
 
