@@ -370,12 +370,12 @@ changed only HERE, i.e. from the menu: the in-world text (file
 names, web pages) is generated when the run starts, so changing
 it mid-game would not rewrite the PC.
 VIDEO rows (2026-10-23, owner: "impostazioni video risoluzione, v sync,
-fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size: an arrow
-selector "< 1920 x 1080 >" (RisMeno / RisValore / RisPiu) over
-GameManager.risoluzioni_possibili() - too many for a row of buttons
-(owner: "vorrei piu' risoluzioni"); arrows off at the list ends and the
-whole selector visibly DISABLED in fullscreen, where the window is the
-screen. A window not in the list shows the largest size that fits it. At the bottom, next to
+fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size: a DROP-DOWN
+(OptionButton "Risoluzione", styled with the same frames, popup
+included) over GameManager.risoluzioni_possibili() - too many for a row
+of buttons (owner: "vorrei piu' risoluzioni"); an arrow selector "< >"
+was tried and the owner wanted a drop-down. Visibly DISABLED in
+fullscreen, where the window is the screen. A window not in the list shows the largest size that fits it. At the bottom, next to
 Back, a "Credits" button opens credits_screen.gd ON TOP (layer + 1);
 ESC then closes the credits first. Rows sit in a 2-column
 GridContainer (labels right-aligned | buttons) so they line up;
