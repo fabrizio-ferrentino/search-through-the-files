@@ -426,6 +426,10 @@ func _punta_torcia() -> void:
 		# il corridoio e' lungo: con la mira in su il fascio finiva sul soffitto in fondo.
 		# Qui quasi orizzontale, all'altezza dell'occhio a 6 m.
 		aim = cam_t.origin + flat * 6.0
+	elif _facing_zone("back"):
+		# dietro: dritto dove guardi (centro dello schermo), a 4 m, cioe' sul fondo della
+		# stanza dove arriva Ghosty. Con la mira della finestra illuminava il quadro.
+		aim = cam_t.origin + fwd * 4.0
 	_torch.look_at(aim, Vector3.UP)
 
 # --- barra batteria (HUD, visibile solo in stanza) ---

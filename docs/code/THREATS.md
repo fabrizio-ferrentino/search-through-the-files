@@ -101,7 +101,10 @@ while off, empty -> off and no relight under BATTERIA_RIACCENDE
 15, flickers under 20; the beam follows the camera every frame
 (_punta_torcia: from the hand, 0.2 right / 0.05 below the eye, aimed
 at a point 3 m ahead and 0.2 m ABOVE the eye - except facing the
-corridor (_facing_zone("right")), where it aims 6 m ahead at eye height;
+corridor (_facing_zone("right")), where it aims 6 m ahead at eye height,
+and behind ("back"), where it aims straight along the camera's view, 4 m
+ahead - the centre of the screen, where Ghosty comes (owner: "centrami la
+torcia di dietro": it lit the painting above the bed);
 2026-10-23, owner "sistema la luce della torcia per la finestra": it used
 to aim 8 m ahead and 0.2 m below, so at the window, 1.6 m away, the beam
 landed on the radiator; then, aimed up everywhere, it lit the corridor's
