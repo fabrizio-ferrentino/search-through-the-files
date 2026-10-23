@@ -268,6 +268,14 @@ dark); _aggiorna_luce_schermo() lerps toward it every frame (no flicker).
 PC off / boot = black = no light, desktop = teal, blue screen = blue room.
 Kept weak on purpose (cone 75, range 3 m): the corridor stays dark, the
 threats are seen only with the torch. Exports in the "Luce schermo" group.
+The desk lamp's "Light" now sits INSIDE the shade (-0.887, 1.15, -1.364;
+2026-10-23, owner: "aggiusta l'ombra della tazza"): it had been 43 cm
+straight above the mug, 34 cm from the lamp, so the mug, pens and scissors
+threw a black star right under the mug. Lit only from inside, the shade
+went black, so the lamp mesh has a material override in main.tscn
+(m_lampada_accesa: its own texture as albedo AND emission, warm tint,
+energy 0.55). The model is one mesh, so the base glows a little too.
+If you move or resize DeskLamp, move "Light" with it.
 The desk lamp ("Light") had range 3 m and lit the Jester at the window
 (~1.7 m away) through the glass even with the torch off: range 1.5 m now
 (owner, 2026-10-23), so at the window he is only a dark shape against the
