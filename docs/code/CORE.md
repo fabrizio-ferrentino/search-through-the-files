@@ -139,7 +139,7 @@ centre x.
   "c'e' una scatola che vola"). ScatolaAperta = one Empty Box alone on the
   floor between the bookshelf and the bed. Cestino = Trash Bin. NEW: Pendola = Grandfathers Clock on the
   right wall at z 1.95 (owner's choice; meant for a ticking sound later);
-  Arredo/Scrivania = Mug With Office Tool + Desk Fan on the desk top (y 0.74).
+  Arredo/Scrivania = Mug With Office Tool (front-left corner, away from under the lamp light) + Desk Fan on the desk top (y 0.74).
   The desk itself is in main.tscn: if you move it, move these two.
   room.tscn and corridor.tscn were first written by one-off scripts that are
   NOT in the repo: they are now ordinary scenes, edit them in the Godot editor.
@@ -268,14 +268,13 @@ dark); _aggiorna_luce_schermo() lerps toward it every frame (no flicker).
 PC off / boot = black = no light, desktop = teal, blue screen = blue room.
 Kept weak on purpose (cone 75, range 3 m): the corridor stays dark, the
 threats are seen only with the torch. Exports in the "Luce schermo" group.
-The desk lamp's "Light" now sits INSIDE the shade (-0.887, 1.15, -1.364;
-2026-10-23, owner: "aggiusta l'ombra della tazza"): it had been 43 cm
-straight above the mug, 34 cm from the lamp, so the mug, pens and scissors
-threw a black star right under the mug. Lit only from inside, the shade
-went black, so the lamp mesh has a material override in main.tscn
-(m_lampada_accesa: its own texture as albedo AND emission, warm tint,
-energy 0.55). The model is one mesh, so the base glows a little too.
-If you move or resize DeskLamp, move "Light" with it.
+The desk lamp's "Light" is NOT inside the shade but just beside it, toward
+the room: that is what lights the shade so it reads warm and lit. Putting it
+inside (and making the shade emissive to compensate) was tried on
+2026-10-23 and rejected by the owner ("si vede malissimo"). The light used
+to hang right over the mug, which threw a black star of pen and scissor
+shadows under it ("aggiusta l'ombra della tazza"): the mug was moved instead
+(Arredo/Scrivania/Tazza, (-0.88, 0.74, -0.86), the desk's front-left corner).
 The desk lamp ("Light") had range 3 m and lit the Jester at the window
 (~1.7 m away) through the glass even with the torch off: range 1.5 m now
 (owner, 2026-10-23), so at the window he is only a dark shape against the
