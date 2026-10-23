@@ -43,8 +43,10 @@ below the floor). Now the floor top is y = 0.
 
 Main.tscn changes: Bed y = 0; Corridor rotated exactly -90 degrees (was
 ~-92.8) with its mouth on the right wall, Transform3D(0,0,-1, 0,1,0,
-1,0,0, 2.6, -0.0125, -0.69); CornerShadow moved to (2, 2.2, 1.5) (it
-was inside the new ceiling); DeskLamp is an editable instance with
+1,0,0, 1.9, -0.0125, 0.12) (corridor axis on z -0.155, the eye's z; see
+room.tscn and corridor.tscn); CornerShadow now at (1.4, 2.2, 1.5) (first
+(2, 2.2, 1.5) because it was inside the new ceiling, then moved again
+on 2026-10-23 because it fell outside the narrower room); DeskLamp is an editable instance with
 Lamp_with_shade cast_shadow = off (the shade threw a huge black blob on
 the wall). Known, left as is: Ghosty's path (markers z 4 -> 1.05, x 0)
 still crosses the bed.
@@ -84,18 +86,25 @@ deformi... placeholder, e inutile modificarli".
 
 The room SHELL and FURNITURE in world coordinates, instanced in main.tscn
 as "Stanza". PURE GRAPHICS: no node in it is read by code. Interior
-x -1.61 (window wall) .. 2.6 (corridor wall), z -1.98 (desk wall) ..
-4.30 (bed wall), floor top y = 0, ceiling 2.5. Walls are 20 cm thick
-and straight.
+x -1.61 (window wall) .. 1.9 (corridor wall), 3.5 m wide, z -1.98 (desk
+wall) .. 4.30 (bed wall), floor top y = 0, ceiling 2.5. Walls are 20 cm
+thick and straight. 2026-10-23 (owner: "col rework secondo me si vede poco
+il corridoio, e' troppo piccolo, e quindi fa poco paura"): the room was
+narrowed (right wall inner face was x 2.6) as part of a corridor rework:
+straight longer corridor, normal door, no light at the end. RULE: the
+doorway and the Corridor must stay on the eye axis (z -0.155); move one,
+move the other. Moved with the wall: PortaRipostiglio (x = X1 - 0.58),
+Scatoloni (X1 - 0.27 / -0.24), Bacheca x 1.33, Plafoniera at the room
+centre x.
 - Guscio: Pavimento, Soffitto, MuroDavanti, MuroDietro, MuroSinistro
   (CSG; child BucoFinestra = the window hole, move it together with
   WindowLeft), MuroDestro (CSG; child BucoPorta = the opening to the
-  corridor, now 0.9 m wide, z -1.14..-0.24 against the bed side (2026-10-23;
-  was 1.2 m, -1.44..-0.24, and before 1.45 m, -1.69..-0.24). Rule: from the
-  seat the corridor is seen diagonally through this door, so its first ~1.5 m
-  near the mouth is hidden by the wall; moving the doorway toward the desk
-  hides SpotR1. History: the 1.2 m width was kept for the peeks until
-  SpotL1 was moved and the left side re-cut, see corridor.tscn), SpalleFinestra
+  corridor, 0.9 m wide and CENTRED on the eye's z (-0.155): z -0.605..0.295
+  (2026-10-23). History: it was 1.2 m, -1.44..-0.24, before that 1.45 m,
+  -1.69..-0.24, always against the bed side, so the corridor was seen
+  diagonally and its first ~1.5 m were hidden by the wall; now that the
+  player turns straight down the axis (pos_right -90) it is centred),
+  SpalleFinestra
   (dark lining of the window reveal: a 50 cm LIT reveal looked like a
   grey box outside the window), Battiscopa, VanoPorta (casing, wood
   lining, light switch).
@@ -109,7 +118,7 @@ and straight.
 - PortaCamera (2026-10-22, owner: "mi pare strano che la stanza da letto
   non abbia una porta sul corridoio"): the bedroom door, OPEN into the room
   toward the front-right corner. The node is the HINGE (pivot on the jamb
-  toward the desk): rotate it on Y to open/close, -10 deg = open (now),
+  on the desk side, still so after the 2026-10-23 rework): rotate it on Y to open/close, -10 deg = open (now),
   90 = closed. It must open on this side: opened the other way it would
   cover the corridor peeks. Child "Anta" = instance of Door.glb (leaf
   1.33 x 2.98 x 0.115) scaled onto the opening (sized from it, so it follows
@@ -125,19 +134,24 @@ legno_mobili.tres. Change one, both room and corridor follow.
 
 ### `scenes/corridor.tscn`
 
-Floor and Ceiling now start at the mouth (z = 0) instead of entering the
-room (it z-fought); floor/walls/ceiling use the shared materials. The
-black side "rooms" (m_room) are unchanged.
-
-2026-10-23: the LEFT side was re-cut into two real doors (lz = local z):
-LeftA (lz 0..-1.3), door of SpotL1 (-1.3..-2.1), LeftB (-2.1..-2.52),
-door of SpotR2 (-2.52..-3.32), new LeftC (-3.32..-3.85). SpotR2, despite
-its name, is on the LEFT side and used to stand in front of solid wall.
-SpotL1 moved from lz -0.9 to -1.7 (it would be invisible through the
-0.9 m bedroom door) and the RoomL1 box followed to lz -1.7. Right side
-unchanged. All three corridor spots are visible from the seat (the
-nearest one half-covered by the jamb; the enemy slides in sideways so it
-still reads); check with stanza_check (stanza_spot_destra.png).
+REBUILT 2026-10-23 (generated; owner: "si vede poco il corridoio, e'
+troppo piccolo, e quindi fa poco paura"; chosen: straight longer corridor,
+normal door, NO light at the end, narrower room). Straight, 6.5 m long
+(lz 0..-6.5), width 1.45 (inner faces lx -1.0 / 0.45, axis -0.275), height
+2.4, shared materials, baseboards, dark-wood casings. Side doors 0.8 m,
+each with a black box "StanzaBuia" behind it: left lz -2.3 (SpotL1, lx
+-0.85), right lz -3.3 (SpotR1, lx 0.30), left lz -4.5 (SpotL2), right lz
+-5.6 (no spot, visual rhythm). The end wall has a closed Door.glb
+"PortaFondo" (vanishing point, no spot). The hidden Light1/Light2 were
+removed: the corridor stays dark on purpose (torch only). Spots must be
+deep: through the 0.9 m bedroom door the corridor's sides show only from
+~2 m in. History, so it does not come back: SpotL2 was named SpotR2 and
+was always on the left; the old corridor had a left side re-cut into two
+doors, SpotL1 at lz -1.7, and dim lights. Instanced in main.tscn with the
+axis on z -0.155 (see main.tscn). All three spots are visible through the
+doorway from the seat after turning right (pos_right -90 in player.gd =
+looking straight down the corridor, was -70); check with stanza_check
+(stanza_spot_destra.png).
 
 ### `scenes/window_left.tscn`
 
@@ -171,6 +185,9 @@ Camera3D: look-around, raycast clicks (incl. torch door-clicks),
 enter/exit PC, monitor quad, and the room's WorldEnvironment
 darkness (_setup_atmosphere: clean dark, NO fog — FNAF4 style;
 @export "Buio" group).
+Look positions: pos_right = -90 (2026-10-23, was -70: turning right you
+look straight down the corridor, which is on the eye axis). Everything
+reads the variable (threat_director _facing_zone, arrows, tests).
 ESC inside the PC leaves for the room EXCEPT when the OS wants it
 (_os.trattiene_esc(): a rename in progress, or a closable dialog
 such as the About) - then it is forwarded instead. Before

@@ -66,7 +66,7 @@ shadow_enabled = true
 omni_range = 3.0
 
 [node name="CornerShadow" type="OmniLight3D" parent="." unique_id=446033683]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.2, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 2.2, 1.5)
 light_color = Color(0.5, 0.6, 0.5, 1)
 light_energy = 0.08
 
@@ -156,7 +156,7 @@ cast_shadow = 0
 transform = Transform3D(-1.0999897, 0.0, 0.0047036, 0.0, 1.0999999, 0.0, -0.0047036, 0.0, -1.0999897, -0.3901032, 0.0, 3.1919957)
 
 [node name="Corridor" parent="." unique_id=1074436095 instance=ExtResource("9_corr")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.6, -0.0125, -0.69)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 1.9, -0.0125, 0.12)
 
 [node name="WindowLeft" parent="." instance=ExtResource("10_finestra")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1.6, 1.35, -0.75)

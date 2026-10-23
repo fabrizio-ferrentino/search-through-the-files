@@ -9,12 +9,13 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 ### `scenes/corridor.tscn`
 
 STARTER right-side corridor (M4): plain box geometry + door
-Marker3Ds in group "enemy_spots", kept DARK (dim lights — the
-torch lights it). Instanced inside main.tscn (node "Corridor");
-move/refine/replace in editor.
-2026-10-23: left side re-cut into two doors, SpotL1 moved to lz -1.7 and
-SpotR2 (on the LEFT side despite its name) now in front of a real door;
-details in CORE.md (`scenes/corridor.tscn`). Enemies are not resized
+Marker3Ds in group "enemy_spots", kept DARK (no lights at all since
+2026-10-23: the torch lights it). Instanced inside main.tscn (node
+"Corridor"); move/refine/replace in editor.
+2026-10-23: rebuilt straight and 6.5 m long. Three spots: SpotL1 (left,
+lz -2.3), SpotR1 (right, lz -3.3), SpotL2 (left, lz -4.5; it was called
+SpotR2 but was always on the left). Details in CORE.md
+(`scenes/corridor.tscn`). Enemies are not resized
 (owner: placeholders, they must be deformed).
 
 ### `scenes/window_left.tscn`
@@ -32,7 +33,9 @@ outside on the ground) is in "enemy_spots" AND "spot_left": Jester
 and HaloMan peek from here like from the corridor doors, and the
 zone to light is the left. Instanced in main.tscn as node
 "WindowLeft" at (-1.6, 1.35, -0.75), rotated so its +Z faces into
-the room: that is where the camera looks at pos_left (70 deg). Each
+the room: that is where the camera looks at pos_left (70 deg; the right
+side, pos_right, is -90 since 2026-10-23, read from the variable by
+_facing_zone, arrows and tests). Each
 node carries an editor_description. Look at it with
 tests/finestra_check.tscn.
 

@@ -9,7 +9,7 @@ extends Camera3D
 # --- CONFIGURAZIONE POSIZIONI ---
 var pos_left = 70.0
 var pos_center = 0.0
-var pos_right = -70.0
+var pos_right = -90.0   # dritto lungo il corridoio (la porta e il corridoio sono in asse con gli occhi)
 var pos_back = 180.0 
 
 var target_yaw = 0.0

@@ -13,13 +13,13 @@
 [ext_resource type="PackedScene" path="res://assets/textures/3d/door/Door.glb" id="6_ext"]
 
 [sub_resource type="BoxMesh" id="box_1"]
-size = Vector3(4.212, 0.1, 6.28)
+size = Vector3(3.512, 0.1, 6.28)
 
 [sub_resource type="BoxMesh" id="box_2"]
-size = Vector3(4.612, 0.1, 6.68)
+size = Vector3(3.912, 0.1, 6.68)
 
 [sub_resource type="BoxMesh" id="box_3"]
-size = Vector3(4.612, 2.6, 0.2)
+size = Vector3(3.912, 2.6, 0.2)
 
 [sub_resource type="StandardMaterial3D" id="m_4"]
 resource_name = "IntonacoEsterno"
@@ -33,16 +33,16 @@ size = Vector3(0.2, 0.01, 1.1)
 size = Vector3(0.2, 1, 0.01)
 
 [sub_resource type="BoxMesh" id="box_7"]
-size = Vector3(4.212, 0.08, 0.015)
+size = Vector3(3.512, 0.08, 0.015)
 
 [sub_resource type="BoxMesh" id="box_8"]
 size = Vector3(0.015, 0.08, 6.28)
 
 [sub_resource type="BoxMesh" id="box_9"]
-size = Vector3(0.015, 0.08, 0.84)
+size = Vector3(0.015, 0.08, 1.375)
 
 [sub_resource type="BoxMesh" id="box_10"]
-size = Vector3(0.015, 0.08, 4.54)
+size = Vector3(0.015, 0.08, 4.005)
 
 [sub_resource type="BoxMesh" id="box_11"]
 size = Vector3(0.03, 2.18, 0.08)
@@ -496,27 +496,27 @@ radial_segments = 16
 rings = 1
 
 [node name="Stanza" type="Node3D"]
-editor_description = "La STANZA: guscio (pavimento, muri, soffitto) e arredo, in coordinate di mondo (questa scena sta all'origine di main.tscn). Interno: x da -1.61 (finestra) a 2.6 (corridoio), z da -1.98 (scrivania) a 4.30 (letto), pavimento a y = 0, soffitto a 2.5. Scrivania, monitor, lampada, letto, finestra, corridoio e i marker dei nemici restano in main.tscn. I materiali condivisi sono in assets/materials/: cambiali li' e cambiano anche nel corridoio. Solo grafica: nessun nodo qui e' letto dal codice."
+editor_description = "La STANZA: guscio (pavimento, muri, soffitto) e arredo, in coordinate di mondo (questa scena sta all'origine di main.tscn). Interno: x da -1.61 (finestra) a 1.9 (corridoio), z da -1.98 (scrivania) a 4.30 (letto), pavimento a y = 0, soffitto a 2.5. Scrivania, monitor, lampada, letto, finestra, corridoio e i marker dei nemici restano in main.tscn. I materiali condivisi sono in assets/materials/: cambiali li' e cambiano anche nel corridoio. Solo grafica: nessun nodo qui e' letto dal codice."
 
 [node name="Guscio" type="Node3D" parent="."]
 
 [node name="Pavimento" type="MeshInstance3D" parent="Guscio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, -0.05, 1.16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, -0.05, 1.16)
 mesh = SubResource("box_1")
 material_override = ExtResource("2_ext")
 
 [node name="Soffitto" type="MeshInstance3D" parent="Guscio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 2.55, 1.16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.55, 1.16)
 mesh = SubResource("box_2")
 material_override = ExtResource("3_ext")
 
 [node name="MuroDavanti" type="MeshInstance3D" parent="Guscio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 1.2, -2.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 1.2, -2.08)
 mesh = SubResource("box_3")
 material_override = ExtResource("1_ext")
 
 [node name="MuroDietro" type="MeshInstance3D" parent="Guscio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 1.2, 4.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 1.2, 4.4)
 mesh = SubResource("box_3")
 material_override = ExtResource("1_ext")
 
@@ -532,13 +532,13 @@ operation = 2
 size = Vector3(1, 1, 1.1)
 
 [node name="MuroDestro" type="CSGBox3D" parent="Guscio"]
-editor_description = "Muro del corridoio, bucato dal figlio BucoPorta (CSG), il vano della porta della camera. Largo 0.9 m da z -1.14 a -0.24, contro il lato del letto: da qui la sedia vede in diagonale la parte di fondo del corridoio, dove stanno le porte degli affacci. Se lo sposti verso la scrivania, SpotR1 sparisce dietro lo stipite."
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.2, 1.16)
+editor_description = "Muro del corridoio, bucato dal figlio BucoPorta (CSG), il vano della porta della camera. Largo 0.9 m da z -0.605 a 0.295: CENTRATO sulla z degli occhi (-0.155), in asse col corridoio, cosi' girandosi a destra (pos_right = -90 in player.gd) si guarda dritto lungo il corridoio. Se sposti il vano, sposta anche Corridor in main.tscn (e viceversa)."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.2, 1.16)
 size = Vector3(0.2, 2.6, 6.28)
 material = ExtResource("1_ext")
 
 [node name="BucoPorta" type="CSGBox3D" parent="Guscio/MuroDestro"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -1.315)
 operation = 2
 size = Vector3(1, 2.3, 0.9)
 
@@ -571,13 +571,13 @@ cast_shadow = 0
 [node name="Battiscopa" type="Node3D" parent="Guscio"]
 
 [node name="Davanti" type="MeshInstance3D" parent="Guscio/Battiscopa"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 0.04, -1.9725)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 0.04, -1.9725)
 mesh = SubResource("box_7")
 material_override = ExtResource("4_ext")
 cast_shadow = 0
 
 [node name="Dietro" type="MeshInstance3D" parent="Guscio/Battiscopa"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.494, 0.04, 4.2925)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 0.04, 4.2925)
 mesh = SubResource("box_7")
 material_override = ExtResource("4_ext")
 cast_shadow = 0
@@ -589,13 +589,13 @@ material_override = ExtResource("4_ext")
 cast_shadow = 0
 
 [node name="DestraA" type="MeshInstance3D" parent="Guscio/Battiscopa"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 0.04, -1.56)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8925, 0.04, -1.2925)
 mesh = SubResource("box_9")
 material_override = ExtResource("4_ext")
 cast_shadow = 0
 
 [node name="DestraB" type="MeshInstance3D" parent="Guscio/Battiscopa"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 0.04, 2.03)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8925, 0.04, 2.2975)
 mesh = SubResource("box_10")
 material_override = ExtResource("4_ext")
 cast_shadow = 0
@@ -603,37 +603,37 @@ cast_shadow = 0
 [node name="VanoPorta" type="Node3D" parent="Guscio"]
 
 [node name="StipiteAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 1.09, -1.18)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.885, 1.09, -0.645)
 mesh = SubResource("box_11")
 material_override = ExtResource("4_ext")
 
 [node name="StipiteDietro" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 1.09, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.885, 1.09, 0.335)
 mesh = SubResource("box_11")
 material_override = ExtResource("4_ext")
 
 [node name="Architrave" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 2.14, -0.69)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.885, 2.14, -0.155)
 mesh = SubResource("box_12")
 material_override = ExtResource("4_ext")
 
 [node name="SpallaAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.05, -1.135)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.05, -0.6)
 mesh = SubResource("box_13")
 material_override = ExtResource("4_ext")
 
 [node name="SpallaDietro" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.05, -0.245)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.05, 0.29)
 mesh = SubResource("box_13")
 material_override = ExtResource("4_ext")
 
 [node name="SpallaSopra" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.095, -0.69)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.095, -0.155)
 mesh = SubResource("box_14")
 material_override = ExtResource("4_ext")
 
 [node name="Interruttore" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 1.1, -0.02)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8925, 1.1, 0.515)
 mesh = SubResource("box_16")
 material_override = SubResource("m_15")
 
@@ -1158,34 +1158,34 @@ cast_shadow = 0
 [node name="Armadio" type="Node3D" parent="Arredo"]
 
 [node name="Zoccolo" type="MeshInstance3D" parent="Arredo/Armadio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.345, 0.03, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.645, 0.03, 2.9)
 mesh = SubResource("box_99")
 material_override = ExtResource("4_ext")
 
 [node name="Corpo" type="MeshInstance3D" parent="Arredo/Armadio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.325, 1.005, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.625, 1.005, 2.9)
 mesh = SubResource("box_100")
 material_override = ExtResource("5_ext")
 
 [node name="Cornice" type="MeshInstance3D" parent="Arredo/Armadio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.305, 1.975, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.605, 1.975, 2.9)
 mesh = SubResource("box_101")
 material_override = ExtResource("4_ext")
 
 [node name="Fessura" type="MeshInstance3D" parent="Arredo/Armadio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.047, 1, 2.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.347, 1, 2.9)
 mesh = SubResource("box_102")
 material_override = ExtResource("4_ext")
 cast_shadow = 0
 
 [node name="PomoloA" type="MeshInstance3D" parent="Arredo/Armadio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0375, 1.05, 2.855)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3375, 1.05, 2.855)
 mesh = SubResource("box_103")
 material_override = SubResource("m_98")
 cast_shadow = 0
 
 [node name="PomoloB" type="MeshInstance3D" parent="Arredo/Armadio"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0375, 1.05, 2.945)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3375, 1.05, 2.945)
 mesh = SubResource("box_103")
 material_override = SubResource("m_98")
 cast_shadow = 0
@@ -1216,11 +1216,11 @@ material_override = SubResource("m_107")
 
 [node name="PortaRipostiglio" parent="Arredo" instance=ExtResource("6_ext")]
 editor_description = "Il modello della porta (assets/textures/3d/door/Door.glb), chiusa, sul muro di fondo. Prima stava accanto all'imbocco del corridoio; li' ora c'e' la porta della camera (PortaCamera), aperta."
-transform = Transform3D(-0.65, 0, 0, 0, 0.65, 0, 0, 0, -0.65, 1.72, 0, 4.26)
+transform = Transform3D(-0.65, 0, 0, 0, 0.65, 0, 0, 0, -0.65, 1.32, 0, 4.26)
 
 [node name="PortaCamera" type="Node3D" parent="Arredo"]
-editor_description = "La porta della camera: il CARDINE (perno), sullo stipite verso la scrivania. Ruota questo nodo sull'asse Y per aprirla o chiuderla: -10 gradi = aperta verso l'angolo (come ora), 90 = chiusa. Aperta deve restare da questo lato: dall'altro coprirebbe gli affacci del corridoio."
-transform = Transform3D(0.9848, 0, -0.1736, 0, 1, 0, 0.1736, 0, 0.9848, 2.56, 0, -1.11)
+editor_description = "La porta della camera: il CARDINE (perno), sullo stipite verso la scrivania. Ruota questo nodo sull'asse Y per aprirla o chiuderla: -10 gradi = aperta verso l'angolo (come ora), 90 = chiusa. Aperta deve restare verso l'angolo: spalancata verso il centro del vano coprirebbe il corridoio."
+transform = Transform3D(0.9848, 0, -0.1736, 0, 1, 0, 0.1736, 0, 0.9848, 1.86, 0, -0.575)
 
 [node name="Anta" parent="Arredo/PortaCamera" instance=ExtResource("6_ext")]
 transform = Transform3D(0.6767, 0, 0, 0, 0.7013, 0, 0, 0, 0.65, -0.448, 0, -0.0052)
@@ -1253,36 +1253,36 @@ cast_shadow = 0
 [node name="Bacheca" type="Node3D" parent="Arredo"]
 
 [node name="Cornice" type="MeshInstance3D" parent="Arredo/Bacheca"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -1.9675)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.33, 1.5, -1.9675)
 mesh = SubResource("box_116")
 material_override = ExtResource("4_ext")
 
 [node name="Sughero" type="MeshInstance3D" parent="Arredo/Bacheca"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -1.95)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.33, 1.5, -1.95)
 mesh = SubResource("box_118")
 material_override = SubResource("m_117")
 cast_shadow = 0
 
 [node name="Foglio1" type="MeshInstance3D" parent="Arredo/Bacheca"]
-transform = Transform3D(0.9976, 0.0698, 0, -0.0698, 0.9976, 0, 0, 0, 1, 1.26, 1.56, -1.943)
+transform = Transform3D(0.9976, 0.0698, 0, -0.0698, 0.9976, 0, 0, 0, 1, 1.09, 1.56, -1.943)
 mesh = SubResource("box_121")
 material_override = SubResource("m_119")
 cast_shadow = 0
 
 [node name="Foglio2" type="MeshInstance3D" parent="Arredo/Bacheca"]
-transform = Transform3D(0.9986, -0.0523, 0, 0.0523, 0.9986, 0, 0, 0, 1, 1.48, 1.6, -1.943)
+transform = Transform3D(0.9986, -0.0523, 0, 0.0523, 0.9986, 0, 0, 0, 1, 1.31, 1.6, -1.943)
 mesh = SubResource("box_122")
 material_override = SubResource("m_120")
 cast_shadow = 0
 
 [node name="Foglio3" type="MeshInstance3D" parent="Arredo/Bacheca"]
-transform = Transform3D(0.9945, -0.1045, 0, 0.1045, 0.9945, 0, 0, 0, 1, 1.7, 1.52, -1.943)
+transform = Transform3D(0.9945, -0.1045, 0, 0.1045, 0.9945, 0, 0, 0, 1, 1.53, 1.52, -1.943)
 mesh = SubResource("box_123")
 material_override = SubResource("m_119")
 cast_shadow = 0
 
 [node name="Foglio4" type="MeshInstance3D" parent="Arredo/Bacheca"]
-transform = Transform3D(0.9994, 0.0349, 0, -0.0349, 0.9994, 0, 0, 0, 1, 1.53, 1.37, -1.943)
+transform = Transform3D(0.9994, 0.0349, 0, -0.0349, 0.9994, 0, 0, 0, 1, 1.36, 1.37, -1.943)
 mesh = SubResource("box_124")
 material_override = SubResource("m_119")
 cast_shadow = 0
@@ -1290,23 +1290,23 @@ cast_shadow = 0
 [node name="Scatoloni" type="Node3D" parent="Arredo"]
 
 [node name="Grande" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(0.0698, 0, 0.9976, 0, 1, 0, -0.9976, 0, 0.0698, 2.33, 0.2, 1.2)
+transform = Transform3D(0.0698, 0, 0.9976, 0, 1, 0, -0.9976, 0, 0.0698, 1.63, 0.2, 1.2)
 mesh = SubResource("box_127")
 material_override = SubResource("m_125")
 
 [node name="NastroGrande" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(0.0698, 0, 0.9976, 0, 1, 0, -0.9976, 0, 0.0698, 2.33, 0.4025, 1.2)
+transform = Transform3D(0.0698, 0, 0.9976, 0, 1, 0, -0.9976, 0, 0.0698, 1.63, 0.4025, 1.2)
 mesh = SubResource("box_128")
 material_override = SubResource("m_126")
 cast_shadow = 0
 
 [node name="Piccolo" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(-0.1908, 0, 0.9816, 0, 1, 0, -0.9816, 0, -0.1908, 2.36, 0.55, 1.17)
+transform = Transform3D(-0.1908, 0, 0.9816, 0, 1, 0, -0.9816, 0, -0.1908, 1.66, 0.55, 1.17)
 mesh = SubResource("box_129")
 material_override = SubResource("m_125")
 
 [node name="NastroPiccolo" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(-0.1908, 0, 0.9816, 0, 1, 0, -0.9816, 0, -0.1908, 2.36, 0.7025, 1.17)
+transform = Transform3D(-0.1908, 0, 0.9816, 0, 1, 0, -0.9816, 0, -0.1908, 1.66, 0.7025, 1.17)
 mesh = SubResource("box_130")
 material_override = SubResource("m_126")
 cast_shadow = 0
@@ -1319,17 +1319,17 @@ material_override = SubResource("m_131")
 [node name="Plafoniera" type="Node3D" parent="Arredo"]
 
 [node name="Rosone" type="MeshInstance3D" parent="Arredo/Plafoniera"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.485, 1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.485, 1)
 mesh = SubResource("cil_133")
 material_override = SubResource("m_15")
 
 [node name="Stelo" type="MeshInstance3D" parent="Arredo/Plafoniera"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.42, 1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.42, 1)
 mesh = SubResource("cil_135")
 material_override = SubResource("m_134")
 
 [node name="Paralume" type="MeshInstance3D" parent="Arredo/Plafoniera"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.3, 1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.3, 1)
 mesh = SubResource("cil_137")
 material_override = SubResource("m_136")
 
