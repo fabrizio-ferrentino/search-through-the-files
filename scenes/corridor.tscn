@@ -1,95 +1,283 @@
 [gd_scene format=3 uid="uid://0yl7nprafrno"]
 
-[sub_resource type="StandardMaterial3D" id="m_floor"]
-albedo_color = Color(0.08, 0.08, 0.09, 1)
-
-[sub_resource type="BoxMesh" id="box"]
-
-[sub_resource type="StandardMaterial3D" id="m_wall"]
-albedo_color = Color(0.12, 0.12, 0.14, 1)
+[ext_resource type="Material" path="res://assets/materials/pavimento_legno.tres" id="m_floor"]
+[ext_resource type="Material" path="res://assets/materials/carta_da_parati.tres" id="m_wall"]
+[ext_resource type="Material" path="res://assets/materials/soffitto.tres" id="m_ceiling"]
+[ext_resource type="Material" path="res://assets/materials/legno_scuro.tres" id="m_scuro"]
+[ext_resource type="PackedScene" path="res://assets/textures/3d/door/Door.glb" id="porta"]
 
 [sub_resource type="StandardMaterial3D" id="m_room"]
 albedo_color = Color(0.04, 0.04, 0.05, 1)
 
-[node name="Corridor" type="Node3D" unique_id=541986947]
+[sub_resource type="BoxMesh" id="box_1"]
+size = Vector3(1.65, 0.1, 6.6)
 
-[node name="Floor" type="MeshInstance3D" parent="." unique_id=1813885056]
-transform = Transform3D(2.75, 0, 0, 0, 0.125, 0, 0, 0, 5, 0, -0.05, -1.8)
-material_override = SubResource("m_floor")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_2"]
+size = Vector3(1.65, 2.4, 0.1)
 
-[node name="Ceiling" type="MeshInstance3D" parent="." unique_id=1407597964]
-transform = Transform3D(2.2, 0, 0, 0, 0.1, 0, 0, 0, 4, 0, 2.45, -1.8)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_3"]
+size = Vector3(0.1, 2.4, 1.9)
 
-[node name="BackWall" type="MeshInstance3D" parent="." unique_id=587779812]
-transform = Transform3D(2.2, 0, 0, 0, 2.5, 0, 0, 0, 0.1, 0, 1.25, -3.85)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_4"]
+size = Vector3(0.1, 2.4, 1.4)
 
-[node name="LeftA" type="MeshInstance3D" parent="." unique_id=1752441789]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.4, -1.05, 1.2, -0.2)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_5"]
+size = Vector3(0.1, 2.4, 1.6)
 
-[node name="LeftB" type="MeshInstance3D" parent="." unique_id=965503595]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 2.45, -1.05, 1.2, -2.625)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_6"]
+size = Vector3(0.1, 0.35, 0.8)
 
-[node name="RightA" type="MeshInstance3D" parent="." unique_id=1005019157]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.5, 0.5, 1.2, -0.25)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_7"]
+size = Vector3(0.1, 2.4, 2.9)
 
-[node name="RightB" type="MeshInstance3D" parent="." unique_id=1415642037]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.6, 0.5, 1.2, -0.842)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_8"]
+size = Vector3(0.1, 2.4, 1.5)
 
-[node name="RightC" type="MeshInstance3D" parent="." unique_id=2126349759]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.75, 0.5, 1.2, -3.475)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[sub_resource type="BoxMesh" id="box_9"]
+size = Vector3(0.1, 2.4, 0.5)
 
-[node name="RoomL1" type="MeshInstance3D" parent="." unique_id=29044227]
-transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, -1.6898966, 1.1, -0.9)
+[sub_resource type="BoxMesh" id="box_10"]
+size = Vector3(0.015, 0.08, 1.9)
+
+[sub_resource type="BoxMesh" id="box_11"]
+size = Vector3(0.015, 0.08, 1.4)
+
+[sub_resource type="BoxMesh" id="box_12"]
+size = Vector3(0.015, 0.08, 1.6)
+
+[sub_resource type="BoxMesh" id="box_13"]
+size = Vector3(0.015, 0.08, 2.9)
+
+[sub_resource type="BoxMesh" id="box_14"]
+size = Vector3(0.015, 0.08, 1.5)
+
+[sub_resource type="BoxMesh" id="box_15"]
+size = Vector3(0.015, 0.08, 0.5)
+
+[sub_resource type="BoxMesh" id="box_16"]
+size = Vector3(1.45, 0.08, 0.015)
+
+[sub_resource type="BoxMesh" id="box_17"]
+size = Vector3(0.03, 2.12, 0.07)
+
+[sub_resource type="BoxMesh" id="box_18"]
+size = Vector3(0.03, 0.07, 0.94)
+
+[sub_resource type="BoxMesh" id="box_19"]
+size = Vector3(1.4, 2.2, 1.4)
+
+[node name="Corridor" type="Node3D"]
+editor_description = "Il corridoio a destra, DRITTO e lungo 6.5 m. Origine = imbocco (z = 0, sul muro destro della stanza), -Z va verso il fondo, X e' la larghezza (facce interne a -1.0 e 0.45, asse a -0.275). In main.tscn e' ruotato di -90 gradi e messo in modo che l'asse cada sulla z degli occhi: girandosi a destra (pos_right = -90) lo si guarda dritto attraverso la porta della camera. Gli spot degli affacci (gruppo enemy_spots) stanno davanti alle porte laterali, in profondita': da una porta di 0.9 m il primo tratto del corridoio si vede solo al centro, i lati si vedono da circa 2 m in poi. Resta BUIO apposta: lo si vede con la torcia. I materiali sono quelli della stanza (assets/materials/)."
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.275, -0.0375, -3.3)
+mesh = SubResource("box_1")
+material_override = ExtResource("m_floor")
+
+[node name="Ceiling" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.275, 2.4625, -3.3)
+mesh = SubResource("box_1")
+material_override = ExtResource("m_ceiling")
+
+[node name="BackWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.275, 1.2125, -6.55)
+mesh = SubResource("box_2")
+material_override = ExtResource("m_wall")
+
+[node name="Left1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 1.2125, -0.95)
+mesh = SubResource("box_3")
+material_override = ExtResource("m_wall")
+
+[node name="Left2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 1.2125, -3.4)
+mesh = SubResource("box_4")
+material_override = ExtResource("m_wall")
+
+[node name="Left3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 1.2125, -5.7)
+mesh = SubResource("box_5")
+material_override = ExtResource("m_wall")
+
+[node name="LeftArchitrave1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 2.2375, -2.3)
+mesh = SubResource("box_6")
+material_override = ExtResource("m_wall")
+
+[node name="LeftArchitrave2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 2.2375, -4.5)
+mesh = SubResource("box_6")
+material_override = ExtResource("m_wall")
+
+[node name="Right1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.2125, -1.45)
+mesh = SubResource("box_7")
+material_override = ExtResource("m_wall")
+
+[node name="Right2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.2125, -4.45)
+mesh = SubResource("box_8")
+material_override = ExtResource("m_wall")
+
+[node name="Right3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.2125, -6.25)
+mesh = SubResource("box_9")
+material_override = ExtResource("m_wall")
+
+[node name="RightArchitrave1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.2375, -3.3)
+mesh = SubResource("box_6")
+material_override = ExtResource("m_wall")
+
+[node name="RightArchitrave2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.2375, -5.6)
+mesh = SubResource("box_6")
+material_override = ExtResource("m_wall")
+
+[node name="Battiscopa" type="Node3D" parent="."]
+
+[node name="Sinistra1" type="MeshInstance3D" parent="Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9925, 0.0525, -0.95)
+mesh = SubResource("box_10")
+material_override = ExtResource("m_scuro")
+cast_shadow = 0
+
+[node name="Sinistra2" type="MeshInstance3D" parent="Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9925, 0.0525, -3.4)
+mesh = SubResource("box_11")
+material_override = ExtResource("m_scuro")
+cast_shadow = 0
+
+[node name="Sinistra3" type="MeshInstance3D" parent="Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9925, 0.0525, -5.7)
+mesh = SubResource("box_12")
+material_override = ExtResource("m_scuro")
+cast_shadow = 0
+
+[node name="Destra1" type="MeshInstance3D" parent="Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4425, 0.0525, -1.45)
+mesh = SubResource("box_13")
+material_override = ExtResource("m_scuro")
+cast_shadow = 0
+
+[node name="Destra2" type="MeshInstance3D" parent="Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4425, 0.0525, -4.45)
+mesh = SubResource("box_14")
+material_override = ExtResource("m_scuro")
+cast_shadow = 0
+
+[node name="Destra3" type="MeshInstance3D" parent="Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4425, 0.0525, -6.25)
+mesh = SubResource("box_15")
+material_override = ExtResource("m_scuro")
+cast_shadow = 0
+
+[node name="Fondo" type="MeshInstance3D" parent="Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.275, 0.0525, -6.4925)
+mesh = SubResource("box_16")
+material_override = ExtResource("m_scuro")
+cast_shadow = 0
+
+[node name="Porte" type="Node3D" parent="."]
+editor_description = "Le porte laterali: il vano (buco fra i tratti di muro), gli stipiti e, dietro, una 'stanza' nera (un blocco buio: dentro non si vede niente). Lo spot davanti alla porta e' dove si affaccia il nemico."
+
+[node name="Porta1" type="Node3D" parent="Porte"]
+
+[node name="StipiteA" type="MeshInstance3D" parent="Porte/Porta1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.985, 1.0725, -1.865)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
+
+[node name="StipiteB" type="MeshInstance3D" parent="Porte/Porta1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.985, 1.0725, -2.735)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
+
+[node name="Architrave" type="MeshInstance3D" parent="Porte/Porta1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.985, 2.0975, -2.3)
+mesh = SubResource("box_18")
+material_override = ExtResource("m_scuro")
+
+[node name="StanzaBuia" type="MeshInstance3D" parent="Porte/Porta1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.1125, -2.3)
+mesh = SubResource("box_19")
 material_override = SubResource("m_room")
-mesh = SubResource("box")
 
-[node name="RoomR1" type="MeshInstance3D" parent="." unique_id=2099092578]
-transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, 1.1352229, 1.1, -2.0812383)
+[node name="SpotL1" type="Marker3D" parent="." groups=["enemy_spots"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 0, -2.3)
+
+[node name="Porta2" type="Node3D" parent="Porte"]
+
+[node name="StipiteA" type="MeshInstance3D" parent="Porte/Porta2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 1.0725, -2.865)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
+
+[node name="StipiteB" type="MeshInstance3D" parent="Porte/Porta2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 1.0725, -3.735)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
+
+[node name="Architrave" type="MeshInstance3D" parent="Porte/Porta2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 2.0975, -3.3)
+mesh = SubResource("box_18")
+material_override = ExtResource("m_scuro")
+
+[node name="StanzaBuia" type="MeshInstance3D" parent="Porte/Porta2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 1.1125, -3.3)
+mesh = SubResource("box_19")
 material_override = SubResource("m_room")
-mesh = SubResource("box")
 
-[node name="RoomR2" type="MeshInstance3D" parent="." unique_id=1407299450]
-transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, -1.684545, 1.1, -2.6)
+[node name="SpotR1" type="Marker3D" parent="." groups=["enemy_spots"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, -3.3)
+
+[node name="Porta3" type="Node3D" parent="Porte"]
+
+[node name="StipiteA" type="MeshInstance3D" parent="Porte/Porta3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.985, 1.0725, -4.065)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
+
+[node name="StipiteB" type="MeshInstance3D" parent="Porte/Porta3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.985, 1.0725, -4.935)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
+
+[node name="Architrave" type="MeshInstance3D" parent="Porte/Porta3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.985, 2.0975, -4.5)
+mesh = SubResource("box_18")
+material_override = ExtResource("m_scuro")
+
+[node name="StanzaBuia" type="MeshInstance3D" parent="Porte/Porta3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.1125, -4.5)
+mesh = SubResource("box_19")
 material_override = SubResource("m_room")
-mesh = SubResource("box")
 
-[node name="Light1" type="OmniLight3D" parent="." unique_id=1533033649]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -1)
-visible = false
-light_color = Color(0.7, 0.55, 0.45, 1)
-light_energy = 0.05
+[node name="SpotL2" type="Marker3D" parent="." groups=["enemy_spots"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 0, -4.5)
 
-[node name="Light2" type="OmniLight3D" parent="." unique_id=832991223]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -2.6)
-visible = false
-light_color = Color(0.7, 0.55, 0.45, 1)
-light_energy = 0.05
+[node name="Porta4" type="Node3D" parent="Porte"]
 
-[node name="SpotL1" type="Marker3D" parent="." unique_id=2087849275 groups=["enemy_spots"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9918645, 0, -0.9)
+[node name="StipiteA" type="MeshInstance3D" parent="Porte/Porta4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 1.0725, -5.165)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
 
-[node name="SpotR1" type="Marker3D" parent="." unique_id=733420691 groups=["enemy_spots"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32151806, 0.1140019, -2.0544162)
+[node name="StipiteB" type="MeshInstance3D" parent="Porte/Porta4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 1.0725, -6.035)
+mesh = SubResource("box_17")
+material_override = ExtResource("m_scuro")
 
-[node name="SpotR2" type="Marker3D" parent="." unique_id=796735030 groups=["enemy_spots"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0213723, 0, -2.9215245)
+[node name="Architrave" type="MeshInstance3D" parent="Porte/Porta4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 2.0975, -5.6)
+mesh = SubResource("box_18")
+material_override = ExtResource("m_scuro")
 
-[node name="RightC2" type="MeshInstance3D" parent="." unique_id=82359547]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.75, 0.5, 1.2, -2.732)
-material_override = SubResource("m_wall")
-mesh = SubResource("box")
+[node name="StanzaBuia" type="MeshInstance3D" parent="Porte/Porta4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 1.1125, -5.6)
+mesh = SubResource("box_19")
+material_override = SubResource("m_room")
+
+[node name="PortaFondo" parent="." instance=ExtResource("porta")]
+editor_description = "Porta chiusa in fondo al corridoio (Door.glb): solo il punto di fuga dello sguardo, nessuno si affaccia da qui."
+transform = Transform3D(0.65, 0, 0, 0, 0.65, 0, 0, 0, 0.65, -0.275, 0, -6.46)

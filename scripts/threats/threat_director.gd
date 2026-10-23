@@ -406,8 +406,12 @@ func _update_torch(delta: float) -> void:
 	_update_battery_ui()
 
 # Luce VERA, non "stampata": parte dalla MANO (un po' sotto/destra dell'occhio) e punta
-# ORIZZONTALE dove guardi (all'altezza del nemico, non sul pavimento): il fascio graza
-# pareti e nemici e fa ombre. Si riallinea a ogni frame, cosi' segue lo sguardo.
+# dove guardi, all'altezza del nemico (non sul pavimento): il fascio graza pareti e nemici
+# e fa ombre. Si riallinea a ogni frame, cosi' segue lo sguardo.
+# Mira a 3 m e 20 cm SOPRA l'occhio (23/10/2026): prima mirava a 8 m e 20 cm sotto, e alla
+# finestra (a 1.6 m) il centro del fascio cadeva sul termosifone invece che sul vetro. Verso
+# il corridoio (destra) invece mira a 6 m all'altezza dell'occhio: con la mira in su, in fondo
+# al corridoio il fascio finiva sul soffitto.
 func _punta_torcia() -> void:
 	var cam_t: Transform3D = player.global_transform
 	var fwd: Vector3 = -cam_t.basis.z
@@ -415,9 +419,17 @@ func _punta_torcia() -> void:
 	if flat.length() < 0.01:
 		flat = fwd
 	flat = flat.normalized()
-	_torch.global_position = cam_t.origin + cam_t.basis.x * 0.2 - cam_t.basis.y * 0.1
-	var aim: Vector3 = cam_t.origin + flat * 8.0
-	aim.y = cam_t.origin.y - 0.2
+	_torch.global_position = cam_t.origin + cam_t.basis.x * 0.2 - cam_t.basis.y * 0.05
+	var aim: Vector3 = cam_t.origin + flat * 3.0
+	aim.y = cam_t.origin.y + 0.2
+	if _facing_zone("right"):
+		# il corridoio e' lungo: con la mira in su il fascio finiva sul soffitto in fondo.
+		# Qui quasi orizzontale, all'altezza dell'occhio a 6 m.
+		aim = cam_t.origin + flat * 6.0
+	elif _facing_zone("back"):
+		# dietro: dritto dove guardi (centro dello schermo), a 4 m, cioe' sul fondo della
+		# stanza dove arriva Ghosty. Con la mira della finestra illuminava il quadro.
+		aim = cam_t.origin + fwd * 4.0
 	_torch.look_at(aim, Vector3.UP)
 
 # --- barra batteria (HUD, visibile solo in stanza) ---

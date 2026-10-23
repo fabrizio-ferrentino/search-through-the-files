@@ -130,6 +130,11 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   the WORST glyph separates at the best slider position, plus the
   at-rest watermark per glyph and the true band ratio — windowed),
 
+- photo_file_key_test.tscn/.gd (the photo key's SECOND route, the code
+  in the file's BYTES: over 40 seeds both routes occur, FILE mode keeps
+  the code out of the pixels and PIXEL mode out of the dump, decoys stay
+  clean, and the comment's position in the dump varies — headless),
+
 - photo_banda_scan.tscn/.gd (dev tool: the quietest spot in the
   shader's real band on each photo and the offset it would need),
 
@@ -169,6 +174,16 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   with threats off, photographed looking LEFT and straight ahead ->
   user://finestra_sinistra.png / finestra_centro.png, to judge the
   placeholder window by eye),
+
+- stanza_check.tscn/.gd (dev tool, WINDOWED, 2026-10-22: the real room
+  (room.tscn) with threats off, photographed from the four views as
+  the player sees it (centro, sinistra, destra, dietro) ->
+  user://stanza_<vista>.png, and again with the ambient light raised
+  (1.2) -> user://stanza_<vista>_luce.png, plus user://stanza_alto_luce.png
+  from above. To judge the furniture and walls by eye; no asserts.
+  2026-10-23: also user://stanza_spot_destra.png, the right view with a
+  red unshaded capsule (1.8 m) on every "enemy_spots" marker, to check by
+  eye that every peek spot is visible from the seat),
 
 - crt_look_check.tscn/.gd (dev tool, WINDOWED: the REAL room, into
   the PC, and photos of what the player sees - full view, a x4

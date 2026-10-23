@@ -9,7 +9,7 @@ extends Camera3D
 # --- CONFIGURAZIONE POSIZIONI ---
 var pos_left = 70.0
 var pos_center = 0.0
-var pos_right = -70.0
+var pos_right = -90.0   # dritto lungo il corridoio (la porta e il corridoio sono in asse con gli occhi)
 var pos_back = 180.0 
 
 var target_yaw = 0.0
@@ -35,7 +35,8 @@ var _pc_layer: CanvasLayer = null      # overlay a tutto schermo (vista "dentro 
 var _pc_bg: ColorRect = null           # sfondo nero dell'overlay (porta il cursore reale)
 var _os_mouse_in := false              # la SubViewport dell'OS sa che il mouse e' su di lei?
 var _pc_fade: ColorRect = null         # rettangolo nero per le dissolvenze dell'overlay
-var _screen_tex: ImageTexture = null   # texture del monitor 3D (aggiornata dal SubViewport)
+var _media_vp: SubViewport = null      # 16x12: la media dei colori dell'OS (luce dello schermo)
+var _media_in_lettura := false         # una rilettura asincrona di _media_vp e' in corso
 var _poll_accum := 0.0
 var _home_transform: Transform3D       # posa "a riposo" della telecamera (centro stanza)
 var _home_fov := 75.0
@@ -54,6 +55,14 @@ var _virus = null                      # VirusDirector (M5): i virus dentro il P
 # --- buio della stanza (M4): nero PULITO, niente nebbia (stile FNAF 4) ---
 @export_group("Buio")
 @export var ambient_energy := 0.04                   # luce ambientale (bassa = piu' buio)
+
+# --- luce dello schermo (il nodo LuceSchermo in main.tscn): colore e intensita' DAL VIVO ---
+@export_group("Luce schermo")
+@export var screen_light_max := 1.0       # intensita' con lo schermo al massimo (scala col canale piu' forte)
+@export var screen_light_smooth := 8.0    # quanto in fretta segue i cambi (piu' alto = piu' pronto)
+var _luce_schermo: SpotLight3D = null
+var _luce_colore := Color.BLACK           # colore verso cui sfuma (media dello schermo)
+var _luce_energia := 0.0                  # intensita' verso cui sfuma
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -143,6 +152,12 @@ func _setup_atmosphere() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.4, 0.45, 0.55)
 	env.ambient_light_energy = ambient_energy
+	# occlusione ambientale: scurisce i punti di contatto (tazza sulla scrivania, libri, scatole),
+	# anche sotto la luce della lampada (light_affect), cosi' gli oggetti non sembrano appoggiati in aria
+	env.ssao_enabled = true
+	env.ssao_radius = 0.25
+	env.ssao_intensity = 2.5
+	env.ssao_light_affect = 0.5
 	var we := WorldEnvironment.new()
 	we.name = "Atmosphere"
 	we.environment = env
@@ -442,32 +457,48 @@ func _setup_monitor_screen() -> void:
 	_kill_monitor_emission()   # spegne le scritte verdi del terminale del modello
 	if _os_viewport == null:
 		return
-	# lascia renderizzare il SubViewport un paio di frame prima di leggerne la texture
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var img := _os_viewport.get_texture().get_image()
-	if img == null or img.is_empty():
-		img = Image.create(OS_SIZE.x, OS_SIZE.y, false, Image.FORMAT_RGBA8)
-		img.fill(Color.BLACK)
-	_screen_tex = ImageTexture.create_from_image(img)
-	_build_screen_quad(_screen_tex)
+	# Il vetro usa DIRETTAMENTE la texture del SubViewport (dal vivo, ogni frame), filtrata
+	# da schermo_monitor.gdshader contro il moire'. Prima la si copiava sulla CPU ogni 80 ms
+	# (get_image + mipmap): ogni copia fermava il frame per ~20 ms, scatti continui.
+	_build_screen_quad(_os_viewport.get_texture())
+	# la luce dello schermo: un SubViewport minuscolo con la media dei colori dell'OS
+	_media_vp = SubViewport.new()
+	_media_vp.name = "MediaSchermo"
+	_media_vp.size = Vector2i(16, 12)
+	_media_vp.disable_3d = true
+	_media_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var rett := ColorRect.new()
+	rett.size = Vector2(16, 12)
+	var sm := ShaderMaterial.new()
+	sm.shader = preload("res://scripts/os/media_schermo.gdshader")
+	sm.set_shader_parameter("os_tex", _os_viewport.get_texture())
+	rett.material = sm
+	_media_vp.add_child(rett)
+	get_parent().add_child(_media_vp)
 
-# Aggiorna la texture del monitor 3D col contenuto attuale dell'OS (poche volte
-# al secondo: basta per avvio/login/desktop e non pesa).
+# Rilegge la media dei colori dell'OS (poche volte al secondo) per la luce dello schermo.
+# Lettura ASINCRONA dalla GPU: il dato arriva qualche frame dopo, senza fermare il frame.
 func _poll_monitor(delta: float) -> void:
-	if _screen_tex == null or _os_viewport == null:
+	if _media_vp == null or _media_in_lettura:
 		return
 	_poll_accum += delta
 	if _poll_accum < 0.08:
 		return
 	_poll_accum = 0.0
-	var img := _os_viewport.get_texture().get_image()
-	if img == null or img.is_empty():
+	var rd := RenderingServer.get_rendering_device()
+	var rid := RenderingServer.texture_get_rd_texture(_media_vp.get_texture().get_rid())
+	if rd == null or not rid.is_valid():
 		return
-	if img.get_size() == Vector2i(_screen_tex.get_width(), _screen_tex.get_height()):
-		_screen_tex.update(img)
-	else:
-		_screen_tex.set_image(img)
+	_media_in_lettura = true
+	if rd.texture_get_data_async(rid, 0, _media_letta) != OK:
+		_media_in_lettura = false
+
+func _media_letta(dati: PackedByteArray) -> void:
+	_media_in_lettura = false
+	if dati.size() < 16 * 12 * 4:
+		return
+	var img := Image.create_from_data(16, 12, false, Image.FORMAT_RGBA8, dati.slice(0, 16 * 12 * 4))
+	_misura_schermo(img)     # colore medio -> luce che lo schermo getta nella stanza
 
 # Spegne l'emissivo del modello del monitor (il finto terminale verde) cosi' lo
 # schermo sottostante e' nero e il pannello del desktop puo' stare dentro la cornice.
@@ -503,26 +534,140 @@ func _build_screen_quad(tex: Texture2D) -> void:
 
 	var quad := MeshInstance3D.new()
 	quad.name = "MonitorScreen"
-	var mesh := QuadMesh.new()
-	quad.mesh = mesh
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = tex   # ViewportTexture: il monitor mostra l'OS dal vivo
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://scripts/os/schermo_monitor.gdshader")
+	mat.set_shader_parameter("os_tex", tex)   # ViewportTexture: il monitor mostra l'OS dal vivo
 	quad.material_override = mat
 	get_parent().add_child(quad)
 
-	# Se esiste il nodo di riferimento "test-schermo", ricalca esattamente
-	# posizione/orientamento/dimensione del suo lato schermo.
+	# Il desktop va SUL vetro del modello, non su un foglio davanti: si copiano i triangoli
+	# dello schermo del modello (bombati come un CRT) e ci si disegna sopra l'OS.
 	var ref = get_node_or_null("../test-schermo")
 	if ref is MeshInstance3D and ref.mesh is BoxMesh:
 		ref.visible = false
+		if _vetro_del_modello(quad, _face_from_box(ref)["basis"]):
+			_metti_luce_schermo(quad)
+			return
+	# ripiego (modello cambiato, niente riferimento): un quad piatto davanti al vetro
+	var mesh := QuadMesh.new()
+	quad.mesh = mesh
+	if ref is MeshInstance3D and ref.mesh is BoxMesh:
 		var info := _face_from_box(ref)
 		mesh.size = info["size"]
 		quad.global_transform = Transform3D(info["basis"], info["origin"] + info["basis"].z * screen_push)
 	else:
 		mesh.size = Vector2(screen_w, screen_h)
 		quad.global_position = _screen_point() + Vector3(0, 0, screen_push) + screen_nudge
+	_metti_luce_schermo(quad)
+
+# Il vetro del monitor nel modello (retro_computer_setup: una sola mesh con un atlante 4096
+# per monitor, case, tastiera e mouse) sono 32 triangoli, una griglia 4x4 leggermente
+# bombata, mappati sul nero dell'atlante dentro SCHERMO_UV. Si copiano in una mesh nuova,
+# staccata di SCHERMO_STACCO verso chi guarda, con le UV dell'atlante riportate a 0..1:
+# il desktop combacia col nero del modello angolo per angolo, anche guardandolo di sbieco.
+# Il quad ha origine al centro del vetro e +Z verso chi guarda (lo usa _metti_luce_schermo).
+# false = triangoli non trovati (modello cambiato): si torna al quad piatto.
+const SCHERMO_UV := Rect2(0.010452, 0.00734, 0.210971, 0.183536)
+const SCHERMO_STACCO := 0.002
+
+func _vetro_del_modello(quad: MeshInstance3D, base: Basis) -> bool:
+	var mon = get_node_or_null("../Monitor")
+	var mi: MeshInstance3D = _find_mesh(mon) if mon else null
+	if mi == null or mi.mesh == null:
+		return false
+	var arr: Array = mi.mesh.surface_get_arrays(0)
+	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
+	var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+	if uv.is_empty() or idx.is_empty():
+		return false
+	var zona := SCHERMO_UV.grow(0.0005)
+	var mondo := PackedVector3Array()   # vertici dei triangoli del vetro, in coordinate mondo
+	var uv_vetro := PackedVector2Array()
+	for t in range(0, idx.size(), 3):
+		if zona.has_point(uv[idx[t]]) and zona.has_point(uv[idx[t + 1]]) and zona.has_point(uv[idx[t + 2]]):
+			for k in 3:
+				mondo.append(mi.global_transform * v[idx[t + k]])
+				uv_vetro.append((uv[idx[t + k]] - SCHERMO_UV.position) / SCHERMO_UV.size)
+	if mondo.size() < 6:
+		return false
+	var centro := Vector3.ZERO
+	for p in mondo:
+		centro += p
+	centro /= float(mondo.size())
+	# nelle coordinate del quad (base ortonormale: l'inversa e' la trasposta)
+	var inv := base.transposed()
+	var locali := PackedVector3Array()
+	var segno_u := 0.0
+	var segno_v := 0.0
+	for i in mondo.size():
+		var l: Vector3 = inv * (mondo[i] - centro) + Vector3(0, 0, SCHERMO_STACCO)
+		locali.append(l)
+		segno_u += (uv_vetro[i].x - 0.5) * l.x
+		segno_v += (uv_vetro[i].y - 0.5) * l.y
+	# l'atlante puo' essere specchiato: u deve crescere verso destra, v verso il basso
+	for i in uv_vetro.size():
+		var c := uv_vetro[i]
+		if segno_u < 0.0:
+			c.x = 1.0 - c.x
+		if segno_v > 0.0:
+			c.y = 1.0 - c.y
+		uv_vetro[i] = c
+	var dati := []
+	dati.resize(Mesh.ARRAY_MAX)
+	dati[Mesh.ARRAY_VERTEX] = locali
+	dati[Mesh.ARRAY_TEX_UV] = uv_vetro
+	var am := ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, dati)
+	quad.mesh = am
+	quad.global_transform = Transform3D(base, centro)
+	return true
+
+# La luce dello schermo (LuceSchermo in main.tscn) esce dal DAVANTI del vetro: 3 cm davanti
+# al centro del quad, puntata lungo la sua normale (+Z del quad, verso il giocatore) ma resa
+# ORIZZONTALE: lo schermo e' inclinato all'indietro, e puntata in giu' faceva una macchia sul
+# bordo della scrivania. La vecchia OmniLight stava dietro il vetro, dentro il monitor, e il
+# monitor la oscurava.
+func _metti_luce_schermo(quad: Node3D) -> void:
+	_luce_schermo = get_node_or_null("../LuceSchermo") as SpotLight3D
+	if _luce_schermo == null:
+		return
+	var n: Vector3 = quad.global_transform.basis.z.normalized()
+	var p: Vector3 = quad.global_position + n * 0.03
+	n = Vector3(n.x, 0.0, n.z).normalized()
+	_luce_schermo.global_position = p
+	_luce_schermo.look_at(p + n, Vector3.UP)   # lo SpotLight illumina verso il suo -Z
+	_luce_schermo.light_energy = 0.0
+
+# Colore medio dello schermo da una griglia rada di pixel (16 x 12: costa niente). Il colore
+# e' la tinta (normalizzata), l'intensita' il canale piu' forte (la luminosita' "percepita"
+# dava un blu della schermata blu quasi spento): schermo nero (PC spento, avvio) = luce
+# spenta da sola.
+func _misura_schermo(img: Image) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	var somma := Color(0, 0, 0)
+	var n := 0
+	for gy in range(12):
+		for gx in range(16):
+			var c := img.get_pixel(int((gx + 0.5) * w / 16.0), int((gy + 0.5) * h / 12.0))
+			somma.r += c.r
+			somma.g += c.g
+			somma.b += c.b
+			n += 1
+	var media := Color(somma.r / n, somma.g / n, somma.b / n)
+	var top: float = maxf(media.r, maxf(media.g, media.b))
+	if top > 0.001:
+		_luce_colore = Color(media.r / top, media.g / top, media.b / top)
+	_luce_energia = screen_light_max * top
+
+# Ogni frame la luce sfuma verso il colore/intensita' misurati (niente sfarfallio).
+func _aggiorna_luce_schermo(delta: float) -> void:
+	if _luce_schermo == null:
+		return
+	var k: float = clampf(delta * screen_light_smooth, 0.0, 1.0)
+	_luce_schermo.light_color = _luce_schermo.light_color.lerp(_luce_colore, k)
+	_luce_schermo.light_energy = lerpf(_luce_schermo.light_energy, _luce_energia, k)
 
 # Ricava il rettangolo dello "schermo" da un box piatto: la faccia grande
 # (asse piu' sottile = normale), orientata verso la camera e con l'alto in su.
@@ -581,6 +726,7 @@ func _screen_point() -> Vector3:
 	return global_position - global_transform.basis.z * 1.0
 
 func _process(delta):
+	_aggiorna_luce_schermo(delta)
 	if not _in_pc:
 		_poll_monitor(delta)   # tieni il monitor 3D aggiornato quando si e' in stanza
 	if entering or _in_pc:

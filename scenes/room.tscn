@@ -1,0 +1,588 @@
+[gd_scene load_steps=61 format=3]
+
+[ext_resource type="Material" path="res://assets/materials/carta_da_parati.tres" id="1_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/pavimento_legno.tres" id="2_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/soffitto.tres" id="3_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/legno_scuro.tres" id="4_ext"]
+
+[ext_resource type="Material" path="res://assets/materials/legno_mobili.tres" id="5_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/door/Door.glb" id="6_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Bookshelf.glb" id="7_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Books.glb" id="8_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/books/Books Row.glb" id="9_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/books/Book Stack.glb" id="10_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/books/Books Leaning.glb" id="11_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/End Table.glb" id="12_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Alarm Clock.glb" id="13_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/wallart/Op Art.glb" id="14_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Wall Corkboard.glb" id="15_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/quaternius/Cardboard Boxes.glb" id="16_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Empty Box.glb" id="17_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Grandfathers Clock.glb" id="18_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Trash Bin.glb" id="19_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Mug With Office Tool.glb" id="20_ext"]
+
+[ext_resource type="PackedScene" path="res://assets/textures/3d/household/Desk Fan.glb" id="21_ext"]
+
+[sub_resource type="BoxMesh" id="box_1"]
+size = Vector3(3.512, 0.1, 6.28)
+
+[sub_resource type="BoxMesh" id="box_2"]
+size = Vector3(3.912, 0.1, 6.68)
+
+[sub_resource type="BoxMesh" id="box_3"]
+size = Vector3(3.912, 2.6, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="m_4"]
+resource_name = "IntonacoEsterno"
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_5"]
+size = Vector3(0.2, 0.01, 1.1)
+
+[sub_resource type="BoxMesh" id="box_6"]
+size = Vector3(0.2, 1, 0.01)
+
+[sub_resource type="BoxMesh" id="box_7"]
+size = Vector3(3.512, 0.08, 0.015)
+
+[sub_resource type="BoxMesh" id="box_8"]
+size = Vector3(0.015, 0.08, 6.28)
+
+[sub_resource type="BoxMesh" id="box_9"]
+size = Vector3(0.015, 0.08, 1.375)
+
+[sub_resource type="BoxMesh" id="box_10"]
+size = Vector3(0.015, 0.08, 4.005)
+
+[sub_resource type="BoxMesh" id="box_11"]
+size = Vector3(0.03, 2.18, 0.08)
+
+[sub_resource type="BoxMesh" id="box_12"]
+size = Vector3(0.03, 0.08, 1.06)
+
+[sub_resource type="BoxMesh" id="box_13"]
+size = Vector3(0.2, 2.1, 0.01)
+
+[sub_resource type="BoxMesh" id="box_14"]
+size = Vector3(0.2, 0.01, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="m_15"]
+resource_name = "Plastica"
+albedo_color = Color(0.62, 0.6, 0.54, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="box_16"]
+size = Vector3(0.015, 0.11, 0.075)
+
+[sub_resource type="StandardMaterial3D" id="m_17"]
+resource_name = "TappetoBordo"
+albedo_color = Color(0.07, 0.08, 0.15, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_18"]
+size = Vector3(1.8, 0.012, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="m_19"]
+resource_name = "TappetoCampo"
+albedo_color = Color(0.3, 0.085, 0.065, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_20"]
+size = Vector3(1.56, 0.014, 1.16)
+
+[sub_resource type="StandardMaterial3D" id="m_21"]
+resource_name = "VerniceTermosifone"
+albedo_color = Color(0.55, 0.53, 0.48, 1)
+roughness = 0.55
+metallic = 0.2
+
+[sub_resource type="BoxMesh" id="box_22"]
+size = Vector3(0.09, 0.55, 0.075)
+
+[sub_resource type="BoxMesh" id="box_23"]
+size = Vector3(0.05, 0.04, 0.86)
+
+[sub_resource type="BoxMesh" id="box_24"]
+size = Vector3(0.06, 0.13, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="m_25"]
+resource_name = "Stoffa"
+albedo_color = Color(0.24, 0.1, 0.085, 1)
+roughness = 1
+
+[sub_resource type="StandardMaterial3D" id="m_26"]
+resource_name = "StoffaPiega"
+albedo_color = Color(0.2, 0.08, 0.07, 1)
+roughness = 1
+
+[sub_resource type="BoxMesh" id="box_27"]
+size = Vector3(0.025, 0.025, 2.2)
+
+[sub_resource type="BoxMesh" id="box_28"]
+size = Vector3(0.035, 1.5, 0.13)
+
+[sub_resource type="StandardMaterial3D" id="m_29"]
+resource_name = "Pomolo"
+albedo_color = Color(0.5, 0.42, 0.22, 1)
+roughness = 0.35
+metallic = 0.8
+
+[sub_resource type="BoxMesh" id="box_30"]
+size = Vector3(0.51, 0.06, 1.16)
+
+[sub_resource type="BoxMesh" id="box_31"]
+size = Vector3(0.55, 1.89, 1.2)
+
+[sub_resource type="BoxMesh" id="box_32"]
+size = Vector3(0.59, 0.05, 1.26)
+
+[sub_resource type="BoxMesh" id="box_33"]
+size = Vector3(0.006, 1.8, 0.008)
+
+[sub_resource type="BoxMesh" id="box_34"]
+size = Vector3(0.025, 0.06, 0.022)
+
+[sub_resource type="CylinderMesh" id="cil_35"]
+top_radius = 0.06
+bottom_radius = 0.06
+height = 0.03
+radial_segments = 16
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="m_36"]
+resource_name = "Ottone"
+albedo_color = Color(0.45, 0.38, 0.2, 1)
+roughness = 0.4
+metallic = 0.8
+
+[sub_resource type="CylinderMesh" id="cil_37"]
+top_radius = 0.008
+bottom_radius = 0.008
+height = 0.1
+radial_segments = 16
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="m_38"]
+resource_name = "VetroOpaco"
+albedo_color = Color(0.7, 0.68, 0.6, 1)
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="cil_39"]
+top_radius = 0.12
+bottom_radius = 0.22
+height = 0.14
+radial_segments = 16
+rings = 1
+
+[node name="Stanza" type="Node3D"]
+editor_description = "La STANZA: guscio (pavimento, muri, soffitto) e arredo, in coordinate di mondo (questa scena sta all'origine di main.tscn). Interno: x da -1.61 (finestra) a 1.9 (corridoio), z da -1.98 (scrivania) a 4.30 (letto), pavimento a y = 0, soffitto a 2.5. Scrivania, monitor, lampada, letto, finestra, corridoio e i marker dei nemici restano in main.tscn. I materiali condivisi sono in assets/materials/: cambiali li' e cambiano anche nel corridoio. Solo grafica: nessun nodo qui e' letto dal codice."
+
+[node name="Guscio" type="Node3D" parent="."]
+
+[node name="Pavimento" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, -0.05, 1.16)
+mesh = SubResource("box_1")
+material_override = ExtResource("2_ext")
+
+[node name="Soffitto" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.55, 1.16)
+mesh = SubResource("box_2")
+material_override = ExtResource("3_ext")
+
+[node name="MuroDavanti" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 1.2, -2.08)
+mesh = SubResource("box_3")
+material_override = ExtResource("1_ext")
+
+[node name="MuroDietro" type="MeshInstance3D" parent="Guscio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 1.2, 4.4)
+mesh = SubResource("box_3")
+material_override = ExtResource("1_ext")
+
+[node name="MuroSinistro" type="CSGBox3D" parent="Guscio"]
+editor_description = "Muro della finestra, bucato dal figlio BucoFinestra (CSG). Se sposti WindowLeft in main.tscn, sposta anche il buco."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.2, 1.16)
+size = Vector3(0.2, 2.6, 6.28)
+material = ExtResource("1_ext")
+
+[node name="BucoFinestra" type="CSGBox3D" parent="Guscio/MuroSinistro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -1.91)
+operation = 2
+size = Vector3(1, 1, 1.1)
+
+[node name="MuroDestro" type="CSGBox3D" parent="Guscio"]
+editor_description = "Muro del corridoio, bucato dal figlio BucoPorta (CSG), il vano della porta della camera. Largo 0.9 m da z -0.605 a 0.295: CENTRATO sulla z degli occhi (-0.155), in asse col corridoio, cosi' girandosi a destra (pos_right = -90 in player.gd) si guarda dritto lungo il corridoio. Se sposti il vano, sposta anche Corridor in main.tscn (e viceversa)."
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.2, 1.16)
+size = Vector3(0.2, 2.6, 6.28)
+material = ExtResource("1_ext")
+
+[node name="BucoPorta" type="CSGBox3D" parent="Guscio/MuroDestro"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -1.315)
+operation = 2
+size = Vector3(1, 2.3, 0.9)
+
+[node name="SpalleFinestra" type="Node3D" parent="Guscio"]
+
+[node name="Sopra" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.845, -0.75)
+mesh = SubResource("box_5")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Sotto" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 0.855, -0.75)
+mesh = SubResource("box_5")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Avanti" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.35, -1.295)
+mesh = SubResource("box_6")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Dietro" type="MeshInstance3D" parent="Guscio/SpalleFinestra"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.712, 1.35, -0.205)
+mesh = SubResource("box_6")
+material_override = SubResource("m_4")
+cast_shadow = 0
+
+[node name="Battiscopa" type="Node3D" parent="Guscio"]
+
+[node name="Davanti" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 0.04, -1.9725)
+mesh = SubResource("box_7")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="Dietro" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 0.04, 4.2925)
+mesh = SubResource("box_7")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="Sinistra" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6045, 0.04, 1.16)
+mesh = SubResource("box_8")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="DestraA" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8925, 0.04, -1.2925)
+mesh = SubResource("box_9")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="DestraB" type="MeshInstance3D" parent="Guscio/Battiscopa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8925, 0.04, 2.2975)
+mesh = SubResource("box_10")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="VanoPorta" type="Node3D" parent="Guscio"]
+
+[node name="StipiteAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.885, 1.09, -0.645)
+mesh = SubResource("box_11")
+material_override = ExtResource("4_ext")
+
+[node name="StipiteDietro" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.885, 1.09, 0.335)
+mesh = SubResource("box_11")
+material_override = ExtResource("4_ext")
+
+[node name="Architrave" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.885, 2.14, -0.155)
+mesh = SubResource("box_12")
+material_override = ExtResource("4_ext")
+
+[node name="SpallaAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.05, -0.6)
+mesh = SubResource("box_13")
+material_override = ExtResource("4_ext")
+
+[node name="SpallaDietro" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.05, 0.29)
+mesh = SubResource("box_13")
+material_override = ExtResource("4_ext")
+
+[node name="SpallaSopra" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.095, -0.155)
+mesh = SubResource("box_14")
+material_override = ExtResource("4_ext")
+
+[node name="Interruttore" type="MeshInstance3D" parent="Guscio/VanoPorta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8925, 1.1, 0.515)
+mesh = SubResource("box_16")
+material_override = SubResource("m_15")
+
+[node name="Arredo" type="Node3D" parent="."]
+
+[node name="Tappeto" type="Node3D" parent="Arredo"]
+
+[node name="Bordo" type="MeshInstance3D" parent="Arredo/Tappeto"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.006, 0.6)
+mesh = SubResource("box_18")
+material_override = SubResource("m_17")
+cast_shadow = 0
+
+[node name="Campo" type="MeshInstance3D" parent="Arredo/Tappeto"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.007, 0.6)
+mesh = SubResource("box_20")
+material_override = SubResource("m_19")
+cast_shadow = 0
+
+[node name="Termosifone" type="Node3D" parent="Arredo"]
+
+[node name="Elemento1" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -1.15)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento2" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -1.05)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento3" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.95)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento4" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.85)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento5" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.75)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento6" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.65)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento7" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.55)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento8" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.45)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="Elemento9" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.4, -0.35)
+mesh = SubResource("box_22")
+material_override = SubResource("m_21")
+
+[node name="TuboSopra" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.64, -0.75)
+mesh = SubResource("box_23")
+material_override = SubResource("m_21")
+
+[node name="TuboSotto" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.16, -0.75)
+mesh = SubResource("box_23")
+material_override = SubResource("m_21")
+
+[node name="PiedeA" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.065, -1.13)
+mesh = SubResource("box_24")
+material_override = SubResource("m_21")
+
+[node name="PiedeB" type="MeshInstance3D" parent="Arredo/Termosifone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.552, 0.065, -0.37)
+mesh = SubResource("box_24")
+material_override = SubResource("m_21")
+
+[node name="Tende" type="Node3D" parent="Arredo"]
+
+[node name="Bastone" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.472, 2.02, -0.75)
+mesh = SubResource("box_27")
+material_override = ExtResource("4_ext")
+
+[node name="TendaAvanti1" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, -1.74)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="TendaAvanti2" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.492, 1.25, -1.62)
+mesh = SubResource("box_28")
+material_override = SubResource("m_26")
+
+[node name="TendaAvanti3" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, -1.5)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="TendaDietro1" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, 0)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="TendaDietro2" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.492, 1.25, 0.12)
+mesh = SubResource("box_28")
+material_override = SubResource("m_26")
+
+[node name="TendaDietro3" type="MeshInstance3D" parent="Arredo/Tende"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.462, 1.25, 0.24)
+mesh = SubResource("box_28")
+material_override = SubResource("m_25")
+
+[node name="Armadio" type="Node3D" parent="Arredo"]
+
+[node name="Zoccolo" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.645, 0.03, 2.9)
+mesh = SubResource("box_30")
+material_override = ExtResource("4_ext")
+
+[node name="Corpo" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.625, 1.005, 2.9)
+mesh = SubResource("box_31")
+material_override = ExtResource("5_ext")
+
+[node name="Cornice" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.605, 1.975, 2.9)
+mesh = SubResource("box_32")
+material_override = ExtResource("4_ext")
+
+[node name="Fessura" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.347, 1, 2.9)
+mesh = SubResource("box_33")
+material_override = ExtResource("4_ext")
+cast_shadow = 0
+
+[node name="PomoloA" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3375, 1.05, 2.855)
+mesh = SubResource("box_34")
+material_override = SubResource("m_29")
+cast_shadow = 0
+
+[node name="PomoloB" type="MeshInstance3D" parent="Arredo/Armadio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3375, 1.05, 2.945)
+mesh = SubResource("box_34")
+material_override = SubResource("m_29")
+cast_shadow = 0
+
+[node name="PortaRipostiglio" parent="Arredo" instance=ExtResource("6_ext")]
+editor_description = "Il modello della porta (assets/textures/3d/door/Door.glb), chiusa, sul muro di fondo. Prima stava accanto all'imbocco del corridoio; li' ora c'e' la porta della camera (PortaCamera), aperta."
+transform = Transform3D(-0.65, 0, 0, 0, 0.65, 0, 0, 0, -0.65, 1.32, 0, 4.26)
+
+[node name="PortaCamera" type="Node3D" parent="Arredo"]
+editor_description = "La porta della camera: il CARDINE (perno), sullo stipite verso la scrivania. Ruota questo nodo sull'asse Y per aprirla o chiuderla: -10 gradi = aperta verso l'angolo (come ora), 90 = chiusa. Aperta deve restare verso l'angolo: spalancata verso il centro del vano coprirebbe il corridoio."
+transform = Transform3D(0.9848, 0, -0.1736, 0, 1, 0, 0.1736, 0, 0.9848, 1.86, 0, -0.575)
+
+[node name="Anta" parent="Arredo/PortaCamera" instance=ExtResource("6_ext")]
+transform = Transform3D(0.6767, 0, 0, 0, 0.7013, 0, 0, 0, 0.65, -0.448, 0, -0.0052)
+
+[node name="Libreria" type="Node3D" parent="Arredo"]
+editor_description = "I modelli 'household' vengono dal pacchetto Household Props 001 di CreativeTrio (CC0, poly.pizza), lo stesso di scrivania, letto e lampada: scala 1.4 come la scrivania."
+
+[node name="Scaffale" parent="Arredo/Libreria" instance=ExtResource("7_ext")]
+transform = Transform3D(0, 0, 1.4, 0, 1.4, 0, -1.4, 0, 0, -1.507, 0, 0.85)
+
+[node name="Libri1" parent="Arredo/Libreria" instance=ExtResource("8_ext")]
+transform = Transform3D(0, 0, 1.4, 0, 1.4, 0, -1.4, 0, 0, -1.4895, 0.014, 0.969)
+
+[node name="Libri2" parent="Arredo/Libreria" instance=ExtResource("9_ext")]
+transform = Transform3D(0, 0, 0.56, 0, 0.56, 0, -0.33, 0, 0, -1.488, 0.482, 0.859)
+
+[node name="Libri3" parent="Arredo/Libreria" instance=ExtResource("10_ext")]
+transform = Transform3D(0.0146, 0, 0.2095, 0, 0.21, 0, -0.2095, 0, 0.0146, -1.502, 0.792, 0.858)
+
+[node name="Libri4" parent="Arredo/Libreria" instance=ExtResource("11_ext")]
+transform = Transform3D(0, 0, 3.5, 0, 3.5, 0, -3.5, 0, 0, -1.5245, 1.1725, 0.8465)
+
+[node name="Libri5" parent="Arredo/Libreria" instance=ExtResource("8_ext")]
+transform = Transform3D(0, 0, -1.4, 0, 1.4, 0, 1.4, 0, 0, -1.5245, 1.456, 0.745)
+
+[node name="Comodino" type="Node3D" parent="Arredo"]
+editor_description = "I modelli 'household' vengono dal pacchetto Household Props 001 di CreativeTrio (CC0, poly.pizza), lo stesso di scrivania, letto e lampada: scala 1.4 come la scrivania."
+
+[node name="Tavolino" parent="Arredo/Comodino" instance=ExtResource("12_ext")]
+transform = Transform3D(-1.2, 0, 0, 0, 1.2, 0, 0, 0, -1.2, -1.296, 0, 3.984)
+
+[node name="Sveglia" parent="Arredo/Comodino" instance=ExtResource("13_ext")]
+transform = Transform3D(-0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, -0.9659, -1.412, 0.57, 4.1)
+
+[node name="Quadro" parent="Arredo" instance=ExtResource("14_ext")]
+editor_description = "Quadro sopra il letto: 'Op Art' di Ryan Murray (poly.pizza, CC-BY 3.0, DA CITARE nei crediti del gioco). Vedi assets/textures/3d/wallart/CREDITS.md."
+transform = Transform3D(0.21, 0, 0, 0, 0.21, 0, 0, 0, 0.21, -0.0475, 1.619, 4.265)
+
+[node name="Bacheca" parent="Arredo" instance=ExtResource("15_ext")]
+editor_description = "I modelli 'household' vengono dal pacchetto Household Props 001 di CreativeTrio (CC0, poly.pizza), lo stesso di scrivania, letto e lampada: scala 1.4 come la scrivania."
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 1.33, 1.18, -1.96)
+
+[node name="Scatoloni" parent="Arredo" instance=ExtResource("16_ext")]
+editor_description = "Pila di scatoloni chiusi: 'Cardboard Boxes' di Quaternius (CC0, poly.pizza), vedi assets/textures/3d/quaternius/CREDITS.md."
+transform = Transform3D(0, 0, 0.6, 0, 0.6, 0, -0.6, 0, 0, 1.581, 0, 0.94)
+
+[node name="ScatolaAperta" parent="Arredo" instance=ExtResource("17_ext")]
+editor_description = "I modelli 'household' vengono dal pacchetto Household Props 001 di CreativeTrio (CC0, poly.pizza), lo stesso di scrivania, letto e lampada: scala 1.4 come la scrivania."
+transform = Transform3D(1.1258, 0, 0.65, 0, 1.3, 0, -0.65, 0, 1.1258, -1.252, 0, 1.65)
+
+[node name="Pendola" parent="Arredo" instance=ExtResource("18_ext")]
+editor_description = "I modelli 'household' vengono dal pacchetto Household Props 001 di CreativeTrio (CC0, poly.pizza), lo stesso di scrivania, letto e lampada: scala 1.4 come la scrivania."
+transform = Transform3D(0, 0, -1.4, 0, 1.4, 0, 1.4, 0, 0, 1.685, 0, 1.95)
+
+[node name="Cestino" parent="Arredo" instance=ExtResource("19_ext")]
+editor_description = "I modelli 'household' vengono dal pacchetto Household Props 001 di CreativeTrio (CC0, poly.pizza), lo stesso di scrivania, letto e lampada: scala 1.4 come la scrivania."
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0.92, 0, -1.55)
+
+[node name="Scrivania" type="Node3D" parent="Arredo"]
+editor_description = "Oggetti sul piano della scrivania di main.tscn (piano a y 0.74). I modelli 'household' vengono dal pacchetto Household Props 001 di CreativeTrio (CC0, poly.pizza), lo stesso di scrivania, letto e lampada: scala 1.4 come la scrivania."
+
+[node name="Tazza" parent="Arredo/Scrivania" instance=ExtResource("20_ext")]
+transform = Transform3D(1.1276, 0, 0.4104, 0, 1.2, 0, -0.4104, 0, 1.1276, -0.72, 0.74, -0.98)
+
+[node name="Ventilatore" parent="Arredo/Scrivania" instance=ExtResource("21_ext")]
+transform = Transform3D(1.2557, 0, 0.3365, 0, 1.3, 0, -0.3365, 0, 1.2557, -0.56, 0.74, -1.68)
+
+[node name="Plafoniera" type="Node3D" parent="Arredo"]
+
+[node name="Rosone" type="MeshInstance3D" parent="Arredo/Plafoniera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.485, 1)
+mesh = SubResource("cil_35")
+material_override = SubResource("m_15")
+
+[node name="Stelo" type="MeshInstance3D" parent="Arredo/Plafoniera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.42, 1)
+mesh = SubResource("cil_37")
+material_override = SubResource("m_36")
+
+[node name="Paralume" type="MeshInstance3D" parent="Arredo/Plafoniera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.144, 2.3, 1)
+mesh = SubResource("cil_39")
+material_override = SubResource("m_38")
+
+[node name="DoorFrame" parent="Arredo/PortaCamera/Anta/RootNode" index="0"]
+visible = false
+
+[editable path="Arredo/PortaCamera/Anta"]

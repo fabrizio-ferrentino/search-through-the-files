@@ -27,7 +27,195 @@ Start screen (this is the main scene).
 
 ### `scenes/main.tscn`
 
-The 3D room. Camera3D runs player.gd.
+The 3D room. Camera3D runs player.gd. The shell and furniture are NOT
+here any more: they are the instance "Stanza" (scenes/room.tscn) at the
+origin. main.tscn keeps the desk/PC/monitor, Bed, lights, the Corridor
+instance, WindowLeft, the enemies' markers.
+
+2026-10-22 (owner: "sistemare la stanza, il mondo 3d, nulla di troppo
+incredibile... rimanere coerente con il tutto"): the room was rebuilt
+from primitives + the owner's models, scenes only (no script touched).
+Old main.tscn nodes removed: floor, wall, wallLeft (+BucoFinestra),
+wallBack, wallRight, Soffitto, the "Root Scene" door. Why: the old walls
+were rotated ~1 degree and started 9 cm above the floor, and the floor
+top was at y = 0.112 (desk legs sunk 12 cm, bed 22 cm, Ghosty's markers
+below the floor). Now the floor top is y = 0.
+
+Main.tscn changes: Bed y = 0; Corridor rotated exactly -90 degrees (was
+~-92.8) with its mouth on the right wall, Transform3D(0,0,-1, 0,1,0,
+1,0,0, 1.9, -0.0125, 0.12) (corridor axis on z -0.155, the eye's z; see
+room.tscn and corridor.tscn); CornerShadow now at (1.4, 2.2, 1.5) (first
+(2, 2.2, 1.5) because it was inside the new ceiling, then moved again
+on 2026-10-23 because it fell outside the narrower room); DeskLamp is an editable instance with
+Lamp_with_shade cast_shadow = off (the shade threw a huge black blob on
+the wall). Known, left as is: Ghosty's path (markers z 4 -> 1.05, x 0)
+still crosses the bed.
+
+2026-10-22, proportions pass (owner: check they are "non dico realistiche
+ma almeno giuste"). The desk was 0.60 m tall (real ~0.74) and the eye
+1.07 above the floor (seated ~1.2). The whole desk group was raised by
++0.14 m: Camera3D (eye now y 1.21), test-schermo, Monitor, DeskLamp, the
+screen-glow OmniLight3D and "Light". DeskModel keeps its feet on the floor
+and is stretched in Y (scale y 1.4 -> 1.723, top at 0.74). The view from
+the seat is unchanged relative to the desk. No script holds a hard-coded
+height (checked). Bed scaled 1.2 -> 1.1 (~1.63 x 2.15 m, was 1.78 x 2.35),
+origin z moved +0.1 so the headboard stays against the wall.
+Measured and fine: wardrobe 2.0 h, bookcase 1.7, nightstand 0.5, closet
+door 2.05, window sill 0.85 / top 1.85, ceiling 2.5, corridor 2.4; Jester
+1.91, HaloMan 2.11 (would brush the 2.1 doorway top), Ghosty 1.7 floating.
+(The two items that were "known, left on purpose" here, the 1.2 m door
+and the 0.45 m screen, were fixed on 2026-10-23, see below.)
+
+2026-10-23, screen, lamp, door (owner: "se vuoi sistemare lo schermo
+fallo", then "fai lo schermo un po piu grande"; he approved the door
+plan). main.tscn: the computer model (Monitor node + its collision shapes)
+and the hidden reference test-schermo were scaled to 0.9 of their size
+around the model's base (the Monitor origin, on the desk top); the
+screen-glow OmniLight3D moved the same way. The visible screen is now
+~0.40 m wide (was ~0.45, too big for a 1999 CRT); keyboard and tower
+shrink with it (one mesh). DeskLamp scale 2 -> 1.6 (0.52 m tall, was
+0.65); its "Light" kept the same place RELATIVE to the lamp (offset from
+the lamp base x0.8, now (-0.72, 1.17, -1.07)), so the hot spot sits in
+the shade again - left at the old height it sat on the shade's top rim. If
+you rescale the lamp, move "Light" with it. crt_look_check confirms the screen quad still fits the frame and
+its colour matches the OS exactly. Enemies were NOT resized: owner, "i
+personaggi se sono tanto grossi o alti non e un problema devono essere
+deformi... placeholder, e inutile modificarli".
+
+### `scenes/room.tscn`
+
+The room SHELL and FURNITURE in world coordinates, instanced in main.tscn
+as "Stanza". PURE GRAPHICS: no node in it is read by code. Interior
+x -1.61 (window wall) .. 1.9 (corridor wall), 3.5 m wide, z -1.98 (desk
+wall) .. 4.30 (bed wall), floor top y = 0, ceiling 2.5. Walls are 20 cm
+thick and straight. 2026-10-23 (owner: "col rework secondo me si vede poco
+il corridoio, e' troppo piccolo, e quindi fa poco paura"): the room was
+narrowed (right wall inner face was x 2.6) as part of a corridor rework:
+straight longer corridor, normal door, no light at the end. RULE: the
+doorway and the Corridor must stay on the eye axis (z -0.155); move one,
+move the other. Moved with the wall: PortaRipostiglio (x = X1 - 0.58),
+Scatoloni (X1 - 0.27 / -0.24), Bacheca x 1.33, Plafoniera at the room
+centre x.
+- Guscio: Pavimento, Soffitto, MuroDavanti, MuroDietro, MuroSinistro
+  (CSG; child BucoFinestra = the window hole, move it together with
+  WindowLeft), MuroDestro (CSG; child BucoPorta = the opening to the
+  corridor, 0.9 m wide and CENTRED on the eye's z (-0.155): z -0.605..0.295
+  (2026-10-23). History: it was 1.2 m, -1.44..-0.24, before that 1.45 m,
+  -1.69..-0.24, always against the bed side, so the corridor was seen
+  diagonally and its first ~1.5 m were hidden by the wall; now that the
+  player turns straight down the axis (pos_right -90) it is centred),
+  SpalleFinestra
+  (dark lining of the window reveal: a 50 cm LIT reveal looked like a
+  grey box outside the window), Battiscopa, VanoPorta (casing, wood
+  lining, light switch).
+- Arredo: Tappeto, Termosifone, Tende, Armadio, Plafoniera (off) and the
+  doors are still primitives (no equivalent in the bundle). PortaRipostiglio
+  = the owner's Door.glb, closed, on the back wall right of the bed (before
+  it stood rotated beside the corridor mouth). 2026-10-23 (owner: improve the
+  3D graphics with free poly.pizza models): the other props became instances
+  of the "Household Props 001" models (all models have the origin at the base centre and face +Z; at scale 1.4,
+  the desk's scale, they reach real sizes):
+  Libreria = Bookshelf + one different book model per level (shelf tops at
+  y 0.014/0.378/0.728/1.092/1.456 at scale 1.4). Each level is split by two
+  staggered uprights into three compartments; books go ONLY in the middle
+  one (0.41 x 0.22 m, centre (-1.507, y, 0.857)) - placed by eye, rows hung
+  out of the shelf ("ci sono dei libri che escono dalla libreria"). From the
+  bottom: the bundle's Books row, "Books Row", "Book Stack", "Books
+  Leaning", the bundle's Books row turned round. The same row copied on
+  every shelf "faceva uno strano effetto" (owner, 2026-10-23), so the three
+  middle levels use models from assets/textures/3d/books/ (CC-BY 3.0:
+  ATTRIBUTION REQUIRED, see CREDITS.md there). Comodino = End
+  Table (scale 1.2) + Alarm Clock (off); Quadro = "Op Art" by Ryan Murray
+  (assets/textures/3d/wallart/, CC-BY 3.0: ATTRIBUTION REQUIRED in the game's
+  credits, see the CREDITS.md there; centred model facing -Z, scale 0.21 =
+  0.80 x 0.60 m; chosen 2026-10-23 among three the owner proposed: its cold
+  concentric "tunnel" echoes the corridor; it replaced the bundle's
+  Painting, which is now unused); Bacheca = Wall Corkboard (1.2); Scatoloni =
+  "Cardboard Boxes" by Quaternius (CC0, assets/textures/3d/quaternius/, a
+  single closed stack 1.42 x 1.75 x 0.99 in the model, scale 0.6 = about
+  1.05 m tall; 0.9 was "troppo grandi") against the right wall between the
+  doorway and the clock (z 0.5..1.35); it
+  replaced two stacked open Empty Box, the top one of which floated (owner:
+  "c'e' una scatola che vola"). ScatolaAperta = one Empty Box alone on the
+  floor between the bookshelf and the bed. Cestino = Trash Bin. NEW: Pendola = Grandfathers Clock on the
+  right wall at z 1.95 (owner's choice; meant for a ticking sound later);
+  Arredo/Scrivania = Mug With Office Tool + Desk Fan on the desk top (y 0.74).
+  The desk itself is in main.tscn: if you move it, move these two.
+  room.tscn and corridor.tscn were first written by one-off scripts that are
+  NOT in the repo: they are now ordinary scenes, edit them in the Godot editor.
+- PortaCamera (2026-10-22, owner: "mi pare strano che la stanza da letto
+  non abbia una porta sul corridoio"): the bedroom door, OPEN into the room
+  toward the front-right corner. The node is the HINGE (pivot on the jamb
+  on the desk side, still so after the 2026-10-23 rework): rotate it on Y to open/close, -10 deg = open (now),
+  90 = closed. It must open on this side: opened the other way it would
+  cover the corridor peeks. Child "Anta" = instance of Door.glb (leaf
+  1.33 x 2.98 x 0.115) scaled onto the opening (sized from it, so it follows
+  the 0.9 m doorway), editable instance with the
+  model's DoorFrame hidden; the VanoPorta casing is the frame.
+
+### `assets/materials/` (shared by room.tscn AND corridor.tscn)
+
+carta_da_parati.tres (faint vertical stripes: a GradientTexture2D with
+world triplanar), pavimento_legno.tres (planks, same trick),
+soffitto.tres, legno_scuro.tres (same colour as the window frame),
+legno_mobili.tres. Change one, both room and corridor follow.
+
+### `scenes/corridor.tscn`
+
+REBUILT 2026-10-23 (owner: "si vede poco il corridoio, e'
+troppo piccolo, e quindi fa poco paura"; chosen: straight longer corridor,
+normal door, NO light at the end, narrower room). Straight, 6.5 m long
+(lz 0..-6.5), width 1.45 (inner faces lx -1.0 / 0.45, axis -0.275), height
+2.4, shared materials, baseboards, dark-wood casings. Side doors 0.8 m,
+each with a black box "StanzaBuia" behind it: left lz -2.3 (SpotL1, lx
+-0.85), right lz -3.3 (SpotR1, lx 0.30), left lz -4.5 (SpotL2), right lz
+-5.6 (no spot, visual rhythm). The end wall has a closed Door.glb
+"PortaFondo" (vanishing point, no spot). The hidden Light1/Light2 were
+removed: the corridor stays dark on purpose (torch only). Spots must be
+deep: through the 0.9 m bedroom door the corridor's sides show only from
+~2 m in. History, so it does not come back: SpotL2 was named SpotR2 and
+was always on the left; the old corridor had a left side re-cut into two
+doors, SpotL1 at lz -1.7, and dim lights. Instanced in main.tscn with the
+axis on z -0.155 (see main.tscn). All three spots are visible through the
+doorway from the seat after turning right (pos_right -90 in player.gd =
+looking straight down the corridor, was -70); check with stanza_check
+(stanza_spot_destra.png).
+
+### `scenes/window_left.tscn`
+
+The outside seen through the window. 2026-10-23 (owner: "il mondo fuori
+dalla finestra ... sembra vuoto e quando punto la torcia sugli alberi
+appaiono neri"): the three primitive cones ("Alberi", 2026-10-22) became
+"Esterno", models by Quaternius (CC0, assets/textures/3d/outdoor/ with its
+CREDITS.md): near, a wooden fence (z -2.6) and two bushes; then two dead
+trees; at the back six pines (z -8.5..-11.5). Real sizes (pines 6-8 m).
+Everything stays BEHIND SpotFinestra (z -0.75) so nothing covers the peek.
+"Notte" (unshaded sky, 44 x 18 at z -15) and "Terreno" (lawn 44 x 15, from
+z -0.1 to -15.1) were enlarged and pushed back to contain them. With the
+torch off the trees read as black shapes against the sky; the torch shows
+their colours. Glass m_vetro is near-black on purpose (see THREATS.md,
+torch). Window-local axes: +Z into the room, X along the wall.
+More detail, same day (owner: "erba, nuvole ... fai tu"), all Quaternius
+CC0 in outdoor/: Esterno/Prato = grass tufts, tall and dry grass, small
+plants, rocks, from z -1.4 back (none in front of the peek); Esterno/Cielo =
+three clouds (editable instances, unshaded dark-blue material override),
+a Luna (unshaded sphere, NOT a light; placed by projecting a free patch of
+sky in the seat's left view onto the sky plane - elsewhere it hid behind
+the window frame) and 45 unshaded star quads on the sky plane. The outside
+has NO light of its own (owner: "mi piaceva che fosse buio fuori" - a lit
+street light was tried and removed the same day).
+Esterno/Lontano (owner: "lo sfondo sembra ancora troppo piatto, aggiungi
+delle case in lontananza, o delle montagne"): three Quaternius "Mountains"
+(squashed in depth, z ~-13.7, unshaded material m_montagne slightly darker
+than the sky, which was brightened a little for the contrast) and two
+small DARK houses (no lit window, no light) at z ~-12.3. From the seat only
+a strip of horizon shows (window-local x ~-0.5..9 at z -15), so two pines
+and a dead tree were moved aside to open a gap where the houses sit.
+The houses looked like they floated ("sembra che le case volino"): they
+DID sit on the lawn, but the unlit lawn was pure black, so they hung over
+nothing. Terreno (m_prato) now has a very faint emission (moonlit ground,
+it reads as a ground band up to the mountains) and bushes and grass stand
+at the houses' bases.
 
 ### `scenes/ComputerMode.tscn`
 
@@ -56,6 +244,75 @@ Camera3D: look-around, raycast clicks (incl. torch door-clicks),
 enter/exit PC, monitor quad, and the room's WorldEnvironment
 darkness (_setup_atmosphere: clean dark, NO fog — FNAF4 style;
 @export "Buio" group).
+Look positions: pos_right = -90 (2026-10-23, was -70: turning right you
+look straight down the corridor, which is on the eye axis). Everything
+reads the variable (threat_director _facing_zone, arrows, tests).
+Monitor quad (2026-10-23, owner: "si vede male ... lo schermo con delle
+scanalature"): the 1440x1080 OS image shrunk to ~200 px on screen gave a
+moire. The quad shows the SubViewport's ViewportTexture DIRECTLY (live every
+frame, the owner's requirement) through scripts/os/schermo_monitor.gdshader:
+each pixel averages 4x4 bilinear taps spread over its footprint in the
+texture (dFdx/dFdy of UV), the job mipmaps would do; up close it is plain
+bilinear. NEVER copy the OS image to the CPU per frame: until 2026-10-23
+_poll_monitor did get_image() + generate_mipmaps() every 0.08 s, and each
+GPU->CPU readback stalled the frame ~20 ms (measured: 423 fps average but
+1% of frames at 19.8 ms = visible stutter; without it 1113 fps, worst 1%
+1.5 ms; owner: "mi sembra strano fare questi cali"). Same date: project.godot [rendering]
+msaa_3d = 4x for the room's jagged edges. The 1280x720 window override is
+the owner's, for development - leave it.
+Monitor fit (2026-10-23, owner: "deve essere centrato perfettamente con il
+nero del monitor ... si vede come se fosse un foglio sopra al modello"): the
+desktop is no longer a flat QuadMesh 3 cm in front of the glass (screen_push,
+needed because the CRT glass bulges; from any angle its corners floated off
+the black). _vetro_del_modello() copies the model's own screen: in
+retro_computer_setup (one mesh, one 4096 atlas) the glass is 32 triangles, a
+slightly bulged 4x4 grid, mapped inside the atlas rect SCHERMO_UV (picked by
+UV, not geometry: bezel triangles share the plane). They become an ArrayMesh
+2 mm (SCHERMO_STACCO) in front of the glass, UVs = atlas UVs remapped to 0..1
+(flips detected against the screen axes), origin at the glass centre, +Z
+toward the viewer (_metti_luce_schermo relies on it). test-schermo gives
+only the orientation; the flat quad stays as the fallback if the model
+changes. Shader cull_disabled, so the copied winding cannot hide it.
+Screen light (2026-10-23, owner: "mi pare strano che il pc non proietta
+luce nella stanza"): the SpotLight3D "LuceSchermo" in main.tscn replaces the
+old blue OmniLight3D, which sat 7 cm BEHIND the screen face, inside the
+monitor, and was shadowed by it. _metti_luce_schermo() (called from
+_build_screen_quad) puts it 3 cm in front of the screen quad, aimed along
+the quad normal made horizontal (aimed down, it made a hot spot on the desk
+edge). the light's colour comes from "MediaSchermo", a 16 x 12 SubViewport whose
+ColorRect (media_schermo.gdshader) averages 8x8 taps of each OS cell;
+_poll_monitor reads it back every 0.08 s with RenderingDevice
+texture_get_data_async (no stall, the data arrives a few frames later in
+_media_letta) and _misura_schermo() averages it: colour = the normalised hue, energy = screen_light_max x
+the strongest channel (perceived luminance left the blue screen nearly
+dark); _aggiorna_luce_schermo() lerps toward it every frame (no flicker).
+PC off / boot = black = no light, desktop = teal, blue screen = blue room.
+Kept weak on purpose (cone 75, range 3 m): the corridor stays dark, the
+threats are seen only with the torch. Exports in the "Luce schermo" group.
+The desk lamp's "Light" is NOT inside the shade but just in front of it
+(-0.82, 1.12, -1.2), on the lamp's side toward the room: that is what lights
+the shade so it reads warm and lit. Putting it inside (and making the shade
+emissive to compensate) was tried on 2026-10-23 and rejected by the owner
+("si vede malissimo"); so was moving the mug. It used to float 34 cm in
+front of the lamp, right above the mug: the pens threw radial "rays" and the
+mug's shadow looked fake ("ancora finta"). Now it sits next to the shade,
+so the mug's shadow falls forward. It is a SHARP shadow (no light_size,
+default shadow_blur, shadow_opacity 0.8 so it is never pitch black): the
+owner preferred it ("perfetta nitida, si vedeva anche il buco delle
+forbici") to the soft one, and it is also the cheapest. A light_size (soft
+PCSS shadows) cost frames, and the project soft_shadow_filter_quality 4
+used to hide its grain HALVED the frame rate (measured 2026-10-23: 459 ->
+253 fps; the owner noticed the lag): both are gone. light_specular 0: with
+a light size the highlight became a big bright oval on the desk and a
+yellow disc reflected in the window glass (the glass also has
+specular_mode disabled).
+The room Environment (player.gd _setup_atmosphere) has SSAO with
+light_affect 0.5: contact shadows under the mug, books and boxes, also
+where the lamp shines (about 10% of the frame time).
+The desk lamp ("Light") had range 3 m and lit the Jester at the window
+(~1.7 m away) through the glass even with the torch off: range 1.5 m now
+(owner, 2026-10-23), so at the window he is only a dark shape against the
+sky until the torch hits him; the desk and the wall behind stay lit.
 ESC inside the PC leaves for the room EXCEPT when the OS wants it
 (_os.trattiene_esc(): a rename in progress, or a closable dialog
 such as the About) - then it is forwarded instead. Before
@@ -135,6 +392,15 @@ The directors' side: VirusDirector.forza_debug / ferma_debug /
 azzera_attesa / stato_debug, ThreatDirector.forza_affaccio /
 allontana / stato_debug. All text English (see §6, DEV-ONLY keys).
 
+### `scripts/fps_counter.gd`
+FpsCounter (DEV-ONLY, 2026-10-23, owner: "un contatore degli fps ... in
+debug"): a CanvasLayer (layer 70, above pause) with a top-right Label
+"FPS n", refreshed every 0.25 s, green >= 55, yellow >= 30, red below.
+GameManager._ready adds it to the root (deferred) ONLY when
+OS.is_debug_build(): always on in the editor and in debug exports, absent
+in release exports. PROCESS_MODE_ALWAYS, mouse IGNORE; visible in the
+menu, the room and inside the PC.
+
 ### `scripts/nav_arrow.gd`
 
 Room look-around arrows: a big semi-transparent rectangle
@@ -210,6 +476,16 @@ New"). Loaded via Win95.font(); add Tinos-*.ttf for a serif.
 ### `assets/textures/`
 
 Wallpapers, the 3D models (computer, desk, lamp), the arrow sprite.
+
+`3d/household/` (2026-10-23): 21 .glb from the poly.pizza bundle "Household
+Props 001" (CreativeTrio, CC0), downloaded from static.poly.pizza; its
+`CREDITS.md` lists source, author, license and each model's page. Desk.glb,
+Bed.glb and Lamp With Shade.glb are byte-identical to the bundle's; Door.glb
+is NOT from it (source unknown). Used in room.tscn: Bookshelf, Books, End
+Table, Alarm Clock, Painting, Wall Corkboard, Empty Box, Trash Bin,
+Grandfathers Clock, Mug With Office Tool, Desk Fan. Downloaded, NOT used yet:
+Cabinet, Chandelier, Ceiling Fan, Rocking Chair, Coat Rack, Potted Plant,
+Globe, Armchair, Chair, Dresser.
 
 ### `docs/`
 

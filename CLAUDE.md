@@ -34,7 +34,7 @@ $proj  = "z:\Progetti\Search Through the Files"
   Silent test = run `--import` and read the parse error (usually rule 3 below).
 - In a `-s` script, `_initialize()` must `get_root().add_child(...)` then `await process_frame`.
 - Sabotage new checks: break the code on purpose, require red, restore.
-- **Do not commit or push unless asked.** `docs/`, `web/` and `CLAUDE.md` are gitignored.
+- **Do not commit or push unless asked.** `docs/`, `web/` and `CLAUDE.md` are tracked: commit their changes too.
 
 ## 3. Architecture in one picture
 
@@ -51,7 +51,7 @@ Main Menu (main_menu.tscn) ─ Start ─► Room (main.tscn)
 The OS renders once; the room samples it for the monitor and the overlay. Inside the PC, input
 is forwarded with `push_input()` and the cursor shape comes from `cursor_shape_at(pos)`.
 `GameManager` (autoload) holds what survives scene changes: run state, keys, language, debug
-switches. Overlay layers: PC view 10, win 20, debug 30, death 50, pause 60. Full data flow:
+switches. Overlay layers: PC view 10, win 20, debug 30, death 50, pause 60, FPS counter 70 (debug builds only). Full data flow:
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## 4. Where things live
@@ -70,7 +70,7 @@ switches. Overlay layers: PC view 10, win 20, debug 30, death 50, pause 60. Full
 ```
 project.godot            autoload GameManager; "pause" action; translations (fallback "en")
 locale/ui.csv            THE translation table (keys,en,it): every player-facing string. --import after editing
-scenes/                  main_menu (main scene), main (room), corridor, window_left, enemies/*, fade_transition,
+scenes/                  main_menu (main scene), main (room), room (shell+furniture), corridor, window_left, enemies/*, fade_transition,
                          ComputerMode (DEV-ONLY OS harness, not in the live flow)
 scripts/
   GameManager.gd         run lifecycle, keys, language, debug switches, F8-F12 dev keys
@@ -136,8 +136,8 @@ Implemented (details in the area docs):
 - PC threats: lethal apparitions, false alarms, YouAreStupid, blue screen.
 - Game over with per-cause lines; F12 debug panel (dev-only) with every threat on a button.
 
-NOT implemented yet: real enemy models/animations (placeholders, owner's art comes last); real
-3D room layout; sound; options beyond language; the planned ending (GDD §2b); other PC threats
+NOT implemented yet: real enemy models/animations (placeholders, owner's art comes last); the final
+3D room (today a furnished starter room from primitives + owner's models); sound; options beyond language; the planned ending (GDD §2b); other PC threats
 (self-opening windows, corrupted files, hunting cursor). Cut on purpose: PC session persistence.
 "Continue the game" = the next item in ROADMAP.md.
 
@@ -151,8 +151,9 @@ NOT implemented yet: real enemy models/animations (placeholders, owner's art com
 - `set_anchors_preset()` on a node already in the tree keeps its size: use
   `set_anchors_and_offsets_preset()`.
 - An app reading global `_input` keeps receiving it while minimised: check `is_visible_in_tree()`.
-- player.gd reaches room nodes by relative path; the OS aligns the monitor quad to the hidden
-  node `test-schermo`.
+- player.gd reaches room nodes by relative path; the monitor's desktop is drawn on the MODEL's
+  own screen triangles (`_vetro_del_modello`, found by their atlas UV rect); the hidden node
+  `test-schermo` only gives the orientation (and the flat-quad fallback).
 - Never hand-edit UIDs; `.godot/` is cache.
 
 ## 8. Working with Claude on this project (saving tokens)

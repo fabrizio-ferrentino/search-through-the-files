@@ -143,7 +143,6 @@ func _prova_foto(path: String, codice: String) -> Dictionary:
 			path.get_file(), float(spot["delta"]), float(spot["sigma_bp"]),
 			("  [SFOCATA]" if spot.has("blur_rect") else "")])
 	_banda_vera(con, senza, celle)
-	_varianti(con, senza, celle)
 	print("  detail     L1    L2    L3    L4    L5    L6   PEGGIO  d'(peggio)  taglio")
 	var risultati: Dictionary = {}
 	for i in range(21):
@@ -394,56 +393,6 @@ func _banda_vera(con: Image, senza: Image, celle: Array) -> void:
 	# filtro che il giocatore non usa mai.
 	print("  risposta del filtro ai tratti: %s  (media %.2f)  -> CODE_BP_RESPONSE"
 			% [" ".join(risposte), _media(risposte_v)])
-
-# Varianti di KERNEL a confronto, sullo stesso punto e sugli stessi glifi. Conta una sola
-# colonna: il rapporto del glifo PEGGIORE, perche' una lettera sepolta rende illeggibile
-# tutto il codice. Serve a scegliere il filtro per misura e non per intuizione -- la banda
-# va accordata sui tratti veri (2.2-2.5 px), e il termine "fine dentro larga" sottraeva
-# segnale senza dare niente in cambio.
-const VARIANTI := [
-	{"nome": "A attuale (0.2 fine in larga)", "fine_centro": 0.5, "fine_raggio": 1.0,
-		"anelli": [1.8, 3.8, 6.8], "pesi": [0.02879, 0.04283, 0.02838], "fine_in_larga": 0.2},
-	{"nome": "B senza fine in larga", "fine_centro": 0.5, "fine_raggio": 1.0,
-		"anelli": [1.8, 3.8, 6.8], "pesi": [0.035988, 0.053538, 0.035475], "fine_in_larga": 0.0},
-	{"nome": "C fine solo centro", "fine_centro": 1.0, "fine_raggio": 1.0,
-		"anelli": [1.8, 3.8, 6.8], "pesi": [0.035988, 0.053538, 0.035475], "fine_in_larga": 0.0},
-	{"nome": "D larga piu' larga", "fine_centro": 0.5, "fine_raggio": 1.0,
-		"anelli": [2.6, 5.2, 9.0], "pesi": [0.035988, 0.053538, 0.035475], "fine_in_larga": 0.0},
-	{"nome": "E larga piu' stretta", "fine_centro": 0.5, "fine_raggio": 1.0,
-		"anelli": [1.4, 2.8, 5.0], "pesi": [0.035988, 0.053538, 0.035475], "fine_in_larga": 0.0},
-	{"nome": "F fine 1.4 + larga media", "fine_centro": 0.4, "fine_raggio": 1.4,
-		"anelli": [2.2, 4.4, 7.6], "pesi": [0.035988, 0.053538, 0.035475], "fine_in_larga": 0.0},
-]
-
-func _varianti(con: Image, senza: Image, celle: Array) -> void:
-	var w := senza.get_width()
-	var h := senza.get_height()
-	var lc := OSContent.bp_luma(con)
-	var ls := OSContent.bp_luma(senza)
-	print("  varianti di kernel (rapporto del glifo PEGGIORE, e risposta media):")
-	for v in VARIANTI:
-		var ker: Dictionary = {
-			"fine_centro": v["fine_centro"], "fine_raggio": v["fine_raggio"],
-			"anelli": v["anelli"], "pesi": v["pesi"], "fine_in_larga": v["fine_in_larga"]}
-		var peggio := 999.0
-		var risp: Array = []
-		for c in celle:
-			var seg_somma := 0.0
-			for p in c["nucleo_comp"]:
-				var q: Vector2i = p
-				seg_somma += absf(OSContent.bp_at_kernel(lc, w, h, q.x, q.y, ker)
-						- OSContent.bp_at_kernel(ls, w, h, q.x, q.y, ker))
-			var segnale: float = seg_somma / float(maxi(1, c["nucleo_comp"].size()))
-			var rum2 := 0.0
-			for p in c["fondo_comp"]:
-				var q2: Vector2i = p
-				var b: float = OSContent.bp_at_kernel(ls, w, h, q2.x, q2.y, ker)
-				rum2 += b * b
-			var rumore: float = sqrt(rum2 / float(maxi(1, c["fondo_comp"].size())))
-			peggio = minf(peggio, (segnale / rumore) if rumore > 0.00002 else 999.0)
-			var scarto: float = float(c["A"]) / 255.0
-			risp.append((segnale / scarto) if scarto > 0.0005 else 0.0)
-		print("     %-32s peggiore %6.2f   risposta %.2f" % [str(v["nome"]), peggio, _media(risp)])
 
 func _media(v: Array) -> float:
 	var somma := 0.0

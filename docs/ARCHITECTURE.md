@@ -57,7 +57,9 @@ even while you are looking around the room. The OS is rendered into an offscreen
 `SubViewport`. The room consumes that render in two ways:
 
 1. **On the 3D monitor:** a `QuadMesh` ("MonitorScreen") textured with the
-   viewport's image, refreshed a few times per second (`_poll_monitor`).
+   viewport texture directly (live, every frame), filtered against moire by
+   `schermo_monitor.gdshader`. Nothing is copied to the CPU except a 16x12
+   average for the screen light, read back asynchronously (`_poll_monitor`).
 2. **As a fullscreen overlay:** a `CanvasLayer` ("PCLayer") with a `TextureRect`
    of the same viewport texture, plus the **CRT shader**. Shown only when you
    "enter" the PC.
