@@ -34,7 +34,7 @@ $proj  = "z:\Progetti\Search Through the Files"
   Silent test = run `--import` and read the parse error (usually rule 3 below).
 - In a `-s` script, `_initialize()` must `get_root().add_child(...)` then `await process_frame`.
 - Sabotage new checks: break the code on purpose, require red, restore.
-- **Do not commit or push unless asked.** `docs/`, `web/` and `CLAUDE.md` are gitignored.
+- **Do not commit or push unless asked.** `docs/`, `web/` and `CLAUDE.md` are tracked: commit their changes too.
 
 ## 3. Architecture in one picture
 
@@ -51,7 +51,7 @@ Main Menu (main_menu.tscn) ─ Start ─► Room (main.tscn)
 The OS renders once; the room samples it for the monitor and the overlay. Inside the PC, input
 is forwarded with `push_input()` and the cursor shape comes from `cursor_shape_at(pos)`.
 `GameManager` (autoload) holds what survives scene changes: run state, keys, language, debug
-switches. Overlay layers: PC view 10, win 20, debug 30, death 50, pause 60. Full data flow:
+switches. Overlay layers: PC view 10, win 20, debug 30, death 50, pause 60, FPS counter 70 (debug builds only). Full data flow:
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## 4. Where things live

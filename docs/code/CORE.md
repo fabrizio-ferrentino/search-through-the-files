@@ -268,15 +268,21 @@ dark); _aggiorna_luce_schermo() lerps toward it every frame (no flicker).
 PC off / boot = black = no light, desktop = teal, blue screen = blue room.
 Kept weak on purpose (cone 75, range 3 m): the corridor stays dark, the
 threats are seen only with the torch. Exports in the "Luce schermo" group.
-The desk lamp's "Light" is NOT inside the shade but just beside it, toward
-the room: that is what lights the shade so it reads warm and lit. Putting it
-inside (and making the shade emissive to compensate) was tried on
-2026-10-23 and rejected by the owner ("si vede malissimo"); so was moving
-the mug. The mug's shadow looked fake ("ancora finta") because it was pure
-black with razor edges: the lamp light now has soft shadows (light_size
-0.06, shadow_blur 1.5) and shadow_opacity 0.8, so shadows are soft and
-never pitch black; light_specular 0.1 because with a light size the
-specular highlight became a big bright oval on the desk.
+The desk lamp's "Light" is NOT inside the shade but just in front of it
+(-0.82, 1.12, -1.2), on the lamp's side toward the room: that is what lights
+the shade so it reads warm and lit. Putting it inside (and making the shade
+emissive to compensate) was tried on 2026-10-23 and rejected by the owner
+("si vede malissimo"); so was moving the mug. It used to float 34 cm in
+front of the lamp, right above the mug: the pens threw radial "rays" and the
+mug's shadow looked fake ("ancora finta"). Now it sits next to the shade,
+so the mug's shadow falls forward, short and soft (light_size 0.12,
+shadow_blur 1.5, shadow_opacity 0.8; project soft_shadow_filter_quality 4
+removes the dithered grain). light_specular 0: with a light size the
+highlight became a big bright oval on the desk and a yellow disc reflected
+in the window glass (the glass also has specular_mode disabled).
+The room Environment (player.gd _setup_atmosphere) has SSAO with
+light_affect 0.5: contact shadows under the mug, books and boxes, also
+where the lamp shines.
 The desk lamp ("Light") had range 3 m and lit the Jester at the window
 (~1.7 m away) through the glass even with the torch off: range 1.5 m now
 (owner, 2026-10-23), so at the window he is only a dark shape against the
@@ -359,6 +365,15 @@ is FOCUS_NONE, or a space typed in Notepad would press the last one.
 The directors' side: VirusDirector.forza_debug / ferma_debug /
 azzera_attesa / stato_debug, ThreatDirector.forza_affaccio /
 allontana / stato_debug. All text English (see §6, DEV-ONLY keys).
+
+### `scripts/fps_counter.gd`
+FpsCounter (DEV-ONLY, 2026-10-23, owner: "un contatore degli fps ... in
+debug"): a CanvasLayer (layer 70, above pause) with a top-right Label
+"FPS n", refreshed every 0.25 s, green >= 55, yellow >= 30, red below.
+GameManager._ready adds it to the root (deferred) ONLY when
+OS.is_debug_build(): always on in the editor and in debug exports, absent
+in release exports. PROCESS_MODE_ALWAYS, mouse IGNORE; visible in the
+menu, the room and inside the PC.
 
 ### `scripts/nav_arrow.gd`
 

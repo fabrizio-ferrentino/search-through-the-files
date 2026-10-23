@@ -85,6 +85,10 @@ func _ready() -> void:
 	# la lingua scelta nelle Opzioni, o l'inglese la prima volta. salva = false: qui si
 	# sta RILEGGENDO una scelta, non facendone una nuova.
 	set_lingua(_lingua_salvata(), false)
+	# DEV-ONLY: il contatore degli FPS (scripts/fps_counter.gd), solo nelle build di debug.
+	# Differito: durante il _ready degli autoload la radice sta ancora aggiungendo figli.
+	if OS.is_debug_build():
+		get_tree().root.add_child.call_deferred(FpsCounter.new())
 
 # Il nome da mostrare per un codice lingua ("it" -> "Italiano").
 func nome_lingua(codice: String) -> String:
