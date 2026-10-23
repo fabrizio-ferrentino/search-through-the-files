@@ -61,7 +61,8 @@ project root (`python tools/web/media.py busta` regenerates only the files whose
 contains "busta"; each file is a placeholder, replace it with a real one under the same name):
 - a GIF89a writer (own LZW encoder) draws the animated and still pictures into
   `web/img/*.gif` - no words in the pictures, so there is no text to translate or to
-  look like a key (pictograms and digits only, no real brands);
+  look like a key (pictograms and digits only, no real brands). 2026-10-24 added `zampa`,
+  `sole`, `aereo`, `carrello`, `pacco` and `vecchio_pc` (a beige PC, used by mercatino);
 - an SMF writer composes four original melodies into `web/audio/*.mid`: `jack`, `inno`,
   `valzer`, `notte`.
 The game plays the MIDI files itself (`MidiSynth`) and decodes the GIFs (`GifDecoder`); after

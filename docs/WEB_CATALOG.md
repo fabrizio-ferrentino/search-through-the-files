@@ -41,9 +41,11 @@ Until 2026-10-23 almost every site was the same skeleton (coloured banner table,
 nav-bar table, Arial text, centred footer) in different colours. The column **Style** gives
 each site its own period archetype (the shapes are described in
 [WEB_AUTHORING.md](WEB_AUTHORING.md) "Style templates"): no two sites share a skeleton. The
-six **pilot** sites were restyled first with the new tools (GIFs, tiled backgrounds, side
-bars, serif and Comic fonts, marquee/blink, MIDI); the others follow after the owner's
-review. A restyle keeps the texts, the pages and every rule below.
+six sites were restyled first with the new tools (GIFs, tiled backgrounds, side
+bars, serif and Comic fonts, marquee/blink, MIDI); on 2026-10-24 the other twenty that still
+shared the old skeleton followed (the ordinary ones by the web-writer agent, the lore ones in
+the main chat, texts untouched). **Every site now has its own look**; the Style column is the
+reference when a site is rewritten. A restyle keeps the texts, the pages and every rule below.
 
 ## Ordinary sites (18)
 
@@ -51,22 +53,22 @@ review. A restyle keeps the texts, the pages and every rule below.
 |---|---|---|---|---|
 | forum | RetroForum | 14 | computer message board: sections, long threads, members, rules | UBB message board: grey bevelled tables, avatars, quotes |
 | shop | BuyItAll / CompraTutto | 9 | mail-order shop; online orders suspended | mail-order catalogue: price-tag grid, star bursts, product pictures |
-| news | NewsToday / NotizieOggi | 11 | news portal, 31/03/1999 edition, six articles | news portal: left side-bar of sections, headlines in the middle |
-| meteo | WeatherNow / MeteoNow | 6 | forecasts, cities, satellite (offline), seasonal, glossary | instrument panel: brushed-metal tile, big tables of numbers |
+| news | NewsToday / NotizieOggi | 11 | news portal, 31/03/1999 edition, six articles | news portal in three columns: sections, headlines, a right-hand box of quick news |
+| meteo | WeatherNow / MeteoNow | 6 | forecasts, cities, satellite (offline), seasonal, glossary | teletext page: black, blocky cyan/yellow/green Courier, page numbers |
 | giochi | PlayWeb / GiocaWeb | 7 | shareware, chart, cheats, reviews; downloads closed | game zone: black, neon grid tile, flames, scrolling chart |
 | mail | WebNet WebMail | 6 | login closed during the move; service news, help, terms | web application: grey Win95 boxes, no pictures |
-| blog | ~jack99 | 7 | a happy sixteen-year-old: friends, band, school trip, a full guestbook | **pilot** GeoCities teen page: tiled sky, Comic, GIFs, counter, MIDI, marquee |
+| blog | ~jack99 | 7 | a happy sixteen-year-old: friends, band, school trip, a full guestbook | GeoCities teen page: tiled sky, Comic, GIFs, counter, MIDI, marquee |
 | biblioteca | Millbrook Public Library / Biblioteca Civica di San Vito | 7 | hours, new books, events, card catalogue | card catalogue: parchment tile, Times, typed index cards |
-| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 8 | recipes, readers' letters | **pilot** grandma: narrow card on gingham, Times + Comic, clip-art, waltz |
-| calcio | Griffins Fan Club / Fan Club Grifoni | 7 | results, squad, away trips, notice board | **pilot** loud fan club: flames, blink, results marquee, anthem player |
+| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 8 | recipes, readers' letters | grandma: narrow card on gingham, Times + Comic, clip-art, waltz |
+| calcio | Griffins Fan Club / Fan Club Grifoni | 7 | results, squad, away trips, notice board | loud fan club: flames, blink, results marquee, anthem player |
 | tv | CouchGuide / TeleGuida | 6 | listings, films, series, letters | TV guide: time-slot grid, coloured channel columns |
 | musica | MidiMania / MidiWorld | 6 | MIDI archive (downloads suspended), invented lyrics, chart | MIDI archive: Courier file lists, embedded players |
 | viaggi | Sun & Sea Travel / Viaggi Sole e Mare | 7 | offers, destinations; online booking closed | travel brochure: postcards, big pictures, sky colours |
-| comune | Town of Millbrook / Comune di San Vito al Lago | 7 | offices, notices, events, certificates, waste collection | **pilot** bare 1995 institutional page: grey, Times, lists, no tables |
+| comune | Town of Millbrook / Comune di San Vito al Lago | 7 | offices, notices, events, certificates, waste collection | bare 1995 institutional page: grey, Times, lists, no tables |
 | scuola | Millbrook High / Liceo G. Galilei | 7 | circulars, trips, computer room, school paper | student-made: notice board, typewriter Courier |
-| driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ | **pilot** tech portal: dark left side-bar, badges, mono tables |
-| animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers | charity page: centred column of animal cards |
-| oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters | **pilot** splash page + mystical pages: night tile, serif gold, ambient MIDI |
+| driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ | tech portal: dark left side-bar, badges, mono tables |
+| animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers | charity notice board: a two-column grid of animal cards, paw prints |
+| oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters | splash page + mystical pages: night tile, serif gold, ambient MIDI |
 
 The ordinary sites share one invented world: the town of **Millbrook / San Vito al
 Lago** (library, town hall, school, shelter, football club, PC repair), the WebNet

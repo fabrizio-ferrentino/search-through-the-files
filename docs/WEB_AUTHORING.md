@@ -82,6 +82,14 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
   `HtmlBB._spacer_row`. Percentages need the page width, which `BrowserApp` passes
   as `ctx["page_width"]` and recomputes when the window is resized (real reflow).
   With several columns the declared width is split evenly between them.
+- **A table narrower than the page stays narrow** (since 2026-10-24): a `width` smaller than
+  the page, in px or %, is wrapped between empty filler columns, so a long paragraph no longer
+  stretches a "560 px card" to the page edge. `align="center"` puts a filler on each side.
+- `<hr>` inside a table cell is as wide as the CELL (a `%`, or no width, is turned into pixels
+  of the cell); Godot alone would measure it on the whole page and push the table out.
+- **Known limit:** a full-width table with several text-heavy columns can still exceed the page
+  by 5-10 px (Godot distributes the column widths itself; news/index measured 910 on 900). Give
+  such columns explicit `width`s.
 - Without a `width`, a table stays as wide as its content — which is also
   period-accurate (e.g. a small login box). Give banners
   `width="100%"` if you want them to span the page like the forum's does.
@@ -187,7 +195,9 @@ image is the same in both languages — only pictograms and digits; no real bran
 | `floppy.gif` / `ingranaggio.gif` | floppy with a falling arrow / turning gear |
 | `pallone.gif` / `pentola.gif` / `fiore.gif` / `stemma.gif` | bouncing ball / steaming pot / flower / town coat of arms |
 | `zodiaco.gif` (160x160) | turning zodiac wheel with the moon |
-| `contatore_jack.gif`, `contatore_grifoni.gif`, `contatore_stelle.gif` | hit counters (green digits) |
+| `volto.gif` (200x240) | face diagram with numbered measurement lines |
+| `zampa.gif` / `sole.gif` / `aereo.gif` / `carrello.gif` / `pacco.gif` | paw print / turning sun / small plane crossing (100 px wide) / shopping trolley / parcel with string |
+| `contatore_jack.gif`, `contatore_grifoni.gif`, `contatore_stelle.gif`, `contatore_giorni.gif` | counters (green digits) |
 | `bottone_monitor.gif`, `bottone_modem.gif`, `bottone_dischetto.gif` | 88x31 badges |
 | `stelle.gif` (animated night sky), `griglia.gif` (neon grid), `quadretti.gif` (gingham), `pergamena.gif` (parchment), `metallo.gif` (brushed metal) | tiles for `<body background>` |
 | `web/audio/`: `jack.mid` (pop loop), `inno.mid` (stadium anthem), `valzer.mid` (accordion waltz), `notte.mid` (night pad) | page music |

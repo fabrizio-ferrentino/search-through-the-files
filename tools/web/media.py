@@ -568,6 +568,96 @@ def volto():
     scrivi_gif("volto.gif", [t.p], pal)
 
 
+def vecchio_pc():
+    """Un PC beige da scrivania con il monitor sopra (il mercatino dell'usato)."""
+    pal = [(255, 0, 255), (214, 204, 170), (150, 140, 110), (40, 60, 70), (0, 0, 0), (60, 160, 60)]
+    t = Tela(48, 44, 0)
+    t.rett(10, 2, 28, 22, 1)
+    t.rett(13, 5, 22, 15, 3)
+    t.rett(14, 6, 6, 1, 5)
+    t.rett(20, 24, 8, 3, 2)
+    t.rett(4, 27, 40, 14, 1)
+    t.rett(7, 30, 14, 3, 2)
+    t.rett(7, 35, 14, 2, 2)
+    t.rett(36, 32, 3, 2, 5)
+    for x0, y0, w, h in ((10, 2, 28, 22), (4, 27, 40, 14)):
+        t.linea(x0, y0, x0 + w - 1, y0, 4)
+        t.linea(x0, y0 + h - 1, x0 + w - 1, y0 + h - 1, 4)
+        t.linea(x0, y0, x0, y0 + h - 1, 4)
+        t.linea(x0 + w - 1, y0, x0 + w - 1, y0 + h - 1, 4)
+    scrivi_gif("vecchio_pc.gif", [t.p], pal, trasparente=0)
+
+
+def zampa():
+    """L'impronta di una zampa (il rifugio)."""
+    pal = [(255, 0, 255), (90, 60, 30)]
+    t = Tela(32, 32, 0)
+    t.cerchio(16, 21, 7, 1)
+    for x, y in ((7, 12), (13, 7), (20, 7), (26, 12)):
+        t.cerchio(x, y, 3.2, 1)
+    scrivi_gif("zampa.gif", [t.p], pal, trasparente=0)
+
+
+def sole():
+    """Il sole che gira coi raggi (i viaggi)."""
+    pal = [(255, 0, 255), (255, 200, 0), (255, 140, 0)]
+    fs = []
+    for f in range(6):
+        t = Tela(40, 40, 0)
+        for k in range(12):
+            a = k / 12 * math.tau + f * math.tau / 72
+            t.linea(20 + 11 * math.cos(a), 20 + 11 * math.sin(a), 20 + 18 * math.cos(a), 20 + 18 * math.sin(a), 2)
+        t.cerchio(20, 20, 9, 1)
+        fs.append(t.p)
+    scrivi_gif("sole.gif", fs, pal, ritardo=12, trasparente=0)
+
+
+def aereo():
+    """L'aeroplanino che attraversa (i viaggi)."""
+    pal = [(255, 0, 255), (240, 240, 250), (40, 60, 140), (200, 0, 0)]
+    fs = []
+    for f in range(10):
+        t = Tela(100, 30, 0)
+        x = -20 + f * 13
+        t.rett(x, 13, 26, 5, 1)
+        t.poligono([(x + 26, 13), (x + 32, 15), (x + 26, 18)], 1)
+        t.poligono([(x + 8, 13), (x + 16, 13), (x + 10, 4)], 2)
+        t.poligono([(x + 8, 18), (x + 16, 18), (x + 10, 27)], 2)
+        t.rett(x, 10, 4, 4, 3)
+        for k in range(4):
+            t.px(x - 3 - k * 3, 15, 2)
+        fs.append(t.p)
+    scrivi_gif("aereo.gif", fs, pal, ritardo=10, trasparente=0)
+
+
+def carrello():
+    """Il carrello della spesa (il negozio per corrispondenza)."""
+    pal = [(255, 0, 255), (0, 0, 0), (200, 0, 0)]
+    t = Tela(36, 30, 0)
+    t.linea(2, 4, 8, 4, 1)
+    t.linea(8, 4, 12, 20, 1)
+    t.poligono([(9, 8), (33, 8), (30, 18), (12, 18)], 2)
+    t.linea(12, 20, 30, 20, 1)
+    t.cerchio(14, 25, 2.5, 1)
+    t.cerchio(28, 25, 2.5, 1)
+    scrivi_gif("carrello.gif", [t.p], pal, trasparente=0)
+
+
+def pacco():
+    """Il pacco con lo spago (si spedisce a casa)."""
+    pal = [(255, 0, 255), (190, 140, 80), (110, 70, 30), (0, 0, 0)]
+    t = Tela(36, 30, 0)
+    t.rett(4, 8, 28, 20, 1)
+    t.linea(4, 8, 31, 8, 3)
+    t.linea(4, 27, 31, 27, 3)
+    t.linea(4, 8, 4, 27, 3)
+    t.linea(31, 8, 31, 27, 3)
+    t.linea(18, 8, 18, 27, 2)
+    t.linea(4, 17, 31, 17, 2)
+    t.cerchio(18, 6, 3, 2, pieno=False)
+    scrivi_gif("pacco.gif", [t.p], pal, trasparente=0)
+
+
 # ---------------- sfondi a mosaico ----------------
 
 def stelle():
@@ -798,7 +888,7 @@ TUTTI = [cantiere, busta, globo, nuovo, smile, fiamme, arcobaleno, floppy, ingra
          lambda: contatore(18342, "contatore_grifoni.gif"),
          lambda: contatore(951, "contatore_stelle.gif"),
          lambda: contatore(8478, "contatore_giorni.gif"),
-         volto,
+         volto, zampa, sole, aereo, carrello, pacco, vecchio_pc,
          lambda: bottone("bottone_monitor.gif", "monitor", (0, 0, 128), "800x600"),
          lambda: bottone("bottone_modem.gif", "modem", (0, 90, 0), "56K"),
          lambda: bottone("bottone_dischetto.gif", "dischetto", (110, 0, 0), "144"),

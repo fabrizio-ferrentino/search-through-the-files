@@ -202,6 +202,24 @@ variety; and start adding GIFs and audio in pages; take inspiration from 90s web
   META_PLAY "__audio:play" and META_STOP "__audio:stop" (BrowserApp intercepts them).
 Tests: html_bb_test.gd, section _prova_varieta.
 
+2026-10-24 (owner: "continuiamo con i siti"; the last twenty sites were restyled and their
+tables exposed three width problems):
+- NARROW TABLES (_stringi): a table whose width is smaller than the page (px or %) is wrapped
+  between empty filler columns (centred: one per side; left-aligned: one on the right). WHY:
+  Godot's spacer row only gives a table its MINIMUM width, so a long paragraph used to stretch
+  a "560 px card" to the page edge (Granny Rose's card; the helpline column). Any table with a
+  width sets ctx["uses_width"], so the browser recompiles the page once the page width is known.
+  A 100% table is not wrapped.
+- `<hr>` inside a table cell (_hr): a percentage (or no width = 100%) is converted to pixels of
+  the CELL when the cell width is known (ctx page_width is the cell's while it is walked).
+  WHY: Godot measures `[hr]` percentages on the whole page, and a rule in a side column pushed
+  the table out of the page.
+- CELLA_EXTRA = 4: a cell takes 4 px beyond its padding (measured with a probe); the spacer
+  formula used 2. Used in _table (the width a nested table gets inside a cell) and in _spacer_row.
+- KNOWN LIMIT, not fixed: a full-width table with several text-heavy columns can still exceed
+  the page by 5-10 px (Godot's own distribution of widths; measured on news/index: 910 on 900).
+Tests: html_bb_test.gd (stretta_*, piena_non_stretta, hr_in_cella).
+
 ### `scripts/os/gif_decoder.gd`
 
 GifDecoder (2026-10-23): pure static GIF87a/89a decoder, no engine state. LZW, global and

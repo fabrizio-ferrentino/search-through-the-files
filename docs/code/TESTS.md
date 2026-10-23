@@ -18,6 +18,12 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   px and %, a nested table's width relative to its cell, bordercolor, marquee
   (incl. the in-cell and too-long static fallback), blink, bgsound/embed in ctx and
   the player links, anchors never inside moving text, tiled-background textures,
+  2026-10-24, narrow tables: stretta_centrata (a 500 px centred table in a 904 page gets
+  3 columns with a 200 px filler), stretta_niente_center (no [center] is emitted),
+  stretta_sinistra / stretta_sinistra_resto (50% left-aligned: 2 columns, 398 px filler),
+  piena_non_stretta (a 100% table is NOT wrapped), hr_in_cella (an `<hr>` in a 400 px cell
+  with padding 0 is `width=396`); the expected widths of the other table checks were updated
+  for CELLA_EXTRA = 4,
 
 - gif_test.gd (-s, headless, 2026-10-23: every web/img/*.gif decodes; frame
   counts and delays, colours, transparency, disposal 2/3, the textures
@@ -466,6 +472,14 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   The same rename in browser_chrome_test (treno/index), page_load_test (four openings of
   treno/index), siti_catalogo_test (the address cases `www.webnet.it/~trenoperso...`) and
   the siti_check sample pages.
+  2026-10-24: its banner check now loads the FIXED fixture tests/pagine_prova/tabelle.html.
+  FIXTURES FOLDER tests/pagine_prova/: tabelle.html (the old forum index: tables, links,
+  coloured rows) and paragrafi.html (the old newspaper article: plain paragraphs on a light
+  background). WHY: browser_click_test and browser_e2e find click points by pixel colour; a
+  restyled live site broke them without any browser bug, so they must not read live sites.
+  browser_click_test uses TABELLE / PARAGRAFI, picks the link point at the CENTRE of the longest
+  blue run, and its _reset waits (attendi_caricamento) for any loading started by a previous
+  link click, or the loading veil swallowed the next click.
   NOTE for browser_click_test: finding "a point on a glyph" from
   the pixels is where this test kept breaking when the chrome grew,
   and each fix is a different trap. It locates a glyph by LOCAL

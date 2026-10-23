@@ -114,10 +114,11 @@ Make every run different (prevents memorized solutions).
   **Done:** the engine (animated GIFs, MIDI music with a synth, tiled backgrounds, side-bar
   columns, Times and Comic faces, marquee/blink, `&nbsp;` ASCII art), the placeholder media
   (`tools/web/media.py`), the PC speakers (tray volume/mute, sound that comes from the desk
-  in the room), six pilot sites restyled and four new sites each with its own look.
-  **Next:** restyle the remaining sites that still share the old skeleton, following the
-  "Style" column of WEB_CATALOG.md, in batches reviewed by the owner; the owner will also
-  rewrite or replace some sites himself. **Later:** simplifying what "view source" shows, to
+  in the room), six pilot sites restyled and four new sites each with its own look; since
+  2026-10-24 ALL sites are restyled (the last twenty: ordinary ones by web-writer, lore ones
+  by a script that touched only header/nav, fonts, colours and container), plus the narrow-table
+  and `<hr>`-in-cell fixes in the compiler. **Next:** the owner's review of the sites; the owner
+  will also rewrite or replace some sites himself. **Later:** simplifying what "view source" shows, to
   help the player spot the key (owner: "vedremo dopo"); real art and music replacing the
   placeholders (same file names).
 
