@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded;
+render_mode unshaded, cull_disabled;
 
 // Il vetro del monitor 3D: mostra DAL VIVO la texture del SubViewport dell'OS (player.gd).
 // Una ViewportTexture non ha mipmap: l'OS (1440x1080) sul monitor occupa ~200-400 px e

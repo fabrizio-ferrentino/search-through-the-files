@@ -151,8 +151,9 @@ NOT implemented yet: real enemy models/animations (placeholders, owner's art com
 - `set_anchors_preset()` on a node already in the tree keeps its size: use
   `set_anchors_and_offsets_preset()`.
 - An app reading global `_input` keeps receiving it while minimised: check `is_visible_in_tree()`.
-- player.gd reaches room nodes by relative path; the OS aligns the monitor quad to the hidden
-  node `test-schermo`.
+- player.gd reaches room nodes by relative path; the monitor's desktop is drawn on the MODEL's
+  own screen triangles (`_vetro_del_modello`, found by their atlas UV rect); the hidden node
+  `test-schermo` only gives the orientation (and the flat-quad fallback).
 - Never hand-edit UIDs; `.godot/` is cache.
 
 ## 8. Working with Claude on this project (saving tokens)

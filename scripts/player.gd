@@ -534,19 +534,24 @@ func _build_screen_quad(tex: Texture2D) -> void:
 
 	var quad := MeshInstance3D.new()
 	quad.name = "MonitorScreen"
-	var mesh := QuadMesh.new()
-	quad.mesh = mesh
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://scripts/os/schermo_monitor.gdshader")
 	mat.set_shader_parameter("os_tex", tex)   # ViewportTexture: il monitor mostra l'OS dal vivo
 	quad.material_override = mat
 	get_parent().add_child(quad)
 
-	# Se esiste il nodo di riferimento "test-schermo", ricalca esattamente
-	# posizione/orientamento/dimensione del suo lato schermo.
+	# Il desktop va SUL vetro del modello, non su un foglio davanti: si copiano i triangoli
+	# dello schermo del modello (bombati come un CRT) e ci si disegna sopra l'OS.
 	var ref = get_node_or_null("../test-schermo")
 	if ref is MeshInstance3D and ref.mesh is BoxMesh:
 		ref.visible = false
+		if _vetro_del_modello(quad, _face_from_box(ref)["basis"]):
+			_metti_luce_schermo(quad)
+			return
+	# ripiego (modello cambiato, niente riferimento): un quad piatto davanti al vetro
+	var mesh := QuadMesh.new()
+	quad.mesh = mesh
+	if ref is MeshInstance3D and ref.mesh is BoxMesh:
 		var info := _face_from_box(ref)
 		mesh.size = info["size"]
 		quad.global_transform = Transform3D(info["basis"], info["origin"] + info["basis"].z * screen_push)
@@ -554,6 +559,69 @@ func _build_screen_quad(tex: Texture2D) -> void:
 		mesh.size = Vector2(screen_w, screen_h)
 		quad.global_position = _screen_point() + Vector3(0, 0, screen_push) + screen_nudge
 	_metti_luce_schermo(quad)
+
+# Il vetro del monitor nel modello (retro_computer_setup: una sola mesh con un atlante 4096
+# per monitor, case, tastiera e mouse) sono 32 triangoli, una griglia 4x4 leggermente
+# bombata, mappati sul nero dell'atlante dentro SCHERMO_UV. Si copiano in una mesh nuova,
+# staccata di SCHERMO_STACCO verso chi guarda, con le UV dell'atlante riportate a 0..1:
+# il desktop combacia col nero del modello angolo per angolo, anche guardandolo di sbieco.
+# Il quad ha origine al centro del vetro e +Z verso chi guarda (lo usa _metti_luce_schermo).
+# false = triangoli non trovati (modello cambiato): si torna al quad piatto.
+const SCHERMO_UV := Rect2(0.010452, 0.00734, 0.210971, 0.183536)
+const SCHERMO_STACCO := 0.002
+
+func _vetro_del_modello(quad: MeshInstance3D, base: Basis) -> bool:
+	var mon = get_node_or_null("../Monitor")
+	var mi: MeshInstance3D = _find_mesh(mon) if mon else null
+	if mi == null or mi.mesh == null:
+		return false
+	var arr: Array = mi.mesh.surface_get_arrays(0)
+	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
+	var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+	if uv.is_empty() or idx.is_empty():
+		return false
+	var zona := SCHERMO_UV.grow(0.0005)
+	var mondo := PackedVector3Array()   # vertici dei triangoli del vetro, in coordinate mondo
+	var uv_vetro := PackedVector2Array()
+	for t in range(0, idx.size(), 3):
+		if zona.has_point(uv[idx[t]]) and zona.has_point(uv[idx[t + 1]]) and zona.has_point(uv[idx[t + 2]]):
+			for k in 3:
+				mondo.append(mi.global_transform * v[idx[t + k]])
+				uv_vetro.append((uv[idx[t + k]] - SCHERMO_UV.position) / SCHERMO_UV.size)
+	if mondo.size() < 6:
+		return false
+	var centro := Vector3.ZERO
+	for p in mondo:
+		centro += p
+	centro /= float(mondo.size())
+	# nelle coordinate del quad (base ortonormale: l'inversa e' la trasposta)
+	var inv := base.transposed()
+	var locali := PackedVector3Array()
+	var segno_u := 0.0
+	var segno_v := 0.0
+	for i in mondo.size():
+		var l: Vector3 = inv * (mondo[i] - centro) + Vector3(0, 0, SCHERMO_STACCO)
+		locali.append(l)
+		segno_u += (uv_vetro[i].x - 0.5) * l.x
+		segno_v += (uv_vetro[i].y - 0.5) * l.y
+	# l'atlante puo' essere specchiato: u deve crescere verso destra, v verso il basso
+	for i in uv_vetro.size():
+		var c := uv_vetro[i]
+		if segno_u < 0.0:
+			c.x = 1.0 - c.x
+		if segno_v > 0.0:
+			c.y = 1.0 - c.y
+		uv_vetro[i] = c
+	var dati := []
+	dati.resize(Mesh.ARRAY_MAX)
+	dati[Mesh.ARRAY_VERTEX] = locali
+	dati[Mesh.ARRAY_TEX_UV] = uv_vetro
+	var am := ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, dati)
+	quad.mesh = am
+	quad.global_transform = Transform3D(base, centro)
+	return true
 
 # La luce dello schermo (LuceSchermo in main.tscn) esce dal DAVANTI del vetro: 3 cm davanti
 # al centro del quad, puntata lungo la sua normale (+Z del quad, verso il giocatore) ma resa

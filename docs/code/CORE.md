@@ -260,6 +260,19 @@ GPU->CPU readback stalled the frame ~20 ms (measured: 423 fps average but
 1.5 ms; owner: "mi sembra strano fare questi cali"). Same date: project.godot [rendering]
 msaa_3d = 4x for the room's jagged edges. The 1280x720 window override is
 the owner's, for development - leave it.
+Monitor fit (2026-10-23, owner: "deve essere centrato perfettamente con il
+nero del monitor ... si vede come se fosse un foglio sopra al modello"): the
+desktop is no longer a flat QuadMesh 3 cm in front of the glass (screen_push,
+needed because the CRT glass bulges; from any angle its corners floated off
+the black). _vetro_del_modello() copies the model's own screen: in
+retro_computer_setup (one mesh, one 4096 atlas) the glass is 32 triangles, a
+slightly bulged 4x4 grid, mapped inside the atlas rect SCHERMO_UV (picked by
+UV, not geometry: bezel triangles share the plane). They become an ArrayMesh
+2 mm (SCHERMO_STACCO) in front of the glass, UVs = atlas UVs remapped to 0..1
+(flips detected against the screen axes), origin at the glass centre, +Z
+toward the viewer (_metti_luce_schermo relies on it). test-schermo gives
+only the orientation; the flat quad stays as the fallback if the model
+changes. Shader cull_disabled, so the copied winding cannot hide it.
 Screen light (2026-10-23, owner: "mi pare strano che il pc non proietta
 luce nella stanza"): the SpotLight3D "LuceSchermo" in main.tscn replaces the
 old blue OmniLight3D, which sat 7 cm BEHIND the screen face, inside the
