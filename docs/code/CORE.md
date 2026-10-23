@@ -247,8 +247,10 @@ dark); _aggiorna_luce_schermo() lerps toward it every frame (no flicker).
 PC off / boot = black = no light, desktop = teal, blue screen = blue room.
 Kept weak on purpose (cone 75, range 3 m): the corridor stays dark, the
 threats are seen only with the torch. Exports in the "Luce schermo" group.
-The Jester at the window is faintly visible WITHOUT the torch, but that is
-the desk lamp ("Light", range 3 m reaches the window), not this light.
+The desk lamp ("Light") had range 3 m and lit the Jester at the window
+(~1.7 m away) through the glass even with the torch off: range 1.5 m now
+(owner, 2026-10-23), so at the window he is only a dark shape against the
+sky until the torch hits him; the desk and the wall behind stay lit.
 ESC inside the PC leaves for the room EXCEPT when the OS wants it
 (_os.trattiene_esc(): a rename in progress, or a closable dialog
 such as the About) - then it is forwarded instead. Before

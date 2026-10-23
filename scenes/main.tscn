@@ -62,7 +62,7 @@ transform = Transform3D(0.8471001, 0.0382127, -0.5300579, -0.017572, 0.9988801, 
 light_color = Color(0.7246083, 0.6956108, 0.3423986, 1)
 light_energy = 0.8
 shadow_enabled = true
-omni_range = 3.0
+omni_range = 1.5
 
 [node name="CornerShadow" type="OmniLight3D" parent="." unique_id=446033683]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 2.2, 1.5)
