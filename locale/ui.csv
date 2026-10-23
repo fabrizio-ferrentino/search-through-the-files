@@ -217,6 +217,29 @@ UI_QUIT,Quit,Esci
 UI_OPTIONS_TITLE,OPTIONS,OPZIONI
 UI_LANGUAGE,Language,Lingua
 UI_BACK,Back,Indietro
+UI_CREDITS,Credits,Riconoscimenti
+UI_VIDEO_FULLSCREEN,Fullscreen,Schermo intero
+UI_VIDEO_VSYNC,V-Sync,V-Sync
+UI_VIDEO_RESOLUTION,Window size,Dimensione finestra
+UI_RESOLUTION_FMT,%d × %d,%d × %d
+UI_ON,On,Sì
+UI_OFF,Off,No
+UI_CREDITS_TITLE,CREDITS,RICONOSCIMENTI
+CR_SEC_GAME,Game,Gioco
+CR_GAME,A game by Fabrizio Ferrentino,Un gioco di Fabrizio Ferrentino
+CR_SEC_MODELS,3D models,Modelli 3D
+CR_M_HOUSEHOLD,"Household Props 001 (desk, bed, lamp, furniture) · CreativeTrio · CC0 · via Poly Pizza","Household Props 001 (scrivania, letto, lampada, arredi) · CreativeTrio · CC0 · via Poly Pizza"
+CR_M_COMPUTER,Retro Computer Setup (FREE) · Brandon Westlake · Sketchfab Standard · via Sketchfab,Retro Computer Setup (FREE) · Brandon Westlake · Sketchfab Standard · via Sketchfab
+CR_M_QUATERNIUS,"Boxes, trees, grass, rocks, clouds, mountains, houses · Quaternius · CC0 · via Poly Pizza","Scatole, alberi, erba, rocce, nuvole, montagne, case · Quaternius · CC0 · via Poly Pizza"
+CR_M_OPART,Op Art · Ryan Murray · CC BY 3.0 · via Poly Pizza,Op Art · Ryan Murray · CC BY 3.0 · via Poly Pizza
+CR_M_BOOKSTACK,Book Stack · Danni Bittman · CC BY 3.0 · via Poly Pizza,Book Stack · Danni Bittman · CC BY 3.0 · via Poly Pizza
+CR_M_BOOKS1,books · Tiff Eidmann · CC BY 3.0 · via Poly Pizza,books · Tiff Eidmann · CC BY 3.0 · via Poly Pizza
+CR_M_BOOKS2,Books · Alex Safayan · CC BY 3.0 · via Poly Pizza,Books · Alex Safayan · CC BY 3.0 · via Poly Pizza
+CR_SEC_FONTS,Fonts,Caratteri
+CR_FONTS,Arimo and Cousine · Steve Matteson · SIL Open Font License 1.1,Arimo e Cousine · Steve Matteson · SIL Open Font License 1.1
+CR_SEC_ENGINE,Engine,Motore
+CR_ENGINE,Made with Godot Engine · godotengine.org · MIT License,Realizzato con Godot Engine · godotengine.org · Licenza MIT
+CR_ENGINE_COPY,"© Juan Linietsky, Ariel Manzur and the Godot Engine contributors","© Juan Linietsky, Ariel Manzur e i contributori di Godot Engine"
 VFS_A_DRIVE,3½ Floppy (A:),"Floppy da 3,5 pollici (A:)"
 VFS_D_DRIVE,CD-ROM (D:),CD-ROM (D:)
 VFS_PROGRAMS,Program Files,Programmi

@@ -81,10 +81,22 @@ const FILE_IMPOSTAZIONI := "user://impostazioni.cfg"
 
 var lingua := LINGUA_BASE
 
+# ---------------- impostazioni VIDEO (Opzioni) ----------------
+# Le dimensioni della finestra fra cui scegliere (solo quelle che stanno nello schermo).
+const RISOLUZIONI: Array[Vector2i] = [Vector2i(1280, 720), Vector2i(1600, 900),
+		Vector2i(1920, 1080), Vector2i(2560, 1440), Vector2i(3840, 2160)]
+var schermo_intero := false
+var vsync := true
+# La finestra in modalita' finestra. ZERO = mai scelta: resta quella del progetto
+# (project.godot, 1280x720 per lo sviluppo).
+var risoluzione := Vector2i.ZERO
+var _video_applicato := false
+
 func _ready() -> void:
 	# la lingua scelta nelle Opzioni, o l'inglese la prima volta. salva = false: qui si
 	# sta RILEGGENDO una scelta, non facendone una nuova.
 	set_lingua(_lingua_salvata(), false)
+	_carica_video()
 	# DEV-ONLY: il contatore degli FPS (scripts/fps_counter.gd), solo nelle build di debug.
 	# Differito: durante il _ready degli autoload la radice sta ancora aggiungendo figli.
 	if OS.is_debug_build():
@@ -121,6 +133,78 @@ func _salva_lingua(codice: String) -> void:
 	var cfg := ConfigFile.new()
 	cfg.load(FILE_IMPOSTAZIONI)      # rilegge prima di scrivere: le altre impostazioni restano
 	cfg.set_value("gioco", "lingua", codice)
+	var err := cfg.save(FILE_IMPOSTAZIONI)
+	if err != OK:
+		push_warning("settings not saved (error %d)" % err)
+
+# Le impostazioni video salvate si APPLICANO solo dal menu principale (main_menu.gd), una
+# volta per avvio: i test e le scene aperte dall'editor (main.tscn diretta) restano nella
+# finestra del progetto, qualunque cosa abbia scelto chi gioca.
+func applica_video_salvato() -> void:
+	if _video_applicato:
+		return
+	_video_applicato = true
+	_applica_video()
+
+func set_schermo_intero(on: bool) -> void:
+	schermo_intero = on
+	_applica_video()
+	_salva_video()
+
+func set_vsync(on: bool) -> void:
+	vsync = on
+	_applica_video()
+	_salva_video()
+
+func set_risoluzione(r: Vector2i) -> void:
+	risoluzione = r
+	_applica_video()
+	_salva_video()
+
+# Le risoluzioni che stanno nello schermo su cui e' la finestra (le altre la farebbero uscire).
+func risoluzioni_possibili() -> Array[Vector2i]:
+	var schermo := DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
+	var out: Array[Vector2i] = []
+	for r in RISOLUZIONI:
+		if r.x <= schermo.x and r.y <= schermo.y:
+			out.append(r)
+	if out.is_empty():
+		out.append(RISOLUZIONI[0])
+	return out
+
+# La finestra com'e' adesso (per segnare la risoluzione attiva anche se mai scelta).
+func risoluzione_attuale() -> Vector2i:
+	return risoluzione if risoluzione != Vector2i.ZERO else DisplayServer.window_get_size()
+
+func _applica_video() -> void:
+	DisplayServer.window_set_vsync_mode(
+			DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
+	if schermo_intero:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		return
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	if risoluzione != Vector2i.ZERO:
+		DisplayServer.window_set_size(risoluzione)
+		# ricentrata nello schermo, o allargandosi uscirebbe a destra e in basso
+		var sc := DisplayServer.window_get_current_screen()
+		var pos := DisplayServer.screen_get_position(sc) + (DisplayServer.screen_get_size(sc) - risoluzione) / 2
+		DisplayServer.window_set_position(pos)
+
+func _carica_video() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(FILE_IMPOSTAZIONI) != OK:
+		return
+	schermo_intero = bool(cfg.get_value("video", "schermo_intero", false))
+	vsync = bool(cfg.get_value("video", "vsync", true))
+	var r = cfg.get_value("video", "risoluzione", Vector2i.ZERO)
+	risoluzione = r if r is Vector2i else Vector2i.ZERO
+
+func _salva_video() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(FILE_IMPOSTAZIONI)      # rilegge prima di scrivere: la lingua resta
+	cfg.set_value("video", "schermo_intero", schermo_intero)
+	cfg.set_value("video", "vsync", vsync)
+	cfg.set_value("video", "risoluzione", risoluzione)
 	var err := cfg.save(FILE_IMPOSTAZIONI)
 	if err != OK:
 		push_warning("settings not saved (error %d)" % err)

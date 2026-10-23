@@ -23,7 +23,12 @@ characters \n (read back with c_unescape, see OSContent._testo).
 
 ### `scenes/main_menu.tscn`
 
-Start screen (this is the main scene).
+Start screen (this is the main scene). Four buttons in a column
+(Start, Options, Credits, Quit), all at x 1150-1750 and 110 px tall
+on a 130 px pitch: FLAT buttons, plain text, grey with white on
+hover/focus, no box (2026-10-23, owner: "non devono avere questa grande
+hud ... ora sono storti" - they were big grey boxes, each at a different
+x and width). Focus stylebox is empty (a clicked button kept an outline).
 
 ### `scenes/main.tscn`
 
@@ -228,6 +233,15 @@ Reusable black ColorRect + AnimationPlayer (fade_in / fade_out).
 
 ### `scripts/GameManager.gd`
 
+Video settings (2026-10-23): schermo_intero, vsync, risoluzione
+(Vector2i, ZERO = never chosen = keep project.godot's window), saved in
+user://impostazioni.cfg section [video] next to the language, loaded in
+_ready but APPLIED only by applica_video_salvato(), which main_menu.gd
+calls once per launch: tests and main.tscn run from the editor keep the
+project window whatever the player chose. set_schermo_intero /
+set_vsync / set_risoluzione apply + save; windowed sizes are re-centred
+on the screen; risoluzioni_possibili() = RISOLUZIONI that fit.
+
 Autoload. Global run state + run lifecycle
 (start_new_run / game_over / restart) + the LANGUAGE:
 LINGUA_BASE "en", LINGUE ["en","it"], NOMI_LINGUA (the endonyms,
@@ -322,13 +336,16 @@ into the SubViewport.
 
 ### `scripts/main_menu.gd`
 
-Menu buttons + fade to the room. _etichette() assigns the
-three button labels from tr() (UI_START/UI_OPTIONS/UI_QUIT):
+Menu buttons + fade to the room. _ready() first calls
+GameManager.applica_video_salvato() (see GameManager video settings).
+_etichette() assigns the four button labels from tr()
+(UI_START/UI_OPTIONS/UI_CREDITS/UI_QUIT):
 the buttons live in the SCENE (authored by the owner), so the
 text is set in code and the scene is left alone. It is called
 again on the options screen's "lingua_cambiata", or the menu
 would stay in the language it was built in.
-"Options" opens options_screen.gd (one screen at a time).
+"Options" opens options_screen.gd, "Credits" credits_screen.gd (one
+screen at a time each).
 
 ### `scripts/options_screen.gd`
 
@@ -345,9 +362,32 @@ uses one - through a translucent veil the menu's own buttons
 showed through and it read as a drawing defect. Language is
 changed only HERE, i.e. from the menu: the in-world text (file
 names, web pages) is generated when the run starts, so changing
-it mid-game would not rewrite the PC. _riga() is there so the
-screen can grow (volume, sensitivity - M6).
-Test: options_test.tscn.
+it mid-game would not rewrite the PC.
+VIDEO rows (2026-10-23, owner: "impostazioni video risoluzione, v sync,
+fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size (only the
+GameManager.RISOLUZIONI that fit the current screen; visibly DISABLED in
+fullscreen, where the window is the screen). Rows sit in a 2-column
+GridContainer (labels right-aligned | buttons) so they line up;
+_aggiungi_riga() adds one, _pulsante_scelta() makes a choice button,
+and every row is registered in _righe so _aggiorna_selezione() draws all
+of them the same hand-drawn way. Node names are identifiers the tests
+use: language buttons = the code ("en", "it"), SchermoInteroSi/No,
+VSyncSi/No, Ris<w>x<h>.
+Test: options_test.tscn (language only; it never touches video).
+
+### `scripts/credits_screen.gd`
+
+CREDITS overlay (2026-10-23, owner: "aggiungere anche i credits per gli
+asset"): built like OptionsScreen (black, title, Back + ESC), a
+ScrollContainer listing SEZIONI = [section key, [line keys]], all CR_*
+keys in locale/ui.csv. Game author, 3D models (Household Props/
+CreativeTrio CC0, Retro Computer Setup/Brandon Westlake Sketchfab
+Standard, Quaternius CC0, and the CC BY 3.0 ones that REQUIRE
+attribution: Op Art/Ryan Murray, Book Stack/Danni Bittman, books/Tiff
+Eidmann, Books/Alex Safayan), fonts (Arimo + Cousine, OFL), Godot (MIT).
+Full sources are in each assets/.../CREDITS.md. NOT listed: Door.glb
+(source unknown) and the Jester placeholder (local only, not shipped).
+Adding an asset = a CR_ key in the CSV + its name in SEZIONI.
 
 ### `scripts/crosshair.gd`
 

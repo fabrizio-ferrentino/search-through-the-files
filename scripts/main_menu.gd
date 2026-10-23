@@ -3,11 +3,13 @@ extends Node2D
 var button_type = null
 
 var opzioni: OptionsScreen = null    # la schermata Opzioni, se aperta
+var riconoscimenti: CreditsScreen = null   # la schermata Riconoscimenti, se aperta
 
 func _ready() -> void:
+	GameManager.applica_video_salvato()   # schermo intero / V-Sync / finestra scelti nelle Opzioni
 	_etichette()
 
-# I tre pulsanti del menu sono scritti nella SCENA (li ha messi il proprietario in
+# I quattro pulsanti del menu sono scritti nella SCENA (li ha messi il proprietario in
 # editor): le etichette si assegnano qui, da locale/ui.csv, cosi' la scena non va
 # toccata e il menu segue la lingua come il resto del gioco. Il titolo no: il nome
 # del gioco non si traduce. Si richiama dopo un cambio di lingua nelle Opzioni,
@@ -15,6 +17,7 @@ func _ready() -> void:
 func _etichette() -> void:
 	$button_manager/Start.text = tr("UI_START")
 	$button_manager/Option.text = tr("UI_OPTIONS")
+	$button_manager/Credits.text = tr("UI_CREDITS")
 	$button_manager/Quit.text = tr("UI_QUIT")
 
 func _on_start_pressed() -> void:
@@ -35,6 +38,12 @@ func _on_option_pressed() -> void:
 	opzioni.lingua_cambiata.connect(_etichette)
 	add_child(opzioni)
 
+# RICONOSCIMENTI: chi ha fatto gli asset e con che licenza (scripts/credits_screen.gd).
+func _on_credits_pressed() -> void:
+	if riconoscimenti != null and is_instance_valid(riconoscimenti):
+		return
+	riconoscimenti = CreditsScreen.new()
+	add_child(riconoscimenti)
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
