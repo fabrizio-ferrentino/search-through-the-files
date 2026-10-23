@@ -130,6 +130,11 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   the WORST glyph separates at the best slider position, plus the
   at-rest watermark per glyph and the true band ratio — windowed),
 
+- photo_file_key_test.tscn/.gd (the photo key's SECOND route, the code
+  in the file's BYTES: over 40 seeds both routes occur, FILE mode keeps
+  the code out of the pixels and PIXEL mode out of the dump, decoys stay
+  clean, and the comment's position in the dump varies — headless),
+
 - photo_banda_scan.tscn/.gd (dev tool: the quietest spot in the
   shader's real band on each photo and the offset it would need),
 
