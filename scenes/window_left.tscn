@@ -71,6 +71,8 @@ albedo_color = Color(0.02, 0.025, 0.048, 1)
 [sub_resource type="StandardMaterial3D" id="m_prato"]
 albedo_color = Color(0.07, 0.085, 0.055, 1)
 roughness = 1.0
+emission_enabled = true
+emission = Color(0.014, 0.017, 0.022, 1)
 
 [node name="WindowLeft" type="Node3D"]
 editor_description = "SEGNAPOSTO della finestra sulla parete sinistra (M4). Origine = centro del vano, sulla faccia interna del muro; +Z guarda dentro la stanza. La parete E' BUCATA (main.tscn, wallLeft/BucoFinestra): fuori c'e' un prato buio (Terreno) e un cielo notturno lontano (Notte). Il Jester si affaccia da qui (SpotFinestra)."
@@ -579,6 +581,24 @@ transform = Transform3D(0.6344, 0, 0.2958, 0, 0.7, 0, -0.2958, 0, 0.6344, 2.4, -
 
 [node name="CasaB" parent="Esterno/Lontano" instance=ExtResource("casaB")]
 transform = Transform3D(0.4915, 0, -0.3441, 0, 0.6, 0, 0.3441, 0, 0.4915, 5.9, -1.24, -12.2)
+
+[node name="CespuglioCasaA1" parent="Esterno/Lontano" instance=ExtResource("cespuglio")]
+transform = Transform3D(0.4924, 0, 0.0868, 0, 0.5, 0, -0.0868, 0, 0.4924, 1.3, -1.24, -10.7)
+
+[node name="CespuglioCasaA2" parent="Esterno/Lontano" instance=ExtResource("cespuglio")]
+transform = Transform3D(0.3897, 0, -0.225, 0, 0.45, 0, 0.225, 0, 0.3897, 3.7, -1.24, -10.9)
+
+[node name="CespuglioCasaB" parent="Esterno/Lontano" instance=ExtResource("cespuglio")]
+transform = Transform3D(0.225, 0, 0.3897, 0, 0.45, 0, -0.3897, 0, 0.225, 6.3, -1.24, -10.6)
+
+[node name="ErbaCasaA" parent="Esterno/Lontano" instance=ExtResource("erbaalta")]
+transform = Transform3D(0.35, 0, 0, 0, 0.35, 0, 0, 0, 0.35, 2.5, -1.24, -10.6)
+
+[node name="ErbaCasaB" parent="Esterno/Lontano" instance=ExtResource("erbaalta")]
+transform = Transform3D(0.2298, 0, 0.1928, 0, 0.3, 0, -0.1928, 0, 0.2298, 5, -1.24, -10.5)
+
+[node name="ErbaCasaC" parent="Esterno/Lontano" instance=ExtResource("erbasecca")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 7, -1.24, -10.9)
 
 [node name="Mountain_Group_1" parent="Esterno/Lontano/Montagne1/RootNode" index="0"]
 material_override = SubResource("m_montagne")

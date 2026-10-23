@@ -211,6 +211,11 @@ than the sky, which was brightened a little for the contrast) and two
 small DARK houses (no lit window, no light) at z ~-12.3. From the seat only
 a strip of horizon shows (window-local x ~-0.5..9 at z -15), so two pines
 and a dead tree were moved aside to open a gap where the houses sit.
+The houses looked like they floated ("sembra che le case volino"): they
+DID sit on the lawn, but the unlit lawn was pure black, so they hung over
+nothing. Terreno (m_prato) now has a very faint emission (moonlit ground,
+it reads as a ground band up to the mountains) and bushes and grass stand
+at the houses' bases.
 
 ### `scenes/ComputerMode.tscn`
 
