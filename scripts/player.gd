@@ -151,6 +151,12 @@ func _setup_atmosphere() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.4, 0.45, 0.55)
 	env.ambient_light_energy = ambient_energy
+	# occlusione ambientale: scurisce i punti di contatto (tazza sulla scrivania, libri, scatole),
+	# anche sotto la luce della lampada (light_affect), cosi' gli oggetti non sembrano appoggiati in aria
+	env.ssao_enabled = true
+	env.ssao_radius = 0.25
+	env.ssao_intensity = 2.5
+	env.ssao_light_affect = 0.5
 	var we := WorldEnvironment.new()
 	we.name = "Atmosphere"
 	we.environment = env

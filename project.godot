@@ -49,4 +49,5 @@ locale/translations=PackedStringArray("res://locale/ui.en.translation", "res://l
 
 [rendering]
 
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=4
 anti_aliasing/quality/msaa_3d=2
