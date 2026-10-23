@@ -183,8 +183,18 @@ looking straight down the corridor, was -70); check with stanza_check
 
 ### `scenes/window_left.tscn`
 
-2026-10-22: added "Alberi", three unshaded fir silhouettes behind
-SpotFinestra, against the night plane.
+The outside seen through the window. 2026-10-23 (owner: "il mondo fuori
+dalla finestra ... sembra vuoto e quando punto la torcia sugli alberi
+appaiono neri"): the three primitive cones ("Alberi", 2026-10-22) became
+"Esterno", models by Quaternius (CC0, assets/textures/3d/outdoor/ with its
+CREDITS.md): near, a wooden fence (z -2.6) and two bushes; then two dead
+trees; at the back six pines (z -8.5..-11.5). Real sizes (pines 6-8 m).
+Everything stays BEHIND SpotFinestra (z -0.75) so nothing covers the peek.
+"Notte" (unshaded sky, 44 x 18 at z -15) and "Terreno" (lawn 44 x 15, from
+z -0.1 to -15.1) were enlarged and pushed back to contain them. With the
+torch off the trees read as black shapes against the sky; the torch shows
+their colours. Glass m_vetro is near-black on purpose (see THREATS.md,
+torch). Window-local axes: +Z into the room, X along the wall.
 
 ### `scenes/ComputerMode.tscn`
 
