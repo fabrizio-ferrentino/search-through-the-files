@@ -82,15 +82,19 @@ const FILE_IMPOSTAZIONI := "user://impostazioni.cfg"
 var lingua := LINGUA_BASE
 
 # ---------------- impostazioni VIDEO (Opzioni) ----------------
-# Le dimensioni della finestra fra cui scegliere (solo quelle che stanno nello schermo).
-const RISOLUZIONI: Array[Vector2i] = [Vector2i(1280, 720), Vector2i(1600, 900),
-		Vector2i(1920, 1080), Vector2i(2560, 1440), Vector2i(3840, 2160)]
+# Le dimensioni della finestra fra cui scegliere (16:9 e 16:10 comuni; si offrono solo
+# quelle che stanno nello schermo).
+const RISOLUZIONI: Array[Vector2i] = [
+		Vector2i(1280, 720), Vector2i(1280, 800), Vector2i(1366, 768), Vector2i(1440, 900),
+		Vector2i(1600, 900), Vector2i(1680, 1050), Vector2i(1920, 1080), Vector2i(1920, 1200),
+		Vector2i(2560, 1440), Vector2i(2560, 1600), Vector2i(3840, 2160)]
 var schermo_intero := false
 var vsync := true
 # La finestra in modalita' finestra. ZERO = mai scelta: resta quella del progetto
 # (project.godot, 1280x720 per lo sviluppo).
 var risoluzione := Vector2i.ZERO
 var _video_applicato := false
+const BARRA_TITOLO := 40       # altezza della barra del titolo di Windows, circa
 
 func _ready() -> void:
 	# la lingua scelta nelle Opzioni, o l'inglese la prima volta. salva = false: qui si
@@ -161,17 +165,14 @@ func set_risoluzione(r: Vector2i) -> void:
 	_applica_video()
 	_salva_video()
 
-# Le dimensioni che stanno DAVVERO nello schermo come finestra: dentro lo spazio utile (senza
-# la barra delle applicazioni) e con posto per la barra del titolo. Una finestra grande quanto
-# lo schermo (1920x1080 su uno schermo 1920x1080) lo copre tutto e sembra a schermo intero
-# (proprietario, 23/10/2026: "se metto 1920x1080 ... esce full screen lo stesso").
-const BARRA_TITOLO := 40
-
+# Le dimensioni che stanno nello schermo. Una grande QUANTO lo schermo (1920x1080 su uno
+# schermo 1920x1080) si offre lo stesso, per scelta del proprietario (23/10/2026): lo copre
+# tutto e sembra a schermo intero, con la barra del titolo appena fuori.
 func risoluzioni_possibili() -> Array[Vector2i]:
-	var utile := DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen()).size
+	var schermo := DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
 	var out: Array[Vector2i] = []
 	for r in RISOLUZIONI:
-		if r.x <= utile.x and r.y + BARRA_TITOLO <= utile.y:
+		if r.x <= schermo.x and r.y <= schermo.y:
 			out.append(r)
 	if out.is_empty():
 		out.append(RISOLUZIONI[0])
@@ -195,10 +196,13 @@ func _applica_video() -> void:
 		if not possibili.has(risoluzione):
 			risoluzione = possibili[possibili.size() - 1]
 		DisplayServer.window_set_size(risoluzione)
-		# ricentrata nello schermo, o allargandosi uscirebbe a destra e in basso
+		# centrata nello spazio utile (senza barra delle applicazioni); se non ci sta, dal suo
+		# angolo in alto a sinistra, con la barra del titolo dentro lo schermo
 		var utile := DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
-		DisplayServer.window_set_position(utile.position + (utile.size - risoluzione) / 2
-				+ Vector2i(0, BARRA_TITOLO / 2))
+		var pos := utile.position + (utile.size - risoluzione) / 2 + Vector2i(0, BARRA_TITOLO / 2)
+		pos.x = maxi(pos.x, utile.position.x)
+		pos.y = maxi(pos.y, utile.position.y + BARRA_TITOLO)
+		DisplayServer.window_set_position(pos)
 
 func _carica_video() -> void:
 	var cfg := ConfigFile.new()

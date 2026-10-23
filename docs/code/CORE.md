@@ -240,11 +240,12 @@ _ready but APPLIED only by applica_video_salvato(), which main_menu.gd
 calls once per launch: tests and main.tscn run from the editor keep the
 project window whatever the player chose. set_schermo_intero /
 set_vsync / set_risoluzione apply + save; windowed sizes are re-centred
-in the usable area. risoluzioni_possibili() = RISOLUZIONI that fit the
-screen's USABLE rect (no taskbar) with BARRA_TITOLO (40 px) to spare: a
-1920x1080 window on a 1920x1080 screen covered it and looked fullscreen
-(owner: "se metto 1920x1080 ... esce full screen lo stesso"). A saved
-size that no longer fits falls back to the largest that does.
+in the usable area (title bar kept on screen). RISOLUZIONI = common 16:9
+and 16:10 sizes 1280x720 .. 3840x2160; risoluzioni_possibili() = those
+not larger than the SCREEN. A size equal to the screen is offered on
+purpose: it covers it and looks fullscreen - the owner was told and
+wants it (2026-10-23, "rimetti 1920x1080"). A saved size that no longer
+fits falls back to the largest that does.
 
 Autoload. Global run state + run lifecycle
 (start_new_run / game_over / restart) + the LANGUAGE:
@@ -369,9 +370,12 @@ changed only HERE, i.e. from the menu: the in-world text (file
 names, web pages) is generated when the run starts, so changing
 it mid-game would not rewrite the PC.
 VIDEO rows (2026-10-23, owner: "impostazioni video risoluzione, v sync,
-fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size (only the
-sizes GameManager.risoluzioni_possibili() returns; visibly DISABLED in
-fullscreen, where the window is the screen). At the bottom, next to
+fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size: an arrow
+selector "< 1920 x 1080 >" (RisMeno / RisValore / RisPiu) over
+GameManager.risoluzioni_possibili() - too many for a row of buttons
+(owner: "vorrei piu' risoluzioni"); arrows off at the list ends and the
+whole selector visibly DISABLED in fullscreen, where the window is the
+screen. A window not in the list shows the largest size that fits it. At the bottom, next to
 Back, a "Credits" button opens credits_screen.gd ON TOP (layer + 1);
 ESC then closes the credits first. Rows sit in a 2-column
 GridContainer (labels right-aligned | buttons) so they line up;
