@@ -234,6 +234,21 @@ requirement) now calls img.generate_mipmaps() before updating the texture
 LINEAR_WITH_MIPMAPS_ANISOTROPIC. Same date: project.godot [rendering]
 msaa_3d = 4x for the room's jagged edges. The 1280x720 window override is
 the owner's, for development - leave it.
+Screen light (2026-10-23, owner: "mi pare strano che il pc non proietta
+luce nella stanza"): the SpotLight3D "LuceSchermo" in main.tscn replaces the
+old blue OmniLight3D, which sat 7 cm BEHIND the screen face, inside the
+monitor, and was shadowed by it. _metti_luce_schermo() (called from
+_build_screen_quad) puts it 3 cm in front of the screen quad, aimed along
+the quad normal made horizontal (aimed down, it made a hot spot on the desk
+edge). _misura_schermo() averages a 16 x 12 pixel grid of the OS image on
+each 0.08 s poll: colour = the normalised hue, energy = screen_light_max x
+the strongest channel (perceived luminance left the blue screen nearly
+dark); _aggiorna_luce_schermo() lerps toward it every frame (no flicker).
+PC off / boot = black = no light, desktop = teal, blue screen = blue room.
+Kept weak on purpose (cone 75, range 3 m): the corridor stays dark, the
+threats are seen only with the torch. Exports in the "Luce schermo" group.
+The Jester at the window is faintly visible WITHOUT the torch, but that is
+the desk lamp ("Light", range 3 m reaches the window), not this light.
 ESC inside the PC leaves for the room EXCEPT when the OS wants it
 (_os.trattiene_esc(): a rename in progress, or a closable dialog
 such as the About) - then it is forwarded instead. Before

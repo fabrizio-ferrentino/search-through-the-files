@@ -55,6 +55,14 @@ var _virus = null                      # VirusDirector (M5): i virus dentro il P
 @export_group("Buio")
 @export var ambient_energy := 0.04                   # luce ambientale (bassa = piu' buio)
 
+# --- luce dello schermo (il nodo LuceSchermo in main.tscn): colore e intensita' DAL VIVO ---
+@export_group("Luce schermo")
+@export var screen_light_max := 1.0       # intensita' con lo schermo al massimo (scala col canale piu' forte)
+@export var screen_light_smooth := 8.0    # quanto in fretta segue i cambi (piu' alto = piu' pronto)
+var _luce_schermo: SpotLight3D = null
+var _luce_colore := Color.BLACK           # colore verso cui sfuma (media dello schermo)
+var _luce_energia := 0.0                  # intensita' verso cui sfuma
+
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_home_transform = global_transform   # posa centrale da cui si entra/torna
@@ -467,6 +475,7 @@ func _poll_monitor(delta: float) -> void:
 	var img := _os_viewport.get_texture().get_image()
 	if img == null or img.is_empty():
 		return
+	_misura_schermo(img)     # colore medio -> luce che lo schermo getta nella stanza
 	img.generate_mipmaps()   # ~3 ms ogni 80 ms: il monitor resta dal vivo (vedi _setup_monitor_screen)
 	if img.get_size() == Vector2i(_screen_tex.get_width(), _screen_tex.get_height()):
 		_screen_tex.update(img)
@@ -527,6 +536,53 @@ func _build_screen_quad(tex: Texture2D) -> void:
 	else:
 		mesh.size = Vector2(screen_w, screen_h)
 		quad.global_position = _screen_point() + Vector3(0, 0, screen_push) + screen_nudge
+	_metti_luce_schermo(quad)
+
+# La luce dello schermo (LuceSchermo in main.tscn) esce dal DAVANTI del vetro: 3 cm davanti
+# al centro del quad, puntata lungo la sua normale (+Z del quad, verso il giocatore) ma resa
+# ORIZZONTALE: lo schermo e' inclinato all'indietro, e puntata in giu' faceva una macchia sul
+# bordo della scrivania. La vecchia OmniLight stava dietro il vetro, dentro il monitor, e il
+# monitor la oscurava.
+func _metti_luce_schermo(quad: Node3D) -> void:
+	_luce_schermo = get_node_or_null("../LuceSchermo") as SpotLight3D
+	if _luce_schermo == null:
+		return
+	var n: Vector3 = quad.global_transform.basis.z.normalized()
+	var p: Vector3 = quad.global_position + n * 0.03
+	n = Vector3(n.x, 0.0, n.z).normalized()
+	_luce_schermo.global_position = p
+	_luce_schermo.look_at(p + n, Vector3.UP)   # lo SpotLight illumina verso il suo -Z
+	_luce_schermo.light_energy = 0.0
+
+# Colore medio dello schermo da una griglia rada di pixel (16 x 12: costa niente). Il colore
+# e' la tinta (normalizzata), l'intensita' il canale piu' forte (la luminosita' "percepita"
+# dava un blu della schermata blu quasi spento): schermo nero (PC spento, avvio) = luce
+# spenta da sola.
+func _misura_schermo(img: Image) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	var somma := Color(0, 0, 0)
+	var n := 0
+	for gy in range(12):
+		for gx in range(16):
+			var c := img.get_pixel(int((gx + 0.5) * w / 16.0), int((gy + 0.5) * h / 12.0))
+			somma.r += c.r
+			somma.g += c.g
+			somma.b += c.b
+			n += 1
+	var media := Color(somma.r / n, somma.g / n, somma.b / n)
+	var top: float = maxf(media.r, maxf(media.g, media.b))
+	if top > 0.001:
+		_luce_colore = Color(media.r / top, media.g / top, media.b / top)
+	_luce_energia = screen_light_max * top
+
+# Ogni frame la luce sfuma verso il colore/intensita' misurati (niente sfarfallio).
+func _aggiorna_luce_schermo(delta: float) -> void:
+	if _luce_schermo == null:
+		return
+	var k: float = clampf(delta * screen_light_smooth, 0.0, 1.0)
+	_luce_schermo.light_color = _luce_schermo.light_color.lerp(_luce_colore, k)
+	_luce_schermo.light_energy = lerpf(_luce_schermo.light_energy, _luce_energia, k)
 
 # Ricava il rettangolo dello "schermo" da un box piatto: la faccia grande
 # (asse piu' sottile = normale), orientata verso la camera e con l'alto in su.
@@ -585,6 +641,7 @@ func _screen_point() -> Vector3:
 	return global_position - global_transform.basis.z * 1.0
 
 func _process(delta):
+	_aggiorna_luce_schermo(delta)
 	if not _in_pc:
 		_poll_monitor(delta)   # tieni il monitor 3D aggiornato quando si e' in stanza
 	if entering or _in_pc:

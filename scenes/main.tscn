@@ -49,14 +49,13 @@ editor_description = "Pavimento, muri, soffitto e arredo: scenes/room.tscn (pavi
 [node name="Desk" type="Node3D" parent="." unique_id=594763906]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.444794, 1.182103, 18.783127)
 
-[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=47843843]
-transform = Transform3D(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -0.0677327, 1.0618503, -1.3305715)
-light_color = Color(0.6, 0.7, 0.9, 1)
-light_energy = 0.15
+[node name="LuceSchermo" type="SpotLight3D" parent="."]
+editor_description = "La luce che lo SCHERMO del PC getta nella stanza. Posizione e mira le mette player.gd (3 cm davanti al centro dello schermo, verso il giocatore), colore e intensita' li prende dal vivo da cio' che c'e' sullo schermo (gruppo 'Luce schermo' fra le export di Camera3D): PC spento = buio, schermata blu = stanza blu. Debole apposta: non deve rivelare finestra e corridoio, dove le minacce si vedono solo con la torcia. Qui si regolano cono, portata e ombre."
+light_energy = 0.0
 shadow_enabled = true
-distance_fade_enabled = true
-omni_range = 6.0
-omni_shadow_mode = 0
+spot_range = 3.0
+spot_angle = 75.0
+spot_attenuation = 0.8
 
 [node name="Light" type="OmniLight3D" parent="." unique_id=704683100]
 transform = Transform3D(0.8471001, 0.0382127, -0.5300579, -0.017572, 0.9988801, 0.0439285, 0.5311429, -0.0278976, 0.8468229, -0.7226378, 1.1701644, -1.073071)
