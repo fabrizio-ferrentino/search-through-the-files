@@ -61,7 +61,11 @@ spot_attenuation = 0.8
 transform = Transform3D(0.8471001, 0.0382127, -0.5300579, -0.017572, 0.9988801, 0.0439285, 0.5311429, -0.0278976, 0.8468229, -0.7226378, 1.1701644, -1.073071)
 light_color = Color(0.7246083, 0.6956108, 0.3423986, 1)
 light_energy = 0.8
+light_size = 0.06
+light_specular = 0.1
 shadow_enabled = true
+shadow_opacity = 0.8
+shadow_blur = 1.5
 omni_range = 1.5
 
 [node name="CornerShadow" type="OmniLight3D" parent="." unique_id=446033683]

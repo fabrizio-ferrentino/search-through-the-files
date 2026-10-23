@@ -139,7 +139,7 @@ centre x.
   "c'e' una scatola che vola"). ScatolaAperta = one Empty Box alone on the
   floor between the bookshelf and the bed. Cestino = Trash Bin. NEW: Pendola = Grandfathers Clock on the
   right wall at z 1.95 (owner's choice; meant for a ticking sound later);
-  Arredo/Scrivania = Mug With Office Tool (front-left corner, away from under the lamp light) + Desk Fan on the desk top (y 0.74).
+  Arredo/Scrivania = Mug With Office Tool + Desk Fan on the desk top (y 0.74).
   The desk itself is in main.tscn: if you move it, move these two.
   room.tscn and corridor.tscn were first written by one-off scripts that are
   NOT in the repo: they are now ordinary scenes, edit them in the Godot editor.
@@ -271,10 +271,12 @@ threats are seen only with the torch. Exports in the "Luce schermo" group.
 The desk lamp's "Light" is NOT inside the shade but just beside it, toward
 the room: that is what lights the shade so it reads warm and lit. Putting it
 inside (and making the shade emissive to compensate) was tried on
-2026-10-23 and rejected by the owner ("si vede malissimo"). The light used
-to hang right over the mug, which threw a black star of pen and scissor
-shadows under it ("aggiusta l'ombra della tazza"): the mug was moved instead
-(Arredo/Scrivania/Tazza, (-0.88, 0.74, -0.86), the desk's front-left corner).
+2026-10-23 and rejected by the owner ("si vede malissimo"); so was moving
+the mug. The mug's shadow looked fake ("ancora finta") because it was pure
+black with razor edges: the lamp light now has soft shadows (light_size
+0.06, shadow_blur 1.5) and shadow_opacity 0.8, so shadows are soft and
+never pitch black; light_specular 0.1 because with a light size the
+specular highlight became a big bright oval on the desk.
 The desk lamp ("Light") had range 3 m and lit the Jester at the window
 (~1.7 m away) through the glass even with the torch off: range 1.5 m now
 (owner, 2026-10-23), so at the window he is only a dark shape against the
