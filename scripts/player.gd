@@ -449,6 +449,9 @@ func _setup_monitor_screen() -> void:
 	if img == null or img.is_empty():
 		img = Image.create(OS_SIZE.x, OS_SIZE.y, false, Image.FORMAT_RGBA8)
 		img.fill(Color.BLACK)
+	# mipmap: l'OS (1440x1080) sul monitor occupa ~200 px; senza le versioni ridotte e
+	# mediate, le righe sottili del desktop diventano strisce (moire', "scanalature")
+	img.generate_mipmaps()
 	_screen_tex = ImageTexture.create_from_image(img)
 	_build_screen_quad(_screen_tex)
 
@@ -464,6 +467,7 @@ func _poll_monitor(delta: float) -> void:
 	var img := _os_viewport.get_texture().get_image()
 	if img == null or img.is_empty():
 		return
+	img.generate_mipmaps()   # ~3 ms ogni 80 ms: il monitor resta dal vivo (vedi _setup_monitor_screen)
 	if img.get_size() == Vector2i(_screen_tex.get_width(), _screen_tex.get_height()):
 		_screen_tex.update(img)
 	else:
@@ -508,7 +512,7 @@ func _build_screen_quad(tex: Texture2D) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_texture = tex   # ViewportTexture: il monitor mostra l'OS dal vivo
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	quad.material_override = mat
 	get_parent().add_child(quad)
 

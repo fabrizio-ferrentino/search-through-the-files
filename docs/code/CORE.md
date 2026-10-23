@@ -226,6 +226,14 @@ darkness (_setup_atmosphere: clean dark, NO fog — FNAF4 style;
 Look positions: pos_right = -90 (2026-10-23, was -70: turning right you
 look straight down the corridor, which is on the eye axis). Everything
 reads the variable (threat_director _facing_zone, arrows, tests).
+Monitor quad (2026-10-23, owner: "si vede male ... lo schermo con delle
+scanalature"): the 1440x1080 OS image shrunk to ~200 px on screen gave a
+moire. _poll_monitor (every 0.08 s - the screen stays LIVE, the owner's
+requirement) now calls img.generate_mipmaps() before updating the texture
+(~3 ms each time) and the material filter is
+LINEAR_WITH_MIPMAPS_ANISOTROPIC. Same date: project.godot [rendering]
+msaa_3d = 4x for the room's jagged edges. The 1280x720 window override is
+the owner's, for development - leave it.
 ESC inside the PC leaves for the room EXCEPT when the OS wants it
 (_os.trattiene_esc(): a rename in progress, or a closable dialog
 such as the About) - then it is forwarded instead. Before
