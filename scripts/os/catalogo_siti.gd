@@ -196,7 +196,7 @@ const SITI := [
 	{"id": "brutti", "nome": "WS_UGLY", "desc": "WS_UGLY_D",
 		"en": "www.uglyguysboard.com", "it": "www.forumdeibrutti.it",
 		"tipo": "lore", "voce": "altri", "featured": false, "stato": "completo",
-		"pagine": ["index", "rules", "glossary", "thread_truth", "thread_hypergamy", "thread_33",
+		"pagine": ["index", "rules", "thread_truth", "thread_hypergamy", "thread_33",
 				"thread_measures", "thread_leaving", "thread_nosubject"]},
 	# 23/10/2026: un trattato amatoriale che misura i volti e ne trae una sentenza
 	{"id": "volto", "nome": "WS_FACE", "desc": "WS_FACE_D",

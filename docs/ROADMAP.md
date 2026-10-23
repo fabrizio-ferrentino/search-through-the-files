@@ -104,15 +104,22 @@ Make every run different (prevents memorized solutions).
   the 4 keys are one per technique: file / folder name / web / image.
   **Changed 2026-10-18 (owner):** key 1 = file OR folder (50/50), keys 2-3 = web on two
   different sites, key 4 = image.
-- [~] **The web: ~30 real sites** (owner, 2026-10-19). A site is a folder of pages
+- [x] **The web: real sites** (owner, 2026-10-19). A site is a folder of pages
   (`web/pages/<lang>/<site>/`) listed in the site catalog (`scripts/os/catalogo_siti.gd`);
   each run picks 10-15 of them, 4-5 with lore; the web keys land on any page of two
-  sites of the run; a site not in the run answers "cannot find server". **Done:** the
-  engine, the tests (`siti_catalogo_test`) and the two sample sites that set the level
-  (RetroForum, 14 pages; the young man's page, 7 pages). **Next:** the other 28, in batches
-  of 4-5 reviewed by the owner — the list and their status are in
-  [WEB_CATALOG.md](WEB_CATALOG.md). **Later:** simplifying what "view source" shows, to help
-  the player spot the key (owner: "vedremo dopo").
+  sites of the run; a site not in the run answers "cannot find server". **Done:** all 30
+  sites written (2026-10-20); 34 since 2026-10-23 (four lore sites added, the young man
+  reduced to one site of his own, nickname ~missedtrain) — see [WEB_CATALOG.md](WEB_CATALOG.md).
+- [~] **Web variety** (owner, 2026-10-23: "most sites are very similar, if not identical").
+  **Done:** the engine (animated GIFs, MIDI music with a synth, tiled backgrounds, side-bar
+  columns, Times and Comic faces, marquee/blink, `&nbsp;` ASCII art), the placeholder media
+  (`tools/web/media.py`), the PC speakers (tray volume/mute, sound that comes from the desk
+  in the room), six pilot sites restyled and four new sites each with its own look.
+  **Next:** restyle the remaining sites that still share the old skeleton, following the
+  "Style" column of WEB_CATALOG.md, in batches reviewed by the owner; the owner will also
+  rewrite or replace some sites himself. **Later:** simplifying what "view source" shows, to
+  help the player spot the key (owner: "vedremo dopo"); real art and music replacing the
+  placeholders (same file names).
 
 ## Milestone 4 — The room threat (FNAF layer)
 The reason you can't just read in peace. Enemies & layout per GDD §5.1 / §7.1.
@@ -175,7 +182,9 @@ Threat *inside* the machine + atmosphere. Viruses per GDD §7.2.
 
 ## Milestone 6 — Audio & polish
 - [ ] **Audio pass:** CRT hum, key clicks, dial-up, HDD chatter, drone that
-  tracks threat level, jumpscare stingers. (No audio exists yet.)
+  tracks threat level, jumpscare stingers. (The only audio today is the web pages' music,
+  2026-10-23, through the "PC" bus of `scripts/os/audio_pc.gd`: PC sounds should use that
+  bus too, so the tray mute and the room positioning apply to them.)
 - [~] **Menu/options:** the Options screen **exists** (`scripts/options_screen.gd`,
   opened by the main menu) and holds the **language selector**. Still missing:
   volume, maybe mouse sensitivity, and whatever else settles as a setting —
