@@ -35,7 +35,8 @@ var _pc_layer: CanvasLayer = null      # overlay a tutto schermo (vista "dentro 
 var _pc_bg: ColorRect = null           # sfondo nero dell'overlay (porta il cursore reale)
 var _os_mouse_in := false              # la SubViewport dell'OS sa che il mouse e' su di lei?
 var _pc_fade: ColorRect = null         # rettangolo nero per le dissolvenze dell'overlay
-var _screen_tex: ImageTexture = null   # texture del monitor 3D (aggiornata dal SubViewport)
+var _media_vp: SubViewport = null      # 16x12: la media dei colori dell'OS (luce dello schermo)
+var _media_in_lettura := false         # una rilettura asincrona di _media_vp e' in corso
 var _poll_accum := 0.0
 var _home_transform: Transform3D       # posa "a riposo" della telecamera (centro stanza)
 var _home_fov := 75.0
@@ -456,37 +457,48 @@ func _setup_monitor_screen() -> void:
 	_kill_monitor_emission()   # spegne le scritte verdi del terminale del modello
 	if _os_viewport == null:
 		return
-	# lascia renderizzare il SubViewport un paio di frame prima di leggerne la texture
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var img := _os_viewport.get_texture().get_image()
-	if img == null or img.is_empty():
-		img = Image.create(OS_SIZE.x, OS_SIZE.y, false, Image.FORMAT_RGBA8)
-		img.fill(Color.BLACK)
-	# mipmap: l'OS (1440x1080) sul monitor occupa ~200 px; senza le versioni ridotte e
-	# mediate, le righe sottili del desktop diventano strisce (moire', "scanalature")
-	img.generate_mipmaps()
-	_screen_tex = ImageTexture.create_from_image(img)
-	_build_screen_quad(_screen_tex)
+	# Il vetro usa DIRETTAMENTE la texture del SubViewport (dal vivo, ogni frame), filtrata
+	# da schermo_monitor.gdshader contro il moire'. Prima la si copiava sulla CPU ogni 80 ms
+	# (get_image + mipmap): ogni copia fermava il frame per ~20 ms, scatti continui.
+	_build_screen_quad(_os_viewport.get_texture())
+	# la luce dello schermo: un SubViewport minuscolo con la media dei colori dell'OS
+	_media_vp = SubViewport.new()
+	_media_vp.name = "MediaSchermo"
+	_media_vp.size = Vector2i(16, 12)
+	_media_vp.disable_3d = true
+	_media_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var rett := ColorRect.new()
+	rett.size = Vector2(16, 12)
+	var sm := ShaderMaterial.new()
+	sm.shader = preload("res://scripts/os/media_schermo.gdshader")
+	sm.set_shader_parameter("os_tex", _os_viewport.get_texture())
+	rett.material = sm
+	_media_vp.add_child(rett)
+	get_parent().add_child(_media_vp)
 
-# Aggiorna la texture del monitor 3D col contenuto attuale dell'OS (poche volte
-# al secondo: basta per avvio/login/desktop e non pesa).
+# Rilegge la media dei colori dell'OS (poche volte al secondo) per la luce dello schermo.
+# Lettura ASINCRONA dalla GPU: il dato arriva qualche frame dopo, senza fermare il frame.
 func _poll_monitor(delta: float) -> void:
-	if _screen_tex == null or _os_viewport == null:
+	if _media_vp == null or _media_in_lettura:
 		return
 	_poll_accum += delta
 	if _poll_accum < 0.08:
 		return
 	_poll_accum = 0.0
-	var img := _os_viewport.get_texture().get_image()
-	if img == null or img.is_empty():
+	var rd := RenderingServer.get_rendering_device()
+	var rid := RenderingServer.texture_get_rd_texture(_media_vp.get_texture().get_rid())
+	if rd == null or not rid.is_valid():
 		return
+	_media_in_lettura = true
+	if rd.texture_get_data_async(rid, 0, _media_letta) != OK:
+		_media_in_lettura = false
+
+func _media_letta(dati: PackedByteArray) -> void:
+	_media_in_lettura = false
+	if dati.size() < 16 * 12 * 4:
+		return
+	var img := Image.create_from_data(16, 12, false, Image.FORMAT_RGBA8, dati.slice(0, 16 * 12 * 4))
 	_misura_schermo(img)     # colore medio -> luce che lo schermo getta nella stanza
-	img.generate_mipmaps()   # ~3 ms ogni 80 ms: il monitor resta dal vivo (vedi _setup_monitor_screen)
-	if img.get_size() == Vector2i(_screen_tex.get_width(), _screen_tex.get_height()):
-		_screen_tex.update(img)
-	else:
-		_screen_tex.set_image(img)
 
 # Spegne l'emissivo del modello del monitor (il finto terminale verde) cosi' lo
 # schermo sottostante e' nero e il pannello del desktop puo' stare dentro la cornice.
@@ -524,10 +536,9 @@ func _build_screen_quad(tex: Texture2D) -> void:
 	quad.name = "MonitorScreen"
 	var mesh := QuadMesh.new()
 	quad.mesh = mesh
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = tex   # ViewportTexture: il monitor mostra l'OS dal vivo
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://scripts/os/schermo_monitor.gdshader")
+	mat.set_shader_parameter("os_tex", tex)   # ViewportTexture: il monitor mostra l'OS dal vivo
 	quad.material_override = mat
 	get_parent().add_child(quad)
 

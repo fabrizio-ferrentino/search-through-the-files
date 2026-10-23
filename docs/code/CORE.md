@@ -249,10 +249,15 @@ look straight down the corridor, which is on the eye axis). Everything
 reads the variable (threat_director _facing_zone, arrows, tests).
 Monitor quad (2026-10-23, owner: "si vede male ... lo schermo con delle
 scanalature"): the 1440x1080 OS image shrunk to ~200 px on screen gave a
-moire. _poll_monitor (every 0.08 s - the screen stays LIVE, the owner's
-requirement) now calls img.generate_mipmaps() before updating the texture
-(~3 ms each time) and the material filter is
-LINEAR_WITH_MIPMAPS_ANISOTROPIC. Same date: project.godot [rendering]
+moire. The quad shows the SubViewport's ViewportTexture DIRECTLY (live every
+frame, the owner's requirement) through scripts/os/schermo_monitor.gdshader:
+each pixel averages 4x4 bilinear taps spread over its footprint in the
+texture (dFdx/dFdy of UV), the job mipmaps would do; up close it is plain
+bilinear. NEVER copy the OS image to the CPU per frame: until 2026-10-23
+_poll_monitor did get_image() + generate_mipmaps() every 0.08 s, and each
+GPU->CPU readback stalled the frame ~20 ms (measured: 423 fps average but
+1% of frames at 19.8 ms = visible stutter; without it 1113 fps, worst 1%
+1.5 ms; owner: "mi sembra strano fare questi cali"). Same date: project.godot [rendering]
 msaa_3d = 4x for the room's jagged edges. The 1280x720 window override is
 the owner's, for development - leave it.
 Screen light (2026-10-23, owner: "mi pare strano che il pc non proietta
@@ -261,8 +266,11 @@ old blue OmniLight3D, which sat 7 cm BEHIND the screen face, inside the
 monitor, and was shadowed by it. _metti_luce_schermo() (called from
 _build_screen_quad) puts it 3 cm in front of the screen quad, aimed along
 the quad normal made horizontal (aimed down, it made a hot spot on the desk
-edge). _misura_schermo() averages a 16 x 12 pixel grid of the OS image on
-each 0.08 s poll: colour = the normalised hue, energy = screen_light_max x
+edge). the light's colour comes from "MediaSchermo", a 16 x 12 SubViewport whose
+ColorRect (media_schermo.gdshader) averages 8x8 taps of each OS cell;
+_poll_monitor reads it back every 0.08 s with RenderingDevice
+texture_get_data_async (no stall, the data arrives a few frames later in
+_media_letta) and _misura_schermo() averages it: colour = the normalised hue, energy = screen_light_max x
 the strongest channel (perceived luminance left the blue screen nearly
 dark); _aggiorna_luce_schermo() lerps toward it every frame (no flicker).
 PC off / boot = black = no light, desktop = teal, blue screen = blue room.
