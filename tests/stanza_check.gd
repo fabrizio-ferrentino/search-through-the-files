@@ -28,6 +28,24 @@ func _ready() -> void:
 		await _foto("stanza_%s.png" % vista[0])
 		env.ambient_light_energy = 1.2
 		await _foto("stanza_%s_luce.png" % vista[0])
+	# gli spot degli affacci: una sagoma rossa (alta 1.8, senza luce propria) su ognuno,
+	# vista da destra, per controllare che dalla sedia si vedano tutti
+	var rosso := StandardMaterial3D.new()
+	rosso.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rosso.albedo_color = Color(1, 0.1, 0.1)
+	for spot in get_tree().get_nodes_in_group("enemy_spots"):
+		var sagoma := MeshInstance3D.new()
+		var capsula := CapsuleMesh.new()
+		capsula.radius = 0.2
+		capsula.height = 1.8
+		sagoma.mesh = capsula
+		sagoma.material_override = rosso
+		stanza.add_child(sagoma)
+		sagoma.global_position = (spot as Node3D).global_position + Vector3(0, 0.9, 0)
+	player.target_yaw = player.pos_right
+	await get_tree().create_timer(1.5).timeout
+	env.ambient_light_energy = buio
+	await _foto("stanza_spot_destra.png")
 	# dall'alto: una telecamera nuova sopra la stanza, guarda giu'
 	var cam := Camera3D.new()
 	stanza.add_child(cam)

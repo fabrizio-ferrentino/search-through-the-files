@@ -175,7 +175,10 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   the player sees it (centro, sinistra, destra, dietro) ->
   user://stanza_<vista>.png, and again with the ambient light raised
   (1.2) -> user://stanza_<vista>_luce.png, plus user://stanza_alto_luce.png
-  from above. To judge the furniture and walls by eye; no asserts),
+  from above. To judge the furniture and walls by eye; no asserts.
+  2026-10-23: also user://stanza_spot_destra.png, the right view with a
+  red unshaded capsule (1.8 m) on every "enemy_spots" marker, to check by
+  eye that every peek spot is visible from the seat),
 
 - crt_look_check.tscn/.gd (dev tool, WINDOWED: the REAL room, into
   the PC, and photos of what the player sees - full view, a x4

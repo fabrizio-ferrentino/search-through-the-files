@@ -39,7 +39,7 @@ size = Vector3(4.212, 0.08, 0.015)
 size = Vector3(0.015, 0.08, 6.28)
 
 [sub_resource type="BoxMesh" id="box_9"]
-size = Vector3(0.015, 0.08, 0.29)
+size = Vector3(0.015, 0.08, 0.84)
 
 [sub_resource type="BoxMesh" id="box_10"]
 size = Vector3(0.015, 0.08, 4.54)
@@ -48,13 +48,13 @@ size = Vector3(0.015, 0.08, 4.54)
 size = Vector3(0.03, 2.18, 0.08)
 
 [sub_resource type="BoxMesh" id="box_12"]
-size = Vector3(0.03, 0.08, 1.61)
+size = Vector3(0.03, 0.08, 1.06)
 
 [sub_resource type="BoxMesh" id="box_13"]
 size = Vector3(0.2, 2.1, 0.01)
 
 [sub_resource type="BoxMesh" id="box_14"]
-size = Vector3(0.2, 0.01, 1.45)
+size = Vector3(0.2, 0.01, 0.9)
 
 [sub_resource type="StandardMaterial3D" id="m_15"]
 resource_name = "Plastica"
@@ -532,15 +532,15 @@ operation = 2
 size = Vector3(1, 1, 1.1)
 
 [node name="MuroDestro" type="CSGBox3D" parent="Guscio"]
-editor_description = "Muro del corridoio, bucato dal figlio BucoPorta (CSG) largo quanto il corridoio: gli affacci alle porte del corridoio devono vedersi dalla sedia."
+editor_description = "Muro del corridoio, bucato dal figlio BucoPorta (CSG), il vano della porta della camera. Largo 0.9 m da z -1.14 a -0.24, contro il lato del letto: da qui la sedia vede in diagonale la parte di fondo del corridoio, dove stanno le porte degli affacci. Se lo sposti verso la scrivania, SpotR1 sparisce dietro lo stipite."
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.2, 1.16)
 size = Vector3(0.2, 2.6, 6.28)
 material = ExtResource("1_ext")
 
 [node name="BucoPorta" type="CSGBox3D" parent="Guscio/MuroDestro"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -2.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -1.85)
 operation = 2
-size = Vector3(1, 2.3, 1.45)
+size = Vector3(1, 2.3, 0.9)
 
 [node name="SpalleFinestra" type="Node3D" parent="Guscio"]
 
@@ -589,7 +589,7 @@ material_override = ExtResource("4_ext")
 cast_shadow = 0
 
 [node name="DestraA" type="MeshInstance3D" parent="Guscio/Battiscopa"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 0.04, -1.835)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5925, 0.04, -1.56)
 mesh = SubResource("box_9")
 material_override = ExtResource("4_ext")
 cast_shadow = 0
@@ -603,7 +603,7 @@ cast_shadow = 0
 [node name="VanoPorta" type="Node3D" parent="Guscio"]
 
 [node name="StipiteAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 1.09, -1.73)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 1.09, -1.18)
 mesh = SubResource("box_11")
 material_override = ExtResource("4_ext")
 
@@ -613,12 +613,12 @@ mesh = SubResource("box_11")
 material_override = ExtResource("4_ext")
 
 [node name="Architrave" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 2.14, -0.965)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.585, 2.14, -0.69)
 mesh = SubResource("box_12")
 material_override = ExtResource("4_ext")
 
 [node name="SpallaAvanti" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.05, -1.685)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 1.05, -1.135)
 mesh = SubResource("box_13")
 material_override = ExtResource("4_ext")
 
@@ -628,7 +628,7 @@ mesh = SubResource("box_13")
 material_override = ExtResource("4_ext")
 
 [node name="SpallaSopra" type="MeshInstance3D" parent="Guscio/VanoPorta"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.095, -0.965)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.095, -0.69)
 mesh = SubResource("box_14")
 material_override = ExtResource("4_ext")
 
@@ -1215,8 +1215,15 @@ mesh = SubResource("box_108")
 material_override = SubResource("m_107")
 
 [node name="PortaRipostiglio" parent="Arredo" instance=ExtResource("6_ext")]
-editor_description = "Il modello della porta (assets/textures/3d/door/Door.glb), chiusa, sul muro di fondo. Prima stava accanto all'imbocco del corridoio; li' ora c'e' il vano aperto, largo quanto il corridoio (le sue porte devono vedersi)."
+editor_description = "Il modello della porta (assets/textures/3d/door/Door.glb), chiusa, sul muro di fondo. Prima stava accanto all'imbocco del corridoio; li' ora c'e' la porta della camera (PortaCamera), aperta."
 transform = Transform3D(-0.65, 0, 0, 0, 0.65, 0, 0, 0, -0.65, 1.72, 0, 4.26)
+
+[node name="PortaCamera" type="Node3D" parent="Arredo"]
+editor_description = "La porta della camera: il CARDINE (perno), sullo stipite verso la scrivania. Ruota questo nodo sull'asse Y per aprirla o chiuderla: -10 gradi = aperta verso l'angolo (come ora), 90 = chiusa. Aperta deve restare da questo lato: dall'altro coprirebbe gli affacci del corridoio."
+transform = Transform3D(0.9848, 0, -0.1736, 0, 1, 0, 0.1736, 0, 0.9848, 2.56, 0, -1.11)
+
+[node name="Anta" parent="Arredo/PortaCamera" instance=ExtResource("6_ext")]
+transform = Transform3D(0.6767, 0, 0, 0, 0.7013, 0, 0, 0, 0.65, -0.448, 0, -0.0052)
 
 [node name="Quadro" type="Node3D" parent="Arredo"]
 
@@ -1283,23 +1290,23 @@ cast_shadow = 0
 [node name="Scatoloni" type="Node3D" parent="Arredo"]
 
 [node name="Grande" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(0.9976, 0, 0.0698, 0, 1, 0, -0.0698, 0, 0.9976, 1.62, 0.2, -1.71)
+transform = Transform3D(0.0698, 0, 0.9976, 0, 1, 0, -0.9976, 0, 0.0698, 2.33, 0.2, 1.2)
 mesh = SubResource("box_127")
 material_override = SubResource("m_125")
 
 [node name="NastroGrande" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(0.9976, 0, 0.0698, 0, 1, 0, -0.0698, 0, 0.9976, 1.62, 0.4025, -1.71)
+transform = Transform3D(0.0698, 0, 0.9976, 0, 1, 0, -0.9976, 0, 0.0698, 2.33, 0.4025, 1.2)
 mesh = SubResource("box_128")
 material_override = SubResource("m_126")
 cast_shadow = 0
 
 [node name="Piccolo" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(0.9816, 0, -0.1908, 0, 1, 0, 0.1908, 0, 0.9816, 1.58, 0.55, -1.7)
+transform = Transform3D(-0.1908, 0, 0.9816, 0, 1, 0, -0.9816, 0, -0.1908, 2.36, 0.55, 1.17)
 mesh = SubResource("box_129")
 material_override = SubResource("m_125")
 
 [node name="NastroPiccolo" type="MeshInstance3D" parent="Arredo/Scatoloni"]
-transform = Transform3D(0.9816, 0, -0.1908, 0, 1, 0, 0.1908, 0, 0.9816, 1.58, 0.7025, -1.7)
+transform = Transform3D(-0.1908, 0, 0.9816, 0, 1, 0, -0.9816, 0, -0.1908, 2.36, 0.7025, 1.17)
 mesh = SubResource("box_130")
 material_override = SubResource("m_126")
 cast_shadow = 0
@@ -1325,3 +1332,8 @@ material_override = SubResource("m_134")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.3, 1)
 mesh = SubResource("cil_137")
 material_override = SubResource("m_136")
+
+[node name="DoorFrame" parent="Arredo/PortaCamera/Anta/RootNode" index="0"]
+visible = false
+
+[editable path="Arredo/PortaCamera/Anta"]

@@ -10,7 +10,7 @@
 albedo_color = Color(0.04, 0.04, 0.05, 1)
 
 [node name="Corridor" type="Node3D" unique_id=541986947]
-editor_description = "Il corridoio a destra. Origine = imbocco (z = 0, sul muro destro della stanza), -Z va verso il fondo. Pavimento e soffitto partono dall'imbocco: non devono entrare nella stanza. I materiali sono quelli della stanza (assets/materials/)."
+editor_description = "Il corridoio a destra. Origine = imbocco (z = 0, sul muro destro della stanza), -Z va verso il fondo. Pavimento e soffitto partono dall'imbocco: non devono entrare nella stanza. I materiali sono quelli della stanza (assets/materials/). Dalla sedia il corridoio si vede in diagonale attraverso una porta di 0.9 m: il primo metro e mezzo vicino all'imbocco e' coperto dal muro, per questo le porte (e gli spot) cominciano da z -1.3."
 
 [node name="Floor" type="MeshInstance3D" parent="." unique_id=1813885056]
 transform = Transform3D(2.75, 0, 0, 0, 0.125, 0, 0, 0, 4.3, 0, -0.05, -2.15)
@@ -28,12 +28,12 @@ material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="LeftA" type="MeshInstance3D" parent="." unique_id=1752441789]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.4, -1.05, 1.2, -0.2)
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 1.3, -1.05, 1.2, -0.65)
 material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
 [node name="LeftB" type="MeshInstance3D" parent="." unique_id=965503595]
-transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 2.45, -1.05, 1.2, -2.625)
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.42, -1.05, 1.2, -2.31)
 material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
@@ -52,8 +52,13 @@ transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.75, 0.5, 1.2, -3.475)
 material_override = ExtResource("m_wall")
 mesh = SubResource("box")
 
+[node name="LeftC" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.1, 0, 0, 0, 2.4, 0, 0, 0, 0.53, -1.05, 1.2, -3.585)
+material_override = ExtResource("m_wall")
+mesh = SubResource("box")
+
 [node name="RoomL1" type="MeshInstance3D" parent="." unique_id=29044227]
-transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, -1.6898966, 1.1, -0.9)
+transform = Transform3D(1.4, 0, 0, 0, 2.2, 0, 0, 0, 1.4, -1.6898966, 1.1, -1.7)
 material_override = SubResource("m_room")
 mesh = SubResource("box")
 
@@ -80,7 +85,7 @@ light_color = Color(0.7, 0.55, 0.45, 1)
 light_energy = 0.05
 
 [node name="SpotL1" type="Marker3D" parent="." unique_id=2087849275 groups=["enemy_spots"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9918645, 0, -0.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9918645, 0, -1.7)
 
 [node name="SpotR1" type="Marker3D" parent="." unique_id=733420691 groups=["enemy_spots"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32151806, 0.1140019, -2.0544162)

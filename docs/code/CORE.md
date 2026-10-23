@@ -49,6 +49,37 @@ Lamp_with_shade cast_shadow = off (the shade threw a huge black blob on
 the wall). Known, left as is: Ghosty's path (markers z 4 -> 1.05, x 0)
 still crosses the bed.
 
+2026-10-22, proportions pass (owner: check they are "non dico realistiche
+ma almeno giuste"). The desk was 0.60 m tall (real ~0.74) and the eye
+1.07 above the floor (seated ~1.2). The whole desk group was raised by
++0.14 m: Camera3D (eye now y 1.21), test-schermo, Monitor, DeskLamp, the
+screen-glow OmniLight3D and "Light". DeskModel keeps its feet on the floor
+and is stretched in Y (scale y 1.4 -> 1.723, top at 0.74). The view from
+the seat is unchanged relative to the desk. No script holds a hard-coded
+height (checked). Bed scaled 1.2 -> 1.1 (~1.63 x 2.15 m, was 1.78 x 2.35),
+origin z moved +0.1 so the headboard stays against the wall.
+Measured and fine: wardrobe 2.0 h, bookcase 1.7, nightstand 0.5, closet
+door 2.05, window sill 0.85 / top 1.85, ceiling 2.5, corridor 2.4; Jester
+1.91, HaloMan 2.11 (would brush the 2.1 doorway top), Ghosty 1.7 floating.
+(The two items that were "known, left on purpose" here, the 1.2 m door
+and the 0.45 m screen, were fixed on 2026-10-23, see below.)
+
+2026-10-23, screen, lamp, door (owner: "se vuoi sistemare lo schermo
+fallo", then "fai lo schermo un po piu grande"; he approved the door
+plan). main.tscn: the computer model (Monitor node + its collision shapes)
+and the hidden reference test-schermo were scaled to 0.9 of their size
+around the model's base (the Monitor origin, on the desk top); the
+screen-glow OmniLight3D moved the same way. The visible screen is now
+~0.40 m wide (was ~0.45, too big for a 1999 CRT); keyboard and tower
+shrink with it (one mesh). DeskLamp scale 2 -> 1.6 (0.52 m tall, was
+0.65); its "Light" kept the same place RELATIVE to the lamp (offset from
+the lamp base x0.8, now (-0.72, 1.17, -1.07)), so the hot spot sits in
+the shade again - left at the old height it sat on the shade's top rim. If
+you rescale the lamp, move "Light" with it. crt_look_check confirms the screen quad still fits the frame and
+its colour matches the OS exactly. Enemies were NOT resized: owner, "i
+personaggi se sono tanto grossi o alti non e un problema devono essere
+deformi... placeholder, e inutile modificarli".
+
 ### `scenes/room.tscn`
 
 The room SHELL and FURNITURE in world coordinates, instanced in main.tscn
@@ -59,8 +90,12 @@ and straight.
 - Guscio: Pavimento, Soffitto, MuroDavanti, MuroDietro, MuroSinistro
   (CSG; child BucoFinestra = the window hole, move it together with
   WindowLeft), MuroDestro (CSG; child BucoPorta = the opening to the
-  corridor, z -1.69..-0.24, h 2.1 - it MUST be as wide as the corridor,
-  or the corridor peek spots are hidden from the seat), SpalleFinestra
+  corridor, now 0.9 m wide, z -1.14..-0.24 against the bed side (2026-10-23;
+  was 1.2 m, -1.44..-0.24, and before 1.45 m, -1.69..-0.24). Rule: from the
+  seat the corridor is seen diagonally through this door, so its first ~1.5 m
+  near the mouth is hidden by the wall; moving the doorway toward the desk
+  hides SpotR1. History: the 1.2 m width was kept for the peeks until
+  SpotL1 was moved and the left side re-cut, see corridor.tscn), SpalleFinestra
   (dark lining of the window reveal: a 50 cm LIT reveal looked like a
   grey box outside the window), Battiscopa, VanoPorta (casing, wood
   lining, light switch).
@@ -68,7 +103,18 @@ and straight.
   Comodino (+ alarm clock, off), PortaRipostiglio (the owner's Door.glb,
   closed, on the back wall right of the bed; before it stood rotated
   beside the corridor mouth), Quadro, Bacheca (cork board, papers
-  without text), Scatoloni, Cestino, Plafoniera (off).
+  without text), Scatoloni (2026-10-22: moved against the right wall
+  between the door and the wardrobe, z ~1.2, because the bedroom door
+  swings through the corner where they stood), Cestino, Plafoniera (off).
+- PortaCamera (2026-10-22, owner: "mi pare strano che la stanza da letto
+  non abbia una porta sul corridoio"): the bedroom door, OPEN into the room
+  toward the front-right corner. The node is the HINGE (pivot on the jamb
+  toward the desk): rotate it on Y to open/close, -10 deg = open (now),
+  90 = closed. It must open on this side: opened the other way it would
+  cover the corridor peeks. Child "Anta" = instance of Door.glb (leaf
+  1.33 x 2.98 x 0.115) scaled onto the opening (sized from it, so it follows
+  the 0.9 m doorway), editable instance with the
+  model's DoorFrame hidden; the VanoPorta casing is the frame.
 
 ### `assets/materials/` (shared by room.tscn AND corridor.tscn)
 
@@ -82,6 +128,16 @@ legno_mobili.tres. Change one, both room and corridor follow.
 Floor and Ceiling now start at the mouth (z = 0) instead of entering the
 room (it z-fought); floor/walls/ceiling use the shared materials. The
 black side "rooms" (m_room) are unchanged.
+
+2026-10-23: the LEFT side was re-cut into two real doors (lz = local z):
+LeftA (lz 0..-1.3), door of SpotL1 (-1.3..-2.1), LeftB (-2.1..-2.52),
+door of SpotR2 (-2.52..-3.32), new LeftC (-3.32..-3.85). SpotR2, despite
+its name, is on the LEFT side and used to stand in front of solid wall.
+SpotL1 moved from lz -0.9 to -1.7 (it would be invisible through the
+0.9 m bedroom door) and the RoomL1 box followed to lz -1.7. Right side
+unchanged. All three corridor spots are visible from the seat (the
+nearest one half-covered by the jamb; the enemy slides in sideways so it
+still reads); check with stanza_check (stanza_spot_destra.png).
 
 ### `scenes/window_left.tscn`
 

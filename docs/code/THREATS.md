@@ -12,6 +12,10 @@ STARTER right-side corridor (M4): plain box geometry + door
 Marker3Ds in group "enemy_spots", kept DARK (dim lights — the
 torch lights it). Instanced inside main.tscn (node "Corridor");
 move/refine/replace in editor.
+2026-10-23: left side re-cut into two doors, SpotL1 moved to lz -1.7 and
+SpotR2 (on the LEFT side despite its name) now in front of a real door;
+details in CORE.md (`scenes/corridor.tscn`). Enemies are not resized
+(owner: placeholders, they must be deformed).
 
 ### `scenes/window_left.tscn`
 
