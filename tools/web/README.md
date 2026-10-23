@@ -43,12 +43,31 @@ genera("mysite", skin, P)
 ```
 
 Tips learned writing the 30 sites:
-- In a table, the declared widths of several columns are split evenly. Put a short label
-  (date, author) **above** the text in the same cell, not in a narrow first column.
+- Since 2026-10-23 `<td width="N">` / `width="N%"` works, so a narrow first column (an
+  author column, a side bar of links) is possible; without it the columns share the table
+  width evenly.
+- `genera()`'s skin puts the SAME header on every page; that is fine inside one site, but
+  every site needs its own look (see "Style" in docs/WEB_CATALOG.md).
 - Join chat-log lines with `<br>` and no newline, or every line after the first starts with
   a space.
 - English pages use dollars, Italian ones lire.
 - Write Italian with `e'` / `piu'` like the existing pages.
+
+## `media.py`
+
+Stdlib-only generator of the PLACEHOLDER media (2026-10-23; the owner chose generated
+placeholders, to be replaced later). Run it with `python tools/web/media.py` from the
+project root (`python tools/web/media.py busta` regenerates only the files whose name
+contains "busta"; each file is a placeholder, replace it with a real one under the same name):
+- a GIF89a writer (own LZW encoder) draws the animated and still pictures into
+  `web/img/*.gif` - no words in the pictures, so there is no text to translate or to
+  look like a key (pictograms and digits only, no real brands);
+- an SMF writer composes four original melodies into `web/audio/*.mid`: `jack`, `inno`,
+  `valzer`, `notte`.
+The game plays the MIDI files itself (`MidiSynth`) and decodes the GIFs (`GifDecoder`); after
+adding files run `--import` and `tests/gif_test.gd`, `tests/midi_test.gd` and
+`siti_catalogo_test` (check MEDIA_ESISTONO). Pages cite them as `<img src="x.gif">` and
+`<bgsound src="x.mid">`, see docs/WEB_AUTHORING.md.
 
 ## `registra.py`
 

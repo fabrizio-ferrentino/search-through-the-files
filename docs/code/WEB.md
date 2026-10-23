@@ -23,6 +23,20 @@ WebRuntime.source_html (injects the
 key) then renders strip_comments(...). "Visualizza sorgente" =
 pretty-printed source. See docs/WEB_AUTHORING.md + memory
 `web-browser`.
+BACKGROUND AND MUSIC (2026-10-23): _page_tile is a TextureRect (STRETCH_TILE) between the
+page colour and the PageView, showing the <body background> image tiled; _sposta_mosaico
+moves it with the scroll (a fixed tile would look painted on the glass). _musica is an
+AudioStreamPlayer at MUSICA_DB (-6 dB) fed by ctx["audio"] (_audio_pagina): music starts in
+_fine_caricamento if "auto", and stops in _load (navigate / reload), in _interrompi (the
+stop button, a music still being rendered will not arrive) and with the window. _musica.bus
+= AudioPC.bus() (2026-10-23): the music goes through the PC's speakers bus, so the tray
+speaker's volume/Mute (the period way to silence a page, see OS.md) applies, and in the
+room it is muffled and panned toward the desk. A MIDI is
+first rendered by MidiSynth.prepara in a thread: _musica_attesa holds the file being waited
+for and _process polls MidiSynth.pronto, then _avvia_musica. _on_meta intercepts the
+"__audio:play" / "__audio:stop" links of a visible <embed> before navigating. Minimising the
+window does NOT stop the music (period-accurate). sta_suonando() and musica_in_attesa() exist
+for the tests. Test: web_media_test.tscn.
 LOADING (WTTG2-style, 2026-09-16): opening a page is NOT instant.
 The page is rendered at once but a VEIL (page-background ColorRect
 above the PageView, mouse_filter STOP) covers it for a short while,
@@ -159,9 +173,61 @@ work: [cell expand] does nothing in 4.6 and a [table] is otherwise
 content-wide, so _spacer_row appends an invisible row with a
 transparent spacer image (web/img/spacer.png) of the exact width —
 percentages need ctx["page_width"], which BrowserApp passes and
-recomputes on resize. face= → mono for Courier*, else the page sans.
-<img src> = files in web/img/ (missing → drawn "broken"
+recomputes on resize. <img src> = files in web/img/ (missing → drawn "broken"
 placeholder). Unit test: tests/html_bb_test.gd.
+
+2026-10-23 (owner: "the web sites are mostly very similar, almost identical; I want huge
+variety; and start adding GIFs and audio in pages; take inspiration from 90s web design"):
+- face= → famiglia(): sans / serif (Tinos) / comic (Comic Neue) / mono, emitted as
+  [font=file]. <b>/<i>/<hN> inside a non-sans family emit THAT family's bold/italic FILE
+  (_file_di / _font_file; the state {fam,b,i} rides on the tag stack through _push's
+  `extra`, read by _stato). Comic Neue has no italic (the original neither). Files in
+  Win95._FONT_FILES.
+- <td width> px or %: _colonne computes per-column widths and _spacer_row builds the
+  invisible spacer row. A NESTED table's % width is relative to its CELL (ctx page_width is
+  swapped while a cell is walked). <table bordercolor> works.
+- img_path(src): a .gif is decoded ONCE by GifDecoder and the texture is registered on the
+  virtual path "<file>.gif.tex" with take_over_path (the same trick as the broken-image
+  placeholder), cached in the static _gif; texture(src) gives the same texture for
+  <body background> (the browser tiles it).
+- <marquee> → [marquee w len v dir mode] (WebEffetti). Top level only: inside a table cell
+  (ctx _in_cella) or when the text is longer than the page it comes out STATIC, as in
+  Netscape. <blink> → [blink].
+- <bgsound> / <embed> print no text; they fill ctx["audio"] = {src, path, loop, auto}
+  (audio_path() resolves web/audio/). A VISIBLE <embed> draws a small player whose links are
+  META_PLAY "__audio:play" and META_STOP "__audio:stop" (BrowserApp intercepts them).
+Tests: html_bb_test.gd, section _prova_varieta.
+
+### `scripts/os/gif_decoder.gd`
+
+GifDecoder (2026-10-23): pure static GIF87a/89a decoder, no engine state. LZW, global and
+local palettes, transparency, per-frame delays, disposal 2 and 3, interlace; it composes the
+frames onto the logical screen. texture_da_file(path) → AnimatedTexture (an ImageTexture
+when there is a single frame). Called by HtmlBB.img_path. Test: tests/gif_test.gd.
+
+### `scripts/os/web_effetti.gd`
+
+WebEffetti (2026-10-23): the RichTextEffects Marquee and Blink. tutti(fermo := false) returns
+the list: PageView installs tutti(), and its text-mask twin (the offscreen redraw of
+_prepara_maschera) installs tutti(true), the "fermo" (still) versions, so the layout of the
+mask matches the real page. page_view.gd's TAG_NOTI gained marquee and blink (the tag walk of
+_mappa_allineamenti would otherwise give up on them).
+
+### `scripts/os/midi.gd`
+
+Midi (2026-10-23): Midi.leggi(dati: PackedByteArray) -> Dictionary, an SMF type 0/1 parser:
+notes in SECONDS (tempo map honoured, running status, program change per channel, channel 10 =
+drums). Test: tests/midi_test.gd.
+
+### `scripts/os/midi_synth.gd`
+
+MidiSynth (2026-10-23; owner's choice: MIDI played by a small GDScript synth, not recorded
+audio): renders the notes to 22 kHz mono PCM16 in an AudioStreamWAV with cheap "1997 sound
+card" voices picked by General MIDI program family (square / triangle / saw / sine / pulse
++ ADSR, noise drums, one-pole low-pass and a soft limiter). prepara(path) renders in a
+WorkerThreadPool task and _consegna (on the main thread) fills a static cache; pronto(path)
+says it is done; stream_in_cache(path, loop) reads the cache; stream_da_file(path, loop)
+renders synchronously (tests). Test: tests/midi_test.gd.
 
 ### `scripts/os/catalogo_siti.gd`
 
@@ -278,6 +344,8 @@ dark cell (black on dark: MIN_CONTRASTO), and anything inside
 GameManager/OSContent) so html_bb_test can sweep it headless over
 the real pages; inserisci() injects at ONE given spot, which is what
 lets the tests check every spot of every page.
+2026-10-23: marquee and blink are containers AND MOBILI (in_mobile counter): no rendered key
+spot is offered inside text that moves or blinks (the player could not read it).
 Tests: html_bb_test.gd + web_key_inject.tscn.
 
 ### `web/`
@@ -319,6 +387,22 @@ planned 30 sites: docs/WEB_CATALOG.md. (webnet.html = the user's
 original mockup, ref.)
 
 ## Feature notes
+
+- **Variety, GIFs and audio in pages (2026-10-23).** Owner (Italian, paraphrased): the sites
+  are mostly very similar, almost identical; he wants huge variety, the ability to have GIFs
+  and audio in pages, inspired by 90s web design. His choices: MIDI played by a small
+  GDScript synth (not audio files); engine first plus SIX PILOT SITES restyled in six
+  different styles, the other 24 after he reviews them; placeholder media generated by a
+  script. Pilots (EN+IT): blog (GeoCities teen), calcio (loud fan club), comune (bare 1995,
+  no tables), driver (dark side-bar portal), oroscopo (splash + mystical), ricette (card on
+  gingham); the Style column is in docs/WEB_CATALOG.md. Engine: GifDecoder, WebEffetti, Midi,
+  MidiSynth, the HtmlBB additions (fonts, td widths, marquee, blink, bgsound/embed, tiled
+  background) and the BrowserApp tile + music player, each described in its entry above.
+  Placeholder media: tools/web/media.py writes web/img/*.gif and web/audio/*.mid (four
+  original melodies: jack, inno, valzer, notte); the pictures contain no words. Authoring
+  rules (tags, fonts, media table, Music section, style archetypes): docs/WEB_AUTHORING.md.
+  Not stopped by design: music keeps playing while the browser is minimised. siti_catalogo_test
+  check MEDIA_ESISTONO fails if a page references a media file that does not exist.
 
 - **Page loading** (WTTG2-style): opening a site takes 0.35-1.2 s (random, scaled by the
   page's fake KB), the page stays covered and unclickable meanwhile, and a period status bar

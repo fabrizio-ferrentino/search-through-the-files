@@ -83,6 +83,9 @@ func _initialize() -> void:
 	# 16. lo scanner delle ancore sulle pagine vere
 	_prova_ancore()
 
+	# 17-24: gli strumenti per la varieta' dei siti (2026-10-23)
+	_prova_varieta()
+
 	if _fails.is_empty():
 		print("RISULTATO: PASS (tutti i test superati)")
 	else:
@@ -118,6 +121,115 @@ func _count(name: String, got: String, frag: String, want: int) -> void:
 		print("FAIL  %s — %s presente %d volte (attese %d) in: %s" % [name, frag, cnt, want, got.c_escape()])
 		_fails.append(name)
 
+
+# ============================================================
+# GIF, famiglie di caratteri, colonne, marquee/blink, musica
+# ============================================================
+
+func _prova_varieta() -> void:
+	# 17. GIF animata: decodificata e registrata su un percorso virtuale che [img]
+	# carica; il file c'e' (lo genera tools/web/media.py)
+	var g := HtmlBB.compile("<img src=\"busta.gif\">")
+	_eq("gif_percorso", g, "[img]res://web/img/busta.gif.tex[/img]")
+	var tex := load("res://web/img/busta.gif.tex")
+	if tex is AnimatedTexture and (tex as AnimatedTexture).frames > 1:
+		print("PASS  gif_animata")
+	else:
+		print("FAIL  gif_animata: %s" % [tex])
+		_fails.append("gif_animata")
+	_has("gif_mancante", HtmlBB.compile("<img src=\"non_ce.gif\">"), "_rotta_.imgtex")
+
+	# 18. famiglie: Times -> Tinos, Comic -> Comic Neue, Arial = il sans del tema
+	_has("face_serif", HtmlBB.compile("<font face=\"Times New Roman\">a</font>"), "[font=res://assets/fonts/Tinos-Regular.ttf]a[/font]")
+	_has("face_comic", HtmlBB.compile("<font face=\"Comic Sans MS\">a</font>"), "ComicNeue-Regular.ttf")
+	_eq("face_arial", HtmlBB.compile("<font face=\"Verdana, Arial\">a</font>"), "a")
+	_has("face_mono", HtmlBB.compile("<font face=\"Courier New\">a</font>"), "[code]a[/code]")
+	# grassetto DENTRO un'altra famiglia: il file grassetto, non [b] (che e' Arimo)
+	var bs := HtmlBB.compile("<font face=\"Times\"><b>a</b></font>")
+	_has("serif_b", bs, "Tinos-Bold.ttf")
+	_no("serif_b_no_tema", bs, "[b]")
+	_has("b_serif", HtmlBB.compile("<b><font face=\"Times\">a</font></b>"), "Tinos-Bold.ttf")
+	_has("serif_i", HtmlBB.compile("<font face=\"Georgia\"><i>a</i></font>"), "Tinos-Italic.ttf")
+	_has("serif_h1", HtmlBB.compile("<font face=\"Times\"><h1>T</h1></font>"), "Tinos-Bold.ttf")
+	_has("sans_in_serif", HtmlBB.compile("<font face=\"Times\"><font face=\"Arial\">a</font></font>"), "Arimo-Regular.ttf")
+
+	# 19. colonne con la loro larghezza: la colonna laterale da 160 px, l'altra il resto
+	var lat := HtmlBB.compile("<table width=\"600\" cellpadding=\"4\"><tr><td width=\"160\">menu</td><td>testo</td></tr></table>")
+	_has("td_width_160", lat, "[img width=150 height=1]")
+	_has("td_width_resto", lat, "[img width=430 height=1]")
+	var pct := HtmlBB.compile("<table width=\"100%\" cellpadding=\"0\"><tr><td width=\"25%\">a</td><td>b</td></tr></table>", {"page_width": 800.0})
+	_has("td_width_pct", pct, "[img width=198 height=1]")
+	_has("td_width_pct_resto", pct, "[img width=598 height=1]")
+	# una tabella al 100% DENTRO una cella e' larga quanto la cella, non quanto la pagina
+	var ann := HtmlBB.compile("<table width=\"600\" cellpadding=\"4\"><tr><td width=\"160\">menu</td><td><table width=\"100%\" cellpadding=\"0\"><tr><td>x</td></tr></table></td></tr></table>", {"page_width": 900.0})
+	_has("annidata_della_cella", ann, "[img width=428 height=1]")
+	_no("annidata_non_della_pagina", ann, "[img width=898 height=1]")
+	_has("bordercolor",HtmlBB.compile("<table border=\"1\" bordercolor=\"#FF0000\"><tr><td>a</td></tr></table>"), "border=#FF0000")
+
+	# 20. marquee: riga a se', con larghezza, lunghezza, velocita'; in una cella e' ferma
+	var mq := HtmlBB.compile("<p>prima</p><marquee scrollamount=\"3\">Benvenuti!</marquee><p>dopo</p>", {"page_width": 700.0})
+	_has("marquee", mq, "[left][marquee w=700 len=")
+	_has("marquee_testo", mq, "]Benvenuti![/marquee][/left]")
+	_has("marquee_v", mq, " v=35 dir=l mode=s]")
+	_has("marquee_alt", HtmlBB.compile("<marquee behavior=\"alternate\" direction=\"right\">x</marquee>"), "dir=r mode=a")
+	var mc := HtmlBB.compile("<table><tr><td><marquee>fermo</marquee></td></tr></table>")
+	_has("marquee_cella", mc, "fermo")
+	_no("marquee_cella_ferma", mc, "[marquee")
+	# piu' lungo della pagina: andrebbe a capo, quindi resta fermo
+	var ml := HtmlBB.compile("<marquee>" + "parola ".repeat(60) + "</marquee>", {"page_width": 300.0})
+	_has("marquee_lungo", ml, "parola parola")
+	_no("marquee_lungo_fermo", ml, "[marquee")
+
+	# 21. blink: un tag in linea che sopravvive al <br>
+	_eq("blink", HtmlBB.compile("<blink>a<br>b</blink>"), "[blink]a[/blink]\n[blink]b[/blink]")
+
+	# 22. bgsound / embed: niente testo, la musica nel contesto; il lettore visibile
+	var ctx := {}
+	var bgs := HtmlBB.compile("<bgsound src=\"jack.mid\" loop=\"infinite\">ciao", ctx)
+	_eq("bgsound_muto", bgs, "ciao")
+	var au: Dictionary = ctx.get("audio", {})
+	if str(au.get("path", "")) == "res://web/audio/jack.mid" and bool(au.get("loop")) and bool(au.get("auto")):
+		print("PASS  bgsound_ctx")
+	else:
+		print("FAIL  bgsound_ctx: %s" % [au])
+		_fails.append("bgsound_ctx")
+	var ctx2 := {}
+	var emb := HtmlBB.compile("<embed src=\"inno.mid\" autostart=\"false\" width=\"145\" height=\"40\">", ctx2)
+	_has("embed_play", emb, "[url=" + HtmlBB.META_PLAY + "]")
+	_has("embed_stop", emb, "[url=" + HtmlBB.META_STOP + "]")
+	if not bool((ctx2.get("audio", {}) as Dictionary).get("auto", true)):
+		print("PASS  embed_non_parte")
+	else:
+		print("FAIL  embed_non_parte: %s" % [ctx2])
+		_fails.append("embed_non_parte")
+	_eq("embed_nascosto", HtmlBB.compile("<embed src=\"valzer.mid\" hidden=\"true\" autostart=\"true\">x"), "x")
+
+	# 23. la chiave non finisce mai in testo che scorre o lampeggia
+	var mob := "<html><body><p>Un paragrafo qualunque abbastanza lungo da ospitare la chiave.</p>" \
+			+ "<marquee>Questo testo scorre da destra a sinistra senza fermarsi mai</marquee>" \
+			+ "<p><blink>Questo testo lampeggia senza sosta e non si riesce a leggerlo</blink></p></body></html>"
+	var dentro := 0
+	for a in WA.ancore(mob, true):
+		var pos: int = a["pos"]
+		var m0 := mob.find("<marquee>")
+		var m1 := mob.find("</marquee>")
+		var b0 := mob.find("<blink>")
+		var b1 := mob.find("</blink>")
+		if (pos > m0 and pos <= m1) or (pos > b0 and pos <= b1):
+			dentro += 1
+			print("  ancora %s in testo mobile a %d" % [a["tipo"], pos])
+	if dentro == 0:
+		print("PASS  ancore_fuori_dal_mobile")
+	else:
+		print("FAIL  ancore_fuori_dal_mobile")
+		_fails.append("ancore_fuori_dal_mobile")
+
+	# 24. sfondo a mosaico: la texture di un src (anche GIF)
+	if HtmlBB.texture("stelle.gif") is AnimatedTexture and HtmlBB.texture("quadretti.gif") is ImageTexture:
+		print("PASS  sfondo_texture")
+	else:
+		print("FAIL  sfondo_texture")
+		_fails.append("sfondo_texture")
 
 # ============================================================
 # Scanner delle ancore (WebAnchor) sulle pagine d'autore

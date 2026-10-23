@@ -64,7 +64,10 @@ const MIN_CONTRASTO := 0.55   # scarto di luminanza fondo/testo per dire "cella 
 
 const CONTENITORI := ["p", "div", "center", "blockquote", "ul", "ol", "li", "table",
 	"tr", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6", "form", "font", "a",
-	"b", "i", "u", "s", "code"]
+	"b", "i", "u", "s", "code", "marquee", "blink"]
+# Testo che si muove o sparisce (<marquee>, <blink>): la chiave li' dentro non si
+# potrebbe leggere ne' selezionare, quindi nessuna ancora resa ci finisce.
+const MOBILI := ["marquee", "blink"]
 const VOID_BLOCCO := ["br", "hr"]
 
 # ============================================================
@@ -96,6 +99,7 @@ static func ancore(src: String, visibile: bool) -> Array:
 	var par_titolo := false
 	var in_link := 0
 	var lista_pos := -1
+	var in_mobile := 0             # dentro <marquee>/<blink>
 	# contatori: servono solo a scrivere la nota per il pannello F12
 	var n_par := 0
 	var n_tab := 0
@@ -118,7 +122,7 @@ static func ancore(src: String, visibile: bool) -> Array:
 			if lung >= MIN_TRATTO and not in_titolo and zona == "body":
 				var reso: bool = prof_tab == 0 or in_cella
 				var dove := _nota_testo(par_aperto, n_par, in_cella, n_celle)
-				if visibile and reso and in_link == 0:
+				if visibile and reso and in_link == 0 and in_mobile == 0:
 					var sp := _spazio_centrale(tratto)
 					if sp >= 0:
 						out.append({"pos": i + sp + 1, "tipo": IN_FRASE, "nota": dove})
@@ -227,6 +231,9 @@ static func ancore(src: String, visibile: bool) -> Array:
 				# solo <ul>: in un <ol> una voce in piu' rinumera tutte quelle dopo,
 				# cioe' cambierebbe la pagina anche fuori dal punto d'inserimento
 				lista_pos = -1 if chiude else gt + 1
+
+		if MOBILI.has(nm):
+			in_mobile = maxi(in_mobile - 1, 0) if chiude else in_mobile + 1
 
 		# ---- la pila dei contenitori (tollerante come HtmlBB._rows) ----
 		if chiude:

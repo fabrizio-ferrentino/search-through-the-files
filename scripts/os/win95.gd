@@ -29,6 +29,13 @@ const _FONT_FILES := {
 	"sans_bi": "Arimo-BoldItalic.ttf",
 	"mono": "Cousine-Regular.ttf",
 	"mono_b": "Cousine-Bold.ttf",
+	# solo per le pagine web (face="Times New Roman" / "Comic Sans MS"): vedi HtmlBB._font_file
+	"serif": "Tinos-Regular.ttf",
+	"serif_b": "Tinos-Bold.ttf",
+	"serif_i": "Tinos-Italic.ttf",
+	"serif_bi": "Tinos-BoldItalic.ttf",
+	"comic": "ComicNeue-Regular.ttf",
+	"comic_b": "ComicNeue-Bold.ttf",
 }
 static var _fonts: Dictionary = {}
 
@@ -314,6 +321,52 @@ static func menu_separator() -> Control:
 		sep.draw_line(Vector2(2, y + 1), Vector2(sep.size.x - 2, y + 1), C_LIGHT, 1.0))
 	return sep
 
+# Un tassello in rilievo (il cursore di una trackbar) come texture: bordo 3D doppio di Win95,
+# luce in alto a sinistra, ombra in basso a destra.
+static func _tex_rilievo(w: int, h: int) -> ImageTexture:
+	var im := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	im.fill(C_FACE)
+	for x in range(w):
+		im.set_pixel(x, 0, C_LIGHT)
+		im.set_pixel(x, 1, C_HILIGHT)
+		im.set_pixel(x, h - 1, C_DARK)
+		im.set_pixel(x, h - 2, C_SHADOW)
+	for y in range(h):
+		im.set_pixel(0, y, C_LIGHT)
+		im.set_pixel(1, y, C_HILIGHT)
+		im.set_pixel(w - 1, y, C_DARK)
+		im.set_pixel(w - 2, y, C_SHADOW)
+	im.set_pixel(w - 1, 0, C_DARK)
+	im.set_pixel(0, h - 1, C_DARK)
+	return ImageTexture.create_from_image(im)
+
+# La casella di Win95: quadrato bianco incassato (bordo doppio al contrario del rilievo)
+# e, se segnata, il segno di spunta nero.
+static func _tex_casella(segnata: bool) -> ImageTexture:
+	var n := 20
+	var im := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	im.fill(C_LIGHT)
+	for i in range(n):
+		im.set_pixel(i, 0, C_SHADOW)
+		im.set_pixel(0, i, C_SHADOW)
+		im.set_pixel(i, 1, C_DARK)
+		im.set_pixel(1, i, C_DARK)
+		im.set_pixel(i, n - 1, C_LIGHT)
+		im.set_pixel(n - 1, i, C_LIGHT)
+		im.set_pixel(i, n - 2, C_HILIGHT)
+		im.set_pixel(n - 2, i, C_HILIGHT)
+	if segnata:
+		# la spunta: giu' da sinistra fino in basso, poi su verso destra, spessa 3 px
+		var punti: Array = []
+		for k in range(4):
+			punti.append(Vector2i(5 + k, 9 + k))
+		for k in range(7):
+			punti.append(Vector2i(9 + k, 12 - k))
+		for p in punti:
+			for dy in range(3):
+				im.set_pixel(p.x, p.y + dy, C_DARK)
+	return ImageTexture.create_from_image(im)
+
 static func make_theme() -> Theme:
 	var t := Theme.new()
 	t.default_font = font()
@@ -386,6 +439,39 @@ static func make_theme() -> Theme:
 	t.set_stylebox("grabber", "HScrollBar", _sb(true, C_FACE, true, 12, mezzo, 12, mezzo))
 	t.set_stylebox("grabber_highlight", "HScrollBar", _sb(true, C_FACE, true, 12, mezzo, 12, mezzo))
 	t.set_stylebox("grabber_pressed", "HScrollBar", _sb(false, C_FACE, true, 12, mezzo, 12, mezzo))
+
+	# CURSORI (HSlider/VSlider: il volume del vassoio, le regolazioni del visualizzatore
+	# di immagini). Erano quelli di Godot, scuri e tondi, come le barre prima del 18/09.
+	# In Win98 il cursore e' una "trackbar": un canale incassato e sottile e un tassello in
+	# rilievo che ci scorre sopra. Lo spessore del canale viene dai margini dello stylebox
+	# (Slider lo disegna largo quanto la sua misura minima), il tassello e' un'icona.
+	t.set_stylebox("slider", "VSlider", _sb(false, C_LIGHT, true, 3, 0, 3, 0))
+	t.set_stylebox("slider", "HSlider", _sb(false, C_LIGHT, true, 0, 3, 0, 3))
+	for cls in ["VSlider", "HSlider"]:
+		t.set_stylebox("grabber_area", cls, StyleBoxEmpty.new())
+		t.set_stylebox("grabber_area_highlight", cls, StyleBoxEmpty.new())
+	var tassello_v := _tex_rilievo(30, 16)
+	var tassello_h := _tex_rilievo(16, 30)
+	for nome in ["grabber", "grabber_highlight", "grabber_disabled"]:
+		t.set_icon(nome, "VSlider", tassello_v)
+		t.set_icon(nome, "HSlider", tassello_h)
+
+	# CASELLE DI CONTROLLO (CheckBox): il quadratino bianco incassato col segno nero, senza
+	# il pulsante intorno (in Win95 una casella non ha cornice: solo il quadrato e il testo).
+	var vuota := _tex_casella(false)
+	var segnata := _tex_casella(true)
+	t.set_icon("unchecked", "CheckBox", vuota)
+	t.set_icon("unchecked_disabled", "CheckBox", vuota)
+	t.set_icon("checked", "CheckBox", segnata)
+	t.set_icon("checked_disabled", "CheckBox", segnata)
+	for st in ["normal", "pressed", "hover", "hover_pressed", "focus", "disabled"]:
+		var vuoto := StyleBoxEmpty.new()
+		vuoto.set_content_margin_all(2)
+		t.set_stylebox(st, "CheckBox", vuoto)
+	for c in ["font_color", "font_pressed_color", "font_hover_color", "font_hover_pressed_color", "font_focus_color"]:
+		t.set_color(c, "CheckBox", C_TEXT)
+	t.set_color("font_disabled_color", "CheckBox", C_SHADOW)
+	t.set_constant("h_separation", "CheckBox", 6)
 
 	# Label / ScrollContainer
 	t.set_color("font_color", "Label", C_TEXT)

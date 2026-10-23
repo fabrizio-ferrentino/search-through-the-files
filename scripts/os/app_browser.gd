@@ -16,6 +16,7 @@ var _addr: LineEdit
 var _digitato := ""                    # ultimo indirizzo scritto a mano (vedi _load)
 var _rtl: PageView                  # la pagina: un solo documento BBCode
 var _page_bg: ColorRect
+var _page_tile: TextureRect          # <body background="...">: lo sfondo a mosaico
 var _inspector: VBoxContainer
 var _inspector_edit: TextEdit
 
@@ -82,6 +83,15 @@ var _globo: OSIcon = null              # l'icona accanto all'indirizzo: lampeggi
 var _in_carica := false                # sta arrivando qualcosa (vedi is_loading)
 var _tw_carica: Tween = null
 var _tw_globo: Tween = null
+
+# La musica della pagina (<bgsound>/<embed>, vedi HtmlBB._audio): parte quando la
+# pagina ha finito di arrivare, si ferma cambiando pagina, ricaricando, interrompendo
+# o chiudendo la finestra. Un MIDI va prima "suonato" in un thread (MidiSynth):
+# _musica_attesa e' il file che si sta aspettando.
+var _musica: AudioStreamPlayer = null
+var _audio_pagina: Dictionary = {}
+var _musica_attesa := ""
+const MUSICA_DB := -6.0
 
 func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -207,6 +217,13 @@ func launch(arg) -> void:
 	_page_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	page_area.add_child(_page_bg)
 
+	# lo sfondo a mosaico sta fra il colore e la pagina, e scorre con lei
+	_page_tile = TextureRect.new()
+	_page_tile.stretch_mode = TextureRect.STRETCH_TILE
+	_page_tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_page_tile.visible = false
+	page_area.add_child(_page_tile)
+
 	# La pagina: un PageView (RichTextLabel specializzato, scripts/os/page_view.gd).
 	# Lui gestisce clic vs trascinamento, selezione e forma del cursore: il nodo
 	# nudo, con l'input inoltrato nella SubViewport, selezionava una frase a ogni
@@ -221,6 +238,12 @@ func launch(arg) -> void:
 	_rtl.meta_clicked.connect(_on_meta)         # UNICO meccanismo di navigazione
 	_rtl.resized.connect(_on_page_resized)
 	page_area.add_child(_rtl)
+	_rtl.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _sposta_mosaico())
+	page_area.resized.connect(_sposta_mosaico)
+
+	_musica = AudioStreamPlayer.new()
+	_musica.volume_db = MUSICA_DB
+	add_child(_musica)
 
 	# Il VELO: mentre la pagina "arriva" non si deve poter leggere ne' cliccare
 	# niente. Sta sopra al PageView (aggiunto dopo = disegnato dopo) ed e' STOP,
@@ -298,6 +321,7 @@ static func read_page(name: String) -> String:
 	return ""
 
 func _load(name: String) -> void:
+	_ferma_musica()
 	if name == "":
 		name = _home
 	var chiesto := name        # quello che si voleva aprire: serve alla barra se e' una 404
@@ -349,9 +373,11 @@ func _load(name: String) -> void:
 # set_page() azzera selezione, scroll e stato di hover del link.
 func _render_html(body: String) -> void:
 	_page_bg.color = _body_bg(_html_text)
+	_imposta_mosaico(_body_attr(_html_text, "background"))
 	_rtl.add_theme_color_override("default_color", _body_text(_html_text))
 	var ctx := {"link_color": _body_link(_html_text), "page_width": _page_width()}
 	_rtl.set_page(HtmlBB.compile(body, ctx))
+	_audio_pagina = ctx.get("audio", {})
 	# le tabelle con width="N%" dipendono dalla larghezza: se la pagina ne ha,
 	# ricompiliamo quando la finestra cambia misura (come il reflow di un browser)
 	_reflow_width = _page_width() if bool(ctx.get("uses_width", false)) else -1.0
@@ -371,6 +397,13 @@ func _on_page_resized() -> void:
 # Un link cliccato: relativo = una pagina dello STESSO sito, assoluto = un altro sito o il
 # portale (WebRuntime.risolvi_link). Se non porta da nessuna parte la barra mostra il link.
 func _on_meta(meta) -> void:
+	# i pulsanti del lettore di un <embed> non sono indirizzi
+	if str(meta) == HtmlBB.META_PLAY:
+		_suona()
+		return
+	if str(meta) == HtmlBB.META_STOP:
+		_ferma_musica()
+		return
 	var dove := WebRuntime.risolvi_link(str(meta), _current)
 	_digitato = ""          # si e' cliccato un link: non c'e' niente di digitato
 	if dove == "":
@@ -511,6 +544,78 @@ func _body_attr(html: String, name: String) -> String:
 		if gt > bi:
 			return _attr(html.substr(bi, gt - bi), name)
 	return ""
+
+# ---------------- sfondo a mosaico ----------------
+
+func _imposta_mosaico(src: String) -> void:
+	var tex: Texture2D = HtmlBB.texture(src) if src.strip_edges() != "" else null
+	_page_tile.texture = tex
+	_page_tile.visible = tex != null
+	_sposta_mosaico()
+
+# Il mosaico scorre con la pagina: si sposta di quanto e' scorsa, modulo una
+# piastrella, e copre sempre l'area visibile piu' una piastrella di scorta.
+func _sposta_mosaico() -> void:
+	if _page_tile == null or _page_tile.texture == null:
+		return
+	var area: Vector2 = (_page_tile.get_parent() as Control).size
+	var th: float = maxf(1.0, float(_page_tile.texture.get_height()))
+	var scorso: float = _rtl.get_v_scroll_bar().value if _rtl != null else 0.0
+	_page_tile.position = Vector2(0.0, -fposmod(scorso, th))
+	_page_tile.size = Vector2(area.x, area.y + th)
+
+# ---------------- musica della pagina ----------------
+
+func _suona() -> void:
+	var path := str(_audio_pagina.get("path", ""))
+	if path == "" or _musica == null:
+		return
+	var loop := bool(_audio_pagina.get("loop", false))
+	if path.get_extension().to_lower() == "mid":
+		var s := MidiSynth.stream_in_cache(path, loop)
+		if s != null:
+			_avvia_musica(s)
+		elif not MidiSynth.pronto(path):
+			# il MIDI va prima "suonato": in un thread, e intanto si aspetta
+			_musica_attesa = path
+			MidiSynth.prepara(path)
+			set_process(true)
+		return
+	var st := load(path) as AudioStream
+	if st is AudioStreamOggVorbis:
+		(st as AudioStreamOggVorbis).loop = loop
+	elif st is AudioStreamWAV and loop:
+		(st as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+	if st != null:
+		_avvia_musica(st)
+
+func _avvia_musica(st: AudioStream) -> void:
+	_musica_attesa = ""
+	_musica.stream = st
+	_musica.play()
+
+func _ferma_musica() -> void:
+	_musica_attesa = ""
+	if _musica != null:
+		_musica.stop()
+
+# Vero mentre la pagina sta suonando (i test lo usano).
+func sta_suonando() -> bool:
+	return _musica != null and _musica.playing
+
+# Vero mentre si aspetta che il MIDI della pagina sia pronto.
+func musica_in_attesa() -> bool:
+	return _musica_attesa != ""
+
+func _process(_delta: float) -> void:
+	if _musica_attesa == "":
+		set_process(false)
+		return
+	if MidiSynth.pronto(_musica_attesa):
+		var s := MidiSynth.stream_in_cache(_musica_attesa, bool(_audio_pagina.get("loop", false)))
+		_musica_attesa = ""
+		if s != null:
+			_avvia_musica(s)
 
 func _body_bg(html: String) -> Color:
 	var bg := HtmlBB._col(_body_attr(html, "bgcolor"))
@@ -835,6 +940,8 @@ func _fine_caricamento(page: String) -> void:
 	_avanzamento(1.0)
 	_stato_lbl.text = tr("BR_DONE") % WebRuntime.host_of(page)
 	_aggiorna_pulsanti()
+	if bool(_audio_pagina.get("auto", false)):
+		_suona()
 	load_finished.emit(page)
 
 # Il pulsante "interrompi": FERMA l'arrivo dei dati e lascia la pagina A META'.
@@ -851,6 +958,7 @@ func _interrompi() -> void:
 		_tw_carica.kill()
 	_in_carica = false
 	_globo_acceso(false)
+	_ferma_musica()             # la musica non era ancora arrivata: non arrivera'
 	_stato_lbl.text = tr("BR_STOPPED")
 	_aggiorna_pulsanti()
 	load_finished.emit(_current)

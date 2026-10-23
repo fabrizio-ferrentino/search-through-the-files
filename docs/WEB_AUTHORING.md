@@ -36,7 +36,7 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 | HTML | Renders as |
 |---|---|
 | `<b> <i> <u>` | bold / italic / underline |
-| `<font color="#..." size="1..7">` | color + size (`face` is ignored) |
+| `<font color="#..." size="1..7" face="...">` | color + size + family (see Fonts) |
 | `<h1>..<h6>` | bold heading sizes |
 | `<br>`, `<p>`, `<p align="center/right">` | line break / paragraph (blank line) / aligned paragraph |
 | `<center>`, `<div align="center">` | centered block |
@@ -44,7 +44,12 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 | `<hr>`, `<hr width="50%" size="4" color="#...">` | native horizontal rule |
 | `<ul><li>`, `<ol><li>` | • bullets / numbered list |
 | `<blockquote>` | indented block (forum quotes) |
-| `<img src="file.png" width="W" height="H">` | image from `web/img/` (see below) |
+| `<img src="file.png" width="W" height="H">` | image from `web/img/`, PNG or **animated GIF** (see below); inside `<a>` it is a clickable picture |
+| `<body background="tile.gif">` | **tiled background** (PNG or GIF, animated too) that scrolls with the page; keep `bgcolor` too, it shows while loading |
+| `<marquee>` | **scrolling line** (`scrollamount`, `scrolldelay`, `direction="right"`, `behavior="alternate"`, `width="N"`); top level only, and it must FIT ON ONE LINE (about 90 characters at size 3 in a full-width window): inside a table cell, or when longer than the page, it is shown STILL, as Netscape did |
+| `<blink>` | **blinking** text |
+| `<bgsound src="tune.mid" loop="infinite">` | **background music** from `web/audio/` (`.mid`, or `.wav`/`.ogg`); starts when the page has finished loading; no `loop` = plays once |
+| `<embed src="tune.mid" autostart="true/false" hidden="true" loop="true">` | music too; NOT hidden = a small period player (play ► / stop ■) drawn on the page |
 | `<input type="text/submit" value="...">` | DECORATIVE only (`[ Value ]` / underline). **Not used in the sites** (owner, 2026-10-20): a field that cannot be typed in is a broken promise, so `siti_catalogo_test` forbids it; write the login or the search as closed instead |
 | `<table> <tr> <td> <th>` | real table, see below |
 | entities | `&nbsp; &copy; &raquo; &laquo; &middot; &hellip; &quot; &mdash; &deg; &lt; &gt; &amp;` |
@@ -62,6 +67,10 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 - `border="1"` → gray cell borders; `cellpadding="N"` → cell padding;
   `bgcolor` on `<table>`, `<tr>` or `<td>` (most specific wins).
 - `<th>` = bold + centered. `<td align="center/right">` supported.
+- **`<td width="160">` / `width="25%"` WORK** (since 2026-10-23): the first row that declares
+  widths fixes its columns, the others share what is left of the table's `width`. This is the
+  period **side-bar layout**: `<table width="100%"><tr><td width="170" bgcolor="#000033">menu</td><td>content</td></tr></table>`.
+- `bordercolor="#..."` on `<table>` colours the cell borders (default grey).
 - Nested tables work.
 - `cellspacing` is always **0**: cells sit flush against each other (the theme
   sets `table_*_separation` to 0), which is how these pages were authored.
@@ -128,29 +137,26 @@ Why the subclass is needed (all verified with `tests/browser_click_test.gd`):
 ### NOT supported (do not use)
 
 CSS (classes, `style=`), `colspan`/`rowspan`, `<span>`, `<form>` logic,
-`<script>`, `cellspacing`, `bordercolorlight/dark` (parsed but ignored).
-
-`face=` is **partially** supported: anything containing *courier*, *mono* or
-*fixedsys* switches to the monospace font, everything else uses the page sans.
-That covers what the pages actually ask for (`Arial`, `Verdana`, `Helvetica`,
-`Arial Black` all mean "the sans" here).
+`<script>`, `cellspacing`, `bordercolorlight/dark` (parsed but ignored), `valign`,
+floating images (`<img align="left">`: an image sits in the line), frames.
 
 ## Fonts
 
-The OS and the pages share two bundled families (`assets/fonts/`, SIL OFL 1.1),
-both metric-compatible clones of what the 90s web actually used:
+Four bundled families (`assets/fonts/`, SIL OFL 1.1), clones of what the 90s web used.
+`face=` picks one (a list like `"Verdana, Arial"` takes the first it recognises):
 
-| Family | Clone of | Where |
+| `face=` contains | Family | Clone of |
 |---|---|---|
-| Arimo | Arial / Helvetica | OS chrome + page body, `<b>`, `<i>` |
-| Cousine | Courier New | `face="Courier New"` runs |
+| arial, helvetica, verdana, tahoma, impact, sans (or no face) | Arimo | Arial — the page default |
+| times, serif, georgia, garamond, palatino, book, century | **Tinos** | Times New Roman (regular, bold, italic, bold italic) |
+| comic | **Comic Neue** | Comic Sans (regular, bold; no italic) |
+| courier, mono, fixedsys, console | Cousine | Courier New |
 
-They are wired once in `Win95.make_theme()` (`default_font` plus the
-RichTextLabel `normal/bold/italics/bold_italics/mono_font` slots), so a page gets
-them for free — do not set fonts per page. Note that Godot's `[b]` always uses
-the theme's bold slot, so a run cannot be both "a different family" and bold;
-that is why `face=` maps to the two families above instead of pushing arbitrary
-fonts.
+Arimo and Cousine come from the theme (`Win95.make_theme()`); Tinos and Comic Neue are
+pushed by HtmlBB with `[font=file]`, and a `<b>`, `<i>` or `<hN>` inside them picks the
+right file of the same family (Godot's `[b]` alone would switch back to Arimo Bold). A
+`<font face>` does not cross into a table: each cell starts again from Arimo, so set the
+face inside the cells too (that is also how period pages were written).
 
 ## Images
 
@@ -162,8 +168,41 @@ and ship automatically). Reference them by bare filename:
 ```
 
 A missing file renders a drawn "broken image" placeholder (gray box + red X)
-— the page never errors. Current placeholders (`avatar1-3.png`, `occhio.png`)
-are procedural; replace them with authored art freely.
+— the page never errors, but `siti_catalogo_test` (MEDIA_ESISTONO) fails on it: a broken
+image ON PURPOSE goes in that test's `MEDIA_ROTTI` list.
+
+**GIFs** (animated or not) are decoded by `scripts/os/gif_decoder.gd` the first time a page
+shows them, and kept: Godot does not import `.gif`, so they ship as plain files (see the
+export note). Transparency, per-frame delays and frame disposal work.
+
+**The placeholder media** are drawn by `tools/web/media.py` (stdlib Python: re-run it to
+regenerate, or replace any file keeping its name). Rule: **no words inside a picture** — an
+image is the same in both languages — only pictograms and digits; no real brands.
+
+| File | What |
+|---|---|
+| `cantiere.gif` | under-construction sign, animated |
+| `busta.gif` / `globo.gif` / `smile.gif` / `nuovo.gif` | spinning envelope / spinning globe / bouncing smiley / flashing star burst |
+| `fiamme.gif` / `arcobaleno.gif` (480x18 / 480x6) | flame divider (animated) / rainbow divider |
+| `floppy.gif` / `ingranaggio.gif` | floppy with a falling arrow / turning gear |
+| `pallone.gif` / `pentola.gif` / `fiore.gif` / `stemma.gif` | bouncing ball / steaming pot / flower / town coat of arms |
+| `zodiaco.gif` (160x160) | turning zodiac wheel with the moon |
+| `contatore_jack.gif`, `contatore_grifoni.gif`, `contatore_stelle.gif` | hit counters (green digits) |
+| `bottone_monitor.gif`, `bottone_modem.gif`, `bottone_dischetto.gif` | 88x31 badges |
+| `stelle.gif` (animated night sky), `griglia.gif` (neon grid), `quadretti.gif` (gingham), `pergamena.gif` (parchment), `metallo.gif` (brushed metal) | tiles for `<body background>` |
+| `web/audio/`: `jack.mid` (pop loop), `inno.mid` (stadium anthem), `valzer.mid` (accordion waltz), `notte.mid` (night pad) | page music |
+
+## Music
+
+`<bgsound>` / `<embed>` play a file from **`web/audio/`**. MIDI is the period format and
+the default: Godot cannot play it, so `scripts/os/midi.gd` reads the file and
+`scripts/os/midi_synth.gd` renders it with cheap "1997 sound card" voices (square,
+triangle, saw, noise drums; the General MIDI program picks the voice) in a thread, then
+caches it — so the music starts a moment after the page, as it did. `.wav` / `.ogg` work
+too. The music stops when the player leaves the page, reloads, presses Stop while loading,
+or closes the browser; minimising the window does not stop it (it did not in 1999 either).
+The player can mute it or lower it with the speaker icon in the tray (next to the clock), and
+outside the PC the music comes from the desk, muffled. Use it sparingly: a page that plays music also covers the sounds of the room.
 
 ## Adding a site
 
@@ -242,6 +281,28 @@ hardcode a key in a page — it changes every run.
 
 ## Style templates
 
+**Every site must look like itself** (owner, 2026-10-23: "most sites are very similar, if
+not identical"). Until then nearly all of them shared one skeleton — a coloured 100% banner
+table, a light 100% nav-bar table, Arial paragraphs, a centred footer — with different
+colours. Each site now has its own **style archetype** in [WEB_CATALOG.md](WEB_CATALOG.md)
+(column "Style"); never reuse another site's skeleton. The 90s web had many genuinely
+different shapes, and the HTML subset now covers them:
+
+- **Bare academic / institutional** — grey default background, no colours, Times, `<h1>`,
+  `<ul>` of links, `<hr>`, "last updated", no tables at all.
+- **Personal homepage (GeoCities)** — tiled background, Comic, everything centred,
+  animated GIFs, a hit counter, a MIDI, a marquee, a guestbook, a "web ring" row.
+- **Side-bar portal** — a dark left column of links (`<td width>`), content on the right,
+  88x31 badges at the bottom of the column.
+- **Splash page** — an index that is only a big picture and an "enter" link.
+- **Newspaper** — Times masthead, date line, serif columns.
+- **Loud fan site** — flames, blinking, marquees, a visible MIDI player.
+- **Card on a tiled background** — a narrow centred white table on gingham or parchment.
+- **Terminal / hacker** — black, green Courier, ASCII art.
+
+The examples below predate the archetypes: use them for structure (threads, archives,
+listings), not for the look.
+
 - **Complex community site** → `web/pages/en/forum/` (banner with tagline, a navigation
   bar on every page, section listings with alternating row colors, per-post tables with
   an author column, avatar `<img>` and `<blockquote>` quotes, a member list, a profile, the
@@ -252,8 +313,8 @@ hardcode a key in a page — it changes every run.
   with a byline, an archive listing).
 - **Shop** → `web/pages/en/shop/` (catalog grid, product pages, a fake cart and terms).
 - **Forum-style posts** → `web/pages/en/vincente/thread_diary.html` or `lavoro/` (one
-  cell per post, author and date on top: a narrow author COLUMN would take half the
-  table, because the declared widths of several columns are split evenly).
+  cell per post, author and date on top; a narrow author column is now possible with
+  `<td width>`).
 - **Chat log, minimal dark page** → `web/pages/en/chat/` and `nessuno/`.
 - **Portal / listing** → the generated home (`WebRuntime.home_html()`).
 
@@ -270,6 +331,10 @@ hardcode a key in a page — it changes every run.
 & $godot --path $proj res://tests/browser_click_test.tscn
 # gate storico della selezione nella SubViewport (finestra)
 & $godot --path $proj -s res://tests/selection_ghost.gd
+# GIF, MIDI, e la musica/lo sfondo/gli effetti nel browser (headless)
+& $godot --headless --path $proj -s res://tests/gif_test.gd
+& $godot --headless --path $proj -s res://tests/midi_test.gd
+& $godot --headless --path $proj res://tests/web_media_test.tscn
 ```
 
 The e2e test saves screenshots of every showcase page for eyeballing.
@@ -277,6 +342,7 @@ The e2e test saves screenshots of every showcase page for eyeballing.
 ## Export note
 
 PNGs in `web/img/` are imported resources and ship automatically. The
-`web/pages/<lang>/*.html` files are NOT resources: the export preset must include
+`web/pages/<lang>/*.html` files, the `web/img/*.gif` and the `web/audio/*.mid` files are
+NOT resources: the export preset must include
 `web/**` as non-resource files — **recursively**, or a language folder ships empty
 (TODO when the preset exists, see CLAUDE.md).

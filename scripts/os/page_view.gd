@@ -54,6 +54,9 @@ func _init() -> void:
 	drag_and_drop_selection_enabled = false # niente DnD dentro la SubViewport
 	autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mouse_default_cursor_shape = Control.CURSOR_ARROW
+	# <marquee> e <blink> (HtmlBB li compila in [marquee]/[blink])
+	for fx in WebEffetti.tutti():
+		install_effect(fx)
 
 func _ready() -> void:
 	# Con la rotellina il testo scorre SOTTO un mouse fermo: senza questo il
@@ -221,7 +224,7 @@ const A_IGNOTO := -1
 const TAG_NOTI := ["b", "i", "u", "s", "code", "color", "bgcolor", "fgcolor",
 	"font", "font_size", "table", "cell", "url", "center", "left", "right",
 	"fill", "indent", "ul", "ol", "li", "p", "img", "hr", "mono", "outline_size",
-	"outline_color"]
+	"outline_color", "marquee", "blink"]
 
 # Ricostruisce l'allineamento di ogni carattere camminando il BBCode. Il punto
 # delicato: contare i caratteri esattamente come l'engine. Invece di fidarsi si
@@ -354,6 +357,9 @@ func _prepara_maschera(bbcode: String) -> void:
 	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var gemello := RichTextLabel.new()
 	gemello.bbcode_enabled = true
+	# gli stessi tag della pagina, ma fermi: il gemello deve impaginare identico
+	for fx in WebEffetti.tutti(true):
+		gemello.install_effect(fx)
 	gemello.theme = _tema()
 	gemello.autowrap_mode = autowrap_mode
 	gemello.tab_size = tab_size

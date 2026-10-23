@@ -9,8 +9,9 @@ extends RefCounted
 #
 # Sottoinsieme supportato: b/i/u, font(color/size/face), h1-h6, br, p(align),
 # center, div(align), a(href), hr(width/size/color), ul/ol/li, blockquote,
-# img(src/width/height), input(type/value), table/tr/td/th (border/bgcolor/
-# cellpadding/width/align; bgcolor per riga e per cella, align per cella).
+# img(src/width/height, anche GIF animate), input(type/value), table/tr/td/th
+# (border/bordercolor/bgcolor/cellpadding/width/align; bgcolor, align e width per
+# cella), marquee, blink, bgsound/embed (la musica: vedi ctx["audio"]).
 # NON supportati: CSS, colspan/rowspan.
 #
 # NOTE comportamento RichTextLabel (verificato in tests/table_width_probe e
@@ -24,8 +25,10 @@ extends RefCounted
 #   dentro <center>/<div align="center"> vengono centrate.
 # - la selezione include le celle solo se ATTRAVERSA tutta la tabella;
 # - [hr] e' nativo in Godot 4.6.
-# - face=: "Courier New"/monospace -> [code] (slot mono del tema); gli altri
-#   restano il sans del tema (Arimo ~ Arial), che e' cio' che le pagine chiedono.
+# - face=: "Courier New"/monospace -> [code] (slot mono del tema); Times/serif ->
+#   Tinos, Comic -> Comic Neue, con [font=file]; il resto e' il sans del tema
+#   (Arimo ~ Arial). Dentro un face non-sans <b>/<i> scelgono il FILE grassetto/
+#   corsivo della stessa famiglia: [b] userebbe il grassetto del tema (Arimo).
 # ============================================================
 
 const IMG_DIR := "res://web/img/"
@@ -33,6 +36,18 @@ const IMG_DIR := "res://web/img/"
 # Immagine 1x1 trasparente: allarga una tabella a una misura precisa senza
 # comparire (il vecchio trucco dello "spacer.gif" del web anni '90).
 const SPACER_IMG := "res://web/img/spacer.png"
+
+# Musica delle pagine (<bgsound>/<embed>): file .mid (o .wav/.ogg) in web/audio/.
+const AUDIO_DIR := "res://web/audio/"
+
+# Il lettore d'epoca disegnato al posto di un <embed> visibile: due link "finti"
+# che il browser intercetta prima di risolverli come indirizzi (BrowserApp._on_meta).
+const META_PLAY := "__audio:play"
+const META_STOP := "__audio:stop"
+
+# marquee: velocita' predefinita come in IE (scrollamount 6 px ogni 85 ms)
+const MARQUEE_PASSO := 6.0
+const MARQUEE_RITARDO := 0.085
 
 const _ENTITIES := {
 	"&nbsp;": " ", "&copy;": "©", "&raquo;": "»", "&laquo;": "«",
@@ -45,6 +60,9 @@ const _H_PX := {"h1": 30, "h2": 24, "h3": 20, "h4": 18, "h5": 15, "h6": 13}
 static var _ws_re: RegEx
 static var _nl_re: RegEx
 static var _broken_tex: ImageTexture
+static var _gif: Dictionary = {}          # percorso del file -> texture (tenuta viva qui)
+static var _tag_re: RegEx
+static var _size_re: RegEx
 
 # Compila il BODY (gia' senza commenti) in BBCode. ctx: "link_color" (es. "#0000ee").
 static func compile(body: String, ctx: Dictionary = {}) -> String:
@@ -116,7 +134,11 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 				elif al == "right":
 					out += _push(stack, "p", "[right]", "[/right]")
 			"h1", "h2", "h3", "h4", "h5", "h6":
-				out += "\n" + _push(stack, nm, "[font_size=%d][b]" % int(_H_PX[nm]), "[/b][/font_size]")
+				var hf := _file_di(stack, true, false)
+				if hf != "":
+					out += "\n" + _push(stack, nm, "[font_size=%d][font=%s]" % [int(_H_PX[nm]), hf], "[/font][/font_size]", {"b": true})
+				else:
+					out += "\n" + _push(stack, nm, "[font_size=%d][b]" % int(_H_PX[nm]), "[/b][/font_size]", {"b": true})
 			"ul", "ol":
 				lists.push_back({"type": nm, "n": 0})
 				out += "\n"
@@ -131,13 +153,30 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 				out += _close_all(stack) + "\n" + _hr(tag) + "\n" + _reopen_all(stack)
 			"img":
 				out += _img(tag)
+			"marquee":
+				var fine_m := html.findn("</marquee", i)
+				if fine_m < 0:
+					fine_m = n
+				out += _marquee(tag, html.substr(i, fine_m - i), stack, ctx)
+				var gm := html.find(">", fine_m)
+				i = (gm + 1) if gm >= 0 else n
+			"blink":
+				out += _push(stack, "blink", "[blink]", "[/blink]")
+			"bgsound", "embed":
+				out += _audio(nm, tag, stack, ctx)
 			"input":
 				if _attr(tag, "type").to_lower() == "submit":
 					out += "[lb] " + _txt(_attr(tag, "value")) + " [rb]"
 				else:
 					out += "[u]          [/u]"
-			"b", "i", "u":
-				out += _push(stack, nm, "[%s]" % nm, "[/%s]" % nm)
+			"b", "i":
+				var bf := _file_di(stack, nm == "b", nm == "i")
+				if bf != "":
+					out += _push(stack, nm, "[font=" + bf + "]", "[/font]", {nm: true})
+				else:
+					out += _push(stack, nm, "[%s]" % nm, "[/%s]" % nm, {nm: true})
+			"u":
+				out += _push(stack, nm, "[u]", "[/u]")
 			"center":
 				out += _push(stack, "center", "[center]", "[/center]")
 			"div":
@@ -153,10 +192,19 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 			"font":
 				var open := ""
 				var close := ""
-				var face := _attr(tag, "face").to_lower()
-				if face.find("courier") >= 0 or face.find("mono") >= 0 or face.find("fixedsys") >= 0:
+				var extra := {}
+				var fam := famiglia(_attr(tag, "face"))
+				if fam == "mono":
 					open += "[code]"                     # slot mono del tema
 					close = "[/code]" + close
+				elif fam != "":
+					# un'altra famiglia: il file giusto per grassetto/corsivo correnti. Il
+					# sans dentro il sans del tema non ha bisogno di niente.
+					var st := _stato(stack)
+					if fam != "sans" or str(st["fam"]) != "sans":
+						open += "[font=" + _font_file(fam, bool(st["b"]), bool(st["i"])) + "]"
+						close = "[/font]" + close
+					extra["fam"] = fam
 				var col := _attr(tag, "color")
 				if col != "":
 					open += "[color=" + _col(col) + "]"
@@ -165,7 +213,7 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 				if sz != "":
 					open += "[font_size=%d]" % int(_FONT_PX.get(sz.strip_edges(), 16))
 					close = "[/font_size]" + close
-				out += _push(stack, "font", open, close)
+				out += _push(stack, "font", open, close, extra)
 			_:
 				pass   # tag sconosciuto: il contenuto scorre comunque
 	out += _close_all(stack)
@@ -193,6 +241,147 @@ static func _hr(tag: String) -> String:
 		bb += " width=100%"
 	return bb + "]"
 
+# <marquee>: la riga che scorre (effetto [marquee] di web_effetti.gd). Dentro una
+# cella di tabella diventa testo fermo: la cella non sa quanto e' larga e il testo
+# scorrerebbe sopra le vicine -- ed e' anche cio' che faceva Netscape, che il
+# marquee non lo conosceva e lo mostrava immobile.
+static func _marquee(tag: String, interno: String, stack: Array, ctx: Dictionary) -> String:
+	var testo := _walk(interno, ctx).replace("\n", " ").strip_edges()
+	if testo == "":
+		return ""
+	if int(ctx.get("_in_cella", 0)) > 0:
+		return testo
+	ctx["uses_width"] = true
+	var largo := float(ctx.get("page_width", 0.0))
+	if largo <= 0.0:
+		largo = 600.0
+	var w_attr := _attr(tag, "width").strip_edges()
+	if w_attr != "" and not w_attr.ends_with("%"):
+		largo = minf(largo, w_attr.to_float())
+	# quanto e' lungo il testo: misurato col font della pagina, al corpo in vigore
+	var corpo := 16
+	if _size_re == null:
+		_size_re = RegEx.create_from_string("font_size=(\\d+)")
+	for m in _size_re.search_all(_reopen_all(stack) + testo):
+		corpo = int(m.get_string(1))
+	var lungo := Win95.font("sans_b").get_string_size(_solo_testo(testo),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, corpo).x + 8.0
+	# piu' lungo della pagina: il RichTextLabel lo andrebbe a capo e le righe
+	# scorrerebbero una sotto l'altra. Resta fermo, come in Netscape (la regola per
+	# chi scrive: un marquee sta su una riga)
+	if lungo > largo:
+		return _close_all(stack) + "\n" + _reopen_all(stack) + testo + _close_all(stack) + "\n" + _reopen_all(stack)
+	var passo := _attr(tag, "scrollamount").to_float()
+	var ritardo := _attr(tag, "scrolldelay").to_float() / 1000.0
+	var v := (passo if passo > 0.0 else MARQUEE_PASSO) / (ritardo if ritardo >= 0.02 else MARQUEE_RITARDO)
+	var dir := "r" if _attr(tag, "direction").to_lower() == "right" else "l"
+	var modo := "a" if _attr(tag, "behavior").to_lower() == "alternate" else "s"
+	var fx := "[marquee w=%d len=%d v=%d dir=%s mode=%s]" % [int(largo), int(lungo), int(v), dir, modo]
+	return _close_all(stack) + "\n" + _reopen_all(stack) + "[left]" + fx + testo \
+			+ "[/marquee][/left]" + _close_all(stack) + "\n" + _reopen_all(stack)
+
+# <bgsound src loop> / <embed src autostart hidden loop>: la musica della pagina.
+# Non si vede niente: la sorgente finisce in ctx["audio"] (la prima vince, come nei
+# browser) e la suona BrowserApp quando la pagina ha finito di arrivare. Un <embed>
+# NON nascosto disegna il lettore d'epoca: due pulsanti, play e stop.
+static func _audio(nm: String, tag: String, stack: Array, ctx: Dictionary) -> String:
+	var src := _attr(tag, "src").strip_edges()
+	if src == "":
+		return ""
+	var loop := _attr(tag, "loop").strip_edges().to_lower()
+	var auto := true
+	var visibile := false
+	if nm == "embed":
+		auto = _attr(tag, "autostart").strip_edges().to_lower() == "true"
+		visibile = _attr(tag, "hidden").strip_edges().to_lower() != "true"
+	if not ctx.has("audio"):
+		ctx["audio"] = {
+			"src": src,
+			"path": audio_path(src),
+			# bgsound: loop="-1"/"infinite" = per sempre, se manca suona una volta;
+			# embed: loop="true"
+			"loop": loop == "-1" or loop == "infinite" or loop == "true",
+			"auto": auto,
+		}
+	if not visibile:
+		return ""
+	var tasti := "[url=%s][color=#000000] ► [/color][/url][color=#808080]|[/color][url=%s][color=#000000] ■ [/color][/url]" % [META_PLAY, META_STOP]
+	return _close_all(stack) + "\n[table=1][cell bg=#C0C0C0 border=#808080 padding=6,2,6,2]" \
+			+ tasti + "[/cell][/table]\n" + _reopen_all(stack)
+
+# Percorso del file audio di una pagina ("" se non c'e').
+static func audio_path(src: String) -> String:
+	var p := src.strip_edges()
+	if p == "":
+		return ""
+	if not p.begins_with("res://"):
+		p = AUDIO_DIR + p.get_file()
+	return p if FileAccess.file_exists(p) or ResourceLoader.exists(p) else ""
+
+# Il testo di un pezzo di BBCode, senza tag (serve a misurarne la lunghezza).
+static func _solo_testo(bb: String) -> String:
+	if _tag_re == null:
+		_tag_re = RegEx.create_from_string("\\[[^\\]]*\\]")
+	return _tag_re.sub(bb, "", true)
+
+# ---------------- famiglie di caratteri ----------------
+
+# La famiglia di un face= ("Verdana, Arial" -> la prima che si riconosce):
+# "mono", "comic", "serif", "sans", oppure "" se il face manca.
+static func famiglia(face: String) -> String:
+	if face.strip_edges() == "":
+		return ""
+	for pezzo in face.to_lower().split(","):
+		var f := pezzo.strip_edges()
+		if f == "":
+			continue
+		if f.find("courier") >= 0 or f.find("mono") >= 0 or f.find("fixedsys") >= 0 \
+				or f.find("console") >= 0:
+			return "mono"
+		if f.find("comic") >= 0:
+			return "comic"
+		if f.find("sans") >= 0 or f.find("arial") >= 0 or f.find("helvetica") >= 0 \
+				or f.find("verdana") >= 0 or f.find("tahoma") >= 0 or f.find("impact") >= 0:
+			return "sans"
+		if f.find("times") >= 0 or f.find("serif") >= 0 or f.find("georgia") >= 0 \
+				or f.find("garamond") >= 0 or f.find("palatino") >= 0 or f.find("book") >= 0 \
+				or f.find("century") >= 0:
+			return "serif"
+	return "sans"
+
+# Stato tipografico in cima alla pila: famiglia, grassetto, corsivo.
+static func _stato(stack: Array) -> Dictionary:
+	var st := {"fam": "sans", "b": false, "i": false}
+	for e in stack:
+		if e.has("fam"):
+			st["fam"] = e["fam"]
+		if e.get("b", false):
+			st["b"] = true
+		if e.get("i", false):
+			st["i"] = true
+	return st
+
+# Il file da usare per un <b>/<i>/<hN> aperto ora: "" nel sans del tema (bastano
+# [b]/[i]), il file della famiglia altrimenti.
+static func _file_di(stack: Array, b: bool, i: bool) -> String:
+	var st := _stato(stack)
+	var fam := str(st["fam"])
+	if fam == "sans" or fam == "mono":
+		return ""
+	return _font_file(fam, b or bool(st["b"]), i or bool(st["i"]))
+
+static func _font_file(fam: String, b: bool, i: bool) -> String:
+	var nome := fam
+	if fam == "comic":
+		nome = "comic_b" if b else "comic"       # Comic Neue: niente corsivo, come l'originale
+	elif b and i:
+		nome = fam + "_bi"
+	elif b:
+		nome = fam + "_b"
+	elif i:
+		nome = fam + "_i"
+	return Win95.FONT_DIR + str(Win95._FONT_FILES.get(nome, Win95._FONT_FILES["sans"]))
+
 static func _img(tag: String) -> String:
 	var opts := ""
 	var w := _attr(tag, "width").strip_edges()
@@ -208,6 +397,9 @@ static func _img(tag: String) -> String:
 # cella puo' esserci un'altra <table>.
 static func _table(inner: String, tag: String, ctx: Dictionary) -> String:
 	var border := int(_attr(tag, "border")) if _attr(tag, "border").strip_edges() != "" else 0
+	var bordo := _col(_attr(tag, "bordercolor"))
+	if bordo == "":
+		bordo = "#808080"
 	var tbg := _attr(tag, "bgcolor")
 	var padattr := _attr(tag, "cellpadding")
 	var pad := int(padattr) if padattr.strip_edges() != "" else 8
@@ -218,13 +410,16 @@ static func _table(inner: String, tag: String, ctx: Dictionary) -> String:
 		ncols = maxi(ncols, (rd["cells"] as Array).size())
 	if ncols == 0:
 		return ""
+	# la larghezza di ogni colonna (0 = decide il contenuto): serve alla riga
+	# distanziatrice e alle tabelle ANNIDATE, le cui percentuali sono della cella
+	var colw := _colonne(tag, rows, ncols, ctx)
 	var bb := "[table=%d]" % ncols
 	for rd in rows:
 		var cells: Array = rd["cells"]
 		for c in range(ncols):
 			var opts := " padding=%d,%d,%d,%d" % [pad, vpad, pad, vpad]
 			if border > 0:
-				opts += " border=#808080"
+				opts += " border=" + bordo
 			if c >= cells.size():
 				# cella di riempimento (mantiene la griglia allineata)
 				var rbg := str(rd.get("bg", ""))
@@ -240,7 +435,13 @@ static func _table(inner: String, tag: String, ctx: Dictionary) -> String:
 				bg = tbg
 			if bg != "":
 				opts += " bg=" + _col(bg)
+			ctx["_in_cella"] = int(ctx.get("_in_cella", 0)) + 1
+			var pagina_fuori: Variant = ctx.get("page_width", 0.0)
+			if float(colw[c]) > 0.0:
+				ctx["page_width"] = maxf(16.0, float(colw[c]) - float(2 * pad + 2))
 			var content := _walk(str(cd.get("html", "")), ctx).strip_edges()
+			ctx["page_width"] = pagina_fuori
+			ctx["_in_cella"] = int(ctx["_in_cella"]) - 1
 			if bool(cd.get("th", false)):
 				content = "[center][b]" + content + "[/b][/center]"
 			else:
@@ -252,36 +453,82 @@ static func _table(inner: String, tag: String, ctx: Dictionary) -> String:
 						# non ereditare il [center] di una tabella centrata
 						content = "[left]" + content + "[/left]"
 			bb += "[cell" + opts + "]" + content + "[/cell]"
-	bb += _spacer_row(tag, ncols, pad, tbg, ctx)
+	bb += _spacer_row(colw, pad, tbg)
 	return bb + "[/table]"
 
 # <table width="70%"> / width="500": la larghezza di una [table] BBCode e' guidata
 # dal CONTENUTO, quindi la imponiamo col trucco d'epoca della "spacer.gif" — una
 # riga finale, senza bordo e alta 1 px, con un'immagine trasparente larga quanto
-# serve. Con piu' colonne la misura viene spartita in parti uguali.
+# serve per ogni colonna. Le colonne con <td width="160"> / "25%" (nella prima riga
+# che ne dichiara) prendono la loro misura -- e' la colonna laterale dei siti
+# d'epoca -- le altre si spartiscono in parti uguali quello che resta.
 # Richiede ctx["page_width"] (pixel utili della pagina) per le percentuali.
-static func _spacer_row(tag: String, ncols: int, pad: int, tbg: String, ctx: Dictionary) -> String:
-	var w := _attr(tag, "width").strip_edges()
-	if w == "" or ncols <= 0:
+static func _spacer_row(colw: Array, pad: int, tbg: String) -> String:
+	var tutte_zero := true
+	for w in colw:
+		if float(w) >= 16.0:
+			tutte_zero = false
+	if tutte_zero:
 		return ""
-	var target := 0.0
-	if w.ends_with("%"):
-		ctx["uses_width"] = true          # il browser ricompila quando cambia la larghezza
-		var disponibile := float(ctx.get("page_width", 0.0))
-		if disponibile <= 0.0:
-			return ""                     # larghezza di pagina ancora sconosciuta
-		target = disponibile * clampf(w.trim_suffix("%").to_float(), 1.0, 100.0) / 100.0
-	else:
-		target = w.to_float()
-	if target < 16.0:
-		return ""
-	# la cella ci aggiunge il proprio padding orizzontale piu' un paio di px di bordo
-	var larghezza: int = int(maxf(8.0, target / float(ncols) - float(2 * pad + 2)))
 	var opts := " padding=0,0,0,0"
 	if tbg != "":
 		opts += " bg=" + _col(tbg)
-	var cella := "[cell" + opts + "][img width=%d height=1]%s[/img][/cell]" % [larghezza, SPACER_IMG]
-	return cella.repeat(ncols)
+	var out := ""
+	for w in colw:
+		if float(w) < 16.0:
+			out += "[cell" + opts + "][/cell]"
+			continue
+		# la cella ci aggiunge il proprio padding orizzontale piu' un paio di px di bordo
+		var larghezza: int = int(maxf(8.0, float(w) - float(2 * pad + 2)))
+		out += "[cell" + opts + "][img width=%d height=1]%s[/img][/cell]" % [larghezza, SPACER_IMG]
+	return out
+
+# Larghezza in pixel di ogni colonna (0 = non dichiarata e non deducibile).
+static func _colonne(tag: String, rows: Array, ncols: int, ctx: Dictionary) -> Array:
+	var col: Array = []
+	col.resize(ncols)
+	col.fill(0.0)
+	var target := _misura(_attr(tag, "width"), float(ctx.get("page_width", 0.0)), ctx)
+	# le percentuali delle celle sono della tabella, o della pagina se la tabella non
+	# ha una larghezza
+	var base := target if target > 0.0 else float(ctx.get("page_width", 0.0))
+	var dichiarate := false
+	for rd in rows:
+		var celle: Array = rd["cells"]
+		for c in range(mini(celle.size(), ncols)):
+			var m := _misura(str((celle[c] as Dictionary).get("width", "")), base, ctx)
+			if m > 0.0:
+				col[c] = m
+				dichiarate = true
+		if dichiarate:
+			break
+	if target < 16.0:
+		return col
+	var noti := 0.0
+	var ignote := 0
+	for v in col:
+		if float(v) > 0.0:
+			noti += float(v)
+		else:
+			ignote += 1
+	if ignote > 0:
+		var resto := maxf(0.0, target - noti) / float(ignote)
+		for c in range(ncols):
+			if float(col[c]) <= 0.0:
+				col[c] = resto
+	return col
+
+# "70%" o "500" -> pixel (0 se manca, o se la pagina non ha ancora una larghezza).
+static func _misura(w: String, base: float, ctx: Dictionary) -> float:
+	w = w.strip_edges()
+	if w == "":
+		return 0.0
+	if w.ends_with("%"):
+		ctx["uses_width"] = true          # il browser ricompila quando cambia la larghezza
+		if base <= 0.0:
+			return 0.0                    # larghezza di pagina ancora sconosciuta
+		return base * clampf(w.trim_suffix("%").to_float(), 1.0, 100.0) / 100.0
+	return w.to_float()
 
 # Indice del "</table>" che chiude la tabella aperta (gestisce l'annidamento).
 static func _table_end(html: String, from: int) -> int:
@@ -368,7 +615,8 @@ static func _rows(inner: String) -> Array:
 					var bg := _attr(tag, "bgcolor")
 					if bg == "":
 						bg = row_bg
-					cell = {"bg": bg, "align": _attr(tag, "align"), "th": nm == "th"}
+					cell = {"bg": bg, "align": _attr(tag, "align"), "th": nm == "th",
+							"width": _attr(tag, "width")}
 			_:
 				if in_cell:
 					cur += inner.substr(gt - tag.length() - 1, tag.length() + 2)
@@ -389,9 +637,30 @@ static func img_path(src: String) -> String:
 		return _broken_path()
 	if not p.begins_with("res://"):
 		p = IMG_DIR + p
+	if p.get_extension().to_lower() == "gif":
+		return _gif_path(p)
 	if ResourceLoader.exists(p):
 		return p
 	return _broken_path()
+
+# La texture di un src= (per lo sfondo a mosaico di <body background>).
+static func texture(src: String) -> Texture2D:
+	var p := img_path(src)
+	return load(p) as Texture2D
+
+# Godot non importa le GIF: il file si decodifica qui (GifDecoder) UNA volta, e la
+# texture si registra su un percorso virtuale come quella dell'immagine rotta, cosi'
+# [img] la trova. Animata o no, e' sempre la stessa per tutte le pagine che la usano.
+static func _gif_path(p: String) -> String:
+	var virtuale := p + ".tex"
+	if _gif.has(p):
+		return virtuale
+	var tex := GifDecoder.texture_da_file(p)
+	if tex == null:
+		return _broken_path()
+	tex.take_over_path(virtuale)
+	_gif[p] = tex
+	return virtuale
 
 static func _broken_path() -> String:
 	var path := IMG_DIR + "_rotta_.imgtex"
@@ -417,8 +686,11 @@ static func _broken_path() -> String:
 
 # ---------------- stack dei tag inline ----------------
 
-static func _push(stack: Array, nm: String, open: String, close: String) -> String:
-	stack.push_back({"nm": nm, "open": open, "close": close})
+# extra: lo stato tipografico che il tag porta ("fam", "b", "i"), letto da _stato.
+static func _push(stack: Array, nm: String, open: String, close: String, extra: Dictionary = {}) -> String:
+	var e := {"nm": nm, "open": open, "close": close}
+	e.merge(extra)
+	stack.push_back(e)
 	return open
 
 static func _pop_tag(stack: Array, nm: String) -> String:

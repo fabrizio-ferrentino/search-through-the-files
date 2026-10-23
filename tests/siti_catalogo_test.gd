@@ -25,7 +25,10 @@ extends Node
 #   8 nessun campo o pulsante (<input>, <form>, <select>, <textarea>, <button>): il browser
 #     non li sa usare, quindi un accesso, una ricerca, un carrello si scrivono CHIUSI;
 #   9 le DATE: il web del PC e' fermo al 1999 (proprietario: la tragedia e' nella primavera
-#     1999) -- nessuna data dopo il 1999 e niente orari relativi ("oggi, 21:05").
+#     1999) -- nessuna data dopo il 1999 e niente orari relativi ("oggi, 21:05");
+#  10 ogni IMMAGINE, sfondo e MUSICA che una pagina cita esiste (web/img/, web/audio/): un
+#     file sbagliato diventerebbe un'immagine rotta o una pagina muta senza che nessuno se
+#     ne accorga. Un'immagine rotta VOLUTA va elencata in MEDIA_ROTTI.
 #
 # Va eseguito come SCENA (serve l'autoload GameManager). Headless va bene.
 #   & $godot --headless --path $proj res://tests/siti_catalogo_test.tscn
@@ -33,6 +36,8 @@ extends Node
 
 const LINGUE := ["en", "it"]
 const PAGINE := "res://web/pages/"
+# immagini che una pagina mostra rotte APPOSTA (nessuna, per ora)
+const MEDIA_ROTTI: Array = []
 
 var _fails: Array = []
 var _chiave_re := RegEx.new()
@@ -56,6 +61,7 @@ func _ready() -> void:
 	_prova_chiusi()
 	_prova_controlli()
 	_prova_date()
+	_prova_media()
 	_prova_debug_tutti()
 
 	GameManager.set_lingua(lingua_prima, false)
@@ -281,6 +287,26 @@ func _prova_date() -> void:
 					dopo.append("%s/%s '%s'" % [l, pagina, a.get_string()])
 	_check("NIENTE_DATE_RELATIVE", relative.is_empty(), ", ".join(relative.slice(0, 8)))
 	_check("NIENTE_DATE_DOPO_1999", dopo.is_empty(), ", ".join(dopo.slice(0, 8)))
+
+# ---------- 10: immagini, sfondi e musica ----------
+
+func _prova_media() -> void:
+	var re := RegEx.new()
+	re.compile("(?i)<(img|embed|bgsound|body)\\b[^>]*?\\b(src|background)\\s*=\\s*\"([^\"]*)\"")
+	var mancano: Array = []
+	var quanti := 0
+	for l in LINGUE:
+		for pagina in _tutte_le_pagine():
+			for m in re.search_all(_leggi("%s%s/%s.html" % [PAGINE, l, pagina])):
+				var src := m.get_string(3)
+				if MEDIA_ROTTI.has(src):
+					continue
+				quanti += 1
+				var tag := m.get_string(1).to_lower()
+				var c := HtmlBB.audio_path(src) if tag == "embed" or tag == "bgsound" 						else HtmlBB.img_path(src)
+				if c == "" or c.find("_rotta_") >= 0:
+					mancano.append("%s/%s %s" % [l, pagina, src])
+	_check("MEDIA_ESISTONO", mancano.is_empty(), "%d citati, mancano: %s" % [quanti, ", ".join(mancano.slice(0, 8))])
 
 # ---------- il debug "tutti i siti" (pannello F12) ----------
 
