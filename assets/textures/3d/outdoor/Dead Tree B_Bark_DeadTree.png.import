@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ctvh7wyfvk00v"
-path="res://.godot/imported/Dead Tree B_Bark_DeadTree.png-9e0c8e2c75f0374b398f9002a848ab93.ctex"
+path.s3tc="res://.godot/imported/Dead Tree B_Bark_DeadTree.png-9e0c8e2c75f0374b398f9002a848ab93.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "eae9b5ef1194b73f5278668bc17df5a3"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/textures/3d/outdoor/Dead Tree B_Bark_DeadTree.png"
-dest_files=["res://.godot/imported/Dead Tree B_Bark_DeadTree.png-9e0c8e2c75f0374b398f9002a848ab93.ctex"]
+dest_files=["res://.godot/imported/Dead Tree B_Bark_DeadTree.png-9e0c8e2c75f0374b398f9002a848ab93.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0
