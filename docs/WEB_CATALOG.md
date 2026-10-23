@@ -35,28 +35,38 @@ CRT: `tests/siti_check.tscn -- it <site>/<page> ...`.
   dollars, Italian pages lire.
 - **Nothing shaped like a key** (a digit, a dash and four letters/digits). NIENTE_CHIAVI_FINTE.
 
+## Style: every site looks like itself (owner, 2026-10-23)
+
+Until 2026-10-23 almost every site was the same skeleton (coloured banner table, light
+nav-bar table, Arial text, centred footer) in different colours. The column **Style** gives
+each site its own period archetype (the shapes are described in
+[WEB_AUTHORING.md](WEB_AUTHORING.md) "Style templates"): no two sites share a skeleton. The
+six **pilot** sites were restyled first with the new tools (GIFs, tiled backgrounds, side
+bars, serif and Comic fonts, marquee/blink, MIDI); the others follow after the owner's
+review. A restyle keeps the texts, the pages and every rule below.
+
 ## Ordinary sites (18)
 
-| id | Site (EN / IT) | Pages | Notes |
-|---|---|---|---|
-| forum | RetroForum | 14 | computer message board: sections, long threads, members, rules |
-| shop | BuyItAll / CompraTutto | 9 | mail-order shop; online orders suspended |
-| news | NewsToday / NotizieOggi | 11 | news portal, 31/03/1999 edition, six articles |
-| meteo | WeatherNow / MeteoNow | 6 | forecasts, cities, satellite (offline), seasonal, glossary |
-| giochi | PlayWeb / GiocaWeb | 7 | shareware, chart, cheats, reviews; downloads closed |
-| mail | WebNet WebMail | 6 | login closed during the move; service news, help, terms |
-| blog | ~jack99 | 7 | a happy sixteen-year-old: friends, band, school trip, a full guestbook |
-| biblioteca | Millbrook Public Library / Biblioteca Civica di San Vito | 7 | hours, new books, events, card catalogue |
-| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 8 | recipes, readers' letters |
-| calcio | Griffins Fan Club / Fan Club Grifoni | 7 | results, squad, away trips, notice board |
-| tv | CouchGuide / TeleGuida | 6 | listings, films, series, letters |
-| musica | MidiMania / MidiWorld | 6 | MIDI archive (downloads suspended), invented lyrics, chart |
-| viaggi | Sun & Sea Travel / Viaggi Sole e Mare | 7 | offers, destinations; online booking closed |
-| comune | Town of Millbrook / Comune di San Vito al Lago | 7 | offices, notices, events, certificates, waste collection |
-| scuola | Millbrook High / Liceo G. Galilei | 7 | circulars, trips, computer room, school paper |
-| driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ |
-| animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers |
-| oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters |
+| id | Site (EN / IT) | Pages | Notes | Style |
+|---|---|---|---|---|
+| forum | RetroForum | 14 | computer message board: sections, long threads, members, rules | UBB message board: grey bevelled tables, avatars, quotes |
+| shop | BuyItAll / CompraTutto | 9 | mail-order shop; online orders suspended | mail-order catalogue: price-tag grid, star bursts, product pictures |
+| news | NewsToday / NotizieOggi | 11 | news portal, 31/03/1999 edition, six articles | news portal: left side-bar of sections, headlines in the middle |
+| meteo | WeatherNow / MeteoNow | 6 | forecasts, cities, satellite (offline), seasonal, glossary | instrument panel: brushed-metal tile, big tables of numbers |
+| giochi | PlayWeb / GiocaWeb | 7 | shareware, chart, cheats, reviews; downloads closed | game zone: black, neon grid tile, flames, scrolling chart |
+| mail | WebNet WebMail | 6 | login closed during the move; service news, help, terms | web application: grey Win95 boxes, no pictures |
+| blog | ~jack99 | 7 | a happy sixteen-year-old: friends, band, school trip, a full guestbook | **pilot** GeoCities teen page: tiled sky, Comic, GIFs, counter, MIDI, marquee |
+| biblioteca | Millbrook Public Library / Biblioteca Civica di San Vito | 7 | hours, new books, events, card catalogue | card catalogue: parchment tile, Times, typed index cards |
+| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 8 | recipes, readers' letters | **pilot** grandma: narrow card on gingham, Times + Comic, clip-art, waltz |
+| calcio | Griffins Fan Club / Fan Club Grifoni | 7 | results, squad, away trips, notice board | **pilot** loud fan club: flames, blink, results marquee, anthem player |
+| tv | CouchGuide / TeleGuida | 6 | listings, films, series, letters | TV guide: time-slot grid, coloured channel columns |
+| musica | MidiMania / MidiWorld | 6 | MIDI archive (downloads suspended), invented lyrics, chart | MIDI archive: Courier file lists, embedded players |
+| viaggi | Sun & Sea Travel / Viaggi Sole e Mare | 7 | offers, destinations; online booking closed | travel brochure: postcards, big pictures, sky colours |
+| comune | Town of Millbrook / Comune di San Vito al Lago | 7 | offices, notices, events, certificates, waste collection | **pilot** bare 1995 institutional page: grey, Times, lists, no tables |
+| scuola | Millbrook High / Liceo G. Galilei | 7 | circulars, trips, computer room, school paper | student-made: notice board, typewriter Courier |
+| driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ | **pilot** tech portal: dark left side-bar, badges, mono tables |
+| animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers | charity page: centred column of animal cards |
+| oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters | **pilot** splash page + mystical pages: night tile, serif gold, ambient MIDI |
 
 The ordinary sites share one invented world: the town of **Millbrook / San Vito al
 Lago** (library, town hall, school, shelter, football club, PC repair), the WebNet
@@ -69,20 +79,20 @@ never with links.
 The catalog's `voce` says whose story a site tells (`padre`, `ragazzo`, `maledizione`):
 every run has at least one about the father and one about the young man.
 
-| id | Site (EN / IT) | Voice | Pages | Content |
-|---|---|---|---|---|
-| balena | ~whale52 / ~balena52 | young man | 7 | his personal page: about, the 52 Hz whale, dead links, night thoughts, the empty guestbook, the last update |
-| annunci | FreeAds Board / AnnunciGratis | young man | 8 | looks ordinary; the lonely hearts archive with his ad, the same every month, then expired; an answer that came too late |
-| chat | ChatPoint | young man | 8 | rooms closed; the archive: he says hello and nobody answers, the room empties, the last night alone |
-| lavoro | JobFinder / CercoLavoro | young man | 8 | job offers and advice; in the forum his questions get brisk answers |
-| vincente | The Winner Method / Il Metodo Vincente | young man | 7 | the mail-order "method" (the company has closed); his thread in the customer area |
-| ascolto | Someone Listens / Qualcuno Ascolta | young man | 6 | a listening line left without volunteers; his messages, unanswered |
-| cronaca | The County Herald / La Gazzetta della Provincia | father | 8 | the newspaper archive: the tragedy, the follow-up, ordinary local news |
-| genitori | The Kitchen Table / Il Tavolo di Cucina | father | 9 | a parents' forum; the father's posts slipping, the last one to his boys |
-| tecnico | PC Doctor at Home / Il Dottore del PC | father | 6 | a technician's job notes from the father's house; the notice afterwards |
-| misteri | Hidden Truths / Verita' Nascoste | curse | 7 | reports of computers that watch, objects that pass something on, the whale; the webmaster's last update |
-| mercatino | Used PC Market / Mercatino PC | curse | 8 | ordinary ads, and one beige 486 sold again and again, with "don't buy it" |
-| nessuno | nobody / nessuno | curse | 8 | the page that should not exist: the curse speaking to whoever is at the PC now |
+| id | Site (EN / IT) | Voice | Pages | Content | Style |
+|---|---|---|---|---|---|
+| balena | ~whale52 / ~balena52 | young man | 7 | his personal page: about, the 52 Hz whale, dead links, night thoughts, the empty guestbook, the last update | dark personal page: ASCII art, night blue |
+| annunci | FreeAds Board / AnnunciGratis | young man | 8 | looks ordinary; the lonely hearts archive with his ad, the same every month, then expired; an answer that came too late | classifieds: dense small type on newsprint yellow |
+| chat | ChatPoint | young man | 8 | rooms closed; the archive: he says hello and nobody answers, the room empties, the last night alone | chat client: room list side-bar, Courier logs |
+| lavoro | JobFinder / CercoLavoro | young man | 8 | job offers and advice; in the forum his questions get brisk answers | corporate job portal: navy, Times headings |
+| vincente | The Winner Method / Il Metodo Vincente | young man | 7 | the mail-order "method" (the company has closed); his thread in the customer area | sales letter: one long page, red headlines, yellow highlights, blinking |
+| ascolto | Someone Listens / Qualcuno Ascolta | young man | 6 | a listening line left without volunteers; his messages, unanswered | helpline: calm, plain centred text, almost no ornament |
+| cronaca | The County Herald / La Gazzetta della Provincia | father | 8 | the newspaper archive: the tragedy, the follow-up, ordinary local news | newspaper: Times masthead, date line, serif columns |
+| genitori | The Kitchen Table / Il Tavolo di Cucina | father | 9 | a parents' forum; the father's posts slipping, the last one to his boys | homely forum: cream, Georgia, little clip-art |
+| tecnico | PC Doctor at Home / Il Dottore del PC | father | 6 | a technician's job notes from the father's house; the notice afterwards | plain text notes: Courier, like a .txt put online |
+| misteri | Hidden Truths / Verita' Nascoste | curse | 7 | reports of computers that watch, objects that pass something on, the whale; the webmaster's last update | conspiracy page: black, green, eyes, blink |
+| mercatino | Used PC Market / Mercatino PC | curse | 8 | ordinary ads, and one beige 486 sold again and again, with "don't buy it" | flea market: ad table with pictures, beige |
+| nessuno | nobody / nessuno | curse | 8 | the page that should not exist: the curse speaking to whoever is at the PC now | the page that should not exist: almost empty, dark |
 
 **Timeline the lore sites agree on:** the young man's traces run from October 1997 (his
 page) to June 1998 (the last chat log); the father's from February to the night of
