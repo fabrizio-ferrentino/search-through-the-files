@@ -1,6 +1,6 @@
-# The site catalog: the 30 sites
+# The site catalog: the 34 sites
 
-The fake web the player browses. **30 sites** in all; **every run picks 10 to 15**, of
+The fake web the player browses. **34 sites** in all (30 until 2026-10-23, when four lore sites were added); **every run picks 10 to 15**, of
 which **4 or 5 carry lore** (owner, 2026-10-19). All of tonight's sites are listed on the
 WebNet gateway; the others answer "cannot find server". They are period sites of
 1998-99, complex (6-14 pages each, navigation, real text), most of them ordinary, some
@@ -74,28 +74,48 @@ provider, the same weeks of March 1999. They cross-reference each other in their
 (jack99's school trip is the school's fourth-year trip; his dog came from the shelter),
 never with links.
 
-## Lore sites (12)
+## Lore sites (16)
 
-The catalog's `voce` says whose story a site tells (`padre`, `ragazzo`, `maledizione`):
-every run has at least one about the father and one about the young man.
+The catalog's `voce` says whose story a site tells (`padre`, `ragazzo`, `maledizione`,
+`altri`): every run has at least one about the father and one about the young man.
+
+**The young man is not the protagonist** (owner, 2026-10-23: he "almost becomes a main
+character", with more appearances than the father). He has **one site of his own** (`treno`)
+and appears in **at most two others**: the chat and the lonely hearts ads. The sites that
+used to carry his threads (`lavoro`, `vincente`, `ascolto`) now tell the stories of OTHER
+people (voice `altri`), and none of them repeats a detail of his life (night warehouse, the
+twelve windows, the girl at the bar).
+
+**His nickname is `~missedtrain / ~trenoperso`** (owner, 2026-10-23). It used to be
+`~whale52 / ~balena52`, the same animal as the OS logo, which the owner did not like. The
+**52 Hz whale stays the CURSE's emblem** (death screen line, secret-folder glitch, the disk
+files 52HZ.TXT and whale.txt, `misteri/whale`, `nessuno/whale`): only the young man lost it.
+His symbol is the 23:52 regional train that no longer stops at the closed station behind
+his building (the station clock stopped at ten past six); "the train only comes once" is
+what people told him.
 
 | id | Site (EN / IT) | Voice | Pages | Content | Style |
 |---|---|---|---|---|---|
-| balena | ~whale52 / ~balena52 | young man | 7 | his personal page: about, the 52 Hz whale, dead links, night thoughts, the empty guestbook, the last update | dark personal page: ASCII art, night blue |
+| treno | ~missedtrain / ~trenoperso | young man | 7 | his personal page: about, the 23:52 train that does not stop, dead links, night thoughts, the empty guestbook, the last update | dark personal page: ASCII art, night blue |
 | annunci | FreeAds Board / AnnunciGratis | young man | 8 | looks ordinary; the lonely hearts archive with his ad, the same every month, then expired; an answer that came too late | classifieds: dense small type on newsprint yellow |
 | chat | ChatPoint | young man | 8 | rooms closed; the archive: he says hello and nobody answers, the room empties, the last night alone | chat client: room list side-bar, Courier logs |
-| lavoro | JobFinder / CercoLavoro | young man | 8 | job offers and advice; in the forum his questions get brisk answers | corporate job portal: navy, Times headings |
-| vincente | The Winner Method / Il Metodo Vincente | young man | 7 | the mail-order "method" (the company has closed); his thread in the customer area | sales letter: one long page, red headlines, yellow highlights, blinking |
-| ascolto | Someone Listens / Qualcuno Ascolta | young man | 6 | a listening line left without volunteers; his messages, unanswered | helpline: calm, plain centred text, almost no ornament |
+| lavoro | JobFinder / CercoLavoro | others | 8 | job offers and advice; in the forum a night security guard's questions get brisk answers | corporate job portal: navy, Times headings |
+| vincente | The Winner Method / Il Metodo Vincente | others | 7 | the mail-order "method" (the company has closed); a 33-year-old surveyor's thirty days in the customer area | sales letter: one long page, red headlines, yellow highlights, blinking |
+| ascolto | Someone Listens / Qualcuno Ascolta | others | 6 | a listening line left without volunteers; a night baker's messages, unanswered | helpline: calm, plain centred text, almost no ornament |
 | cronaca | The County Herald / La Gazzetta della Provincia | father | 8 | the newspaper archive: the tragedy, the follow-up, ordinary local news | newspaper: Times masthead, date line, serif columns |
 | genitori | The Kitchen Table / Il Tavolo di Cucina | father | 9 | a parents' forum; the father's posts slipping, the last one to his boys | homely forum: cream, Georgia, little clip-art |
 | tecnico | PC Doctor at Home / Il Dottore del PC | father | 6 | a technician's job notes from the father's house; the notice afterwards | plain text notes: Courier, like a .txt put online |
 | misteri | Hidden Truths / Verita' Nascoste | curse | 7 | reports of computers that watch, objects that pass something on, the whale; the webmaster's last update | conspiracy page: black, green, eyes, blink |
 | mercatino | Used PC Market / Mercatino PC | curse | 8 | ordinary ads, and one beige 486 sold again and again, with "don't buy it" | flea market: ad table with pictures, beige |
 | nessuno | nobody / nessuno | curse | 8 | the page that should not exist: the curse speaking to whoever is at the PC now | the page that should not exist: almost empty, dark |
+| brutti | The Ugly Guys' Board / Il Forum dei Brutti | others | 9 | a 1997 board where men ask to be told "the truth" about their looks; long words (hypergamy, genetic determinism, the 80/20) explain everything and change nothing; one member leaves for a dancing class; on 21/11/1998 at 23:52:00 a "guest" posts with the words of the young man's page | WWWBoard: white, Times, threaded message list |
+| volto | The Measure of the Face / La Misura del Volto | others | 6 | an amateur "essay" that measures faces with a ruler and turns the score into a sentence; readers' scores; reader 52 sent a photograph of a man on a station bench with a white space for a face (postmark: June) | treatise: numbered sections, figure, ratio tables |
+| numeri | Numbers Don't Lie / I Numeri Non Mentono | others | 6 | the board's "Professor": invented statistics presented as truth, a survey of the members, and his field notebook, which in January 1999 records a train where there is no railway | print-out: Courier on pale paper, ASCII bar charts |
+| diario | Days Without / Giorni Senza | curse | 6 | a forty-year-old teacher counts the days since he turned eighteen; letters never posted; the last update (29/03/1999, 23:52) is not for the readers of 1999 but for whoever reads it now, in a new house, alone tonight | sepia diary: dark brown, Georgia, a narrow column, a counter |
 
 **Timeline the lore sites agree on:** the young man's traces run from October 1997 (his
-page) to June 1998 (the last chat log); the father's from February to the night of
+page) to June 1998 (the last chat log); after that only echoes of him, never signed (the
+board's guest post and the face site's envelope, both on 21/11/1998; 23:52 recurs); the father's from February to the night of
 Tuesday 30/03/1999 (the forum); the newspaper and the technician write after it, in
 1999. **Lore choice to confirm with the owner:** `mercatino` and `nessuno` show the same
 old PC passing through several owners between the young man's flat and the father's

@@ -77,7 +77,8 @@ CatalogoDisco (2026-10-18): DATA ONLY - what MAY be on the disk:
 FILE_EPOCA (the family's ordinary life) / FILE_LORE_PADRE (the
 father slipping - at least one EVERY run, owner's call) /
 FILE_HORROR (the young man the curse started from, and the curse
-speaking to whoever is at the PC) - all [name key, text key,
+speaking to whoever is at the PC; 2026-10-23: the 52 Hz whale is the CURSE's emblem, the
+young man's nickname is now ~missedtrain / ~trenoperso - comment in catalogo_disco.gd) - all [name key, text key,
 zones] and all written from GDD §2b; {PROTAGONISTA} in a text is
 the hero's name, ONE CSV row (LORE_PROTAGONIST, "Noah" today),
 FILE_DEI_PROGRAMMI (README/LICENSE with {PROG}), PROGRAMMI,

@@ -11,7 +11,9 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - Dev test scripts (run with -s or as scene, see WEB_AUTHORING.md):
 
 - html_bb_test.gd (compiler unit test + the per-page census of
-  hiding spots, over EVERY language folder, headless). 2026-10-23, section
+  hiding spots, over EVERY language folder, headless). 2026-10-23, check "nbsp":
+  `a&nbsp;&nbsp;&nbsp;b  c` compiles to `a   b c` (&nbsp; survives the whitespace
+  collapsing). 2026-10-23, section
   _prova_varieta: the gif path, font families + the bold/italic FILES, <td width>
   px and %, a nested table's width relative to its cell, bordercolor, marquee
   (incl. the in-cell and too-long static fallback), blink, bgsound/embed in ctx and
@@ -459,7 +461,11 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   left click first; and with two windows visible, a right click on
   the inactive one must activate it AND open its menu in one go),
 
-- browser_e2e.tscn/.gd (real browser + real pages + key, windowed).
+- browser_e2e.tscn/.gd (real browser + real pages + key, windowed). 2026-10-23: the site
+  balena became treno (check TRENO, was the balena one: treno/thoughts and treno/update).
+  The same rename in browser_chrome_test (treno/index), page_load_test (four openings of
+  treno/index), siti_catalogo_test (the address cases `www.webnet.it/~trenoperso...`) and
+  the siti_check sample pages.
   NOTE for browser_click_test: finding "a point on a glyph" from
   the pixels is where this test kept breaking when the chrome grew,
   and each fix is a different trap. It locates a glyph by LOCAL

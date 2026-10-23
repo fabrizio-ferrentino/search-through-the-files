@@ -141,8 +141,16 @@ FC_5,proof %s - to print,provino %s - da stampare
 FC_6,personal archive %s,archivio personale %s
 WS_FORUM,RetroForum - Message board,RetroForum - Bacheca
 WS_FORUM_D,"Floppies, 56k modems and other nostalgia.","Floppy, modem 56k e altre nostalgie."
-WS_WHALE,~whale52,~balena52
-WS_WHALE_D,Personal page. Under construction.,Pagina personale. In costruzione.
+WS_TRAIN,~missedtrain,~trenoperso
+WS_TRAIN_D,Personal page. Under construction.,Pagina personale. In costruzione.
+WS_UGLY,The Ugly Guys' Board,Il Forum dei Brutti
+WS_UGLY_D,Message board. Honesty only.,Forum. Solo sincerita'.
+WS_FACE,The Measure of the Face,La Misura del Volto
+WS_FACE_D,An essay on facial proportion.,Saggio sulle proporzioni del viso.
+WS_NUMBERS,Numbers Don't Lie,I Numeri Non Mentono
+WS_NUMBERS_D,Personal page. Statistics.,Pagina personale. Statistiche.
+WS_DAYS,Days Without,Giorni Senza
+WS_DAYS_D,Personal page. A counter.,Pagina personale. Un contatore.
 WS_SHOP,BuyItAll,CompraTutto
 WS_SHOP_D,Mail order shopping delivered to your door.,Vendita per corrispondenza con consegna a casa.
 WS_HERALD,The County Herald - Archive,La Gazzetta della Provincia - Archivio

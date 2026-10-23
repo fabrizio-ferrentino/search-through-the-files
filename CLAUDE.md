@@ -86,14 +86,14 @@ scripts/
     content.gd             random disk + keys 1 and 4 + photos;  catalogo_disco.gd = its data
     app_browser, page_view, html_bbcode   the browser (one RichTextLabel per page)
     gif_decoder, web_effetti, midi, midi_synth   page GIFs, marquee/blink, MIDI music (GDScript synth)
-    web_runtime, web_anchor   run's sites, portal, keys 2 and 3;  catalogo_siti.gd = the 30 sites
+    web_runtime, web_anchor   run's sites, portal, keys 2 and 3;  catalogo_siti.gd = the 34 sites
     app_file_explorer, app_notepad, app_image_viewer   the other apps
     apparizione, virus_mortale, virus_stupido, schermo_blu   PC threats
     audio_pc.gd            audio bus "PC": tray volume/mute, sound from the desk in the room
     secret_glitch.gd       the secret folder's glitch
     crt / adjust / glitch / secret_glitch .gdshader
 assets/                  fonts (Arimo, Cousine), textures (3D models, photos)
-web/pages/<lang>/<site>/<page>.html   the 30 sites, one folder each, EN + IT; img/ = page images
+web/pages/<lang>/<site>/<page>.html   the 34 sites, one folder each, EN + IT; img/ = page images
 tests/                   tests + dev photo tools (siti_check, ascii_check, icone_check...)
 tools/web/               sito.py (site generator + checks), registra.py (add a site to catalog + CSV)
 .claude/agents/          the sub-agents (see §8)
@@ -133,7 +133,7 @@ Implemented (details in the area docs):
   rename (F2, copyable names), browser (selection, links, view-source, loading wait), image
   viewer with sliders.
 - Random disk per run; 4 keys (disk / two sites / photo) and the secret folder that wins.
-- 30 web sites (18 ordinary, 12 lore), 10-15 per run, generated WebNet portal.
+- 34 web sites (18 ordinary, 16 lore), 10-15 per run, generated WebNet portal.
 - Room threats: Jester, HaloMan, Ghosty, held torch with battery.
 - PC threats: lethal apparitions, false alarms, YouAreStupid, blue screen.
 - Game over with per-cause lines; F12 debug panel (dev-only) with every threat on a button.

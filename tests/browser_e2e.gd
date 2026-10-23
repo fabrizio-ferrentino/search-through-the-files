@@ -69,17 +69,17 @@ func _ready() -> void:
 			and txt.find("DISKCOPY") >= 0, "forum/thread non raggiunto o non renderizzato (%s)" % _browser._current)
 
 	# --- la pagina del ragazzo (sito di lore, scuro) ---
-	_browser._load("balena/thoughts")
+	_browser._load("treno/thoughts")
 	await _browser.attendi_caricamento()
-	txt = await _snap("web_balena.png")
-	_check("BALENA", txt.find("whale") >= 0 and txt.find("twelve windows") >= 0,
-			"balena/thoughts non renderizzato")
+	txt = await _snap("web_treno.png")
+	_check("TRENO", txt.find("the train does not stop") >= 0 and txt.find("twelve windows") >= 0,
+			"treno/thoughts non renderizzato")
 
 	# --- una pagina NERA (l'ultimo aggiornamento del ragazzo: body bgcolor nero) ---
-	_browser._load("balena/update")
+	_browser._load("treno/update")
 	await _browser.attendi_caricamento()
 	txt = await _snap("web_pagina_nera.png")
-	_check("PAGINA_NERA", txt.find("the counter has stopped") >= 0, "balena/update non renderizzato")
+	_check("PAGINA_NERA", txt.find("the counter has stopped") >= 0, "treno/update non renderizzato")
 	# lo sfondo pagina deve essere nero (body bgcolor)
 	await RenderingServer.frame_post_draw
 	var img := _sub.get_texture().get_image()
@@ -234,7 +234,7 @@ func _ready() -> void:
 	for cs in CatalogoSiti.SITI:
 		siti_e_home.append(str(cs["id"]) + "/index")
 	siti_e_home.append("forum/rules")
-	siti_e_home.append("balena/thoughts")
+	siti_e_home.append("treno/thoughts")
 	for f in siti_e_home:
 		var url := WebRuntime.display_url(f)
 		var dominio := url.trim_prefix("http://").get_slice("/", 0)

@@ -52,7 +52,7 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 | `<embed src="tune.mid" autostart="true/false" hidden="true" loop="true">` | music too; NOT hidden = a small period player (play ► / stop ■) drawn on the page |
 | `<input type="text/submit" value="...">` | DECORATIVE only (`[ Value ]` / underline). **Not used in the sites** (owner, 2026-10-20): a field that cannot be typed in is a broken promise, so `siti_catalogo_test` forbids it; write the login or the search as closed instead |
 | `<table> <tr> <td> <th>` | real table, see below |
-| entities | `&nbsp; &copy; &raquo; &laquo; &middot; &hellip; &quot; &mdash; &deg; &lt; &gt; &amp;` |
+| entities (`&nbsp;` is a real non-breaking space, kept after whitespace collapsing: **use it to align ASCII art**; plain spaces are collapsed to one) | `&nbsp; &copy; &raquo; &laquo; &middot; &hellip; &quot; &mdash; &deg; &lt; &gt; &amp;` |
 
 **Body attributes** drive the page colors — this is how dark pages work:
 
@@ -298,7 +298,8 @@ different shapes, and the HTML subset now covers them:
 - **Newspaper** — Times masthead, date line, serif columns.
 - **Loud fan site** — flames, blinking, marquees, a visible MIDI player.
 - **Card on a tiled background** — a narrow centred white table on gingham or parchment.
-- **Terminal / hacker** — black, green Courier, ASCII art.
+- **Terminal / hacker** — black, green Courier, ASCII art (draw it with `&nbsp;` for the
+  spaces, 2026-10-23: before, `&nbsp;` was collapsed and the drawings came out crooked).
 
 The examples below predate the archetypes: use them for structure (threads, archives,
 listings), not for the look.
@@ -307,7 +308,7 @@ listings), not for the look.
   bar on every page, section listings with alternating row colors, per-post tables with
   an author column, avatar `<img>` and `<blockquote>` quotes, a member list, a profile, the
   rules, and a "members only" page that the locked topics link to).
-- **Personal homepage** → `web/pages/en/balena/` (dark body, an ASCII drawing in
+- **Personal homepage** → `web/pages/en/treno/` (dark body, an ASCII drawing in
   Courier, a visitor counter, a link list, a guestbook that no longer accepts entries).
 - **Newspaper archive** → `web/pages/en/cronaca/` (masthead, section bar, article pages
   with a byline, an archive listing).

@@ -83,9 +83,10 @@ const FILE_LORE_PADRE := [
 	["FN_HR_WHALE", "FT_HR_WHALE", [SISTEMA, DOCUMENTI]],
 ]
 
-# --- file HORROR: [nome, testo, zone]. La voce del RAGAZZO da cui tutto e' partito (la
-# balena da 52 Hz e' il suo emblema: un richiamo a cui nessuno risponde) e quella della
-# MALEDIZIONE, che parla a chi e' al PC adesso. Pochi per partita (QUANTI_HORROR), cosi'
+# --- file HORROR: [nome, testo, zone]. La voce del RAGAZZO da cui tutto e' partito e quella
+# della MALEDIZIONE, che parla a chi e' al PC adesso (la balena da 52 Hz e' l'emblema della
+# maledizione: un richiamo a cui nessuno risponde; dal 23/10/2026 il ragazzo non ha piu' la
+# balena nel nome, ha il treno). Pochi per partita (QUANTI_HORROR), cosi'
 # quando se ne trova uno fa effetto. Alcuni si travestono da file normali. ---
 const FILE_HORROR := [
 	["FN_HR_52HZ", "FT_HR_52HZ", [SISTEMA, TEMP]],

@@ -43,7 +43,7 @@ because it accepted the logo **or** the word `GATEWAY` — it now demands both.
 
 Since 2026-10-19 **a site is a folder**: `web/pages/<lang>/<site>/`, with `index.html`
 and its other pages. The list of sites, with everything about each one, is the **site
-catalog**: `scripts/os/catalogo_siti.gd`. The planned 30 sites and how far each one is
+catalog**: `scripts/os/catalogo_siti.gd`. The 34 sites and how far each one is
 are in [WEB_CATALOG.md](WEB_CATALOG.md).
 
 | What you see | Where it lives | Notes |
@@ -71,7 +71,7 @@ change the template (and, if you like, keep the mockup in sync by hand).
 ## 2. What happens when the browser opens a page
 
 1. A **page** is called `"<site>/<page>"` inside the game: `forum/index`,
-   `forum/thread`, `balena/thoughts`.
+   `forum/thread`, `treno/thoughts`.
 2. What you type in the address bar goes through `WebRuntime.page_of`
    (`www.retroforum.it/rules.html` → `forum/rules`; `www.retroforum.it` → `forum/index`).
    A **link** you click goes through `WebRuntime.risolvi_link`: a relative href
@@ -110,7 +110,7 @@ others answer "cannot find server" — and no key is ever on the gateway.
 
 1. Make the folder in **every** language, `web/pages/en/<site>/` and
    `web/pages/it/<site>/`, with the **same** file names: at least `index.html`. Copy the
-   closest existing site as a skeleton (`forum/` for something rich, `balena/` for a
+   closest existing site as a skeleton (`forum/` for something rich, `treno/` for a
    personal page, `cronaca/` for a newspaper, `shop/` for a shop).
 2. Inside the pages, link the pages of the same site with **relative** hrefs
    (`<a href="rules.html">`). A site is **closed in itself** (owner, 2026-10-20): it never
@@ -233,7 +233,7 @@ Delete its folders (all languages) plus its entry in the catalog and its rows in
 `browser_e2e` is the one that would catch a broken page, a wrong address, a lost
 logo or a key that cannot be found. To LOOK at pages as the player sees them, through
 the CRT, run `tests/siti_check.tscn` (windowed; after `--` the language and the pages,
-e.g. `-- en forum/index balena/update`): it saves `user://sito_<site>_<page>.png`. It also writes screenshots next to the other
+e.g. `-- en forum/index treno/update`): it saves `user://sito_<site>_<page>.png`. It also writes screenshots next to the other
 test output, which is the fastest way to see what a page looks like in game without
 launching the whole game.
 

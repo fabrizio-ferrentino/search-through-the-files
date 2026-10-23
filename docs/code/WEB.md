@@ -1,6 +1,6 @@
 # The web: browser, pages, sites, web keys
 
-Read before touching the browser, the HTML compiler, the site catalog or the web keys. Writing pages: docs/WEB_AUTHORING.md; wiring sites: docs/WEB_SITES.md; the 30 sites and their rules: docs/WEB_CATALOG.md.
+Read before touching the browser, the HTML compiler, the site catalog or the web keys. Writing pages: docs/WEB_AUTHORING.md; wiring sites: docs/WEB_SITES.md; the 34 sites and their rules: docs/WEB_CATALOG.md.
 
 Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only a one-line map).
 
@@ -176,6 +176,10 @@ percentages need ctx["page_width"], which BrowserApp passes and
 recomputes on resize. <img src> = files in web/img/ (missing → drawn "broken"
 placeholder). Unit test: tests/html_bb_test.gd.
 
+2026-10-23 (nbsp): _txt keeps `&nbsp;` as a real non-breaking space (U+00A0) and replaces it
+AFTER the whitespace collapsing. Before, it became a plain space and was collapsed, so ASCII
+drawings came out crooked. html_bb_test has an "nbsp" check.
+
 2026-10-23 (owner: "the web sites are mostly very similar, almost identical; I want huge
 variety; and start adding GIFs and audio in pages; take inspiration from 90s web design"):
 - face= → famiglia(): sans / serif (Tinos) / comic (Comic Neue) / mono, emitted as
@@ -235,20 +239,20 @@ CatalogoSiti (2026-10-19): DATA ONLY - which sites the web MAY have.
 One entry per site in SITI: id (= the folder), nome/desc (WS_* CSV
 keys), en/it (the period domain per language, may carry a path:
 www.webnet.it/~jack99), tipo (normale/lore), voce (lore only:
-padre / ragazzo / maledizione), featured, stato (segnaposto /
+padre / ragazzo / maledizione / altri - altri, added 2026-10-23, is other people's stories, not the young man's), featured, stato (segnaposto /
 completo - a complete site needs COMPLETO_PAGINE 5 pages and
 COMPLETO_TESTO 6000 characters of visible text per language),
 pagine (every page of the folder, index first: the key can land in
 any) and morti (dead links ON PURPOSE: a missing page of the site,
-or the address of a site that is gone). All 30 sites (written
-2026-10-20) and the RULES every site follows: docs/WEB_CATALOG.md;
+or the address of a site that is gone). All 34 sites (30 written
+2026-10-20, four lore sites added 2026-10-23) and the RULES every site follows: docs/WEB_CATALOG.md;
 the recipe: docs/WEB_SITES.md §3. Test: siti_catalogo_test.tscn.
 
 ### `scripts/os/web_runtime.gd`
 
 WebRuntime: per-run web state (no file IO, no engine). A SITE IS A
 FOLDER (2026-10-19, owner: ~30 complex sites, 10-15 per run): a
-page is called "<site>/<page>" (forum/index, balena/thoughts); the
+page is called "<site>/<page>" (forum/index, treno/thoughts); the
 pages outside the sites have one name (home, 404, NONSERVER).
 build() (from BrowserApp.reset_pages on start_new_run) takes the
 pool from the catalog and _scegli_siti picks SITI_MIN..SITI_MAX
@@ -265,8 +269,8 @@ would be one place to search.
 ADDRESSES: dominio(site, lang) from the catalog; display_url /
 host_of give the domain plus "/<page>.html" (the index is the bare
 domain); page_of resolves domain + path across BOTH languages,
-longest match first (www.webnet.it/~balena52/thoughts.html ->
-balena/thoughts, www.webnet.it -> home) with the period
+longest match first (www.webnet.it/~trenoperso/thoughts.html ->
+treno/thoughts, www.webnet.it -> home) with the period
 tolerances (no http://, no www., the bare name, the old internal
 id); risolvi_link(href, current) keeps a RELATIVE href inside the
 current page's site and sends an absolute one through page_of;
@@ -360,10 +364,11 @@ and a page name are identifiers, only the content is translated.
 The two SAMPLE sites that set the bar for the rest (owner,
 2026-10-19): forum/ (RetroForum, 14 pages: index, five sections,
 four long threads, members, a profile, rules, a members-only page
-the locked topics lead to) and balena/ (the personal page of the
+the locked topics lead to) and treno/ (the personal page of the
 young man the curse started from, GDD §2b, 7 pages; never explicit
-about his death). On 2026-10-20 all 30 sites were written (18
-ordinary, 12 lore - the map is docs/WEB_CATALOG.md) and the old
+about his death; called balena/ and nicknamed ~whale52 / ~balena52 until 2026-10-23,
+see the lore note below). On 2026-10-20 all 30 sites were written (18
+ordinary, 12 lore; 34 and 16 since 2026-10-23 - the map is docs/WEB_CATALOG.md) and the old
 one-page placeholders were deleted. Three RULES the owner set that
 day, enforced by siti_catalogo_test: a site is CLOSED IN ITSELF (it
 never links to another site of the catalog - only to the WebNet
@@ -383,10 +388,36 @@ the recipe for ADDING A LANGUAGE. The HOME is GENERATED per-run by
 WebRuntime (tonight's sites) — there is no home.html. To add a site:
 its folder in every web/pages/<lang>/, its WS_* rows in
 locale/ui.csv and its entry in scripts/os/catalogo_siti.gd. The
-planned 30 sites: docs/WEB_CATALOG.md. (webnet.html = the user's
+34 sites: docs/WEB_CATALOG.md. (webnet.html = the user's
 original mockup, ref.)
 
 ## Feature notes
+
+- **Lore change: the young man's site and nickname (2026-10-23).** Owner (Italian,
+  paraphrased): he liked the lore spread across the sites, but did not like the nickname
+  whale52 (same animal as the OS logo), and the young man appeared in more sites than the
+  father. He asked for a parody "forum of the ugly" and for sites about hypergamy / genetic
+  determinism / late virginity, always with a creepy touch; modern terms are allowed.
+  History, so it does not come back: the site `balena` (www.webnet.com/~whale52 /
+  www.webnet.it/~balena52, CSV WS_WHALE) is now `treno` (www.webnet.com/~missedtrain /
+  www.webnet.it/~trenoperso, CSV WS_TRAIN); the page whale.html is now binario.html "the
+  23:52" (the closed station behind his building, the regional train that does not stop, the
+  clock stopped at ten past six). The chat logs use the nick trenoperso / missedtrain. The
+  52 Hz whale stays the CURSE's emblem (death screen, glitch, disk files, misteri/whale,
+  nessuno/whale).
+  He keeps ONE site and appears in at most two others (chat, annunci). His former threads
+  became other people's stories: lavoro (a night security guard, nightguard_74 / vigilante_74),
+  vincente (the diary thread of a 33-year-old surveyor, surveyor33 / geometra33), ascolto (the
+  unanswered messages of a night baker); misteri/letters: a reader's letter no longer says he
+  has a page. Those three sites have voce "altri" (new value in catalogo_siti.gd: other
+  people's stories, not the young man's).
+  Four new lore sites (catalogo_siti.gd + WS_* CSV keys): brutti (WWWBoard-style board, 9
+  pages), volto (face-measuring essay, 6), numeri (statistics + field notes, 6), diario (a
+  teacher's day counter, 6; voce "maledizione"). New images by tools/web/media.py: volto.gif
+  (face diagram with numbered measurements), contatore_giorni.gif. Catalog: 34 sites, 16 lore.
+  The facts per site are in docs/WEB_CATALOG.md. Tests moved from balena/* to treno/*
+  (browser_chrome_test, browser_e2e check TRENO, page_load_test, siti_catalogo_test address
+  cases, siti_check sample pages). Also in this change: the &nbsp; fix (html_bbcode.gd entry).
 
 - **Variety, GIFs and audio in pages (2026-10-23).** Owner (Italian, paraphrased): the sites
   are mostly very similar, almost identical; he wants huge variety, the ability to have GIFs
@@ -423,7 +454,7 @@ original mockup, ref.)
   `web_runtime.gd` injects the per-run key into the carrier page (visible legacy `<p>` →
   selectable text, or `<!--comment-->` → only in view-source). Authoring guide:
   **docs/WEB_AUTHORING.md**; templates: the site folders forum/ (complex),
-  balena/ (personal page), cronaca/ (newspaper), shop/, chat/ and nessuno/ (minimal dark). Tests: tests/html_bb_test.gd (headless unit),
+  treno/ (personal page), cronaca/ (newspaper), shop/, chat/ and nessuno/ (minimal dark). Tests: tests/html_bb_test.gd (headless unit),
   tests/browser_e2e.tscn (end-to-end), tests/selection_ghost.gd (SubViewport gate).
   **Export TODO:** the export preset must include non-resource files `*.html` under `web/`
   (the PNGs in web/img/ import as resources and ship automatically). `start_new_run(seed)` resets PC state and

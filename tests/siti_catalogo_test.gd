@@ -192,8 +192,8 @@ func _ids(siti: Array) -> Array:
 
 func _prova_indirizzi() -> void:
 	var casi := {
-		"http://www.webnet.it/~balena52/thoughts.html": "balena/thoughts",
-		"www.webnet.it/~balena52": "balena/index",
+		"http://www.webnet.it/~trenoperso/thoughts.html": "treno/thoughts",
+		"www.webnet.it/~trenoperso": "treno/index",
 		"www.gazzettadellaprovincia.it/tragedia.html": "cronaca/tragedia",
 		"www.webnet.it": WebRuntime.HOME,
 		"http://www.retroforum.com/rules.html": "forum/rules",
@@ -208,8 +208,8 @@ func _prova_indirizzi() -> void:
 
 	var link := [
 		["rules.html", "forum/index", "forum/rules"],
-		["index.html", "balena/thoughts", "balena/index"],
-		["http://www.retroforum.it", "balena/links", "forum/index"],
+		["index.html", "treno/thoughts", "treno/index"],
+		["http://www.retroforum.it", "treno/links", "forum/index"],
 		["http://www.webnet.it", "forum/rules", WebRuntime.HOME],
 	]
 	var rotti: Array = []

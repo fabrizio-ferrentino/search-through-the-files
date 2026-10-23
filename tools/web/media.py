@@ -531,6 +531,43 @@ def zodiaco():
     scrivi_gif("zodiaco.gif", fs, pal, ritardo=12, trasparente=0)
 
 
+def volto():
+    """Lo schema del volto del sito delle misure: un ovale di profilo frontale, occhi, naso,
+    bocca e le linee di misura numerate (solo cifre). Statico, come una tavola d'anatomia."""
+    pal = [(255, 255, 255), (0, 0, 0), (170, 170, 170), (180, 0, 0)]
+    t = Tela(200, 240, 0)
+    cx, cy = 100, 118
+    for k in range(360):
+        a = k / 360 * math.tau
+        rx = 62 if math.sin(a) < 0 else 62 - 14 * math.sin(a) ** 3
+        t.px(cx + rx * math.cos(a), cy + 92 * math.sin(a), 1)
+    for ex in (78, 122):
+        t.cerchio(ex, 100, 9, 1, pieno=False)
+        t.cerchio(ex, 100, 3, 1)
+    t.linea(100, 104, 92, 140, 1)
+    t.linea(92, 140, 104, 142, 1)
+    t.linea(84, 166, 116, 166, 1)
+    # le misure: tratteggiate, rosse, con il numero
+    def misura(x0, y0, x1, y1, n, tx, ty):
+        lung = int(max(abs(x1 - x0), abs(y1 - y0)))
+        for i in range(lung + 1):
+            if (i // 3) % 2 == 0:
+                f = i / max(1, lung)
+                t.px(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, 3)
+        t.testo(tx, ty, n, 3, scala=2)
+    misura(78, 84, 122, 84, "1", 96, 70)
+    misura(100, 100, 100, 166, "2", 106, 124)
+    misura(46, 118, 154, 118, "3", 158, 112)
+    misura(100, 26, 100, 210, "4", 84, 214)
+    misura(60, 190, 100, 210, "5", 60, 196)
+    # la griglia di fondo, leggera
+    for x in range(0, 200, 20):
+        for y in range(0, 240, 2):
+            if t.p[y][x] == 0:
+                t.p[y][x] = 2 if y % 6 == 0 else 0
+    scrivi_gif("volto.gif", [t.p], pal)
+
+
 # ---------------- sfondi a mosaico ----------------
 
 def stelle():
@@ -760,6 +797,8 @@ TUTTI = [cantiere, busta, globo, nuovo, smile, fiamme, arcobaleno, floppy, ingra
          lambda: contatore(4217, "contatore_jack.gif"),
          lambda: contatore(18342, "contatore_grifoni.gif"),
          lambda: contatore(951, "contatore_stelle.gif"),
+         lambda: contatore(8478, "contatore_giorni.gif"),
+         volto,
          lambda: bottone("bottone_monitor.gif", "monitor", (0, 0, 128), "800x600"),
          lambda: bottone("bottone_modem.gif", "modem", (0, 90, 0), "56K"),
          lambda: bottone("bottone_dischetto.gif", "dischetto", (110, 0, 0), "144"),

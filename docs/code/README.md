@@ -36,7 +36,7 @@ WEB_SITES.md / WEB_CATALOG.md (the recipes for disk files and web pages).
 | **Torch** | Held (press = on), with a battery; repels the Jester and Ghosty. |
 | **PC viruses** | The lethal one (an apparition: power off within 10 s), YouAreStupid (window spam), the blue screen (reboots the PC). Plus false alarms. |
 | **Apparition** | How the curse shows itself in the PC (`apparizione.gd`): the hanged child in ASCII, eyes, wrong clock, a typed line, darkness, blood, shaking windows. Brief = false alarm, lasting = real. |
-| **Site / catalog** | The 30 authored sites (`catalogo_siti.gd`, one folder each under `web/pages/<lang>/`); 18 ordinary, 12 lore. |
+| **Site / catalog** | The 34 authored sites (`catalogo_siti.gd`, one folder each under `web/pages/<lang>/`); 18 ordinary, 16 lore. |
 
 ### Code terms (and the Italian names in the code)
 

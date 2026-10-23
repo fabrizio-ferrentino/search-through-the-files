@@ -98,9 +98,10 @@ the game's texts — write around it.*
 - **Three voices** for the lore files:
   1. **the father**, getting worse — diary entries that start normal and slip, a moment of
      lucidity written to his sons;
-  2. **the original young man** — loneliness, nobody answering (the **52-Hz whale**, the
-     OS logo, is his emblem: the loneliest whale, a call nobody answers), never graphic
-     about his death;
+  2. **the original young man** — loneliness, nobody answering, never graphic about his
+     death. (Until 2026-10-23 the **52-Hz whale**, the OS logo, was his emblem and his
+     nickname was whale52; the owner changed it: his nickname is now ~missedtrain /
+     ~trenoperso and the whale stays the **curse's** emblem.)
   3. **the curse itself**, speaking to whoever is at the PC *now* — short, in lowercase,
      it knows the room and knows you are alone tonight.
 - **Weight on the father** (owner's call): every run has at least one of his files.
@@ -109,8 +110,12 @@ the game's texts — write around it.*
 ### TODO
 
 - **Lore on the websites** (owner, 2026-10-18; planned in [WEB_CATALOG.md](WEB_CATALOG.md),
-  12 lore sites out of ~30): fragments about the original young man and about the father,
-  spread across the fake sites. **Built (2026-10-20), all twelve:** the young man's
+  16 lore sites out of 34 since 2026-10-23, 12 out of 30 before): fragments about the
+  original young man and about the father,
+  spread across the fake sites. 2026-10-23 (owner): the young man keeps ONE site (`treno`)
+  and appears in at most two others (chat, annunci); the threads of lavoro, vincente and
+  ascolto are other people's stories; four lore sites were added (brutti, volto, numeri,
+  diario), see WEB_CATALOG.md. **Built (2026-10-20), the first twelve:** the young man's
   personal page, the lonely hearts column, the chat archive, the job board, the "method"
   site and the listening line (his voice); the newspaper archive, the parents' forum and
   the repair technician's notes (the father); the mysteries site, the second-hand PC market

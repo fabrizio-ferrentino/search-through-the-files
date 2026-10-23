@@ -5,10 +5,10 @@ extends Node
 # Per ogni pagina salva user://sito_<sito>_<pagina>.png (la finestra del gioco).
 # Va eseguito A FINESTRA; dopo "--" la lingua (di base "it") e, se si vuole, le pagine:
 #   & $godot --path $proj res://tests/siti_check.tscn
-#   & $godot --path $proj res://tests/siti_check.tscn -- en forum/index balena/update
+#   & $godot --path $proj res://tests/siti_check.tscn -- en forum/index treno/update
 
 const PAGINE := ["forum/index", "forum/hardware", "forum/thread", "forum/members",
-		"balena/index", "balena/about", "balena/thoughts", "balena/guestbook", "balena/update"]
+		"treno/index", "treno/about", "treno/thoughts", "treno/guestbook", "treno/update"]
 
 func _ready() -> void:
 	await get_tree().process_frame

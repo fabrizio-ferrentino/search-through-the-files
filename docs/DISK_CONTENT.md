@@ -61,7 +61,7 @@ The texts follow the story in [GDD.md §2b](GDD.md): the PC belonged to Noah's *
 |---|---|---|
 | `FILE_EPOCA` | the family | ordinary life: the diary of the first days, a letter to grandma, the kids' homework, the phone list. The warmer these are, the worse the rest. |
 | `FILE_LORE_PADRE` | the father | diaries that start normal and slip, a note written to his sons in a moment of lucidity, the last night |
-| `FILE_HORROR` | the young man / the curse | loneliness, nobody answering (the 52-Hz whale is his emblem); the curse speaking to whoever sits at the PC *now* |
+| `FILE_HORROR` | the young man / the curse | loneliness, nobody answering; the 52-Hz whale is the CURSE's emblem (not the young man's since 2026-10-23); the curse speaking to whoever sits at the PC *now* |
 
 What the GDD marks as **open** (names, how the curse passes from one person to the next)
 is not written in the texts: write around it ("my wife", "the boys", "the neighbour").
