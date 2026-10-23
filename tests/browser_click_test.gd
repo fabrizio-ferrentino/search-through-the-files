@@ -27,8 +27,13 @@ extends Node
 # ============================================================
 
 const VP_SIZE := Vector2i(1440, 1080)
-const TABELLE := "forum/index"        # pagina ricca: tabelle, link, righe colorate
-const PARAGRAFI := "cronaca/tragedia" # pagina a paragrafi semplici su sfondo chiaro
+# Le pagine di prova sono FISSE e stanno qui, non nei siti: il test trova i punti da
+# cliccare guardando i pixel (il blu dei link, il testo neutro), e un sito ridisegnato
+# lo faceva fallire senza che il browser avesse niente (24/10/2026: la fascia blu notte
+# del forum nuovo, col testo bianco sfumato ai bordi, sembrava un link). Sono le
+# versioni del forum e della gazzetta com'erano fino al 23/10/2026.
+const TABELLE := "res://tests/pagine_prova/tabelle.html"     # tabelle, link, righe colorate
+const PARAGRAFI := "res://tests/pagine_prova/paragrafi.html" # paragrafi semplici su sfondo chiaro
 
 var _sub: SubViewport
 var _browser: BrowserApp
@@ -184,8 +189,12 @@ func _timeout() -> void:
 # Ricarica la pagina e azzera lo stato tra un caso e l'altro.
 func _reset(pagina: String) -> void:
 	_meta.clear()
-	_browser._load(pagina)
+	# un clic di prima su un link ha fatto navigare davvero il browser: si aspetta che quel
+	# caricamento finisca, o il suo velo resterebbe sopra la pagina di prova a prendersi i clic
 	await _browser.attendi_caricamento()
+	var html := FileAccess.get_file_as_string(pagina)
+	_browser._html_text = html
+	_browser._render_html(HtmlBB.strip_comments(HtmlBB.body_inner(html)))
 	for i in range(4):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
@@ -224,6 +233,23 @@ func _doppio_clic(pos: Vector2, pagina: String) -> String:
 # saltare l'intestazione), non una coordinata dello schermo: la cornice del browser e'
 # cresciuta due volte e ogni altezza scritta a mano si e' rotta -- una volta la scansione
 # partiva dentro il banner, un'altra il punto "sotto l'intestazione" cadeva nel vuoto.
+# Il centro del tratto continuo piu' lungo fra le x trovate (campionate ogni 2 px; un buco
+# fino a 10 px, lo spazio fra due lettere della stessa parola, non spezza il tratto).
+func _centro_tratto_lungo(xs: Array) -> int:
+	var da: int = xs[0]
+	var meglio_da: int = da
+	var meglio_a: int = da
+	var prima: int = da
+	for k in range(1, xs.size()):
+		var x: int = xs[k]
+		if x - prima > 10:
+			da = x
+		prima = x
+		if x - da > meglio_a - meglio_da:
+			meglio_da = da
+			meglio_a = x
+	return (meglio_da + meglio_a) / 2
+
 func _trova(pagina: String, cerca_link: bool, salta := 0) -> Vector2:
 	await _reset(pagina)
 	var img := _sub.get_texture().get_image()
@@ -262,7 +288,12 @@ func _trova(pagina: String, cerca_link: bool, salta := 0) -> Vector2:
 		# punto "sul testo" cadeva su una linea -- dove il cursore e' giustamente una freccia.
 		# Le lettere invece danno tanti gruppetti separati da spazi: se ne servono almeno 3.
 		if xs.size() >= soglia and (cerca_link or _gruppi(xs) >= 3):
-			if cerca_link or x_forte < 0:
+			if cerca_link:
+				# il centro del tratto blu PIU' LUNGO della riga, cioe' di un solo link: la
+				# mediana di tutti i pixel blu poteva cadere nello stacco fra due link (una
+				# barra "Indice | Hardware | ..."), e 3 px di tremolio uscivano dal link
+				return Vector2(float(_centro_tratto_lungo(xs)), float(y))
+			if x_forte < 0:
 				return Vector2(float(xs[xs.size() / 2]), float(y))
 			return Vector2(float(x_forte), float(y))
 	return Vector2(-1, -1)

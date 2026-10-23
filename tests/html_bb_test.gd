@@ -157,15 +157,26 @@ func _prova_varieta() -> void:
 
 	# 19. colonne con la loro larghezza: la colonna laterale da 160 px, l'altra il resto
 	var lat := HtmlBB.compile("<table width=\"600\" cellpadding=\"4\"><tr><td width=\"160\">menu</td><td>testo</td></tr></table>")
-	_has("td_width_160", lat, "[img width=150 height=1]")
-	_has("td_width_resto", lat, "[img width=430 height=1]")
+	_has("td_width_160", lat, "[img width=148 height=1]")
+	_has("td_width_resto", lat, "[img width=428 height=1]")
 	var pct := HtmlBB.compile("<table width=\"100%\" cellpadding=\"0\"><tr><td width=\"25%\">a</td><td>b</td></tr></table>", {"page_width": 800.0})
-	_has("td_width_pct", pct, "[img width=198 height=1]")
-	_has("td_width_pct_resto", pct, "[img width=598 height=1]")
+	_has("td_width_pct", pct, "[img width=196 height=1]")
+	_has("td_width_pct_resto", pct, "[img width=596 height=1]")
 	# una tabella al 100% DENTRO una cella e' larga quanto la cella, non quanto la pagina
 	var ann := HtmlBB.compile("<table width=\"600\" cellpadding=\"4\"><tr><td width=\"160\">menu</td><td><table width=\"100%\" cellpadding=\"0\"><tr><td>x</td></tr></table></td></tr></table>", {"page_width": 900.0})
-	_has("annidata_della_cella", ann, "[img width=428 height=1]")
-	_no("annidata_non_della_pagina", ann, "[img width=898 height=1]")
+	_has("annidata_della_cella", ann, "[img width=424 height=1]")
+	_no("annidata_non_della_pagina", ann, "[img width=896 height=1]")
+	# una tabella piu' stretta della pagina sta fra colonne vuote che si prendono il resto,
+	# cosi' un paragrafo lungo non la allarga fino al bordo (centrata: due colonne, una per lato)
+	var sch := HtmlBB.compile("<table width=\"500\" align=\"center\"><tr><td>" + "parola ".repeat(80) + "</td></tr></table>", {"page_width": 904.0})
+	_has("stretta_centrata", sch, "[table=3][cell padding=0,0,0,0][img width=200 height=1]")
+	_no("stretta_niente_center", sch, "[center]")
+	var sin := HtmlBB.compile("<table width=\"50%\"><tr><td>x</td></tr></table>", {"page_width": 804.0})
+	_has("stretta_sinistra", sin, "[table=2][cell padding=0,0,0,0][table=1]")
+	_has("stretta_sinistra_resto", sin, "[img width=398 height=1]")
+	# un <hr> dentro una cella e' largo quanto la CELLA (in Godot la % e' della pagina intera)
+	_has("hr_in_cella", HtmlBB.compile("<table width=\"400\" cellpadding=\"0\"><tr><td><hr></td></tr></table>", {"page_width": 900.0}), "height=2 width=396]")
+	_no("piena_non_stretta",HtmlBB.compile("<table width=\"100%\"><tr><td>x</td></tr></table>", {"page_width": 800.0}), "[table=2]")
 	_has("bordercolor",HtmlBB.compile("<table border=\"1\" bordercolor=\"#FF0000\"><tr><td>a</td></tr></table>"), "border=#FF0000")
 
 	# 20. marquee: riga a se', con larghezza, lunghezza, velocita'; in una cella e' ferma

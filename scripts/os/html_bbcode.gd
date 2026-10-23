@@ -45,6 +45,10 @@ const AUDIO_DIR := "res://web/audio/"
 const META_PLAY := "__audio:play"
 const META_STOP := "__audio:stop"
 
+# Quanto occupa una cella oltre al suo padding: misurato con una sonda (24/10/2026), il
+# RichTextLabel ci mette 4 px; con 2 una tabella al 100% a piu' colonne usciva dal bordo.
+const CELLA_EXTRA := 4
+
 # marquee: velocita' predefinita come in IE (scrollamount 6 px ogni 85 ms)
 const MARQUEE_PASSO := 6.0
 const MARQUEE_RITARDO := 0.085
@@ -119,7 +123,11 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 				var endt := _table_end(html, i)
 				var tbb := _table(html.substr(i, endt - i), tag, ctx)
 				# <table align="center">, o tabella dentro <center>/<div align="center">
-				if _attr(tag, "align").to_lower() == "center" or _has_center(stack):
+				var centrata: bool = _attr(tag, "align").to_lower() == "center" or _has_center(stack)
+				var stretta := _stringi(tbb, tag, centrata, ctx)
+				if stretta != "":
+					tbb = stretta
+				elif centrata:
 					tbb = "[center]" + tbb + "[/center]"
 				out += _close_all(stack) + "\n" + tbb + "\n" + _reopen_all(stack)
 				var close_gt := html.find(">", endt)
@@ -150,7 +158,7 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 					pref = "%d. " % int(lists.back()["n"])
 				out += _close_all(stack) + "\n" + "  ".repeat(depth) + pref + _reopen_all(stack)
 			"hr":
-				out += _close_all(stack) + "\n" + _hr(tag) + "\n" + _reopen_all(stack)
+				out += _close_all(stack) + "\n" + _hr(tag, ctx) +"\n" + _reopen_all(stack)
 			"img":
 				out += _img(tag)
 			"marquee":
@@ -229,14 +237,23 @@ static func _has_center(stack: Array) -> bool:
 
 # ---------------- blocchi ----------------
 
-static func _hr(tag: String) -> String:
+# Dentro una cella la percentuale di [hr] e' della PAGINA, non della cella: una riga al
+# 100% in una colonna laterale la allargava fino a spingere la tabella fuori dal bordo.
+# In una cella di larghezza nota la percentuale diventa quindi pixel della cella.
+static func _hr(tag: String, ctx: Dictionary = {}) -> String:
 	var col := _attr(tag, "color")
 	var h := _attr(tag, "size")     # <hr size=N> legacy = spessore
-	var w := _attr(tag, "width")
+	var w := _attr(tag, "width").strip_edges()
 	var bb := "[hr color=" + (_col(col) if col != "" else "#808080")
 	bb += " height=%d" % (maxi(1, int(h)) if h.strip_edges() != "" else 2)
-	if w.strip_edges() != "":
-		bb += " width=" + w.strip_edges() + " align=center"
+	var cella := float(ctx.get("page_width", 0.0)) if int(ctx.get("_in_cella", 0)) > 0 else 0.0
+	if cella > 0.0 and (w == "" or w.ends_with("%")):
+		var pct := 100.0 if w == "" else clampf(w.trim_suffix("%").to_float(), 1.0, 100.0)
+		bb += " width=%d" % int(cella * pct / 100.0)
+		if w != "":
+			bb += " align=center"
+	elif w != "":
+		bb += " width=" + w + " align=center"
 	else:
 		bb += " width=100%"
 	return bb + "]"
@@ -438,7 +455,7 @@ static func _table(inner: String, tag: String, ctx: Dictionary) -> String:
 			ctx["_in_cella"] = int(ctx.get("_in_cella", 0)) + 1
 			var pagina_fuori: Variant = ctx.get("page_width", 0.0)
 			if float(colw[c]) > 0.0:
-				ctx["page_width"] = maxf(16.0, float(colw[c]) - float(2 * pad + 2))
+				ctx["page_width"] = maxf(16.0, float(colw[c]) - float(2 * pad + CELLA_EXTRA))
 			var content := _walk(str(cd.get("html", "")), ctx).strip_edges()
 			ctx["page_width"] = pagina_fuori
 			ctx["_in_cella"] = int(ctx["_in_cella"]) - 1
@@ -479,7 +496,7 @@ static func _spacer_row(colw: Array, pad: int, tbg: String) -> String:
 			out += "[cell" + opts + "][/cell]"
 			continue
 		# la cella ci aggiunge il proprio padding orizzontale piu' un paio di px di bordo
-		var larghezza: int = int(maxf(8.0, float(w) - float(2 * pad + 2)))
+		var larghezza: int = int(maxf(8.0, float(w) - float(2 * pad + CELLA_EXTRA)))
 		out += "[cell" + opts + "][img width=%d height=1]%s[/img][/cell]" % [larghezza, SPACER_IMG]
 	return out
 
@@ -529,6 +546,33 @@ static func _misura(w: String, base: float, ctx: Dictionary) -> float:
 			return 0.0                    # larghezza di pagina ancora sconosciuta
 		return base * clampf(w.trim_suffix("%").to_float(), 1.0, 100.0) / 100.0
 	return w.to_float()
+
+# Una tabella PIU' STRETTA della pagina (<table width="560">, la scheda centrata): la
+# riga distanziatrice da' a una [table] solo la larghezza MINIMA, e un paragrafo lungo la
+# allarga fino al bordo. La si chiude allora fra colonne vuote che riempiono il resto
+# della pagina: lo spazio libero non c'e' piu' e il testo va a capo dentro la tabella.
+# "" se la tabella non e' stretta (o la larghezza della pagina non e' ancora nota).
+static func _stringi(tbb: String, tag: String, centrata: bool, ctx: Dictionary) -> String:
+	var pagina := float(ctx.get("page_width", 0.0))
+	var w := _attr(tag, "width").strip_edges()
+	if w == "":
+		return ""
+	# anche a larghezza ancora ignota: il browser deve ricompilare quando la conosce
+	ctx["uses_width"] = true
+	if pagina <= 0.0:
+		return ""
+	var target := w.to_float()
+	if w.ends_with("%"):
+		target = pagina * clampf(w.trim_suffix("%").to_float(), 1.0, 100.0) / 100.0
+	var avanzo := pagina - target - 4.0
+	if target < 16.0 or avanzo < 24.0:
+		return ""
+	var vuota := "[cell padding=0,0,0,0][img width=%d height=1]" + SPACER_IMG + "[/img][/cell]"
+	var dentro := "[cell padding=0,0,0,0]" + tbb + "[/cell]"
+	if centrata:
+		var lato := int(avanzo / 2.0)
+		return "[table=3]" + vuota % lato + dentro + vuota % lato + "[/table]"
+	return "[table=2]" + dentro + vuota % int(avanzo) + "[/table]"
 
 # Indice del "</table>" che chiude la tabella aperta (gestisce l'annidamento).
 static func _table_end(html: String, from: int) -> int:

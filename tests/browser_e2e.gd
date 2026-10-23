@@ -88,9 +88,13 @@ func _ready() -> void:
 
 	# --- il banner <table width="100%"> del forum deve arrivare davvero a tutta la pagina
 	# (la larghezza delle [table] BBCode e' guidata dal contenuto: la impone la "spacer"
-	# trasparente di HtmlBB._spacer_row) ---
-	_browser._load("forum/index")
-	await _browser.attendi_caricamento()
+	# trasparente di HtmlBB._spacer_row). Sulla pagina di prova FISSA (il vecchio forum, col
+	# banner verde): un sito ridisegnato non deve far fallire un controllo del motore ---
+	var prova := FileAccess.get_file_as_string("res://tests/pagine_prova/tabelle.html")
+	_browser._html_text = prova
+	_browser._render_html(HtmlBB.strip_comments(HtmlBB.body_inner(prova)))
+	for k in range(4):
+		await get_tree().process_frame
 	txt = await _snap("web_banner.png")
 	await RenderingServer.frame_post_draw
 	var bimg := _sub.get_texture().get_image()
