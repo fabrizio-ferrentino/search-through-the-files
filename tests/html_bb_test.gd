@@ -28,6 +28,8 @@ func _initialize() -> void:
 
 	# 3. entita' e parentesi quadre escapate
 	_eq("entita", HtmlBB.compile("x &amp; [y] &raquo;"), "x & [lb]y[rb] »")
+	# &nbsp; resta uno spazio vero, che non si comprime: i disegni ASCII si allineano con quello
+	_eq("nbsp", HtmlBB.compile("a&nbsp;&nbsp;&nbsp;b  c"), "a   b c")
 
 	# 4. link con colore dal contesto
 	_eq("link", HtmlBB.compile("<a href=\"news.html\">N</a>", {"link_color": "#66ff66"}),

@@ -50,7 +50,7 @@ const MARQUEE_PASSO := 6.0
 const MARQUEE_RITARDO := 0.085
 
 const _ENTITIES := {
-	"&nbsp;": " ", "&copy;": "©", "&raquo;": "»", "&laquo;": "«",
+	"&copy;": "©", "&raquo;": "»", "&laquo;": "«",
 	"&middot;": "·", "&hellip;": "…", "&quot;": "\"", "&mdash;": "—", "&deg;": "°",
 	"&lt;": "<", "&gt;": ">", "&amp;": "&",
 }
@@ -804,4 +804,8 @@ static func _txt(s: String) -> String:
 		_ws_re = RegEx.new()
 		_ws_re.compile("\\s+")
 	s = _ws_re.sub(s, " ", true)
+	# &nbsp; DOPO aver compresso gli spazi, e come spazio vero che non si comprime ne' va a
+	# capo: e' cosi' che le pagine allineano i disegni ASCII (prima diventava uno spazio
+	# normale e i disegni si storcevano)
+	s = s.replace("&nbsp;", char(0xA0))
 	return s.replace("[", "￰").replace("]", "[rb]").replace("￰", "[lb]")
