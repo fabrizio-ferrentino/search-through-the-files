@@ -17,8 +17,6 @@
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Rock Medium.glb" id="masso"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Cloud A.glb" id="nuvolaA"]
 [ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Cloud B.glb" id="nuvolaB"]
-[ext_resource type="PackedScene" path="res://assets/textures/3d/outdoor/Street Light.glb" id="lampione"]
-
 [sub_resource type="BoxMesh" id="box"]
 
 [sub_resource type="StandardMaterial3D" id="m_telaio"]
@@ -62,14 +60,6 @@ albedo_color = Color(0.55, 0.58, 0.68, 1)
 
 [sub_resource type="QuadMesh" id="stella"]
 size = Vector2(0.045, 0.045)
-
-[sub_resource type="StandardMaterial3D" id="m_lampadina"]
-shading_mode = 0
-albedo_color = Color(1, 0.85, 0.55, 1)
-
-[sub_resource type="SphereMesh" id="lampadina"]
-radius = 0.1
-height = 0.2
 
 [sub_resource type="StandardMaterial3D" id="m_prato"]
 albedo_color = Color(0.07, 0.085, 0.055, 1)
@@ -546,22 +536,6 @@ transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 9.7986, 4.6542, -14.9)
 mesh = SubResource("stella")
 material_override = SubResource("m_stella")
 cast_shadow = 0
-
-[node name="Lampione" parent="Esterno" instance=ExtResource("lampione")]
-editor_description = "Lampione lontano (Quaternius, CC0) acceso, fra i pini: a ~7 m dalla finestra, davanti ai pini; la sua luce (LuceLampione, portata 4 m) non arriva a chi si affaccia."
-transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 2.2, -1.24, -7.2)
-
-[node name="Lampadina" type="MeshInstance3D" parent="Esterno"]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 2.146, 1.92, -6.072)
-mesh = SubResource("lampadina")
-material_override = SubResource("m_lampadina")
-cast_shadow = 0
-
-[node name="LuceLampione" type="OmniLight3D" parent="Esterno"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.146, 1.75, -6.072)
-light_color = Color(1, 0.8, 0.5, 1)
-light_energy = 1.5
-omni_range = 4.0
 
 [node name="Cloud1" parent="Esterno/Cielo/NuvolaA1/RootNode" index="0"]
 material_override = SubResource("m_nuvola")

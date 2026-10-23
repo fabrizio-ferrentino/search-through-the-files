@@ -20,4 +20,3 @@ Downloaded 2026-10-23 from static.poly.pizza; renamed (original title in quotes)
 - Rock Medium.glb - "Rock Medium" - https://poly.pizza/m/s1OJ3bBzqc
 - Cloud A.glb - "Cloud" - https://poly.pizza/m/KdFNOVn1Gf
 - Cloud B.glb - "Cloud" - https://poly.pizza/m/pjiBiLJwAl
-- Street Light.glb - "Street Light" - https://poly.pizza/m/nFwrlcLvM5
