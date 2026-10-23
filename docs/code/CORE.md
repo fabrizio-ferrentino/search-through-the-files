@@ -23,7 +23,12 @@ characters \n (read back with c_unescape, see OSContent._testo).
 
 ### `scenes/main_menu.tscn`
 
-Start screen (this is the main scene).
+Start screen (this is the main scene). Three boxed buttons (Start,
+Settings, Quit), all the SAME box: x 1050-1770, 200 px tall, at y 290 /
+520 / 750 (2026-10-23, owner: they were "storti", each at a different x
+and width; a flat text-only version was tried and the owner wanted the
+boxes back: "rimetti i pulsanti mi piacevano"). Focus stylebox empty (a
+clicked button kept an outline).
 
 ### `scenes/main.tscn`
 
@@ -228,6 +233,20 @@ Reusable black ColorRect + AnimationPlayer (fade_in / fade_out).
 
 ### `scripts/GameManager.gd`
 
+Video settings (2026-10-23): schermo_intero, vsync, risoluzione
+(Vector2i, ZERO = never chosen = keep project.godot's window), saved in
+user://impostazioni.cfg section [video] next to the language, loaded in
+_ready but APPLIED only by applica_video_salvato(), which main_menu.gd
+calls once per launch: tests and main.tscn run from the editor keep the
+project window whatever the player chose. set_schermo_intero /
+set_vsync / set_risoluzione apply + save; windowed sizes are re-centred
+in the usable area (title bar kept on screen). RISOLUZIONI = common 16:9
+and 16:10 sizes 1280x720 .. 3840x2160; risoluzioni_possibili() = those
+not larger than the SCREEN. A size equal to the screen is offered on
+purpose: it covers it and looks fullscreen - the owner was told and
+wants it (2026-10-23, "rimetti 1920x1080"). A saved size that no longer
+fits falls back to the largest that does.
+
 Autoload. Global run state + run lifecycle
 (start_new_run / game_over / restart) + the LANGUAGE:
 LINGUA_BASE "en", LINGUE ["en","it"], NOMI_LINGUA (the endonyms,
@@ -322,17 +341,28 @@ into the SubViewport.
 
 ### `scripts/main_menu.gd`
 
-Menu buttons + fade to the room. _etichette() assigns the
-three button labels from tr() (UI_START/UI_OPTIONS/UI_QUIT):
+Menu buttons + fade to the room. _ready() first calls
+GameManager.applica_video_salvato() (see GameManager video settings).
+_etichette() assigns the three button labels from tr()
+(UI_START/UI_OPTIONS/UI_QUIT):
 the buttons live in the SCENE (authored by the owner), so the
 text is set in code and the scene is left alone. It is called
 again on the options screen's "lingua_cambiata", or the menu
 would stay in the language it was built in.
-"Options" opens options_screen.gd (one screen at a time).
+"Settings" opens options_screen.gd (one screen at a time).
+After "Start" the menu is LOCKED for the fade (2026-10-23, owner: during
+the fade the other buttons still worked - Settings opened, Quit closed the
+game mid-load, a second Start re-rolled the run): _blocca_pulsanti() sets
+every button to mouse IGNORE + FOCUS_NONE (not disabled: they would turn
+grey for that second) and the three callbacks return while _in_partenza().
+The fade veil cannot block clicks: Fade_transition is mouse IGNORE on
+purpose, the room reuses it.
 
 ### `scripts/options_screen.gd`
 
-OPTIONS overlay (2026-09-19): a CanvasLayer built in code like
+SETTINGS overlay (2026-09-19; shown as "Settings"/"Impostazioni" since
+2026-10-23, owner: "forse e' meglio rinominarla impostazioni" - the
+code and keys keep "options"): a CanvasLayer built in code like
 the other overlays, spawned by main_menu.gd. Holds ONE setting,
 the LANGUAGE: a toggle button per GameManager.LINGUE showing the
 ENDONYM ("Italiano", not "Italian" - in a language list each one
@@ -345,9 +375,45 @@ uses one - through a translucent veil the menu's own buttons
 showed through and it read as a drawing defect. Language is
 changed only HERE, i.e. from the menu: the in-world text (file
 names, web pages) is generated when the run starts, so changing
-it mid-game would not rewrite the PC. _riga() is there so the
-screen can grow (volume, sensitivity - M6).
-Test: options_test.tscn.
+it mid-game would not rewrite the PC.
+VIDEO rows (2026-10-23, owner: "impostazioni video risoluzione, v sync,
+fullscreen"): Fullscreen yes/no, V-Sync yes/no, Window size: a DROP-DOWN
+over GameManager.risoluzioni_possibili() - too many for a row of
+buttons (owner: "vorrei piu' risoluzioni"; an arrow selector "< >" was
+rejected). It is HAND-MADE, not Godot's OptionButton: that popup had its
+own look (radio dots, tiny arrow) and always opened downwards, off the
+screen when the window is as big as the screen (owner: "si vede
+malissimo e va fuori dallo schermo"). "Risoluzione" is a Button with a
+drawn triangle; _apri_elenco_ris() adds "ElencoRisoluzioni" (a clear
+veil that closes it on any click outside; ESC closes it first) with a
+framed list of buttons, below the field if it fits in the VISIBLE part
+of the window (_area_visibile: window rect intersected with the screen's
+usable rect, mapped to canvas coords), otherwise on the roomier side,
+scrolling if needed. Visibly DISABLED in fullscreen. A window not in the list shows the largest size that fits it. At the bottom, next to
+Back, a "Credits" button opens credits_screen.gd ON TOP (layer + 1);
+ESC then closes the credits first. Rows sit in a 2-column
+GridContainer (labels right-aligned | buttons) so they line up;
+_aggiungi_riga() adds one, _pulsante_scelta() makes a choice button,
+and every row is registered in _righe so _aggiorna_selezione() draws all
+of them the same hand-drawn way. Node names are identifiers the tests
+use: language buttons = the code ("en", "it"), SchermoInteroSi/No,
+VSyncSi/No, Ris<w>x<h>.
+Test: options_test.tscn (language only; it never touches video).
+
+### `scripts/credits_screen.gd`
+
+CREDITS overlay (2026-10-23, owner: "aggiungere anche i credits per gli
+asset"; then "i crediti mettili in opzioni"): opened from the Settings
+screen, which sets its layer. Built like OptionsScreen (black, title, Back + ESC), a
+ScrollContainer listing SEZIONI = [section key, [line keys]], all CR_*
+keys in locale/ui.csv. Game author, 3D models (Household Props/
+CreativeTrio CC0, Retro Computer Setup/Brandon Westlake Sketchfab
+Standard, Quaternius CC0, and the CC BY 3.0 ones that REQUIRE
+attribution: Op Art/Ryan Murray, Book Stack/Danni Bittman, books/Tiff
+Eidmann, Books/Alex Safayan), fonts (Arimo + Cousine, OFL), Godot (MIT).
+Full sources are in each assets/.../CREDITS.md. NOT listed: Door.glb
+(source unknown) and the Jester placeholder (local only, not shipped).
+Adding an asset = a CR_ key in the CSV + its name in SEZIONI.
 
 ### `scripts/crosshair.gd`
 

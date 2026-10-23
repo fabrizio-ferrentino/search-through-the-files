@@ -4,36 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://ci5aecoj8enrl" path="res://logo.png" id="2_bqqt6"]
 [ext_resource type="PackedScene" uid="uid://cxlp1v6odc6t3" path="res://scenes/fade_transition.tscn" id="3_fu7sn"]
 
-[sub_resource type="FontFile" id="FontFile_ekxnf"]
-cache/0/variation_coordinates = {}
-cache/0/face_index = 0
-cache/0/embolden = 0.0
-cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
-cache/0/spacing_top = 0
-cache/0/spacing_bottom = 0
-cache/0/spacing_space = 0
-cache/0/spacing_glyph = 0
-cache/0/baseline_offset = 0.0
-cache/0/16/0/ascent = 0.0
-cache/0/16/0/descent = 0.0
-cache/0/16/0/underline_position = 0.0
-cache/0/16/0/underline_thickness = 0.0
-cache/0/16/0/scale = 1.0
-cache/0/30/0/ascent = 0.0
-cache/0/30/0/descent = 0.0
-cache/0/30/0/underline_position = 0.0
-cache/0/30/0/underline_thickness = 0.0
-cache/0/30/0/scale = 1.0
-cache/0/50/0/ascent = 0.0
-cache/0/50/0/descent = 0.0
-cache/0/50/0/underline_position = 0.0
-cache/0/50/0/underline_thickness = 0.0
-cache/0/50/0/scale = 1.0
-cache/0/60/0/ascent = 0.0
-cache/0/60/0/descent = 0.0
-cache/0/60/0/underline_position = 0.0
-cache/0/60/0/underline_thickness = 0.0
-cache/0/60/0/scale = 1.0
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_menu"]
 
 [node name="Main Menu" type="Node2D" unique_id=1896803122]
 position = Vector2(-1, 2)
@@ -47,30 +18,32 @@ offset_bottom = 40.0
 
 [node name="Start" type="Button" parent="button_manager" unique_id=624166923]
 layout_mode = 0
-offset_left = 1055.0
-offset_top = 291.0
-offset_right = 1765.0
-offset_bottom = 494.0
-theme_override_fonts/font = SubResource("FontFile_ekxnf")
+offset_left = 1050.0
+offset_top = 290.0
+offset_right = 1770.0
+offset_bottom = 490.0
 theme_override_font_sizes/font_size = 60
+theme_override_styles/focus = SubResource("StyleBoxEmpty_menu")
 text = "Start"
 
 [node name="Option" type="Button" parent="button_manager" unique_id=1272375437]
 layout_mode = 0
-offset_left = 1048.0
-offset_top = 521.0
-offset_right = 1766.0
-offset_bottom = 726.0
+offset_left = 1050.0
+offset_top = 520.0
+offset_right = 1770.0
+offset_bottom = 720.0
 theme_override_font_sizes/font_size = 60
-text = "Option"
+theme_override_styles/focus = SubResource("StyleBoxEmpty_menu")
+text = "Settings"
 
 [node name="Quit" type="Button" parent="button_manager" unique_id=452922375]
 layout_mode = 0
-offset_left = 1053.0
-offset_top = 754.0
-offset_right = 1778.0
-offset_bottom = 961.0
+offset_left = 1050.0
+offset_top = 750.0
+offset_right = 1770.0
+offset_bottom = 950.0
 theme_override_font_sizes/font_size = 60
+theme_override_styles/focus = SubResource("StyleBoxEmpty_menu")
 text = "Quit"
 
 [node name="Label" type="Label" parent="button_manager" unique_id=419814717]
