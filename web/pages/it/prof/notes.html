@@ -1,0 +1,71 @@
+<html>
+<head><title>Prof. Aldo Brandi - Appunti</title></head>
+<body bgcolor="#FFFFFF" text="#000000" link="#0000EE" vlink="#551A8B">
+<font face="Times New Roman"><h1>Prof. Aldo Brandi</h1><p><i>Dipartimento di Matematica, Universita' degli Studi del Lago</i></p><p>[ <a href="index.html">Home</a> | <a href="teaching.html">Didattica</a> | <b>Appunti</b> | <a href="papers.html">Pubblicazioni</a> | <a href="students.html">Studenti</a> | <a href="contact.html">Ricevimento</a> ]</p></font><hr>
+<font face="Times New Roman"><h2>Appunti delle lezioni</h2>
+<p>Sono gli appunti del mio corso di Analisi Numerica I, in testo semplice, in modo da poterli stampare con qualsiasi stampante e leggere su qualsiasi schermo. Non sono un libro: contengono le definizioni, gli algoritmi e gli esercizi, non le spiegazioni, che do a lezione. Vi prego di non ridistribuirli senza questa intestazione.</p>
+<ul>
+<li>Capitolo 1 - Numeri in virgola mobile (versione del 01/02/1999)</li>
+<li>Capitolo 2 - Equazioni non lineari (versione del 08/02/1999)</li>
+<li>Capitolo 3 - Eliminazione di Gauss (qui sotto, versione del 15/03/1999)</li>
+<li>Capitolo 4 - Pivoting e decomposizione LU</li>
+<li>Capitolo 5 - Norme e condizionamento</li>
+<li>Capitolo 6 - Interpolazione (in preparazione)</li>
+<li>Capitolo 7 - Metodi iterativi, corretto il 15/03/1999</li>
+</ul>
+<p>In questa pagina e' stampato solo il capitolo 3, come esempio; gli altri sono disponibili presso la segreteria del dipartimento su dischetto, o in fotocopia al costo delle copie. Uno studente ha chiesto perche' non siano semplicemente sul Web. Il motivo e' che i file sono in un formato di word processor che nessun browser capisce, e non ho il tempo di convertirli. E' nella mia lista.</p>
+<h3>Capitolo 3</h3></font><pre>
+ANALISI NUMERICA I - APPUNTI DELLE LEZIONI
+Capitolo 3: eliminazione di Gauss (versione del 15/03/1999)
+
+3.1  Il problema
+
+Data una matrice quadrata A (n per n) e un vettore b, trovare x tale che
+A x = b.  Supponiamo A non singolare.
+
+3.2  Eliminazione senza pivoting
+
+per k = 1 fino a n-1
+    per i = k+1 fino a n
+        m = a(i,k) / a(k,k)
+        per j = k fino a n
+            a(i,j) = a(i,j) - m * a(k,j)
+        b(i) = b(i) - m * b(k)
+
+Dopo questo A e' triangolare superiore e si risolve per sostituzione all'indietro:
+
+x(n) = b(n) / a(n,n)
+per i = n-1 fino a 1
+    x(i) = ( b(i) - somma di a(i,j) x(j) per j = i+1..n ) / a(i,i)
+
+3.3  Costo
+
+L'eliminazione costa circa  (2/3) n^3  operazioni in virgola mobile.
+La sostituzione all'indietro circa  n^2.  Per n = 100 sono circa
+670000 operazioni: pochi secondi su una buona workstation, un minuto
+o due su un computer di casa. Per n = 1000 non aspettate.
+
+3.4  Perche' il pivoting?
+
+Take  A = ( 0.0001  1 )   b = ( 1 )
+          ( 1       1 )       ( 2 )
+
+La soluzione esatta e' vicina a x = (1.0001, 0.9999). Con quattro
+cifre decimali e senza pivoting si ottiene x(1) = 0, sbagliato
+del 100 per cento. Scambiate prima le righe e la risposta e' giusta.
+Il pivot non deve essere piccolo rispetto agli altri elementi.
+
+3.5  Esercizi
+
+(a) Risolvete a mano il sistema 3 per 3 alla lavagna. Contate le
+    operazioni. Controllate con la formula qui sopra.
+(b) Scrivete un programma che risolve un sistema letto da un file e
+    stampa il residuo.  Provate una matrice di Hilbert di ordine 8.
+    Spiegate quello che vedete.
+</pre><font face="Times New Roman"><h3>Una nota sugli errori di arrotondamento</h3>
+<p>Un errore frequente dei principianti e' confrontare due numeri in virgola mobile per vedere se sono uguali. Il numero 0.1 non si puo' rappresentare esattamente in binario, quindi sommare 0.1 dieci volte non da' esattamente 1. Un programma che cicla finche' una variabile e' uguale a 1 puo' non fermarsi mai. Confrontate con una tolleranza, e dite qual e' la tolleranza.</p>
+<p>Lo stesso vale per la cancellazione: sottrarre due numeri quasi uguali distrugge la maggior parte delle cifre significative. L'esempio classico e' la soluzione dell'equazione di secondo grado con la formula del libro quando una radice e' molto piu' piccola dell'altra. Usate il prodotto delle radici per evitarlo.</p>
+<p>Una storia per i curiosi: negli anni sessanta un programma per un modello meteorologico diede previsioni diverse su due calcolatori che dovevano essere identici, per una differenza nell'ultima cifra di una costante. La discussione di quel caso e' nella seconda ora della lezione 4.</p></font>
+<hr><font face="Times New Roman" size="2"><address>Ultima modifica: 22/03/1999<br>Questa pagina e' mia e non rappresenta la posizione dell'Universita'. Scritta a mano con un editor di testo.<br>Questa pagina e' stata visitata 1847 volte dal 14 settembre 1996.</address><a href="http://www.webnet.it">WebNet</a></font>
+</body>
+</html>

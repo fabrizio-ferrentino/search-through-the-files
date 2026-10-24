@@ -224,7 +224,8 @@ image is the same in both languages — only pictograms and digits; no real bran
 | `contatore_jack.gif`, `contatore_grifoni.gif`, `contatore_stelle.gif`, `contatore_giorni.gif` | counters (green digits) |
 | `bottone_monitor.gif`, `bottone_modem.gif`, `bottone_dischetto.gif` | 88x31 badges |
 | `stelle.gif` (animated night sky), `griglia.gif` (neon grid), `quadretti.gif` (gingham), `pergamena.gif` (parchment), `metallo.gif` (brushed metal) | tiles for `<body background>` |
-| `web/audio/`: `jack.mid` (pop loop), `inno.mid` (stadium anthem), `valzer.mid` (accordion waltz), `notte.mid` (night pad) | page music |
+| `pois.gif` (tile), `stellina.gif`, `fulmine.gif`, `allarme.gif`, `antenna.gif`, `contatore_anime.gif`, `contatore_radio.gif` | pink polka-dot tile / twinkling star / flashing lightning bolt / flashing warning triangle / antenna with waves / counters (anime, radio sites) |
+| `web/audio/`: `jack.mid` (pop loop), `inno.mid` (stadium anthem), `valzer.mid` (accordion waltz), `notte.mid` (night pad), `demo.mid` (garage-rock riff, band site) | page music |
 
 ## Music
 

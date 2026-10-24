@@ -499,12 +499,23 @@ static func _pulsante(tag: String, etichetta: String, ctx: Dictionary) -> String
 			ctx["_implicito"] = _nuovo_modulo(ctx, "", "get")
 		fi = int(ctx["_implicito"])
 	var meta := "__azzera:%d" % fi if tipo == "reset" else "__invia:%d" % fi
+	# il menu a pulsanti d'epoca: <input type=button onclick="location.href='x.html'">.
+	# Il pulsante diventa un link vero (barra di stato, link visitati, regole del sito).
+	var vai := pulsante_link(tag)
+	if vai != "":
+		meta = vai
 	if tipo == "image":
 		return "[url=%s][img]%s[/img][/url]" % [meta, img_path(_attr(tag, "src"))]
 	if etichetta.strip_edges() == "":
 		etichetta = TranslationServer.translate("WEB_FORM_RESET" if tipo == "reset" else "WEB_FORM_SUBMIT")
 	return "[table=1,center][cell bg=%s border=%s padding=10,2,10,2][url=%s][color=#000000]%s[/color][/url][/cell][/table]" % [
 			BOTTONE_FONDO, BOTTONE_BORDO, meta, _txt(etichetta)]
+
+# L'indirizzo di un onclick="location.href='x'" (o window.location / location=), "" se non c'e'.
+static func pulsante_link(tag: String) -> String:
+	var re := RegEx.create_from_string("(?i)location(?:\\.href)?\\s*=\\s*['\"]([^'\"]+)['\"]")
+	var m := re.search(_attr(tag, "onclick"))
+	return m.get_string(1).strip_edges() if m != null else ""
 
 # <select>: il valore scelto e la freccetta; il browser apre l'elenco delle <option>.
 static func _tendina(tag: String, interno: String, ctx: Dictionary) -> String:

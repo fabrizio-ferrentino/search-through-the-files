@@ -1,0 +1,71 @@
+<html>
+<head><title>Walter H. Brandt - Lecture notes</title></head>
+<body bgcolor="#FFFFFF" text="#000000" link="#0000EE" vlink="#551A8B">
+<font face="Times New Roman"><h1>Walter H. Brandt, Ph.D.</h1><p><i>Department of Mathematics, Lakeland University</i></p><p>[ <a href="index.html">Home</a> | <a href="teaching.html">Teaching</a> | <b>Lecture notes</b> | <a href="papers.html">Publications</a> | <a href="students.html">Students</a> | <a href="contact.html">Office hours</a> ]</p></font><hr>
+<font face="Times New Roman"><h2>Lecture notes</h2>
+<p>These are the notes of my course Numerical Analysis I, in plain text, so that they can be printed on any printer and read on any screen. They are not a book: they contain the definitions, the algorithms and the exercises, not the explanations, which I give at the lectures. Please do not redistribute them without this heading.</p>
+<ul>
+<li>Chapter 1 - Floating-point numbers (version of 02/01/1999)</li>
+<li>Chapter 2 - Nonlinear equations (version of 02/08/1999)</li>
+<li>Chapter 3 - Gaussian elimination (below, version of 03/15/1999)</li>
+<li>Chapter 4 - Pivoting and LU decomposition</li>
+<li>Chapter 5 - Norms and conditioning</li>
+<li>Chapter 6 - Interpolation (in preparation)</li>
+<li>Chapter 7 - Iterative methods, corrected on 03/15/1999</li>
+</ul>
+<p>Only chapter 3 is printed on this page, as a sample; the others are available from the department secretary on a floppy disk, or as a printout at the cost of the photocopies. A student has asked why they are not simply on the Web. The reason is that the files are in a word processor format that no browser understands, and I do not have the time to convert them. It is on my list.</p>
+<h3>Chapter 3</h3></font><pre>
+NUMERICAL ANALYSIS I - LECTURE NOTES
+Chapter 3: Gaussian elimination (version of 03/15/1999)
+
+3.1  The problem
+
+Given a square matrix A (n by n) and a vector b, find x such that
+A x = b.  We assume A is non-singular.
+
+3.2  Elimination without pivoting
+
+for k = 1 to n-1
+    for i = k+1 to n
+        m = a(i,k) / a(k,k)
+        for j = k to n
+            a(i,j) = a(i,j) - m * a(k,j)
+        b(i) = b(i) - m * b(k)
+
+After this, A is upper triangular and we solve by back substitution:
+
+x(n) = b(n) / a(n,n)
+for i = n-1 down to 1
+    x(i) = ( b(i) - sum of a(i,j) x(j) for j = i+1..n ) / a(i,i)
+
+3.3  Cost
+
+The elimination takes about  (2/3) n^3  floating-point operations.
+Back substitution takes about  n^2.  For n = 100 this is about
+670000 operations: a few seconds on a good workstation, a minute
+or two on a home computer. For n = 1000 do not wait.
+
+3.4  Why pivoting?
+
+Take  A = ( 0.0001  1 )   b = ( 1 )
+          ( 1       1 )       ( 2 )
+
+The exact solution is close to x = (1.0001, 0.9999). With four
+decimal digits and no pivoting you get x(1) = 0, which is wrong
+by 100 per cent. Swap the rows first and the answer is right.
+The pivot must not be small compared with the other entries.
+
+3.5  Exercises
+
+(a) Solve by hand the 3 by 3 system on the board. Count the
+    operations. Check with the formula above.
+(b) Write a program that solves a system read from a file and
+    prints the residual.  Try a Hilbert matrix of order 8.
+    Explain what you see.
+</pre><font face="Times New Roman"><h3>A note on rounding errors</h3>
+<p>A frequent mistake of beginners is to compare two floating-point numbers for equality. The number 0.1 cannot be represented exactly in binary, so adding 0.1 ten times does not give exactly 1. A program that loops until a variable is equal to 1 may never stop. Compare with a tolerance, and say what the tolerance is.</p>
+<p>The same holds for cancellation: subtracting two nearly equal numbers destroys most of the significant digits. The classic example is the solution of the quadratic equation by the textbook formula when one root is much smaller than the other. Use the product of the roots to avoid it.</p>
+<p>A story for the curious: in the 1960s a program for a weather model gave different forecasts on two computers that were supposed to be identical, because of a difference in the last digit of one constant. The discussion of that case is in the second hour of lecture 4.</p></font>
+<hr><font face="Times New Roman" size="2"><address>Last modified: 03/22/1999<br>These pages are mine and do not represent the position of the University. Written by hand in a text editor.<br>This page has been visited 1847 times since September 14, 1996.</address><a href="http://www.webnet.com">WebNet</a></font>
+</body>
+</html>

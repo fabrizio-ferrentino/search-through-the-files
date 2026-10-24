@@ -881,6 +881,99 @@ def notte():
     ])
 
 
+# ---------------- 24/10/2026: i sei siti nuovi (anime, prof, band, hosting, 2000, radio) ----------------
+
+def pois():
+    """Pois bianchi su rosa pallido (il santuario di un cartone animato)."""
+    pal = [(255, 232, 244), (255, 255, 255), (250, 200, 226)]
+    t = Tela(32, 32, 0)
+    for cx, cy in ((8, 8), (24, 24)):
+        t.cerchio(cx, cy, 4, 1)
+    for cx, cy in ((24, 8), (8, 24)):
+        t.cerchio(cx, cy, 2, 2)
+    scrivi_gif("pois.gif", [t.p], pal)
+
+
+def stellina():
+    """Una stellina che brilla (animata, fondo trasparente)."""
+    pal = [(255, 0, 255), (255, 240, 120), (255, 255, 255), (255, 170, 60)]
+    fs = []
+    for f in range(4):
+        t = Tela(24, 24, 0)
+        r = (4, 8, 11, 8)[f]
+        t.linea(12 - r, 12, 12 + r, 12, 1)
+        t.linea(12, 12 - r, 12, 12 + r, 1)
+        t.linea(12 - r // 2, 12 - r // 2, 12 + r // 2, 12 + r // 2, 3)
+        t.linea(12 - r // 2, 12 + r // 2, 12 + r // 2, 12 - r // 2, 3)
+        t.cerchio(12, 12, 2, 2)
+        fs.append(t.p)
+    scrivi_gif("stellina.gif", fs, pal, ritardo=14, trasparente=0)
+
+
+def fulmine():
+    """Il fulmine della band: giallo su nero, lampeggia."""
+    pal = [(0, 0, 0), (255, 220, 0), (255, 255, 255)]
+    fs = []
+    for f in range(3):
+        t = Tela(30, 40, 0)
+        c = (1, 2, 1)[f]
+        t.poligono([(18, 1), (6, 22), (14, 22), (10, 38), (25, 15), (16, 15), (22, 1)], c)
+        fs.append(t.p)
+    scrivi_gif("fulmine.gif", fs, pal, ritardo=25)
+
+
+def allarme():
+    """Il triangolo di pericolo che lampeggia (il bug del millennio)."""
+    pal = [(255, 0, 255), (255, 220, 0), (0, 0, 0), (255, 60, 0)]
+    fs = []
+    for f in range(2):
+        t = Tela(40, 36, 0)
+        t.poligono([(20, 2), (38, 33), (2, 33)], 1 if f == 0 else 3)
+        t.poligono([(20, 9), (32, 30), (8, 30)], 0 if False else (1 if f == 0 else 3))
+        t.rett(18, 13, 4, 10, 2)
+        t.rett(18, 25, 4, 4, 2)
+        fs.append(t.p)
+    scrivi_gif("allarme.gif", fs, pal, ritardo=50, trasparente=0)
+
+
+def antenna():
+    """Un'antenna con le onde che si allargano (il radioamatore)."""
+    pal = [(255, 0, 255), (60, 60, 60), (0, 140, 0), (200, 0, 0)]
+    fs = []
+    for f in range(4):
+        t = Tela(48, 48, 0)
+        t.linea(24, 44, 24, 18, 1)
+        t.linea(14, 18, 34, 18, 1)
+        t.linea(16, 12, 16, 18, 1)
+        t.linea(32, 12, 32, 18, 1)
+        t.linea(24, 44, 16, 46, 1)
+        t.linea(24, 44, 32, 46, 1)
+        t.cerchio(24, 8, 2, 3)
+        for k in range(2):
+            r = 6 + (f + k * 2) * 4
+            if r < 22:
+                t.cerchio(24, 8, r, 2, pieno=False)
+        fs.append(t.p)
+    scrivi_gif("antenna.gif", fs, pal, ritardo=18, trasparente=0)
+
+
+def demo():
+    """Il demo della band: riff rock in La minore, accordi di potenza e batteria."""
+    giro = [(9, "m"), (9, "m"), (5, "M"), (7, "M")] * 2
+    riff = []
+    for b, (f, _m) in enumerate(giro):
+        for k in range(8):
+            riff.append((b * 4 + k * 0.5, 0.45, 33 + f + (7 if k in (3, 7) else 0), 100))
+    mel = [(9, 1), (12, 1), (14, 2), (12, 1), (9, 1), (7, 2), (9, 1), (12, 1), (16, 1), (14, 1),
+           (12, 2), (9, 2), (None, 4)] * 2
+    scrivi_mid("demo.mid", 138, [
+        (0, 30, riff),
+        (1, 29, _melodia(mel, 5, vel=96)),
+        (2, 33, [(b * 4 + k, 0.9, 33 + f - 12 + 12, 95) for b, (f, _m) in enumerate(giro) for k in range(4)]),
+        (9, 0, _batteria(8, {36: [0, 1.5, 2], 38: [1, 3], 42: [0, .5, 1, 1.5, 2, 2.5, 3, 3.5], 49: [0]})),
+    ])
+
+
 TUTTI = [cantiere, busta, globo, nuovo, smile, fiamme, arcobaleno, floppy, ingranaggio,
          pallone, pentola, fiore, stemma, zodiaco, stelle, griglia, quadretti, pergamena,
          metallo,
@@ -892,7 +985,10 @@ TUTTI = [cantiere, busta, globo, nuovo, smile, fiamme, arcobaleno, floppy, ingra
          lambda: bottone("bottone_monitor.gif", "monitor", (0, 0, 128), "800x600"),
          lambda: bottone("bottone_modem.gif", "modem", (0, 90, 0), "56K"),
          lambda: bottone("bottone_dischetto.gif", "dischetto", (110, 0, 0), "144"),
-         jack, inno, valzer, notte]
+         pois, stellina, fulmine, allarme, antenna,
+         lambda: contatore(2806, "contatore_radio.gif"),
+         lambda: contatore(612, "contatore_anime.gif"),
+         jack, inno, valzer, notte, demo]
 
 if __name__ == "__main__":
     filtro = sys.argv[1] if len(sys.argv) > 1 else ""

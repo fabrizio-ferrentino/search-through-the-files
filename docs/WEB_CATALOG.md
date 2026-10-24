@@ -1,6 +1,6 @@
-# The site catalog: the 34 sites
+# The site catalog: the 40 sites
 
-The fake web the player browses. **34 sites** in all (30 until 2026-10-23, when four lore sites were added); **every run picks 10 to 15**, of
+The fake web the player browses. **40 sites** in all (30 until 2026-10-23, when four lore sites were added; on 2026-10-24 six more ordinary ones: anime, prof, band, hosting, y2k, radio); **every run picks 10 to 15**, of
 which **4 or 5 carry lore** (owner, 2026-10-19). All of tonight's sites are listed on the
 WebNet gateway; the others answer "cannot find server". They are period sites of
 1998-99, complex (6-14 pages each, navigation, real text), most of them ordinary, some
@@ -50,7 +50,7 @@ shared the old skeleton followed (the ordinary ones by the web-writer agent, the
 the main chat, texts untouched). **Every site now has its own look**; the Style column is the
 reference when a site is rewritten. A restyle keeps the texts, the pages and every rule below.
 
-## Ordinary sites (18)
+## Ordinary sites (24)
 
 | id | Site (EN / IT) | Pages | Notes | Style |
 |---|---|---|---|---|
@@ -72,6 +72,12 @@ reference when a site is rewritten. A restyle keeps the texts, the pages and eve
 | driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ | tech portal: dark left side-bar, badges, mono tables |
 | animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers | charity notice board: a two-column grid of animal cards, paw prints |
 | oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters | splash page + mystical pages: night tile, serif gold, ambient MIDI |
+| anime | Hikari's Shrine / Il Santuario di Hikari | 7 | fan shrine of a thirteen-year-old for the invented cartoon Pixie Pilot Hikari: episode guide, characters, fan art described, awards, web ring (dead links), guestbook form | fan shrine: pink polka-dot tile, Comic, a row of button links, star GIFs, counter, 88x31 badges |
+| prof | Walter H. Brandt / Prof. Aldo Brandi | 6 | a numerical analysis professor: courses and exam dates, lecture notes in `<pre>`, publications, theses, office hours | bare academic page: white, Times, h1, ul, hr, no pictures, no tables |
+| band | Concrete Swans / Cigni di Cemento | 7 | local garage band: news, tour dates 1998-99 in local venues, discography, lyrics, members, MIDI riff, mailing-list and guestbook forms | band site: black, red Arial caps, lightning GIFs, dark date tables |
+| hosting | HomePlot / Pagine di Casa | 7 | free home-page provider: six neighbourhoods, member directory (dead addresses), sign-up form to a cgi script, tips, FAQ, rules | GeoCities-like provider: blue/yellow banner, coloured tab row, cream side column, banner-ad cell |
+| y2k | The Year 2000 Problem / Il problema del 2000 | 7 | an anxious amateur's millennium-bug guide as of 03/31/1999: checklist, appliance compliance table, money, supplies, readers' letters (never writes the date 2000 in slash form) | hazard page: black/yellow stripes, red blinking warnings, Times, countdown bar |
+| radio | The Shack of W3MBK / Il Radiopiano di I2SVL | 7 | ham radio hobby: band tables, logbook in Courier, QSL cards described, dipole build notes, club notices, CB channels | radio shack: olive green, gold headings, Courier tables, amber log on black, antenna GIFs |
 
 The ordinary sites share one invented world: the town of **Millbrook / San Vito al
 Lago** (library, town hall, school, shelter, football club, PC repair), the WebNet

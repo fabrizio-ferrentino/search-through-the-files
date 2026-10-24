@@ -80,6 +80,9 @@ func _initialize() -> void:
 	var fm := HtmlBB.compile("<form action=\"/cgi-bin/cerca.pl\" method=\"get\">Cerca: <input type=\"text\" name=\"q\" size=\"20\" value=\"floppy\"> <input type=\"submit\" value=\"Vai\"></form>", cm)
 	_has("input_submit", fm, "[url=__invia:0][color=#000000]Vai[/color][/url]")
 	_has("input_text", fm, "[img width=1 height=19]res://web/img/spacer.png[/img][color=#000000]floppy[/color]")
+	# il pulsante-menu d'epoca e' un link alla pagina dell'onclick
+	_has("pulsante_menu", HtmlBB.compile("<form><input type=\"button\" value=\"Home\" onclick=\"location.href='index.html'\"></form>", {}),
+			"[url=index.html][color=#000000]Home[/color][/url]")
 	var moduli: Array = cm.get("moduli", [])
 	if moduli.size() == 1 and str(moduli[0]["action"]) == "/cgi-bin/cerca.pl" and str(moduli[0]["campi"][0]["nome"]) == "q":
 		print("PASS  moduli_ctx")

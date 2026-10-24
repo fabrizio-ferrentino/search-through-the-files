@@ -229,6 +229,38 @@ const SITI := [
 		"en": "www.nobodyhome.net", "it": "www.nessunoincasa.it",
 		"tipo": "lore", "voce": "maledizione", "featured": false, "stato": "completo",
 		"pagine": ["index", "door", "family", "keys", "visitors", "whale", "windows", "you"]},
+	# 24/10/2026: santuario di una tredicenne per un cartone inventato (pois rosa, pulsanti, web ring)
+	{"id": "anime", "nome": "WS_ANIME", "desc": "WS_ANIME_D",
+		"en": "www.webnet.com/~hikarishrine", "it": "www.webnet.it/~santuariohikari",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "awards", "characters", "episodes", "gallery", "guestbook", "ring"],
+		"morti": ["www.webnet.com/~starring", "www.webnet.com/~moonpie", "www.webnet.com/~hikari_fan2", "www.webnet.it/~cerchiostellare", "www.webnet.it/~tortalunare", "www.webnet.it/~hikari_fan2"]},
+	# 24/10/2026: la pagina accademica spoglia di un professore di analisi numerica
+	{"id": "prof", "nome": "WS_PROF", "desc": "WS_PROF_D",
+		"en": "www.lakeland.edu/~wbrandt", "it": "www.unilago.it/~brandi",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "contact", "notes", "papers", "students", "teaching"]},
+	# 24/10/2026: il sito di un gruppo rock da garage (nero e rosso, date, testi, demo MIDI, mailing list)
+	{"id": "band", "nome": "WS_BAND", "desc": "WS_BAND_D",
+		"en": "www.concreteswans.com", "it": "www.cignidicemento.it",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "band", "guestbook", "list", "lyrics", "music", "tour"]},
+	# 24/10/2026: un servizio di pagine personali gratuite in stile GeoCities (quartieri, elenco soci, modulo d'iscrizione)
+	{"id": "hosting", "nome": "WS_HOSTING", "desc": "WS_HOSTING_D",
+		"en": "www.homeplot.com", "it": "www.paginedicasa.it",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "districts", "faq", "members", "signup", "terms", "tips"],
+		"morti": ["www.webnet.com/~jenny_k", "www.webnet.com/~rocketboy", "www.webnet.com/~the_budgie_page", "www.webnet.com/~chefmarco", "www.webnet.com/~oldtimers_club", "www.webnet.com/~susanna_and_pets", "www.webnet.it/~jenny_k", "www.webnet.it/~razzoboy", "www.webnet.it/~la_pagina_del_pappagallo", "www.webnet.it/~chef_marco", "www.webnet.it/~circolo_vecchi_amici", "www.webnet.it/~susanna_e_animali"]},
+	# 24/10/2026: la pagina di un dilettante in ansia per il baco del millennio (strisce gialle e nere, tabella degli apparecchi)
+	{"id": "y2k", "nome": "WS_Y2K", "desc": "WS_Y2K_D",
+		"en": "www.webnet.com/~y2kready", "it": "www.webnet.it/~pronti2000",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "about", "appliances", "checklist", "letters", "money", "supplies"]},
+	# 24/10/2026: la stazione di un radioamatore (verde militare, tabelle di frequenze, log in Courier)
+	{"id": "radio", "nome": "WS_RADIO", "desc": "WS_RADIO_D",
+		"en": "www.webnet.com/~w3mbk", "it": "www.webnet.it/~i2svl",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "antenna", "bands", "cb", "club", "logbook", "qsl"]},
 ]
 
 # Il sito con quell'id ({} se non c'e').

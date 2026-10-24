@@ -209,6 +209,18 @@ WS_MARKET,Used PC Market,Mercatino PC
 WS_MARKET_D,Second-hand computers between private people.,Computer usati fra privati.
 WS_NOBODY,nobody,nessuno
 WS_NOBODY_D,you came by yourself.,sei venuto da solo.
+WS_ANIME,Hikari's Shrine,Il Santuario di Hikari
+WS_ANIME_D,"A fan shrine for the cartoon Pixie Pilot Hikari: episodes, characters, fan art, awards.","Un santuario di fan per il cartone Pixie Pilot Hikari: episodi, personaggi, fan art, premi."
+WS_PROF,Walter H. Brandt - Numerical Analysis,Prof. Aldo Brandi - Analisi Numerica
+WS_PROF_D,"A professor's plain home page: courses, lecture notes, publications, office hours.","La pagina spartana di un professore: corsi, appunti, pubblicazioni, ricevimento."
+WS_BAND,Concrete Swans,Cigni di Cemento
+WS_BAND_D,"The official site of a local garage band: tour dates, records, lyrics, mailing list.","Il sito ufficiale di un gruppo rock locale: date, dischi, testi, mailing list."
+WS_HOSTING,HomePlot,Pagine di Casa
+WS_HOSTING_D,"Free web space for everybody: neighbourhoods, member pages, sign-up.","Spazio web gratis per tutti: quartieri, pagine dei soci, iscrizione."
+WS_Y2K,The Year 2000 Problem,Il problema del 2000
+WS_Y2K_D,"An anxious amateur's guide to the millennium bug: checklist, appliances, supplies, letters.","La guida di un appassionato ansioso al baco del millennio: lista, elettrodomestici, scorte, lettere."
+WS_RADIO,The Shack of W3MBK,Il Radiopiano di I2SVL
+WS_RADIO_D,"A ham radio amateur's page: bands, logbook, QSL cards, antennas, club notices, CB.","La pagina di un radioamatore: bande, log, cartoline QSL, antenne, avvisi del club, CB."
 WEB_HOME_TITLE,Welcome to WebNet Gateway v3.1,Benvenuto su WebNet Gateway v3.1
 WEB_HOME_TAGLINE,Your on-ramp to the Information Superhighway,Il tuo punto d'accesso all'Autostrada dell'Informazione
 WEB_HOME_FAVS,YOUR BOOKMARKS:,I TUOI PREFERITI:
