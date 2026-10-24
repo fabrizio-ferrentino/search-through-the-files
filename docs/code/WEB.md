@@ -8,6 +8,17 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 
 ### `scripts/os/app_browser.gd`
 
+2026-10-24, FORMS (details in the feature note): members `_valori`, `_campo` (the field being typed
+in), `_moduli`. Clicking a field activates it; `_input` types into it (Backspace; Enter sends, or
+inserts a newline in a textarea; Tab goes to the next field of the form; ESC stops typing; ctrl/alt
+combinations pass through). A click elsewhere on the page stops typing (`_forse_fuori`, deferred
+after the meta). `_spunta` toggles (radios exclusive by form+name). `_apri_tendina` opens the
+browser's own Win95 drop-down (`_riempi_menu` / `_mostra_menu`) at the mouse. `_invia` builds
+`name=value&...` (checked boxes send their value) and goes to the action; `_azzera` resets. While
+typing the browser is in the group "campo_web_attivo" and `scrive()` is true. Status bar:
+meta_hover_started shows the target address (display_url of risolvi_link), meta_hover_ended restores
+`_stato_fermo` (the "done"/"stopped" text). Visited links: see web_runtime.
+
 BrowserApp: one page = ONE PageView (RichTextLabel). The HTML subset is
 compiled to BBCode by HtmlBB (html_bbcode.gd); the RTL gives
 CONTINUOUS drag selection over the whole page (table cells too,
@@ -128,6 +139,10 @@ left without a callback, the defect that prompted it).
 
 ### `scripts/os/page_view.gd`
 
+2026-10-24: `meta_underlined = false`. Page links carry their own `[u]` (so the visited colour and
+the underline are the compiler's), and buttons and fields are metas too, which must NOT be
+underlined.
+
 PageView: the browser PAGE (a RichTextLabel subclass) — real
 browser click semantics: a single click never leaves a selection
 (the RTL's internal timer would), sub-6px hand shake stays a CLICK
@@ -220,6 +235,24 @@ tables exposed three width problems):
   the page by 5-10 px (Godot's own distribution of widths; measured on news/index: 910 on 900).
 Tests: html_bb_test.gd (stretta_*, piena_non_stretta, hr_in_cella).
 
+2026-10-24 (forms, text tags, visited links; see the feature note in this file):
+- Forms are drawn as small inline tables with special metas: `__campo:<id>` (text/password/
+  textarea), `__spunta:<id>` (checkbox/radio; images Win95._tex_casella / the new
+  Win95._tex_pallino, registered on virtual paths like res://web/img/_casella_on.tex),
+  `__tendina:<id>` (select, with a ▼), `__invia:<form index>`, `__azzera:<form index>` (reset).
+  Field ids are "m<form>_<n>" in document order. ctx["moduli"] = [{action, method, campi:[{id,
+  tipo, nome, valore, modulo, ...}]}]; ctx["valori"] (id -> value) and ctx["campo_attivo"] come
+  from the browser. compile() resets the per-compilation state (moduli, _modulo, _implicito, _pre,
+  _in_cella), so recompiling with the same ctx gives the same ids. Fields have a 19 px strut (an
+  empty field is a line high); a textarea is rows*19 px. Button labels default to the CSV keys
+  WEB_FORM_SUBMIT / WEB_FORM_RESET.
+- Text tags: `<pre>` (spaces -> U+00A0, newlines kept, leading newline dropped), `<tt> <kbd> <samp>`
+  mono, `<s> <strike> <del>`, `<sup> <sub>` (size 11), `<big>` (20) / `<small>` (12), `<dl> <dt> <dd>`,
+  `<address>` italic.
+- Links take ctx["vlink_color"] when ctx["visitato"] (a Callable) says the target was visited.
+Tests: html_bb_test.gd (moduli_ctx, input_*, checkbox, radio, select, textarea, button, reset,
+hidden, pre_spazi, tt, strike, small, address, vlink_visto, vlink_non_visto).
+
 ### `scripts/os/gif_decoder.gd`
 
 GifDecoder (2026-10-23): pure static GIF87a/89a decoder, no engine state. LZW, global and
@@ -267,6 +300,9 @@ or the address of a site that is gone). All 34 sites (30 written
 the recipe: docs/WEB_SITES.md §3. Test: siti_catalogo_test.tscn.
 
 ### `scripts/os/web_runtime.gd`
+
+2026-10-24: `WebRuntime.visitate` (static Dictionary, cleared in build()) holds the pages opened
+in this run; BrowserApp._load fills it, `_visitato(href)` reads it (visited-link colour).
 
 WebRuntime: per-run web state (no file IO, no engine). A SITE IS A
 FOLDER (2026-10-19, owner: ~30 complex sites, 10-15 per run): a
@@ -350,6 +386,10 @@ also what BrowserApp.read_page uses. Test: web_locale_test.
 
 ### `scripts/os/web_anchor.gd`
 
+2026-10-24: no rendered key inside select / textarea / button / pre (the MOBILI list: they are
+not plain text); form, select, textarea, button and pre count as containers. `<option>` is
+deliberately NOT counted (it is usually left unclosed).
+
 WebAnchor: WHERE the web key hides. It used to be an extra line
 before </body> every time, which the owner recognised at a glance;
 now the page is scanned for every safe spot and the seed picks one
@@ -391,9 +431,9 @@ one-page placeholders were deleted. Three RULES the owner set that
 day, enforced by siti_catalogo_test: a site is CLOSED IN ITSELF (it
 never links to another site of the catalog - only to the WebNet
 portal or to a dead address in its "morti"; a directory site,
-"cerca", was written and REMOVED for this reason), NO form controls
-(<input>/<form>/<button>: logins, searches and carts are written as
-closed), and DATES ARE ABSOLUTE AND STOP AT 1999 (no "today, 9:05
+"cerca", was written and REMOVED for this reason), FORMS STAY IN THE SITE
+(MODULI_NEL_SITO; until 2026-10-24 the rule was "no form controls", see the
+feature note), and DATES ARE ABSOLUTE AND STOP AT 1999 (no "today, 9:05
 PM"; the timeline is in GDD §2b). img/ = page
 images (<img src="f.png">; PNGs import as resources and ship)
 plus img/spacer.png, the 1x1 transparent image that gives tables
@@ -410,6 +450,34 @@ locale/ui.csv and its entry in scripts/os/catalogo_siti.gd. The
 original mockup, ref.)
 
 ## Feature notes
+
+- **Forms that work, late-90s page elements (2026-10-24).** Owner asked "Ho notato che non ci sono
+  pulsanti in nessun sito, come mai?". Answer: the 2026-10-20 rule forbade form controls because the
+  browser could not use them. Owner then: "Cerca di ricreare esattamente lo stile dei siti di fine
+  anni 90, quindi se i pulsanti esistevano creamoli. Cos'altro manca?". His choices: forms that REALLY
+  work; the link address in the status bar on hover; visited links in the vlink colour; as page
+  elements "what you think is essential" -> the text tags (`<pre>` etc.). NOT done (cost vs value):
+  frames, Java applets, image maps. Impossible: JavaScript effects (no scripts).
+  History, so it does not come back: the rule NIENTE_CONTROLLI (siti_catalogo_test, check 8) is now
+  MODULI_NEL_SITO; tools/web/sito.py checks the same. A form's action must be empty, a page of the
+  site, or a script of its own server (never http/www/mailto).
+  Sending: a page of the same site that exists opens (the address bar shows the query); anything
+  else (/cgi-bin/...pl, .cgi, .asp) opens the new web/pages/<lang>/500.html "500 Internal Server
+  Error" (a period server page, "WebNet HTTPd/1.2"; the address bar keeps the script URL + query).
+  In the room: while a field is typed in, `desktop.typing()` and `desktop.trattiene_esc()` are true
+  (group "campo_web_attivo"), so P does not pause and ESC stops typing instead of leaving the PC.
+  Content: forms added wherever a 1999 site would have them - forum (search, jump-to, post a reply,
+  members login), mail login, shop (search strip, add-to-cart, order form on the cart), news (archive
+  search, a real poll), meteo (teletext "go to page", city select), giochi (newsletter, vote), blog
+  guestbook, biblioteca catalogue search, ricette send-a-recipe, calcio pre-registration, tv
+  (programme search, letter to the editors), musica (search, request), viaggi (quote), comune
+  (certificate request), driver (find your driver), oroscopo (ascendant calculator), animali
+  (pre-adoption), scuola (write for the paper); lore sites: treno guestbook, annunci answer-an-ad,
+  chat enter-the-chat, ascolto write-to-the-volunteers, vincente order form, lavoro CV, cronaca
+  archive search, genitori login, tecnico request-a-visit, mercatino post-an-ad, misteri
+  send-a-report, volto send-your-measurements, brutti "Post a Followup" under every message. Every
+  form goes to a server script, so the server answers 500: the button works, nobody is there any more.
+  Tests: web_moduli_test.tscn, html_bb_test (see TESTS.md).
 
 - **Lore change: the young man's site and nickname (2026-10-23).** Owner (Italian,
   paraphrased): he liked the lore spread across the sites, but did not like the nickname

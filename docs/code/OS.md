@@ -43,6 +43,10 @@ Test: os_finestre_test.tscn.
 
 ### `scripts/os/desktop.gd`
 
+(2026-10-24: `typing()` and `trattiene_esc()` also return true while a browser is in the group
+"campo_web_attivo", i.e. a web form field is being typed in (`_campo_web_attivo()`); so in the room
+P does not pause and ESC stops typing instead of leaving the PC. See WEB.md app_browser.)
+
 OSDesktop: desktop, TASKBAR, Start menu, window manager,
 mostra_contorno/nascondi_contorno = the dotted DRAG OUTLINE
 layer (2026-09-21), the LAST child of the desktop so it covers

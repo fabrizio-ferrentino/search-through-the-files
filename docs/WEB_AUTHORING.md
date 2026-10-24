@@ -50,7 +50,18 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 | `<blink>` | **blinking** text |
 | `<bgsound src="tune.mid" loop="infinite">` | **background music** from `web/audio/` (`.mid`, or `.wav`/`.ogg`); starts when the page has finished loading; no `loop` = plays once |
 | `<embed src="tune.mid" autostart="true/false" hidden="true" loop="true">` | music too; NOT hidden = a small period player (play ► / stop ■) drawn on the page |
-| `<input type="text/submit" value="...">` | DECORATIVE only (`[ Value ]` / underline). **Not used in the sites** (owner, 2026-10-20): a field that cannot be typed in is a broken promise, so `siti_catalogo_test` forbids it; write the login or the search as closed instead |
+| `<form action="..." method="get/post">` | a REAL form (owner, 2026-10-24). Fields are small inline tables; you can type in them. `action` must stay inside the site: empty, a page of the site, or a script of the site's own server (`/cgi-bin/x.pl`, `.cgi`, `.asp`); never `http://`, `www.` or `mailto:` (`siti_catalogo_test` MODULI_NEL_SITO) |
+| `<input type="text">`, `type="password"` (dots), `<textarea rows= cols=>` | typeable field (click it; Backspace, Tab = next field of the form, Enter sends, newline in a textarea, ESC stops typing). An empty field has the height of a line; a textarea is `rows` x 19 px |
+| `<input type="checkbox/radio" name= value= checked>` | toggles on click; radios of the same form+name are exclusive; a checked box sends its `value` |
+| `<select name><option value>` | Win95 drop-down (the field shows the chosen option and a ▼). `<option>` may stay unclosed |
+| `<input type="submit/button/reset">`, `<button>` | button; label from `value=`, else the CSV texts WEB_FORM_SUBMIT / WEB_FORM_RESET. Reset puts the values back. `type="hidden"` is sent but not drawn |
+| `<pre>` | monospace block: spaces kept (become U+00A0), newlines kept, a leading newline dropped. Use it for ASCII tables and art |
+| `<tt> <kbd> <samp>` | monospace inline |
+| `<s> <strike> <del>` | strike-through |
+| `<sup> <sub>` | smaller text (size 11, not raised) |
+| `<big> <small>` | larger (20) / smaller (12) text |
+| `<dl> <dt> <dd>` | definition list (each on its own line, dd indented by 6 non-breaking spaces) |
+| `<address>` | italic block |
 | `<table> <tr> <td> <th>` | real table, see below |
 | entities (`&nbsp;` is a real non-breaking space, kept after whitespace collapsing: **use it to align ASCII art**; plain spaces are collapsed to one) | `&nbsp; &copy; &raquo; &laquo; &middot; &hellip; &quot; &mdash; &deg; &lt; &gt; &amp;` |
 
@@ -144,9 +155,22 @@ Why the subclass is needed (all verified with `tests/browser_click_test.gd`):
 
 ### NOT supported (do not use)
 
-CSS (classes, `style=`), `colspan`/`rowspan`, `<span>`, `<form>` logic,
-`<script>`, `cellspacing`, `bordercolorlight/dark` (parsed but ignored), `valign`,
+CSS (classes, `style=`), `colspan`/`rowspan`, `<span>`,
+`<script>` (so no JavaScript effects), Java applets, image maps (`<map>`; cost vs value, owner's call 2026-10-24), `cellspacing`, `bordercolorlight/dark` (parsed but ignored), `valign`,
 floating images (`<img align="left">`: an image sits in the line), frames.
+
+### How a form is sent (2026-10-24)
+
+Sending builds `name=value&name=value` (urlencoded) and goes to `action`:
+- a page of the same site that exists: it opens, the address bar shows `page.html?query`;
+- anything else (a `/cgi-bin/...pl`, `.cgi`, `.asp`): the browser opens the period error page
+  `web/pages/<lang>/500.html` "500 Internal Server Error" ("WebNet HTTPd/1.2"); the address bar keeps
+  the script URL + query. This is the normal case: the button works, nobody is there any more.
+Links the visitor has already opened take the `<body vlink>` colour; hovering a link shows its
+address in the status bar.
+History, so it does not come back: until 2026-10-24 `<input>` was decorative only and forbidden in the sites
+(owner, 2026-10-20: a field that cannot be typed in is a broken promise). Owner, 2026-10-24: "Cerca di
+ricreare esattamente lo stile dei siti di fine anni 90, quindi se i pulsanti esistevano creamoli."
 
 ## Fonts
 

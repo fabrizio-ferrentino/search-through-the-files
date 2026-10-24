@@ -4,10 +4,11 @@
 <table width="100%" bgcolor="#FFFFFF" cellpadding="6"><tr><td width="50"><img src="carrello.gif" width="36" height="30"></td><td><font face="Arial Black" size="7" color="#CC0000"><b>CompraTutto</b></font><br><font face="Arial" size="2" color="#CC0000"><b>il negozio che arriva a casa tua &middot; consegna in tutta Italia</b></font></td><td align="right"><font face="Arial" size="2" color="#CC0000"><b>Carrello: 0 articoli</b></font></td></tr></table>
 <table width="100%" bgcolor="#CC0000" cellpadding="1"><tr><td><font size="1">&nbsp;</font></td></tr></table>
 <table width="100%" border="1" bordercolor="#CC0000" bgcolor="#FFE066" cellpadding="4"><tr><td align="center"><font face="Arial" size="2"><a href="index.html">Home</a></font></td><td align="center"><font face="Arial" size="2"><a href="computers.html">Computer e accessori</a></font></td><td align="center"><font face="Arial" size="2"><a href="home.html">Casa ed elettrodomestici</a></font></td><td align="center"><font face="Arial" size="2"><a href="fun.html">Svago</a></font></td><td align="center"><font face="Arial" size="2"><a href="help.html">Aiuto</a></font></td><td align="center"><font face="Arial" size="2"><a href="terms.html">Condizioni di vendita</a></font></td></tr></table>
+<form action="/cgi-bin/shop/search.pl" method="post"><table width="100%" bgcolor="#FFF4B8" cellpadding="4"><tr><td><font face="Arial" size="2"><b>Cerca nel negozio:</b> <input type="text" name="q" size="20" maxlength="40"> <select name="dept"><option value="all">Tutti i reparti</option><option value="computers">Computer e accessori</option><option value="home">Casa ed elettrodomestici</option><option value="fun">Svago</option></select> <input type="submit" value="Cerca"></font></td></tr></table></form>
 <table width="100%" bgcolor="#CC0000" cellpadding="5"><tr><td width="44"><img src="pacco.gif" width="36" height="30"></td><td><font face="Arial Black" size="5" color="#FFFF00">Il tuo carrello</font></td></tr></table>
 
 <table width="100%" border="1" bordercolor="#CC0000" cellpadding="8" bgcolor="#FFFFF0">
-<tr><td><font face="Arial" size="3">Il tuo carrello e' vuoto.</font><br><font face="Arial" size="2">Per aggiungere un articolo, scegli "Compra" accanto al prodotto che ti interessa.</font></td></tr>
+<tr><td><font face="Arial" size="3">Il tuo carrello e' vuoto.</font><br><font face="Arial" size="2">Per aggiungere un articolo, premi "Metti nel carrello" sotto il prodotto che ti interessa.</font></td></tr>
 </table>
 
 <p><font face="Arial" size="2" color="#AA0000"><b>Attenzione:</b> per mettere gli articoli nel carrello il tuo browser deve accettare i "cookie". Se il carrello resta vuoto anche dopo aver scelto un prodotto, controlla le impostazioni di sicurezza del browser, oppure ordina per telefono al numero verde 167 123456.</font></p>
@@ -20,6 +21,15 @@
 <li><font face="Arial" size="2">Ricevi una e-mail di conferma con il numero dell'ordine. Conservala!</font></li>
 <li><font face="Arial" size="2">Il corriere ti telefona il giorno prima della consegna.</font></li>
 </ol>
+
+<p><font face="Arial Black" size="4" color="#CC0000"><b>Modulo d'ordine</b></font></p>
+<form action="/cgi-bin/shop/order.pl" method="post"><table width="100%" border="1" bordercolor="#CC0000" cellpadding="6" bgcolor="#FFFFF0">
+<tr><td width="130"><font face="Arial" size="2"><b>Nome:</b></font></td><td><input type="text" name="name" size="30" maxlength="50"></td></tr>
+<tr><td width="130"><font face="Arial" size="2"><b>Indirizzo:</b></font></td><td><input type="text" name="address" size="40" maxlength="80"></td></tr>
+<tr><td width="130"><font face="Arial" size="2"><b>Citta':</b></font></td><td><input type="text" name="town" size="30" maxlength="50"></td></tr>
+<tr><td width="130"><font face="Arial" size="2"><b>Pagamento:</b></font></td><td><select name="payment"><option value="cod">Contrassegno</option><option value="postal">Vaglia postale</option><option value="card">Carta di credito</option></select></td></tr>
+<tr><td width="130"><font face="Arial" size="2">&nbsp;</font></td><td><font face="Arial" size="2"><input type="checkbox" name="catalogue" value="yes"> Inviatemi il catalogo</font></td></tr>
+<tr><td width="130"><font face="Arial" size="2">&nbsp;</font></td><td><input type="submit" value="Invia ordine"></td></tr></table></form>
 
 <table width="100%" border="1" bordercolor="#CC0000" cellpadding="8" bgcolor="#FFF4B8"><tr><td><font face="Arial" size="2" color="#AA0000"><b>Gli ordini online sono sospesi.</b> Il modulo d'ordine e' in rifacimento e per ora non accetta nuovi ordini. Si puo' sempre ordinare per telefono o per posta, come una volta: i numeri e l'indirizzo sono sul catalogo e nella <a href="help.html">pagina di aiuto</a>.</font></td></tr></table>
 <hr width="100%" size="4" color="#CC0000">

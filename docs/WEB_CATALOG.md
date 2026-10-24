@@ -23,10 +23,13 @@ CRT: `tests/siti_check.tscn -- it <site>/<page> ...`.
   links that leave a site go to the **WebNet portal**, or to an address that is **gone**
   (listed in the site's `morti`: it answers "cannot find server"). A name of another
   site may appear as plain text, never as a link. `siti_catalogo_test` SITI_CHIUSI.
-- **No form controls.** No `<input>`, `<form>`, `<select>`, `<textarea>`, `<button>`: the
-  browser cannot use them. Logins, searches, carts, guestbooks are written as **closed**
-  ("access suspended during the move to the new server", "online orders are suspended",
-  "the guestbook service has been discontinued"). NIENTE_CONTROLLI.
+- **Forms stay in the site.** Forms are allowed (owner, 2026-10-24; the browser now types in
+  them). A form's `action` is empty, a page of its own site, or a script of its own server
+  (`/cgi-bin/...pl`, `.cgi`, `.asp`); never `http`, `www` or `mailto`. A script answers the
+  period "500 Internal Server Error" page. MODULI_NEL_SITO. History: from 2026-10-20 to 2026-10-24
+  the rule was NIENTE_CONTROLLI (no `<input>`/`<form>`/`<select>`/`<textarea>`/`<button>`, logins
+  and carts written as "closed") because the browser could not use them; it was dropped when the
+  owner asked for the late-90s look ("se i pulsanti esistevano creamoli").
 - **Dates are absolute and stop at 1999.** The web on the father's PC is frozen in 1999
   (the timeline is in GDD §2b): no date after 1999, and no relative timestamps like
   "today, 9:05 PM" or "yesterday". Prose may still say "yesterday" inside a dated

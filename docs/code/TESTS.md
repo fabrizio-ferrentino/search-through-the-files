@@ -10,6 +10,12 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 
 - Dev test scripts (run with -s or as scene, see WEB_AUTHORING.md):
 
+- web_moduli_test.tscn/.gd (2026-10-24, headless: the browser's forms. Typing, Backspace, ESC,
+  checkbox, exclusive radios, drop-down, submit to a cgi -> 500 page with the query in the address
+  bar, Enter submits to a page of the site, reset, status bar on link hover and back, vlink colour).
+- html_bb_test.gd 2026-10-24 additions: forms (moduli_ctx, input_valore, input_password, checkbox,
+  radio, select, textarea, button, reset, hidden), text tags (pre_spazi, tt, strike, small, address),
+  vlink_visto / vlink_non_visto. pause_test and rinomina_test still pass.
 - html_bb_test.gd (compiler unit test + the per-page census of
   hiding spots, over EVERY language folder, headless). 2026-10-23, check "nbsp":
   `a&nbsp;&nbsp;&nbsp;b  c` compiles to `a   b c` (&nbsp; survives the whitespace
@@ -113,7 +119,8 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   subpages and ~user pages resolve, a relative link stays in its site,
   and a site not in the run does not answer. Plus the owner's rules of
   2026-10-20: SITI_CHIUSI (no link to another site of the catalog),
-  NIENTE_CONTROLLI (no input/form/select/textarea/button),
+  MODULI_NEL_SITO (check 8; was NIENTE_CONTROLLI until 2026-10-24: a form's action must be empty,
+  a page of the site or a script of its own server, never http/www/mailto),
   NIENTE_DATE_RELATIVE and NIENTE_DATE_DOPO_1999, and DEBUG_TUTTI_I_SITI
   (the F12 switch opens every site, keeps the keys where they were,
   and closes them again). 2026-10-23, check 10 MEDIA_ESISTONO: every file

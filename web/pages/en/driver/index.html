@@ -20,6 +20,17 @@
 <td bgcolor="#FFFFFF">
 <p><font face="Verdana" size="4" color="#1A1A2E"><b>Lost the driver disk?</b></font></p>
 <p><font face="Verdana" size="2">It happens to everybody. You change the computer, you reinstall the system, you move house, and the floppy with the driver of the sound card is gone forever, together with the box. DriverZone collects the drivers of more than 2,000 video cards, sound cards, modems and printers, with notes from our readers on what works and what does not.</font></p>
+<table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8" align="center"><tr><td><font face="Verdana" size="2" color="#000000"><b>Find your driver</b><br>Tell us what you have lost.</font></td></tr></table>
+<form action="/cgi-bin/drivers/find.pl" method="post">
+<table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8" align="center">
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Type of device:</font></td><td><font face="Verdana" size="2" color="#000000"><select name="tipo"><option value="video">Video card</option><option value="audio">Sound card</option><option value="modem">Modem</option><option value="stampante">Printer</option></select></font></td></tr>
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Manufacturer:</font></td><td><font face="Verdana" size="2" color="#000000"><input type="text" name="produttore" size="22" maxlength="40"></font></td></tr>
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Model:</font></td><td><font face="Verdana" size="2" color="#000000"><input type="text" name="modello" size="22" maxlength="40"></font></td></tr>
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Operating system:</font></td><td><font face="Verdana" size="2" color="#000000"><select name="sistema"><option value="win95">Windows 95</option><option value="win98">Windows 98</option><option value="nt4">Windows NT 4.0</option><option value="win31">Windows 3.1</option><option value="dos">MS-DOS</option></select></font></td></tr>
+<tr><td width="170">&nbsp;</td><td><input type="submit" value="Search"></td></tr>
+</table>
+</form>
+<br>
 <table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8"><tr><td><font face="Verdana" size="2"><b>Most searched this week:</b><br>1. VisionMax 3D 4MB (video) &middot; 2. SoundWave 16 (audio) &middot; 3. FastLink 56K (modem) &middot; 4. InkStar 300 (printer) &middot; 5. VisionMax 2D (video)</font></td></tr></table>
 <table width="100%" border="1" cellpadding="6" bgcolor="#FFFFE0"><tr><td><font face="Verdana" size="2"><b>Where are the files?</b> To save money on the web server, all driver files are on our FTP server. Your browser cannot download them from this page: use an FTP program, connect as "anonymous" and look in the folder with the name of the category. If you do not know what an FTP program is, see the <a href="faq.html">FAQ</a>.</font></td></tr></table>
 <p><font face="Verdana" size="2"><b>Before you install anything:</b> write down the exact name of your card, which is printed on the card itself and not always on the box. A driver for the "VisionMax 3D" will not work on the "VisionMax 3D Plus", and the system will tell you so with a black screen.</font></p>

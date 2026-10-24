@@ -120,7 +120,7 @@ Full text with the reasons: [docs/code/README.md](docs/code/README.md).
    (`Win95.menubar_button` / `premi_acceleratore`); strip it elsewhere with `Win95.testo_semplice()`.
 10. **Web sites** (rules in [docs/WEB_CATALOG.md](docs/WEB_CATALOG.md), enforced by
     `siti_catalogo_test`): a site is closed in itself (links only inside it, to the WebNet portal
-    or to dead addresses in `morti`); no `<input>`/`<form>`/`<button>`; dates absolute and not
+    or to dead addresses in `morti`); forms stay inside the site (they work; scripts answer 500); dates absolute and not
     after 1999. Everywhere: **no text shaped like a key** (digit, dash, 4 letters/digits).
 11. Every chrome button either works or is visibly disabled; a dead button is a bug.
 

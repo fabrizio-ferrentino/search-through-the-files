@@ -20,6 +20,17 @@
 <td bgcolor="#FFFFFF">
 <p><font face="Verdana" size="4" color="#1A1A2E"><b>Perso il dischetto del driver?</b></font></p>
 <p><font face="Verdana" size="2">Succede a tutti. Cambi computer, reinstalli il sistema, traslochi, e il dischetto col driver della scheda audio e' sparito per sempre, insieme alla scatola. DriverZone raccoglie i driver di piu' di 2.000 schede video, schede audio, modem e stampanti, con le note dei lettori su cosa funziona e cosa no.</font></p>
+<table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8" align="center"><tr><td><font face="Verdana" size="2" color="#000000"><b>Trova il tuo driver</b><br>Dite cosa avete perso.</font></td></tr></table>
+<form action="/cgi-bin/drivers/find.pl" method="post">
+<table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8" align="center">
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Tipo di periferica:</font></td><td><font face="Verdana" size="2" color="#000000"><select name="tipo"><option value="video">Scheda video</option><option value="audio">Scheda audio</option><option value="modem">Modem</option><option value="stampante">Stampante</option></select></font></td></tr>
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Produttore:</font></td><td><font face="Verdana" size="2" color="#000000"><input type="text" name="produttore" size="22" maxlength="40"></font></td></tr>
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Modello:</font></td><td><font face="Verdana" size="2" color="#000000"><input type="text" name="modello" size="22" maxlength="40"></font></td></tr>
+<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Sistema operativo:</font></td><td><font face="Verdana" size="2" color="#000000"><select name="sistema"><option value="win95">Windows 95</option><option value="win98">Windows 98</option><option value="nt4">Windows NT 4.0</option><option value="win31">Windows 3.1</option><option value="dos">MS-DOS</option></select></font></td></tr>
+<tr><td width="170">&nbsp;</td><td><input type="submit" value="Cerca"></td></tr>
+</table>
+</form>
+<br>
 <table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8"><tr><td><font face="Verdana" size="2"><b>I piu' cercati della settimana:</b><br>1. VisionMax 3D 4MB (video) &middot; 2. SoundWave 16 (audio) &middot; 3. FastLink 56K (modem) &middot; 4. InkStar 300 (stampante) &middot; 5. VisionMax 2D (video)</font></td></tr></table>
 <table width="100%" border="1" cellpadding="6" bgcolor="#FFFFE0"><tr><td><font face="Verdana" size="2"><b>Dove sono i file?</b> Per risparmiare sul server web, tutti i driver stanno sul nostro server FTP. Il browser non puo' scaricarli da questa pagina: usate un programma FTP, collegatevi come "anonymous" e guardate nella cartella col nome della categoria. Se non sapete cos'e' un programma FTP, vedete le <a href="faq.html">domande frequenti</a>.</font></td></tr></table>
 <p><font face="Verdana" size="2"><b>Prima di installare qualunque cosa:</b> scrivetevi il nome esatto della scheda, che e' stampato sulla scheda stessa e non sempre sulla scatola. Un driver per la "VisionMax 3D" non funziona sulla "VisionMax 3D Plus", e il sistema ve lo dira' con uno schermo nero.</font></p>
