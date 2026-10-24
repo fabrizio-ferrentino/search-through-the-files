@@ -58,6 +58,8 @@ SHELL_EXPLORER,File Explorer,Esplora risorse
 SHELL_SHUTDOWN,Shut Down,Spegni il PC
 TRAY_VOLUME,Volume,Volume
 TRAY_MUTE,Mute,Disattiva
+WEB_FORM_SUBMIT,Submit Query,Invia richiesta
+WEB_FORM_RESET,Reset,Annulla
 NP_UNTITLED,Untitled,Senza nome
 BOOT_STARTING,Starting 52-hz Whale...,Avvio di 52-hz Whale in corso...
 BOOT_VERSION,Version 4.02,Versione 4.02

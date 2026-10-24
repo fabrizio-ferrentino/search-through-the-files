@@ -767,7 +767,8 @@ func _rinomina_attiva() -> DesktopItem:
 # l'About" (21/09/2026) funzionava solo nei test, che spingono i tasti nel SubViewport.
 func trattiene_esc() -> bool:
 	return _rinomina_attiva() != null \
-			or (_modal_chiudibile != null and is_instance_valid(_modal_chiudibile))
+			or (_modal_chiudibile != null and is_instance_valid(_modal_chiudibile)) \
+			or _campo_web_attivo()
 
 # Ricostruisce le icone del desktop (es. dopo aver spostato file nel Cestino da
 # un'altra finestra): aggiorna anche lo stato pieno/vuoto del Cestino.
@@ -935,7 +936,16 @@ func _focus_under_mouse(mp: Vector2) -> void:
 # quindi il fuoco che conta e' il suo.
 func typing() -> bool:
 	var f := get_viewport().gui_get_focus_owner()
-	return f is LineEdit or f is TextEdit
+	return f is LineEdit or f is TextEdit or _campo_web_attivo()
+
+# Vero se il giocatore sta scrivendo in un campo di un modulo dentro una pagina web (il
+# browser si mette nel gruppo "campo_web_attivo" finche' scrive). Serve alla stanza: la "p"
+# e' una lettera e ESC smette di scrivere, non mettono in pausa ne' escono dal PC.
+func _campo_web_attivo() -> bool:
+	for b in get_tree().get_nodes_in_group("campo_web_attivo"):
+		if b.has_method("scrive") and b.scrive():
+			return true
+	return false
 
 # Forma del cursore per un punto in coordinate del desktop. La stanza la usa per
 # pilotare il cursore reale sull'overlay del PC: il SubViewport non lo fa da solo.

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/web_moduli_test.gd" id="1_wmo"]
+
+[node name="WebModuliTest" type="Node"]
+script = ExtResource("1_wmo")

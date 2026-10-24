@@ -367,6 +367,30 @@ static func _tex_casella(segnata: bool) -> ImageTexture:
 				im.set_pixel(p.x, p.y + dy, C_DARK)
 	return ImageTexture.create_from_image(im)
 
+# Il pallino di un radio button di Win95: cerchio bianco incassato (ombra in alto a
+# sinistra, luce in basso a destra) e, se scelto, il punto nero al centro.
+static func _tex_pallino(scelto: bool) -> ImageTexture:
+	var n := 20
+	var im := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	im.fill(Color(0, 0, 0, 0))
+	var c := Vector2(9.5, 9.5)
+	for y in range(n):
+		for x in range(n):
+			var p := Vector2(x, y)
+			var d := p.distance_to(c)
+			if d > 9.6:
+				continue
+			var su_sinistra: bool = (p.x - c.x) + (p.y - c.y) < 0.0
+			if d > 8.4:
+				im.set_pixel(x, y, C_SHADOW if su_sinistra else C_LIGHT)
+			elif d > 7.2:
+				im.set_pixel(x, y, C_DARK if su_sinistra else C_HILIGHT)
+			else:
+				im.set_pixel(x, y, C_LIGHT)
+			if scelto and d < 3.2:
+				im.set_pixel(x, y, C_DARK)
+	return ImageTexture.create_from_image(im)
+
 static func make_theme() -> Theme:
 	var t := Theme.new()
 	t.default_font = font()

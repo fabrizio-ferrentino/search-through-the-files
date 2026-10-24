@@ -70,6 +70,11 @@ static var _size_re: RegEx
 
 # Compila il BODY (gia' senza commenti) in BBCode. ctx: "link_color" (es. "#0000ee").
 static func compile(body: String, ctx: Dictionary = {}) -> String:
+	# lo stato di UNA compilazione riparte da zero: ricompilando con lo stesso contesto i
+	# moduli verrebbero contati due volte e gli id dei campi cambierebbero
+	ctx["moduli"] = []
+	for k in ["_modulo", "_implicito", "_pre", "_in_cella"]:
+		ctx.erase(k)
 	var out := _walk(body, ctx)
 	if _nl_re == null:
 		_nl_re = RegEx.new()
@@ -94,7 +99,10 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 			var lt := html.find("<", i)
 			if lt < 0:
 				lt = n
-			out += _txt(html.substr(i, lt - i))
+			if int(ctx.get("_pre", 0)) > 0:
+				out += _txt_pre(html.substr(i, lt - i), stack)
+			else:
+				out += _txt(html.substr(i, lt - i))
 			i = lt
 			continue
 		var gt := html.find(">", i)
@@ -109,8 +117,14 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 			continue
 		if closing:
 			match nm:
-				"h1", "h2", "h3", "h4", "h5", "h6", "div", "center", "blockquote", "p":
+				"h1", "h2", "h3", "h4", "h5", "h6", "div", "center", "blockquote", "p", "address":
 					out += _pop_tag(stack, nm) + "\n"
+				"pre":
+					ctx["_pre"] = maxi(0, int(ctx.get("_pre", 0)) - 1)
+					out += _pop_tag(stack, nm) + "\n"
+				"form":
+					ctx["_modulo"] = -1
+					out += _close_all(stack) + "\n" + _reopen_all(stack)
 				"ul", "ol":
 					if not lists.is_empty():
 						lists.pop_back()
@@ -170,13 +184,61 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 				i = (gm + 1) if gm >= 0 else n
 			"blink":
 				out += _push(stack, "blink", "[blink]", "[/blink]")
+			# ---- testo d'epoca ----
+			"pre":
+				out += _close_all(stack) + "\n" + _reopen_all(stack) + _push(stack, "pre", "[code]", "[/code]")
+				ctx["_pre"] = int(ctx.get("_pre", 0)) + 1
+				# come in HTML, l'a capo subito dopo <pre> non conta
+				if i < n and html[i] == "\r":
+					i += 1
+				if i < n and html[i] == "\n":
+					i += 1
+			"tt", "kbd", "samp":
+				out += _push(stack, nm, "[code]", "[/code]")
+			"s", "strike", "del":
+				out += _push(stack, nm, "[s]", "[/s]")
+			"sup", "sub":
+				out += _push(stack, nm, "[font_size=11]", "[/font_size]")
+			"big":
+				out += _push(stack, nm, "[font_size=20]", "[/font_size]")
+			"small":
+				out += _push(stack, nm, "[font_size=12]", "[/font_size]")
+			"address":
+				out += _close_all(stack) + "\n" + _reopen_all(stack) + _push(stack, "address", "[i]", "[/i]", {"i": true})
+			"dl", "dt":
+				out += _close_all(stack) + "\n" + _reopen_all(stack)
+			"dd":
+				out += _close_all(stack) + "\n" + _reopen_all(stack) + "\u00a0".repeat(6)
+			# ---- moduli (funzionano: vedi BrowserApp, "moduli") ----
+			"form":
+				out += _close_all(stack) + "\n" + _reopen_all(stack)
+				ctx["_modulo"] = _nuovo_modulo(ctx, _attr(tag, "action"), _attr(tag, "method"))
+			"button":
+				var fine_b := html.findn("</button", i)
+				if fine_b < 0:
+					fine_b = n
+				var etichetta := _solo_testo(_walk(html.substr(i, fine_b - i), {})).strip_edges()
+				out += _pulsante(tag, etichetta, ctx)
+				var gb := html.find(">", fine_b)
+				i = (gb + 1) if gb >= 0 else n
+			"select":
+				var fine_s := html.findn("</select", i)
+				if fine_s < 0:
+					fine_s = n
+				out += _tendina(tag, html.substr(i, fine_s - i), ctx)
+				var gs := html.find(">", fine_s)
+				i = (gs + 1) if gs >= 0 else n
+			"textarea":
+				var fine_t := html.findn("</textarea", i)
+				if fine_t < 0:
+					fine_t = n
+				out += _close_all(stack) + "\n" + _area_testo(tag, html.substr(i, fine_t - i), ctx) + "\n" + _reopen_all(stack)
+				var gt2 := html.find(">", fine_t)
+				i = (gt2 + 1) if gt2 >= 0 else n
 			"bgsound", "embed":
 				out += _audio(nm, tag, stack, ctx)
 			"input":
-				if _attr(tag, "type").to_lower() == "submit":
-					out += "[lb] " + _txt(_attr(tag, "value")) + " [rb]"
-				else:
-					out += "[u]          [/u]"
+				out += _input(tag, ctx)
 			"b", "i":
 				var bf := _file_di(stack, nm == "b", nm == "i")
 				if bf != "":
@@ -196,7 +258,13 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 			"blockquote":
 				out += _close_all(stack) + "\n" + _reopen_all(stack) + _push(stack, "blockquote", "[indent]", "[/indent]")
 			"a":
-				out += _push(stack, "a", "[url=" + _attr(tag, "href") + "][color=" + link_color + "][u]", "[/u][/color][/url]")
+				# i link alle pagine gia' viste hanno il colore vlink della pagina
+				var href := _attr(tag, "href")
+				var colore := link_color
+				var visto: Callable = ctx.get("visitato", Callable())
+				if visto.is_valid() and bool(visto.call(href)):
+					colore = str(ctx.get("vlink_color", link_color))
+				out += _push(stack, "a", "[url=" + href + "][color=" + colore + "][u]", "[/u][/color][/url]")
 			"font":
 				var open := ""
 				var close := ""
@@ -325,6 +393,179 @@ static func _audio(nm: String, tag: String, stack: Array, ctx: Dictionary) -> St
 	var tasti := "[url=%s][color=#000000] ► [/color][/url][color=#808080]|[/color][url=%s][color=#000000] ■ [/color][/url]" % [META_PLAY, META_STOP]
 	return _close_all(stack) + "\n[table=1][cell bg=#C0C0C0 border=#808080 padding=6,2,6,2]" \
 			+ tasti + "[/cell][/table]\n" + _reopen_all(stack)
+
+# ---------------- moduli ----------------
+# I moduli d'epoca FUNZIONANO (proprietario, 24/10/2026: "se i pulsanti esistevano
+# creamoli"): campi dove si scrive, caselle che si spuntano, tendine che si aprono,
+# pulsanti che inviano. Qui si DISEGNANO soltanto, come piccole tabelle in linea con
+# dentro un link speciale (__campo:, __spunta:, __tendina:, __invia:, __azzera:) che il
+# browser intercetta; i valori correnti arrivano da ctx["valori"] (id -> valore) e il
+# campo in cui si sta scrivendo da ctx["campo_attivo"]. In ctx["moduli"] il compilatore
+# lascia la descrizione dei moduli della pagina, che il browser usa per inviarli.
+# Gli id ("m0_2" = modulo 0, campo 2) seguono l'ordine del documento: ricompilando la
+# stessa pagina tornano uguali.
+
+const CAMPO_FONDO := "#FFFFFF"
+const CAMPO_BORDO := "#808080"
+const BOTTONE_FONDO := "#C0C0C0"
+const BOTTONE_BORDO := "#404040"
+const PX_CARATTERE := 8.0       # larghezza di un carattere per size= e cols=
+const PX_RIGA := 19.0           # altezza di una riga per rows=
+static var _controlli: Dictionary = {}   # "casella_on" ecc. -> texture (tenuta viva qui)
+
+static func _nuovo_modulo(ctx: Dictionary, action: String, method: String) -> int:
+	if not ctx.has("moduli"):
+		ctx["moduli"] = []
+	var moduli: Array = ctx["moduli"]
+	moduli.append({"action": action.strip_edges(), "method": method.strip_edges().to_lower(), "campi": []})
+	return moduli.size() - 1
+
+# Un campo nuovo nel modulo aperto (o in un modulo implicito, se il campo e' fuori da
+# un <form>, come succedeva nelle pagine scritte a mano).
+static func _nuovo_campo(ctx: Dictionary, tipo: String, nome: String, valore: String, extra: Dictionary = {}) -> Dictionary:
+	var fi: int = int(ctx.get("_modulo", -1))
+	if fi < 0:
+		if int(ctx.get("_implicito", -1)) < 0:
+			ctx["_implicito"] = _nuovo_modulo(ctx, "", "get")
+		fi = int(ctx["_implicito"])
+	var campi: Array = (ctx["moduli"] as Array)[fi]["campi"]
+	var c := {"id": "m%d_%d" % [fi, campi.size()], "tipo": tipo, "nome": nome, "valore": valore, "modulo": fi}
+	c.merge(extra)
+	campi.append(c)
+	return c
+
+# Il valore corrente di un campo: quello scritto dal giocatore, o quello della pagina.
+static func _valore(c: Dictionary, ctx: Dictionary) -> String:
+	var valori: Dictionary = ctx.get("valori", {})
+	return str(valori.get(c["id"], c["valore"]))
+
+static func _input(tag: String, ctx: Dictionary) -> String:
+	var tipo := _attr(tag, "type").strip_edges().to_lower()
+	if tipo == "":
+		tipo = "text"
+	var nome := _attr(tag, "name")
+	var valore := _ent(_attr(tag, "value"))
+	match tipo:
+		"hidden":
+			_nuovo_campo(ctx, tipo, nome, valore)
+			return ""
+		"submit", "button", "reset", "image":
+			return _pulsante(tag, valore, ctx)
+		"checkbox", "radio":
+			var spuntata := tag.to_lower().find("checked") >= 0
+			var c := _nuovo_campo(ctx, tipo, nome, "1" if spuntata else "", {"invia": valore if valore != "" else "on"})
+			var on := _valore(c, ctx) != ""
+			return "[url=__spunta:%s][img width=16 height=16]%s[/img][/url]" % [c["id"], _controllo(tipo, on)]
+	# text, password e tutto il resto: una riga in cui si scrive
+	var size := int(_attr(tag, "size")) if _attr(tag, "size").strip_edges() != "" else 20
+	var maxl := int(_attr(tag, "maxlength")) if _attr(tag, "maxlength").strip_edges() != "" else 0
+	var c2 := _nuovo_campo(ctx, "password" if tipo == "password" else "text", nome, valore, {"max": maxl})
+	var v := _valore(c2, ctx)
+	var mostra := "*".repeat(v.length()) if tipo == "password" else v
+	return _scatola(c2["id"], "__campo:", mostra, str(ctx.get("campo_attivo", "")) == c2["id"],
+			float(clampi(size, 3, 60)) * PX_CARATTERE, 0.0)
+
+# Il riquadro bianco incassato di un campo: testo, cursore se attivo, e una barretta
+# trasparente che lo tiene largo quanto chiede size=/cols= anche quando e' vuoto.
+static func _scatola(id: String, meta: String, testo: String, attivo: bool, largo: float, alto: float) -> String:
+	var t := testo + ("|" if attivo else "")
+	var righe := t.split("\n")
+	var piu_lunga := ""
+	for r in righe:
+		if r.length() > piu_lunga.length():
+			piu_lunga = r
+	var occupa: float = Win95.font("sans").get_string_size(piu_lunga, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+	var resto := int(maxf(1.0, largo - occupa))
+	var corpo := ""
+	for k in range(righe.size()):
+		if k > 0:
+			corpo += "\n"
+		corpo += _txt(righe[k]).replace(" ", char(0xA0))
+	var dentro := "[color=#000000]" + corpo + "[/color][img width=%d height=1]%s[/img]" % [resto, SPACER_IMG]
+	# l'altezza: le righe chieste (rows=), o almeno una riga di testo -- un campo vuoto
+	# senza questa barretta verticale era un filo alto 4 px
+	dentro = "[img width=1 height=%d]%s[/img]" % [int(maxf(alto, PX_RIGA)), SPACER_IMG] + dentro
+	var bordo := "#000080" if attivo else CAMPO_BORDO
+	return "[table=1,center][cell bg=%s border=%s padding=4,2,4,2][url=%s%s]%s[/url][/cell][/table]" % [
+			CAMPO_FONDO, bordo, meta, id, dentro]
+
+# Un pulsante: <input type=submit/button/reset/image> o <button>. Invia il modulo in cui
+# sta (reset lo riporta ai valori della pagina); "image" e' un'immagine cliccabile.
+static func _pulsante(tag: String, etichetta: String, ctx: Dictionary) -> String:
+	var tipo := _attr(tag, "type").strip_edges().to_lower()
+	var fi: int = int(ctx.get("_modulo", -1))
+	if fi < 0:
+		if int(ctx.get("_implicito", -1)) < 0:
+			ctx["_implicito"] = _nuovo_modulo(ctx, "", "get")
+		fi = int(ctx["_implicito"])
+	var meta := "__azzera:%d" % fi if tipo == "reset" else "__invia:%d" % fi
+	if tipo == "image":
+		return "[url=%s][img]%s[/img][/url]" % [meta, img_path(_attr(tag, "src"))]
+	if etichetta.strip_edges() == "":
+		etichetta = TranslationServer.translate("WEB_FORM_RESET" if tipo == "reset" else "WEB_FORM_SUBMIT")
+	return "[table=1,center][cell bg=%s border=%s padding=10,2,10,2][url=%s][color=#000000]%s[/color][/url][/cell][/table]" % [
+			BOTTONE_FONDO, BOTTONE_BORDO, meta, _txt(etichetta)]
+
+# <select>: il valore scelto e la freccetta; il browser apre l'elenco delle <option>.
+static func _tendina(tag: String, interno: String, ctx: Dictionary) -> String:
+	var opzioni: Array = []
+	var scelta := ""
+	var re := RegEx.create_from_string("(?is)<option([^>]*)>([^<]*)")
+	for m in re.search_all(interno):
+		var attr := m.get_string(1)
+		var etichetta := _ent(m.get_string(2)).strip_edges()
+		var v := _attr("x " + attr, "value")
+		if v == "":
+			v = etichetta
+		opzioni.append([v, etichetta])
+		if scelta == "" and attr.to_lower().find("selected") >= 0:
+			scelta = v
+	if scelta == "" and not opzioni.is_empty():
+		scelta = str(opzioni[0][0])
+	var c := _nuovo_campo(ctx, "select", _attr(tag, "name"), scelta, {"opzioni": opzioni})
+	var v2 := _valore(c, ctx)
+	var mostra := v2
+	for o in opzioni:
+		if str(o[0]) == v2:
+			mostra = str(o[1])
+	return "[table=1,center][cell bg=%s border=%s padding=4,1,2,1][url=__tendina:%s][color=#000000]%s  [/color][bgcolor=%s][color=#000000] ▼ [/color][/bgcolor][/url][/cell][/table]" % [
+			CAMPO_FONDO, CAMPO_BORDO, c["id"], _txt(mostra), BOTTONE_FONDO]
+
+# <textarea>: piu' righe; Invio va a capo invece di inviare.
+static func _area_testo(tag: String, interno: String, ctx: Dictionary) -> String:
+	var cols := int(_attr(tag, "cols")) if _attr(tag, "cols").strip_edges() != "" else 40
+	var rows := int(_attr(tag, "rows")) if _attr(tag, "rows").strip_edges() != "" else 4
+	var testo := _ent(interno).trim_prefix("\n").trim_prefix("\r\n")
+	var c := _nuovo_campo(ctx, "textarea", _attr(tag, "name"), testo)
+	return _scatola(c["id"], "__campo:", _valore(c, ctx), str(ctx.get("campo_attivo", "")) == c["id"],
+			float(clampi(cols, 5, 90)) * PX_CARATTERE, float(clampi(rows, 1, 30)) * PX_RIGA)
+
+# Le caselle e i pallini disegnati da Win95, registrati su un percorso virtuale come le
+# GIF, cosi' [img] li trova.
+static func _controllo(tipo: String, on: bool) -> String:
+	var chiave := ("casella" if tipo == "checkbox" else "pallino") + ("_on" if on else "_off")
+	var path := IMG_DIR + "_" + chiave + ".tex"
+	if not _controlli.has(chiave):
+		var tex: Texture2D = Win95._tex_casella(on) if tipo == "checkbox" else Win95._tex_pallino(on)
+		tex.take_over_path(path)
+		_controlli[chiave] = tex
+	return path
+
+# Le entita' in un valore di attributo o di <textarea>/<option>.
+static func _ent(s: String) -> String:
+	for k in _ENTITIES:
+		s = s.replace(k, _ENTITIES[k])
+	return s.replace("&nbsp;", " ")
+
+# Il testo dentro <pre>: gli spazi e gli a capo restano dove sono (spazi -> spazi che
+# non si comprimono, a capo -> a capo veri, con la pila chiusa e riaperta).
+static func _txt_pre(s: String, stack: Array) -> String:
+	for k in _ENTITIES:
+		s = s.replace(k, _ENTITIES[k])
+	s = s.replace("&nbsp;", " ").replace("\t", "    ").replace("\r", "")
+	s = s.replace("[", "￰").replace("]", "[rb]").replace("￰", "[lb]")
+	s = s.replace(" ", char(0xA0))
+	return s.replace("\n", _close_all(stack) + "\n" + _reopen_all(stack))
 
 # Percorso del file audio di una pagina ("" se non c'e').
 static func audio_path(src: String) -> String:

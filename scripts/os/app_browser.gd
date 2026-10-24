@@ -93,6 +93,18 @@ var _audio_pagina: Dictionary = {}
 var _musica_attesa := ""
 const MUSICA_DB := -6.0
 
+# I MODULI della pagina (HtmlBB li disegna, qui funzionano): i valori scritti dal
+# giocatore (id del campo -> valore), il campo in cui sta scrivendo, e la descrizione dei
+# moduli che il compilatore lascia nel contesto. Si azzerano cambiando pagina.
+var _valori: Dictionary = {}
+var _campo := ""
+var _moduli: Array = []
+var _meta_contati := 0                 # cresce a ogni link cliccato (vedi _forse_fuori)
+var _stato_fermo := ""                 # la barra di stato a pagina ferma (dopo un passaggio su un link)
+# La pagina che risponde quando un modulo va a uno script che non c'e' (cgi-bin...): il
+# server d'epoca rispondeva "500 Internal Server Error", ed e' quello che si vede.
+const PAGINA_ERRORE := "500"
+
 func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var root := VBoxContainer.new()
@@ -237,6 +249,9 @@ func launch(arg) -> void:
 	_rtl.add_theme_font_size_override("normal_font_size", 16)
 	_rtl.meta_clicked.connect(_on_meta)         # UNICO meccanismo di navigazione
 	_rtl.resized.connect(_on_page_resized)
+	# passando su un link, in basso compare l'indirizzo dove porta (Netscape, IE)
+	_rtl.meta_hover_started.connect(_su_link)
+	_rtl.meta_hover_ended.connect(func(_m) -> void: _via_dal_link())
 	page_area.add_child(_rtl)
 	_rtl.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _sposta_mosaico())
 	page_area.resized.connect(_sposta_mosaico)
@@ -323,6 +338,9 @@ static func read_page(name: String) -> String:
 
 func _load(name: String) -> void:
 	_ferma_musica()
+	_valori.clear()
+	_scrivi_in("")
+	_moduli = []
 	if name == "":
 		name = _home
 	var chiesto := name        # quello che si voleva aprire: serve alla barra se e' una 404
@@ -350,11 +368,12 @@ func _load(name: String) -> void:
 	# inietta la chiave web del run se questa pagina la ospita (visibile o commento)
 	_html_text = WebRuntime.source_html(name, raw)
 	_current = name
+	WebRuntime.visita(name)
 	# la barra mostra l'INDIRIZZO, non il nome del file. Su una pagina che non
 	# esiste resta scritto l'indirizzo CHIESTO -- quello digitato, o quello del link
 	# morto (il "thread rimosso" del forum) -- come in un browser vero; mostrare
 	# "http://404" sarebbe l'indirizzo della pagina d'errore, non della richiesta.
-	if name == WebRuntime.NONSERVER or (name == "404" and chiesto != "404"):
+	if name == WebRuntime.NONSERVER or name == PAGINA_ERRORE or (name == "404" and chiesto != "404"):
 		_addr.text = _digitato if _digitato != "" else WebRuntime.display_url(chiesto)
 	else:
 		_addr.text = WebRuntime.display_url(name)
@@ -376,8 +395,11 @@ func _render_html(body: String) -> void:
 	_page_bg.color = _body_bg(_html_text)
 	_imposta_mosaico(_body_attr(_html_text, "background"))
 	_rtl.add_theme_color_override("default_color", _body_text(_html_text))
-	var ctx := {"link_color": _body_link(_html_text), "page_width": _page_width()}
+	var ctx := {"link_color": _body_link(_html_text), "page_width": _page_width(),
+			"vlink_color": _body_vlink(_html_text), "visitato": _visitato,
+			"valori": _valori, "campo_attivo": _campo}
 	_rtl.set_page(HtmlBB.compile(body, ctx))
+	_moduli = ctx.get("moduli", [])
 	_audio_pagina = ctx.get("audio", {})
 	# le tabelle con width="N%" dipendono dalla larghezza: se la pagina ne ha,
 	# ricompiliamo quando la finestra cambia misura (come il reflow di un browser)
@@ -398,6 +420,26 @@ func _on_page_resized() -> void:
 # Un link cliccato: relativo = una pagina dello STESSO sito, assoluto = un altro sito o il
 # portale (WebRuntime.risolvi_link). Se non porta da nessuna parte la barra mostra il link.
 func _on_meta(meta) -> void:
+	_meta_contati += 1
+	var m := str(meta)
+	# i controlli dei moduli non sono indirizzi
+	if m.begins_with("__campo:"):
+		_scrivi_in(m.substr(8))
+		_ridisegna()
+		return
+	if m.begins_with("__spunta:"):
+		_spunta(m.substr(9))
+		return
+	if m.begins_with("__tendina:"):
+		_apri_tendina(m.substr(10))
+		return
+	if m.begins_with("__invia:"):
+		_invia(int(m.substr(8)))
+		return
+	if m.begins_with("__azzera:"):
+		_azzera(int(m.substr(9)))
+		return
+	_scrivi_in("")
 	# i pulsanti del lettore di un <embed> non sono indirizzi
 	if str(meta) == HtmlBB.META_PLAY:
 		_suona()
@@ -408,8 +450,8 @@ func _on_meta(meta) -> void:
 	var dove := WebRuntime.risolvi_link(str(meta), _current)
 	_digitato = ""          # si e' cliccato un link: non c'e' niente di digitato
 	if dove == "":
-		var m := str(meta).strip_edges()
-		_digitato = m if m.begins_with("http://") else "http://" + m
+		var scritto := m.strip_edges()
+		_digitato = scritto if scritto.begins_with("http://") else "http://" + scritto
 		dove = WebRuntime.NONSERVER
 	_go(dove)
 
@@ -422,6 +464,17 @@ func _on_meta(meta) -> void:
 # Il prezzo e' che _input arriva SEMPRE, anche a finestra ridotta o coperta, quindi qui si
 # deve controllare a mano di essere davvero sullo schermo -- vedi _in_primo_piano().
 func _input(event: InputEvent) -> void:
+	# si scrive in un campo di una pagina: i tasti sono suoi
+	if _campo != "" and event is InputEventKey and event.pressed and _in_primo_piano():
+		var focus := get_viewport().gui_get_focus_owner()
+		if not (focus is LineEdit or focus is TextEdit) and _tasto_nel_campo(event):
+			get_viewport().set_input_as_handled()
+			return
+	# un clic sulla pagina fuori da ogni campo smette di scrivere: si guarda DOPO che la
+	# pagina ha gestito il clic, perche' il link del campo arriva solo al rilascio
+	if _campo != "" and event is InputEventMouseButton and not event.pressed \
+			and event.button_index == MOUSE_BUTTON_LEFT and _sotto_il_mouse():
+		_forse_fuori.call_deferred(_meta_contati)
 	# ALT+lettera apre la tendina sottolineata. Vale la stessa regola del resto della
 	# tastiera qui: risponde solo la finestra in primo piano.
 	if event is InputEventKey and _in_primo_piano() \
@@ -629,6 +682,194 @@ func _body_text(html: String) -> Color:
 	if c != "" and Color.html_is_valid(c):
 		return Color.html(c)
 	return Win95.C_TEXT
+
+# ---------------- moduli ----------------
+
+func _campo_da_id(id: String) -> Dictionary:
+	for mod in _moduli:
+		for c in mod["campi"]:
+			if str(c["id"]) == id:
+				return c
+	return {}
+
+func _valore(c: Dictionary) -> String:
+	return str(_valori.get(c["id"], c["valore"]))
+
+# Comincia (o smette, con "") a scrivere in un campo. Finche' si scrive, la "p" non mette
+# in pausa e ESC smette di scrivere invece di uscire dal PC (desktop.typing/trattiene_esc
+# chiedono al gruppo "campo_web_attivo").
+func _scrivi_in(id: String) -> void:
+	_campo = id
+	if id != "" and not is_in_group("campo_web_attivo"):
+		add_to_group("campo_web_attivo")
+	elif id == "" and is_in_group("campo_web_attivo"):
+		remove_from_group("campo_web_attivo")
+
+# Vero se questa finestra sta ricevendo la tastiera per un campo della pagina.
+func scrive() -> bool:
+	return _campo != "" and _in_primo_piano()
+
+# Ricompila la pagina con i valori nuovi senza perdere il punto a cui si era arrivati.
+func _ridisegna() -> void:
+	var barra := _rtl.get_v_scroll_bar()
+	var dove := barra.value
+	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
+	barra.value = dove
+	(func() -> void: barra.value = dove).call_deferred()
+
+# Un tasto mentre si scrive. Vero se l'ha usato il campo.
+func _tasto_nel_campo(ev: InputEventKey) -> bool:
+	var c := _campo_da_id(_campo)
+	if c.is_empty():
+		_scrivi_in("")
+		return false
+	if ev.ctrl_pressed or ev.alt_pressed or ev.meta_pressed:
+		return false
+	var v := _valore(c)
+	match ev.keycode:
+		KEY_BACKSPACE:
+			v = v.substr(0, maxi(0, v.length() - 1))
+		KEY_ENTER, KEY_KP_ENTER:
+			if str(c["tipo"]) != "textarea":
+				_invia(int(c["modulo"]))
+				return true
+			v += "\n"
+		KEY_ESCAPE:
+			_scrivi_in("")
+			_ridisegna()
+			return true
+		KEY_TAB:
+			_campo_dopo(c)
+			return true
+		_:
+			if ev.unicode < 32:
+				return false
+			var massimo := int(c.get("max", 0))
+			if massimo > 0 and v.length() >= massimo:
+				return true
+			v += char(ev.unicode)
+	_valori[_campo] = v
+	_ridisegna()
+	return true
+
+# Tab: il campo scrivibile dopo, nello stesso modulo (in giro).
+func _campo_dopo(c: Dictionary) -> void:
+	var campi: Array = []
+	for x in _moduli[int(c["modulo"])]["campi"]:
+		if str(x["tipo"]) in ["text", "password", "textarea"]:
+			campi.append(x)
+	var k := 0
+	for j in range(campi.size()):
+		if str(campi[j]["id"]) == str(c["id"]):
+			k = (j + 1) % campi.size()
+	_scrivi_in(str(campi[k]["id"]))
+	_ridisegna()
+
+func _forse_fuori(contati: int) -> void:
+	if contati == _meta_contati and _campo != "":
+		_scrivi_in("")
+		_ridisegna()
+
+func _spunta(id: String) -> void:
+	var c := _campo_da_id(id)
+	if c.is_empty():
+		return
+	if str(c["tipo"]) == "radio":
+		# un solo pallino per gruppo (stesso modulo, stesso nome)
+		for x in _moduli[int(c["modulo"])]["campi"]:
+			if str(x["tipo"]) == "radio" and str(x["nome"]) == str(c["nome"]):
+				_valori[x["id"]] = ""
+		_valori[id] = "1"
+	else:
+		_valori[id] = "" if _valore(c) != "" else "1"
+	_ridisegna()
+
+# La tendina: lo stesso menu a discesa del browser, dove si e' cliccato.
+func _apri_tendina(id: String) -> void:
+	var c := _campo_da_id(id)
+	if c.is_empty():
+		return
+	var voci: Array = []
+	for o in c.get("opzioni", []):
+		var valore := str(o[0])
+		voci.append([str(o[1]), func() -> void:
+			_valori[id] = valore
+			_ridisegna()])
+	if voci.is_empty():
+		return
+	_riempi_menu(voci)
+	_mostra_menu(get_local_mouse_position())
+
+func _azzera(fi: int) -> void:
+	if fi < 0 or fi >= _moduli.size():
+		return
+	for c in _moduli[fi]["campi"]:
+		_valori.erase(c["id"])
+	_scrivi_in("")
+	_ridisegna()
+
+# INVIA: i valori del modulo diventano la "query" (?nome=valore&...) e si va dove dice
+# action. Se e' una pagina del sito, si apre quella; se e' uno script che qui non esiste
+# (/cgi-bin/cerca.pl, un .asp, un indirizzo sbagliato) il server risponde con l'errore 500
+# d'epoca -- il pulsante ha funzionato, e' il server che non c'e' piu'.
+func _invia(fi: int) -> void:
+	if fi < 0 or fi >= _moduli.size():
+		return
+	var mod: Dictionary = _moduli[fi]
+	var coppie: Array = []
+	for c in mod["campi"]:
+		var nome := str(c["nome"])
+		if nome == "":
+			continue
+		match str(c["tipo"]):
+			"checkbox", "radio":
+				if _valore(c) != "":
+					coppie.append(nome.uri_encode() + "=" + str(c.get("invia", "on")).uri_encode())
+			_:
+				coppie.append(nome.uri_encode() + "=" + _valore(c).uri_encode())
+	var query := "&".join(coppie)
+	var azione := str(mod["action"]).strip_edges()
+	var pagina := _current if azione == "" else WebRuntime.risolvi_link(azione, _current)
+	var esiste := pagina != "" and WebRuntime.in_partita(pagina) and read_page(pagina) != ""
+	var indirizzo := ""
+	if esiste:
+		indirizzo = WebRuntime.display_url(pagina)
+	else:
+		var base := WebRuntime.host_of(WebRuntime.sito_di(_current) + "/index") if WebRuntime.sito_di(_current) != "" else WebRuntime.host_of(_current)
+		indirizzo = azione if azione.begins_with("http") else "http://" + base + "/" + azione.trim_prefix("/")
+	if query != "":
+		indirizzo += "?" + query
+	_scrivi_in("")
+	_digitato = indirizzo
+	_go(pagina if esiste else PAGINA_ERRORE)
+	_addr.text = indirizzo
+
+# ---------------- la barra di stato sui link ----------------
+
+func _su_link(meta) -> void:
+	if _in_carica or _stato_lbl == null:
+		return
+	var m := str(meta)
+	if m.begins_with("__"):
+		return
+	var dove := WebRuntime.risolvi_link(m, _current)
+	_stato_lbl.text = WebRuntime.display_url(dove) if dove != "" else (m if m.begins_with("http") else "http://" + m)
+
+func _via_dal_link() -> void:
+	if _in_carica or _stato_lbl == null:
+		return
+	_stato_lbl.text = _stato_fermo
+
+# Un link porta a una pagina gia' vista in questa partita? (il colore vlink)
+func _visitato(href: String) -> bool:
+	var p := WebRuntime.risolvi_link(href, _current)
+	return p != "" and WebRuntime.visitate.has(p)
+
+func _body_vlink(html: String) -> String:
+	var c := HtmlBB._col(_body_attr(html, "vlink"))
+	if c != "" and Color.html_is_valid(c):
+		return c
+	return "#551A8B"
 
 func _body_link(html: String) -> String:
 	var c := HtmlBB._col(_body_attr(html, "link"))
@@ -940,6 +1181,7 @@ func _fine_caricamento(page: String) -> void:
 	_globo_acceso(false)
 	_avanzamento(1.0)
 	_stato_lbl.text = tr("BR_DONE") % WebRuntime.host_of(page)
+	_stato_fermo = _stato_lbl.text
 	_aggiorna_pulsanti()
 	if bool(_audio_pagina.get("auto", false)):
 		_suona()
@@ -961,6 +1203,7 @@ func _interrompi() -> void:
 	_globo_acceso(false)
 	_ferma_musica()             # la musica non era ancora arrivata: non arrivera'
 	_stato_lbl.text = tr("BR_STOPPED")
+	_stato_fermo = _stato_lbl.text
 	_aggiorna_pulsanti()
 	load_finished.emit(_current)
 

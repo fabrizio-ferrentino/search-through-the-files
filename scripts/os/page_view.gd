@@ -47,6 +47,9 @@ func _init() -> void:
 	fit_content = false
 	scroll_active = true
 	selection_enabled = true
+	# i link delle pagine portano gia' il loro [u] (HtmlBB); la sottolineatura automatica
+	# dei meta sottolineava anche i pulsanti e i campi dei moduli, che sono meta anche loro
+	meta_underlined = false
 	context_menu_enabled = false            # il menu contestuale e' quello del browser
 	shortcut_keys_enabled = false           # Ctrl+C / Ctrl+A li gestisce il browser
 	focus_mode = Control.FOCUS_CLICK

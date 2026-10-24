@@ -15,7 +15,9 @@ _tag = re.compile(r"<[^>]*>")
 _spazi = re.compile(r"\s+")
 _chiave = re.compile(r"\b\d-[A-Z0-9]{4}\b")
 _href = re.compile(r'href\s*=\s*"([^"]*)"')
-_ctrl = re.compile(r"(?i)<(input|form|select|textarea|button)\b")
+# i moduli ci sono (dal 24/10/2026) ma restano nel sito: action vuota, una pagina del sito o
+# uno script del suo server (risponde l'errore 500), mai un altro sito
+_ctrl = re.compile(r'(?i)<form\b[^>]*\baction\s*=\s*"((?:https?:|www\.|mailto:)[^"]*)"')
 _anno = re.compile(r"\b\d{1,2}/(?:\d{1,2}/)?((?:19|20)\d{2})\b|&copy;\s*((?:19|20)\d{2})")
 _rel = re.compile(r"(?i)\b(today|yesterday|oggi|ieri)\b,?\s*(at|alle|ore)?\s*\d{1,2}[:.]\d{2}")
 
@@ -50,7 +52,7 @@ def genera(sid, skin, pagine, morti=()):
             for m in _chiave.finditer(html):
                 errori.append("%s/%s chiave finta '%s'" % (lang, nome, m.group()))
             for m in _ctrl.finditer(html):
-                errori.append("%s/%s controllo <%s>" % (lang, nome, m.group(1)))
+                errori.append("%s/%s modulo fuori dal sito: action=%s" % (lang, nome, m.group(1)))
             for m in _rel.finditer(visibile(html)):
                 errori.append("%s/%s data relativa '%s'" % (lang, nome, m.group()))
             for m in _anno.finditer(html):
@@ -90,7 +92,7 @@ def controlla(sid, morti=()):
             for m in _chiave.finditer(html):
                 errori.append("%s/%s chiave finta '%s'" % (lang, nome, m.group()))
             for m in _ctrl.finditer(html):
-                errori.append("%s/%s controllo <%s>" % (lang, nome, m.group(1)))
+                errori.append("%s/%s modulo fuori dal sito: action=%s" % (lang, nome, m.group(1)))
             for m in _rel.finditer(visibile(html)):
                 errori.append("%s/%s data relativa '%s'" % (lang, nome, m.group()))
             for m in _anno.finditer(html):

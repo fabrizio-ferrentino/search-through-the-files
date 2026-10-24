@@ -64,10 +64,14 @@ const MIN_CONTRASTO := 0.55   # scarto di luminanza fondo/testo per dire "cella 
 
 const CONTENITORI := ["p", "div", "center", "blockquote", "ul", "ol", "li", "table",
 	"tr", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6", "form", "font", "a",
-	"b", "i", "u", "s", "code", "marquee", "blink"]
-# Testo che si muove o sparisce (<marquee>, <blink>): la chiave li' dentro non si
-# potrebbe leggere ne' selezionare, quindi nessuna ancora resa ci finisce.
-const MOBILI := ["marquee", "blink"]
+	"b", "i", "u", "s", "code", "marquee", "blink", "form", "select", "textarea", "button",
+	"pre"]
+# Testo che si muove o sparisce (<marquee>, <blink>) o che sta DENTRO un controllo di un
+# modulo (il valore di un campo, una voce di tendina, l'etichetta di un pulsante), o in un
+# disegno <pre> che si storcerebbe: la chiave li' non si potrebbe leggere o selezionare
+# come testo, quindi nessuna ancora resa ci finisce. (<option> non c'e': di solito non si
+# chiude, e il conto resterebbe aperto per tutto il resto della pagina; basta <select>.)
+const MOBILI := ["marquee", "blink", "select", "textarea", "button", "pre"]
 const VOID_BLOCCO := ["br", "hr"]
 
 # ============================================================

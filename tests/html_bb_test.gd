@@ -74,9 +74,42 @@ func _initialize() -> void:
 	# 13. p align=center
 	_has("p_center", HtmlBB.compile("a<p align=\"center\">b</p>"), "[center]b[/center]")
 
-	# 14. input decorativi
-	_has("input_submit", HtmlBB.compile("<input type=\"submit\" value=\"Invia\">"), "[lb] Invia [rb]")
-	_has("input_text", HtmlBB.compile("<input type=\"text\" size=\"20\">"), "[u]          [/u]")
+	# 14. moduli (dal 24/10/2026 funzionano: qui si controlla il disegno e la descrizione
+	# che il browser usa; il funzionamento e' in web_moduli_test)
+	var cm := {}
+	var fm := HtmlBB.compile("<form action=\"/cgi-bin/cerca.pl\" method=\"get\">Cerca: <input type=\"text\" name=\"q\" size=\"20\" value=\"floppy\"> <input type=\"submit\" value=\"Vai\"></form>", cm)
+	_has("input_submit", fm, "[url=__invia:0][color=#000000]Vai[/color][/url]")
+	_has("input_text", fm, "[img width=1 height=19]res://web/img/spacer.png[/img][color=#000000]floppy[/color]")
+	var moduli: Array = cm.get("moduli", [])
+	if moduli.size() == 1 and str(moduli[0]["action"]) == "/cgi-bin/cerca.pl" and str(moduli[0]["campi"][0]["nome"]) == "q":
+		print("PASS  moduli_ctx")
+	else:
+		print("FAIL  moduli_ctx: %s" % [moduli])
+		_fails.append("moduli_ctx")
+	# il valore scritto dal giocatore vince su quello della pagina, e il campo attivo ha il cursore
+	_has("input_valore", HtmlBB.compile("<input type=\"text\" name=\"q\" value=\"a\">", {"valori": {"m0_0": "ciao"}, "campo_attivo": "m0_0"}), "ciao|")
+	_has("input_password", HtmlBB.compile("<input type=\"password\" name=\"p\">", {"valori": {"m0_0": "segreto"}}), "*******")
+	_has("checkbox", HtmlBB.compile("<input type=\"checkbox\" name=\"c\" checked>"), "[url=__spunta:m0_0][img width=16 height=16]res://web/img/_casella_on.tex[/img][/url]")
+	_has("radio", HtmlBB.compile("<input type=\"radio\" name=\"r\" value=\"a\">"), "_pallino_off.tex")
+	_has("select", HtmlBB.compile("<select name=\"s\"><option value=\"1\">Uno<option value=\"2\" selected>Due</select>"), "[url=__tendina:m0_0][color=#000000]Due")
+	_has("textarea", HtmlBB.compile("<textarea name=\"t\" rows=\"3\" cols=\"30\">riga</textarea>"), "[url=__campo:m0_0][img width=1 height=57]")
+	_has("button", HtmlBB.compile("<form><button type=\"submit\"><b>Entra</b></button></form>"), "[color=#000000]Entra[/color]")
+	_has("reset", HtmlBB.compile("<form><input type=\"reset\" value=\"Pulisci\"></form>"), "[url=__azzera:0]")
+	_eq("hidden", HtmlBB.compile("<input type=\"hidden\" name=\"h\" value=\"x\">"), "")
+
+	# 14b. testo d'epoca: <pre> tiene spazi e a capo, gli altri tag i loro stili
+	var pr := HtmlBB.compile("<pre>\n a  b\n c</pre>")
+	_has("pre_spazi", pr, "[code]" + char(0xA0) + "a" + char(0xA0) + char(0xA0) + "b[/code]\n[code]" + char(0xA0) + "c")
+	_has("tt", HtmlBB.compile("<tt>x</tt>"), "[code]x[/code]")
+	_has("strike", HtmlBB.compile("<strike>x</strike>"), "[s]x[/s]")
+	_has("small", HtmlBB.compile("<small>x</small>"), "[font_size=12]x")
+	_has("address", HtmlBB.compile("<address>x</address>"), "[i]x[/i]")
+
+	# 14c. i link alle pagine gia' viste prendono il colore vlink
+	var vis := HtmlBB.compile("<a href=\"a.html\">A</a> <a href=\"b.html\">B</a>", {"link_color": "#0000ff",
+			"vlink_color": "#800080", "visitato": func(h: String) -> bool: return h == "a.html"})
+	_has("vlink_visto", vis, "[url=a.html][color=#800080]")
+	_has("vlink_non_visto", vis, "[url=b.html][color=#0000ff]")
 
 	# 15. max una riga vuota consecutiva
 	var sp := HtmlBB.compile("a<p><p><p>b")
