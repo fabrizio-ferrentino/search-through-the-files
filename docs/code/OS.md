@@ -366,6 +366,14 @@ NotepadApp: views/edits text files. An IMAGE shows its bytes
 (OSContent.byte_dump) and a BINARY (filetype "bin") shows the
 body it already carries: both READ-ONLY, because rewriting
 random bytes must not be able to change game content.
+FONT (2026-10-25): the text area (`_edit`, a TextEdit) writes in `Win95.font_pagina("mono_b")`
+(Cousine Bold, the crisp variant with antialiasing NONE) at `NP_CORPO = 17` (it was the default
+sans at 18). WHY (owner, 2026-10-25, on the page source): "il font era rigorosamente a
+spaziatura fissa, come Courier New o Fixedsys, senza antialiasing"; Notepad on Windows
+95/98/ME used Fixedsys (raster, monospace, no smoothing). Fixedsys is Microsoft's and is not in
+the project, so Cousine Bold stands in for its weight and blocky pixels. It applies to EVERY
+file opened in Notepad, not only page sources. The browser's "Origine" opens its page source
+here (a temp file `<page>[1].htm`, see WEB.md "VIEW SOURCE").
 
 ## Feature notes
 
@@ -381,7 +389,7 @@ random bytes must not be able to change game content.
   `CONTORNO_SPOSTA` switch it back to live).
 
 - Apps: File Explorer, Notepad (edit + save into the VFS), Browser (HTML→Control renderer:
-  selectable text, clickable links, reflow, "Visualizza sorgente"), Trash
+  selectable text, clickable links, reflow, "Visualizza sorgente" = the page in a Notepad window), Trash
   (move to trash / restore-origin metadata / permanent delete).
 
 - **Rename** files and folders like Win95 (2026-10-18): context menu, Explorer File menu or

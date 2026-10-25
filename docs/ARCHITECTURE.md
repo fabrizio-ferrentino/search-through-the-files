@@ -449,7 +449,8 @@ intact for the login and the secret-folder dialogs.
   **not** CSS classes); the **home is generated** (`name == _home` → `WebRuntime.home_html()`,
   the run's 5 random sites), not a file. `_load` runs the HTML through
   `WebRuntime.source_html()` (injects the per-run key) and renders `strip_comments(...)`;
-  **"Visualizza sorgente"** shows the pretty-printed source (with the key). Right-click menu
+  **"Visualizza sorgente"** opens the raw served source (with the key) in a separate Notepad
+  window (`_view_source`, file `<page>[1].htm`, like IE). Right-click menu
   via `_input`. A missing page → `404`. `reset_pages()` → `WebRuntime.build()` on each
   `start_new_run`. *Lightweight, interactive; not pixel-identical to Chromium — chosen after
   rejecting the gdcef embed (weight) and a baked-image approach (no selection/reflow). Renderer

@@ -27,8 +27,10 @@ whole document is one control:
 - the page **reflows** with the window and scrolls natively (including
   auto-scroll while drag-selecting past the edge).
 
-The raw HTML file is also what the player sees in **"Visualizza sorgente"**
-(pretty-printed), so write source that is pleasant to snoop through — the
+The raw HTML file is also what the player sees in **"Visualizza sorgente"**: since 2026-10-25
+it opens in a separate Notepad window (fixed-width font, file `<page>[1].htm`), **exactly as
+served - NOT pretty-printed or reformatted** - so the indentation and line breaks you write
+are what the player reads. Write source that is pleasant to snoop through — the
 `<!-- comment -->` key can hide there.
 
 ## Supported HTML subset

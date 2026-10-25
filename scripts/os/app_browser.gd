@@ -17,8 +17,6 @@ var _digitato := ""                    # ultimo indirizzo scritto a mano (vedi _
 var _rtl: PageView                  # la pagina: un solo documento BBCode
 var _page_bg: ColorRect
 var _page_tile: TextureRect          # <body background="...">: lo sfondo a mosaico
-var _inspector: VBoxContainer
-var _inspector_edit: TextEdit
 
 var _ctx_layer: Control
 var _ctx_menu: VBoxContainer
@@ -38,7 +36,6 @@ var _back: Array = []
 var _forward: Array = []
 var _html_text := ""                # sorgente (con chiave iniettata) per "visualizza sorgente"
 
-var _resizing := false               # trascinamento maniglia dell'ispettore
 var _reflow_width := -1.0            # se >= 0: la pagina ha tabelle in % -> ricompila se cambia
 
 const PAGES_DIR := "res://web/pages/"
@@ -279,7 +276,6 @@ func launch(arg) -> void:
 	_velo.visible = false
 	page_area.add_child(_velo)
 
-	_build_inspector(root)
 	_costruisci_barra_stato(root)
 	_build_ctx_menu()
 
@@ -388,8 +384,6 @@ func _load(name: String) -> void:
 	if window:
 		window.set_title(_between(_html_text, "<title>", "</title>"))
 	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
-	if _inspector.visible:
-		_inspector_edit.text = _format_html(_html_text)
 	# la pagina e' pronta dentro, ma il modem se la prende con calma: il velo la
 	# tiene coperta per un attimo (vedi _avvia_caricamento)
 	_avvia_caricamento(name)
@@ -572,15 +566,6 @@ func _copy_all() -> void:
 		DisplayServer.clipboard_set(txt)
 
 # ---------------- estrazione dal sorgente ----------------
-
-const _BLOCK_TAGS := {
-	"html": true, "head": true, "body": true, "title": true,
-	"table": true, "tr": true, "td": true, "th": true, "thead": true, "tbody": true,
-	"ul": true, "ol": true, "li": true, "center": true, "div": true, "p": true,
-	"h1": true, "h2": true, "h3": true, "h4": true, "h5": true, "h6": true,
-	"blockquote": true,
-}
-const _VOID_BLOCK := {"br": true, "hr": true, "img": true}
 
 func _tagname(tag: String) -> String:
 	var t := tag.strip_edges()
@@ -979,126 +964,27 @@ func _body_link(html: String) -> String:
 
 # ---------------- visualizza sorgente ----------------
 
-func _build_inspector(root: Control) -> void:
-	_inspector = VBoxContainer.new()
-	_inspector.custom_minimum_size = Vector2(0, 240)
-	_inspector.visible = false
-	_inspector.add_theme_constant_override("separation", 0)
-	root.add_child(_inspector)
-
-	# maniglia per ridimensionare l'altezza del pannello (trascina su/giu')
-	var grip := Panel.new()
-	grip.custom_minimum_size = Vector2(0, 9)
-	grip.mouse_default_cursor_shape = Control.CURSOR_VSIZE
-	grip.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 0, 0, 0, 0))
-	grip.gui_input.connect(_on_grip_input)
-	var gcenter := CenterContainer.new()
-	gcenter.set_anchors_preset(Control.PRESET_FULL_RECT)
-	gcenter.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	grip.add_child(gcenter)
-	var marker := HBoxContainer.new()
-	marker.add_theme_constant_override("separation", 3)
-	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gcenter.add_child(marker)
-	for i in range(2):
-		var dot := ColorRect.new()
-		dot.color = Win95.C_SHADOW
-		dot.custom_minimum_size = Vector2(22, 2)
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		marker.add_child(dot)
-	_inspector.add_child(grip)
-
-	var head := Panel.new()
-	head.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 6, 3, 6, 3))
-	head.custom_minimum_size = Vector2(0, 26)
-	var hb := HBoxContainer.new()
-	hb.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hb.offset_left = 6
-	hb.offset_right = -4
-	head.add_child(hb)
-	var t := Label.new()
-	t.text = tr("BR_SOURCE_TITLE")
-	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.add_child(t)
-	var x := GlyphButton.new()
-	x.glyph = "close"
-	x.custom_minimum_size = Vector2(22, 20)
-	x.pressed.connect(func(): _inspector.visible = false)
-	hb.add_child(x)
-	_inspector.add_child(head)
-	_inspector_edit = TextEdit.new()
-	_inspector_edit.editable = false
-	_inspector_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_inspector_edit.add_theme_font_size_override("font_size", 15)
-	_inspector_edit.add_theme_font_override("font", Win95.font("mono"))   # e' codice: monospace
-	_inspector.add_child(_inspector_edit)
-
-# Trascina la maniglia in cima all'ispettore per cambiarne l'altezza.
-func _on_grip_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		_resizing = event.pressed
-	elif event is InputEventMouseMotion and _resizing:
-		var cms := _inspector.custom_minimum_size
-		cms.y = clampf(cms.y - event.relative.y, 90.0, maxf(120.0, size.y - 220.0))
-		_inspector.custom_minimum_size = cms
+# "Origine" come Internet Explorer: la pagina finisce in un file temporaneo (index[1].htm)
+# che si apre nel BLOCCO NOTE, una finestra a se', col sorgente cosi' com'e' arrivato (niente
+# rientri, niente colori) e il carattere a spaziatura fissa del Blocco note. Come IE, ogni
+# pressione apre una finestra nuova; mentre la pagina arriva non si apre niente (in IE la
+# voce era grigia). Senza sistema intorno (i test del solo browser) il file si prepara ma
+# non c'e' dove aprirlo: lo si legge da sorgente_aperto.
+var sorgente_aperto: Dictionary = {}
 
 func _view_source() -> void:
-	if _inspector == null:
+	if _html_text == "" or is_loading():
 		return
-	if _inspector.visible:
-		_inspector.visible = false
-		return
-	_inspector_edit.text = _format_html(_html_text)
-	_inspector.visible = true
+	sorgente_aperto = {"name": _nome_temporaneo(), "content": _html_text, "filetype": "text"}
+	if os != null and os.has_method("open_app"):
+		os.open_app("notepad", sorgente_aperto)
 
-# Indenta l'HTML grezzo per leggibilita': i blocchi vanno a capo, gli inline scorrono.
-func _format_html(html: String) -> String:
-	var out := ""
-	var line := ""
-	var depth := 0
-	var i := 0
-	var n := html.length()
-	while i < n:
-		var lt := html.find("<", i)
-		if lt < 0:
-			line += html.substr(i)
-			break
-		line += html.substr(i, lt - i)
-		var gt := html.find(">", lt)
-		if gt < 0:
-			line += html.substr(lt)
-			break
-		var raw := html.substr(lt, gt - lt + 1).strip_edges()
-		var nm := _tagname(html.substr(lt + 1, gt - lt - 1))
-		var closing := raw.begins_with("</")
-		if _VOID_BLOCK.has(nm):
-			out += _fmt_line(line, depth)
-			line = ""
-			out += "\t".repeat(depth) + raw + "\n"
-		elif _BLOCK_TAGS.has(nm):
-			out += _fmt_line(line, depth)
-			line = ""
-			if closing:
-				depth = maxi(0, depth - 1)
-			out += "\t".repeat(depth) + raw + "\n"
-			if not closing:
-				depth += 1
-		else:
-			line += html.substr(lt, gt - lt + 1)
-		i = gt + 1
-	out += _fmt_line(line, depth)
-	return out
+# Il nome che IE dava alla copia nella cache: il file della pagina con [1] (la home del
+# portale, che non ha un file, era "default").
+func _nome_temporaneo() -> String:
+	var base := "default" if _current == "" or _current == WebRuntime.HOME else _current.get_file()
+	return base + "[1].htm"
 
-func _fmt_line(line: String, depth: int) -> String:
-	var t := line.strip_edges()
-	return ("\t".repeat(depth) + t + "\n") if t != "" else ""
-
-# ---------------- menu contestuale ----------------
-
-# Lo STRATO dei menu: lo usano sia il menu di destra sulla pagina sia le tendine della
-# barra dei menu (_apri_menu). Le voci non si creano qui: si rifanno a ogni apertura in
-# _riempi_menu, perche' cosa e' attivo dipende dal momento.
 func _build_ctx_menu() -> void:
 	_ctx_layer = Control.new()
 	_ctx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)

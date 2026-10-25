@@ -113,7 +113,6 @@ BR_SOURCE,Source,Origine
 BR_PRINT,Print,Stampa
 BR_ADDR_HINT,Type an address like http://www.site.com,Digita un indirizzo come http://www.sito.it
 BR_GO,Go,Vai
-BR_SOURCE_TITLE,Page source (HTML),Sorgente della pagina (HTML)
 BR_READY,Ready,Pronto
 BR_CONNECTING,Connecting to %s...,Connessione a %s in corso...
 BR_RECEIVING,Receiving data: %d KB of %d KB,Ricezione dati: %d KB di %d KB

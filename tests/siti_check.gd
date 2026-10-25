@@ -6,6 +6,8 @@ extends Node
 # Va eseguito A FINESTRA; dopo "--" la lingua (di base "it") e, se si vuole, le pagine:
 #   & $godot --path $proj res://tests/siti_check.tscn
 #   & $godot --path $proj res://tests/siti_check.tscn -- en forum/index treno/update
+# Una pagina con "!" in fondo (forum/index!) si fotografa anche col suo sorgente aperto nel
+# Blocco note ("Origine" del browser): user://sorgente_<sito>_<pagina>.png
 
 const PAGINE := ["forum/index", "forum/hardware", "forum/thread", "forum/members",
 		"treno/index", "treno/about", "treno/thoughts", "treno/guestbook", "treno/update"]
@@ -35,7 +37,9 @@ func _ready() -> void:
 	var win: OSWindow = os.open_app("browser", "start")
 	win.toggle_max()
 	var app: BrowserApp = win.content_root.get_child(0)
-	for p in pagine:
+	for voce in pagine:
+		var sorgente := str(voce).ends_with("!")
+		var p := str(voce).trim_suffix("!")
 		app._go(str(p))
 		await app.attendi_caricamento()
 		for i in range(6):
@@ -44,6 +48,14 @@ func _ready() -> void:
 		var nome := "sito_%s.png" % str(p).replace("/", "_")
 		get_tree().root.get_texture().get_image().save_png("user://" + nome)
 		print("salvata ", nome, "  (", app._addr.text, ")")
+		if sorgente:
+			app._view_source()
+			for i in range(6):
+				await get_tree().process_frame
+			await RenderingServer.frame_post_draw
+			var nome_s := "sorgente_%s.png" % str(p).replace("/", "_")
+			get_tree().root.get_texture().get_image().save_png("user://" + nome_s)
+			print("salvata ", nome_s)
 	BrowserApp.attesa_scala = 1.0
 	GameManager.set_lingua(lingua_prima, false)
 	GameManager.room_threats_enabled = true

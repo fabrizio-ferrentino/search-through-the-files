@@ -82,8 +82,32 @@ then falls back to "en" and to the old flat folder, so a missing
 translation costs that LANGUAGE a page, not the game; loads via
 WebRuntime.source_html (injects the
 key) then renders strip_comments(...). "Visualizza sorgente" =
-pretty-printed source. See docs/WEB_AUTHORING.md + memory
-`web-browser`.
+the RAW served HTML in a separate Notepad window (see VIEW SOURCE below). See
+docs/WEB_AUTHORING.md + memory `web-browser`.
+VIEW SOURCE (2026-10-25). `_view_source()` (the "Origine" toolbar button and the right-click
+"View source") builds a temp file `{"name": "<page file>[1].htm", "content": _html_text,
+"filetype": "text"}` into `sorgente_aperto` and calls `os.open_app("notepad", file)`: a NEW
+Notepad window per press, like IE. The name is IE's cache copy (`_nome_temporaneo()`: the page
+file + `[1].htm`; the portal home, which has no file, is `default[1].htm`). The content is
+`_html_text` exactly as served: the key already injected by WebRuntime.source_html, NOT
+reformatted (no indentation, no colours). Nothing opens while the page is still loading
+(`is_loading()`; IE greyed the command). Without an `os` (the standalone browser tests) the file
+is prepared but nothing opens: read `sorgente_aperto`. Notepad writes it in its Fixedsys-like
+font (see OS.md). Owner, 2026-10-25: "Voglio migliorare la finestra di visualizzazione del
+codice della pagina... all'epoca la finestra del Sorgente era una finestra di sistema
+completamente separata e il font era rigorosamente a spaziatura fissa, come Courier New o
+Fixedsys, senza antialiasing". Research behind it: IE's View Source copied the page from the
+cache to the TEMP folder and opened it in Notepad (a separate window); Notepad's default font
+on Windows 95/98/ME was Fixedsys (raster, monospace, no smoothing); Netscape 4 had its own
+source window with coloured tags (not copied: IE is the model).
+History, so it does not come back: before this change the browser had its OWN in-window source
+inspector (a panel with a resize grip and a TextEdit: `_build_inspector`, `_on_grip_input`,
+`_inspector`/`_inspector_edit`/`_resizing`) showing the page PRETTY-PRINTED
+(`_format_html` / `_fmt_line` indentation, `_BLOCK_TAGS` / `_VOID_BLOCK`). It was removed
+because the period source window was a separate system window (Notepad) with the raw file,
+as the owner described. The locale key
+`BR_SOURCE_TITLE` (its title) went with it; `BR_SOURCE` (toolbar caption) and `BR_VIEW_SOURCE`
+(menu entry) remain.
 BACKGROUND AND MUSIC (2026-10-23): _page_tile is a TextureRect (STRETCH_TILE) between the
 page colour and the PageView, showing the <body background> image tiled; _sposta_mosaico
 moves it with the scroll (a fixed tile would look painted on the glass). _musica is an

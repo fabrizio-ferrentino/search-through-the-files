@@ -190,7 +190,9 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - siti_check.tscn/.gd (dev tool, WINDOWED: the real browser in the real
   room through the CRT, maximized, on the sample pages or the ones
   after "--" (first the language: "-- en forum/index") ->
-  user://sito_<site>_<page>.png, to judge a site by eye),
+  user://sito_<site>_<page>.png, to judge a site by eye. 2026-10-25: a page argument ending
+  with "!" ("forum/index!") is also photographed with its source open in Notepad ("Origine")
+  -> user://sorgente_<site>_<page>.png),
 
 - vassoio_check.tscn/.gd (dev tool, WINDOWED: the taskbar tray with the
   volume popup open, then muted -> user://vassoio_volume.png and
@@ -544,7 +546,17 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   left click first; and with two windows visible, a right click on
   the inactive one must activate it AND open its menu in one go),
 
-- browser_e2e.tscn/.gd (real browser + real pages + key, windowed). 2026-10-25: its address check
+- browser_e2e.tscn/.gd (real browser + real pages + key, windowed). 2026-10-25, VIEW SOURCE: the
+  browser's `os` is a `FintoOS` (a Control with only `open_app`, which really launches a
+  `NotepadApp` and records what was opened). New checks: SORGENTE_NEL_BLOCCO_NOTE (exactly one
+  "notepad" opened, file name `index[1].htm`, the Notepad's text == the served `_html_text`),
+  SORGENTE_FONT_FISSO (the Notepad text font is `Win95.font_pagina("mono_b")`, a FontFile with
+  antialiasing NONE), SORGENTE_NON_DURANTE_IL_CARICAMENTO (with `attesa_scala = 1.0` and the
+  page still loading, pressing "Origine" opens nothing). SORGENTE_MOSTRA_CHIAVE and
+  SORGENTE_MOSTRA_<tipo>_<seed> (the key shows in the source) now read the text of the Notepad
+  that was opened. The old checks on the in-browser inspector's snapshots were dropped with the
+  inspector. Sabotages: not recorded, none was run for these entries when they were written.
+  Earlier, 2026-10-25: its address check
   accepts `.edu` domains too (TLD list it, com, net, org, edu), since the new `prof` site is at www.lakeland.edu/~wbrandt. 2026-10-23: the site
   balena became treno (check TRENO, was the balena one: treno/thoughts and treno/update).
   The same rename in browser_chrome_test (treno/index), page_load_test (four openings of

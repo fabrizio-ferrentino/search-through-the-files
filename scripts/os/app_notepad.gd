@@ -16,6 +16,7 @@ var _menu_panel: Panel
 var _menu_vbox: VBoxContainer
 
 const MENU_W := 190
+const NP_CORPO := 17       # il corpo del testo (Fixedsys, vedi launch)
 
 func launch(arg) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -65,7 +66,12 @@ func launch(arg) -> void:
 	_edit.clear_undo_history()
 	_edit.editable = not sola_lettura
 	_edit.context_menu_enabled = false   # usiamo il nostro menu personalizzato
-	_edit.add_theme_font_size_override("font_size", 18)
+	# Il Blocco note di Windows 95/98 scriveva in Fixedsys: un carattere a spaziatura fissa,
+	# disegnato a pixel, senza sfumature. Fixedsys e' di Microsoft e qui non c'e': lo fa il
+	# clone di Courier (Cousine) in grassetto e NITIDO, che ne ha il peso e i quadretti.
+	# Serve soprattutto al sorgente delle pagine ("Origine" nel browser apre qui).
+	_edit.add_theme_font_override("font", Win95.font_pagina("mono_b"))
+	_edit.add_theme_font_size_override("font_size", NP_CORPO)
 	_edit.gui_input.connect(_on_edit_input)
 	root.add_child(_edit)
 

@@ -14,6 +14,32 @@ const VP_SIZE := Vector2i(1440, 1080)
 
 var _sub: SubViewport
 var _browser: BrowserApp
+var _os: FintoOS
+
+# Un sistema finto con la sola open_app: apre davvero il Blocco note (fuori da una finestra)
+# e ricorda cosa si e' aperto.
+class FintoOS extends Control:
+	var aperti: Array = []
+	var _note: Array = []
+	func open_app(kind: String, arg = null) -> Object:
+		aperti.append(kind)
+		if kind == "notepad":
+			var np := NotepadApp.new()
+			np.size = Vector2(560, 400)
+			add_child(np)
+			np.launch(arg)
+			_note.append(np)
+		return null
+	func ultimo() -> NotepadApp:
+		return _note.back() if not _note.is_empty() else null
+	func testo_ultimo() -> String:
+		var np := ultimo()
+		return np._edit.text if np != null else ""
+	func chiudi_tutto() -> void:
+		for np in _note:
+			np.queue_free()
+		_note.clear()
+		aperti.clear()
 var _host: Control
 var _fails: Array = []
 
@@ -45,6 +71,11 @@ func _ready() -> void:
 	_host.add_child(_browser)
 	_browser.launch(null)          # home generata
 	_sub.notify_mouse_entered()    # come player.gd: input inoltrato -> hover attivo
+	# il "sistema" intorno al browser, ridotto all'osso: "Origine" deve aprire il sorgente nel
+	# Blocco note (una finestra a se', come IE), e qui il Blocco note si apre davvero
+	_os = FintoOS.new()
+	_host.add_child(_os)
+	_browser.os = _os
 
 	# --- home ---
 	var txt := await _snap("web_home.png")
@@ -54,6 +85,31 @@ func _ready() -> void:
 	# effetto. Nel template la scritta e' spezzata dai tag: vedi docs/WEB_SITES.md.
 	_check("HOME", txt.find("WEBNET") >= 0 and txt.find("GATEWAY") >= 0,
 			"la home generata non porta il marchio WEBNET GATEWAY: '%s'" % txt.substr(0, 60))
+
+	# --- "Origine": il sorgente nel Blocco note, come in IE ---
+	_browser._load("forum/index")
+	await _browser.attendi_caricamento()
+	_browser._view_source()
+	await get_tree().process_frame
+	var np: NotepadApp = _os.ultimo()
+	_check("SORGENTE_NEL_BLOCCO_NOTE", np != null and _os.aperti == ["notepad"]
+			and str(_browser.sorgente_aperto.get("name", "")) == "index[1].htm"
+			and _os.testo_ultimo() == _browser._html_text,
+			"aperti %s, file '%s'" % [str(_os.aperti), str(_browser.sorgente_aperto.get("name", ""))])
+	# il carattere del Blocco note: a spaziatura fissa e nitido (il Fixedsys di Windows 98)
+	if np != null:
+		var f := np._edit.get_theme_font("font")
+		_check("SORGENTE_FONT_FISSO", f == Win95.font_pagina("mono_b") and f is FontFile
+				and (f as FontFile).antialiasing == TextServer.FONT_ANTIALIASING_NONE,
+				"il Blocco note scrive con %s" % str(f))
+	_os.chiudi_tutto()
+	# mentre la pagina arriva, "Origine" non apre niente (in IE la voce era grigia)
+	BrowserApp.attesa_scala = 1.0
+	_browser._load("forum/rules")
+	_browser._view_source()
+	_check("SORGENTE_NON_DURANTE_IL_CARICAMENTO", _os.aperti.is_empty(), "aperti mentre carica: %s" % str(_os.aperti))
+	await _browser.attendi_caricamento()
+	BrowserApp.attesa_scala = 0.05
 
 	# --- forum (vetrina complessa) ---
 	_browser._load("forum/index")
@@ -195,10 +251,9 @@ func _ready() -> void:
 				_browser._view_source()
 				for i in range(3):
 					await get_tree().process_frame
-				_check("SORGENTE_MOSTRA_CHIAVE", _browser._inspector_edit.text.find(kl) >= 0,
+				_check("SORGENTE_MOSTRA_CHIAVE", _os.testo_ultimo().find(kl) >= 0,
 						"il 'visualizza sorgente' non mostra la chiave (%s)" % str(ancora["tipo"]))
-				await _snap("web_chiave_sorgente_%d.png" % (n + 1))
-				_browser._view_source()
+				_os.chiudi_tutto()
 		_check("CHIAVE_SU_UNA_PAGINA", trovate == 1, "pagine col codice nel sorgente: %d" % trovate)
 
 	# --- e la modalita' SORGENTE, che col seme fisso qui sopra non capita mai ---
@@ -222,11 +277,10 @@ func _ready() -> void:
 		_browser._view_source()
 		for i in range(3):
 			await get_tree().process_frame
-		_check("SORGENTE_MOSTRA_" + suffisso, _browser._inspector_edit.text.find(k2) >= 0,
+		_check("SORGENTE_MOSTRA_" + suffisso, _os.testo_ultimo().find(k2) >= 0,
 				"il 'visualizza sorgente' non mostra %s (%s su %s)" % [k2, str(a2["tipo"]), p2])
 		print("   %s: %s -- %s" % [p2, k2, str(a2["nota"])])
-		await _snap("web_sorgente_%s.png" % suffisso)
-		_browser._view_source()
+		_os.chiudi_tutto()
 
 	# --- INDIRIZZI: dominio d'epoca, e quello che si legge si puo' anche digitare ---
 	# Prima la barra diceva "http://news" (il nome del file): nessun suffisso, e
