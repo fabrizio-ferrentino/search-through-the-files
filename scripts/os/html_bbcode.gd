@@ -102,7 +102,12 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 			if int(ctx.get("_pre", 0)) > 0:
 				out += _txt_pre(html.substr(i, lt - i), stack)
 			else:
-				out += _txt(html.substr(i, lt - i))
+				var t := _txt(html.substr(i, lt - i))
+				# come in un browser, gli spazi del sorgente a INIZIO riga non si vedono (quello
+				# fra <ul> e il primo <li> spostava il primo punto piu' in dentro degli altri)
+				if t.begins_with(" ") and _a_capo_finali(out) != 0:
+					t = t.lstrip(" ")
+				out += t
 			i = lt
 			continue
 		var gt := html.find(">", i)
@@ -117,18 +122,26 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 			continue
 		if closing:
 			match nm:
-				"h1", "h2", "h3", "h4", "h5", "h6", "div", "center", "blockquote", "p", "address":
-					out += _pop_tag(stack, nm) + "\n"
+				# i blocchi con margine (titoli, paragrafi, citazioni) lasciano una riga vuota
+				# dopo; div e center solo l'a capo. I margini vicini non si sommano (_spazio).
+				"h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "p", "address":
+					out += _pop_tag(stack, nm)
+					out += _spazio(out, stack, 2)
+				"div", "center":
+					out += _pop_tag(stack, nm)
+					out += _spazio(out, stack, 1)
 				"pre":
 					ctx["_pre"] = maxi(0, int(ctx.get("_pre", 0)) - 1)
 					out += _pop_tag(stack, nm) + "\n"
 				"form":
 					ctx["_modulo"] = -1
-					out += _close_all(stack) + "\n" + _reopen_all(stack)
+					# IE lasciava una riga vuota sotto ogni modulo (il suo margine famoso)
+					out += _spazio(out, stack, 2)
 				"ul", "ol":
 					if not lists.is_empty():
 						lists.pop_back()
-					out += "\n"
+					# un elenco di primo livello ha il suo margine sotto; uno annidato no
+					out += _spazio(out, stack, 2 if lists.is_empty() else 1)
 				_:
 					out += _pop_tag(stack, nm)
 			continue
@@ -143,13 +156,17 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 					tbb = stretta
 				elif centrata:
 					tbb = "[center]" + tbb + "[/center]"
-				out += _close_all(stack) + "\n" + tbb + "\n" + _reopen_all(stack)
+				# una tabella va a capo ma non ha margini suoi (quello sopra, se c'e', e' del
+				# paragrafo prima)
+				var chiusi := _close_all(stack)
+				var gia := _a_capo_finali(out + chiusi)
+				out += chiusi + ("\n" if gia == 0 else "") + tbb + "\n" + _reopen_all(stack)
 				var close_gt := html.find(">", endt)
 				i = (close_gt + 1) if close_gt >= 0 else n
 			"br":
 				out += _close_all(stack) + "\n" + _reopen_all(stack)
 			"p":
-				out += _close_all(stack) + "\n\n" + _reopen_all(stack)
+				out += _spazio(out, stack, 2)
 				var al := _attr(tag, "align").to_lower()
 				if al == "center":
 					out += _push(stack, "p", "[center]", "[/center]")
@@ -157,20 +174,22 @@ static func _walk(html: String, ctx: Dictionary) -> String:
 					out += _push(stack, "p", "[right]", "[/right]")
 			"h1", "h2", "h3", "h4", "h5", "h6":
 				var hf := _file_di(stack, true, false)
+				out += _spazio(out, stack, 2)
 				if hf != "":
-					out += "\n" + _push(stack, nm, "[font_size=%d][font=%s]" % [int(_H_PX[nm]), hf], "[/font][/font_size]", {"b": true})
+					out += _push(stack, nm, "[font_size=%d][font=%s]" % [int(_H_PX[nm]), hf], "[/font][/font_size]", {"b": true})
 				else:
-					out += "\n" + _push(stack, nm, "[font_size=%d][b]" % int(_H_PX[nm]), "[/b][/font_size]", {"b": true})
+					out += _push(stack, nm, "[font_size=%d][b]" % int(_H_PX[nm]), "[/b][/font_size]", {"b": true})
 			"ul", "ol":
+				# come in un browser: un elenco di primo livello ha una riga vuota sopra
+				out += _spazio(out, stack, 2 if lists.is_empty() else 1)
 				lists.push_back({"type": nm, "n": 0})
-				out += "\n"
 			"li":
 				var pref := "• "
 				var depth := maxi(1, lists.size())
 				if not lists.is_empty() and str(lists.back()["type"]) == "ol":
 					lists.back()["n"] = int(lists.back()["n"]) + 1
 					pref = "%d. " % int(lists.back()["n"])
-				out += _close_all(stack) + "\n" + "  ".repeat(depth) + pref + _reopen_all(stack)
+				out += _spazio(out, stack, 1) + "  ".repeat(depth) + pref
 			"hr":
 				out += _close_all(stack) + "\n" + _hr(tag, ctx) +"\n" + _reopen_all(stack)
 			"img":
@@ -349,7 +368,7 @@ static func _marquee(tag: String, interno: String, stack: Array, ctx: Dictionary
 		_size_re = RegEx.create_from_string("font_size=(\\d+)")
 	for m in _size_re.search_all(_reopen_all(stack) + testo):
 		corpo = int(m.get_string(1))
-	var lungo := Win95.font("sans_b").get_string_size(_solo_testo(testo),
+	var lungo := Win95.font_pagina("sans_b").get_string_size(_solo_testo(testo),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, corpo).x + 8.0
 	# piu' lungo della pagina: il RichTextLabel lo andrebbe a capo e le righe
 	# scorrerebbero una sotto l'altra. Resta fermo, come in Netscape (la regola per
@@ -361,7 +380,9 @@ static func _marquee(tag: String, interno: String, stack: Array, ctx: Dictionary
 	var v := (passo if passo > 0.0 else MARQUEE_PASSO) / (ritardo if ritardo >= 0.02 else MARQUEE_RITARDO)
 	var dir := "r" if _attr(tag, "direction").to_lower() == "right" else "l"
 	var modo := "a" if _attr(tag, "behavior").to_lower() == "alternate" else "s"
-	var fx := "[marquee w=%d len=%d v=%d dir=%s mode=%s]" % [int(largo), int(lungo), int(v), dir, modo]
+	# n = quanti caratteri: l'effetto stima dove sta ognuno e lo nasconde fuori dal riquadro
+	var fx := "[marquee w=%d len=%d v=%d dir=%s mode=%s n=%d]" % [int(largo), int(lungo), int(v), dir, modo,
+			maxi(1, _solo_testo(testo).length())]
 	return _close_all(stack) + "\n" + _reopen_all(stack) + "[left]" + fx + testo \
 			+ "[/marquee][/left]" + _close_all(stack) + "\n" + _reopen_all(stack)
 
@@ -390,9 +411,28 @@ static func _audio(nm: String, tag: String, stack: Array, ctx: Dictionary) -> St
 		}
 	if not visibile:
 		return ""
-	var tasti := "[url=%s][color=#000000] ► [/color][/url][color=#808080]|[/color][url=%s][color=#000000] ■ [/color][/url]" % [META_PLAY, META_STOP]
-	return _close_all(stack) + "\n[table=1][cell bg=#C0C0C0 border=#808080 padding=6,2,6,2]" \
-			+ tasti + "[/cell][/table]\n" + _reopen_all(stack)
+	# il lettore di Media Player che IE metteva al posto di un <embed>: la barra di
+	# avanzamento incassata e sotto i pulsantini play, pausa, stop (la pausa ferma, come
+	# faceva con un MIDI). Tutto disegnato, niente scritte.
+	var largo := clampi(int(_attr(tag, "width")) if _attr(tag, "width").strip_edges() != "" else 200, 120, 320)
+	var traccia := "[img]%s[/img]" % _tex_lettore("traccia_%d" % (largo - 12))
+	var tasti := "[url=%s][img]%s[/img][/url][url=%s][img]%s[/img][/url][url=%s][img]%s[/img][/url]" % [
+			META_PLAY, _tex_lettore("play"), META_STOP, _tex_lettore("pausa"), META_STOP, _tex_lettore("stop")]
+	return _close_all(stack) + "\n[table=1][cell bg=#C0C0C0 border=#808080 padding=6,4,6,4]" \
+			+ traccia + "\n" + tasti + "[/cell][/table]\n" + _reopen_all(stack)
+
+# I disegni del lettore (Win95._tex_tasto_lettore / _tex_traccia_lettore) su percorsi virtuali.
+static func _tex_lettore(chiave: String) -> String:
+	var path := IMG_DIR + "_lettore_" + chiave + ".tex"
+	if not _controlli.has("lettore_" + chiave):
+		var tex: Texture2D
+		if chiave.begins_with("traccia_"):
+			tex = Win95._tex_traccia_lettore(int(chiave.substr(8)))
+		else:
+			tex = Win95._tex_tasto_lettore(chiave)
+		tex.take_over_path(path)
+		_controlli["lettore_" + chiave] = tex
+	return path
 
 # ---------------- moduli ----------------
 # I moduli d'epoca FUNZIONANO (proprietario, 24/10/2026: "se i pulsanti esistevano
@@ -463,31 +503,110 @@ static func _input(tag: String, ctx: Dictionary) -> String:
 	var v := _valore(c2, ctx)
 	var mostra := "*".repeat(v.length()) if tipo == "password" else v
 	return _scatola(c2["id"], "__campo:", mostra, str(ctx.get("campo_attivo", "")) == c2["id"],
-			float(clampi(size, 3, 60)) * PX_CARATTERE, 0.0)
+			_largo_campo(float(clampi(size, 3, 60)) * PX_CARATTERE, ctx), 0.0)
 
 # Il riquadro bianco incassato di un campo: testo, cursore se attivo, e una barretta
 # trasparente che lo tiene largo quanto chiede size=/cols= anche quando e' vuoto.
+# Come un campo vero, il riquadro ha una misura FISSA (size=/cols=, rows=) che non cambia
+# mentre si scrive: il testo che non ci sta scorre (si vede la coda mentre si scrive, l'inizio
+# quando il campo non e' attivo) e in un <textarea> va a capo da solo. E il testo usa il font
+# del CONTROLLO, non quello della pagina intorno: prima ereditava <font face size>/<b> della
+# pagina ma veniva misurato col sans a 16, e il riquadro si allargava o stringeva.
 static func _scatola(id: String, meta: String, testo: String, attivo: bool, largo: float, alto: float) -> String:
-	var t := testo + ("|" if attivo else "")
-	var righe := t.split("\n")
-	var piu_lunga := ""
-	for r in righe:
-		if r.length() > piu_lunga.length():
-			piu_lunga = r
-	var occupa: float = Win95.font("sans").get_string_size(piu_lunga, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
-	var resto := int(maxf(1.0, largo - occupa))
-	var corpo := ""
-	for k in range(righe.size()):
+	var font := Win95.font_pagina("sans")
+	# lo spazio utile: tolti il margine sinistro dentro il link (CAMPO_ATTACCO), un paio di px
+	# di respiro a destra e, se si scrive, il cursore
+	var utile := largo - CAMPO_ATTACCO - 3.0 - (CTRL_PX if attivo else 0.0)
+	var righe: Array = []
+	if alto <= 0.0:
+		righe.append(_taglia(testo.replace("
+", " "), font, utile, attivo))
+	else:
+		for par in testo.split("
+"):
+			righe.append_array(_a_capo(par, font, largo - CAMPO_ATTACCO - 3.0 - CTRL_PX))
+	var n_righe := 1 if alto <= 0.0 else maxi(1, int(round(alto / PX_RIGA)))
+	if righe.size() > n_righe:
+		# un'area di testo piena scorre: mentre si scrive si vedono le ultime righe
+		righe = righe.slice(righe.size() - n_righe) if attivo else righe.slice(0, n_righe)
+	# Ogni riga comincia con un margine trasparente e finisce con una barretta trasparente
+	# alta una riga intera che arriva fino al bordo destro: il link copre cosi' tutto il
+	# riquadro, e passandoci sopra si vede la stanghetta (PageView.cursore_a) anche sul
+	# bianco. Il cursore del campo attivo lampeggia, come quello di Windows.
+	var attacco := "[img width=%d height=%d]%s[/img]" % [int(CAMPO_ATTACCO), int(PX_RIGA), SPACER_IMG]
+	var dentro := ""
+	var ultima := maxi(0, mini(righe.size(), n_righe) - 1)
+	for k in range(n_righe):
 		if k > 0:
-			corpo += "\n"
-		corpo += _txt(righe[k]).replace(" ", char(0xA0))
-	var dentro := "[color=#000000]" + corpo + "[/color][img width=%d height=1]%s[/img]" % [resto, SPACER_IMG]
-	# l'altezza: le righe chieste (rows=), o almeno una riga di testo -- un campo vuoto
-	# senza questa barretta verticale era un filo alto 4 px
-	dentro = "[img width=1 height=%d]%s[/img]" % [int(maxf(alto, PX_RIGA)), SPACER_IMG] + dentro
+			dentro += "
+"
+		var r: String = str(righe[k]) if k < righe.size() else ""
+		var cursore := attivo and k == ultima
+		var occupa: float = font.get_string_size(r + ("|" if cursore else ""), HORIZONTAL_ALIGNMENT_LEFT, -1, CTRL_FONT).x
+		dentro += attacco
+		if r != "":
+			dentro += _txt(r).replace(" ", char(0xA0))
+		if cursore:
+			dentro += "[blink]|[/blink]"
+		dentro += "[img width=%d height=%d]%s[/img]" % [int(maxf(1.0, largo - CAMPO_ATTACCO - occupa - 2.0)), int(PX_RIGA), SPACER_IMG]
+	# e sotto, una riga alta 1 px piu' larga di ogni riga di testo: un campo e' una tabellina
+	# in linea, e l'engine la tiene larga quanto il suo pezzo piu' largo che non si spezza.
+	# Senza, appena si scriveva la barretta si accorciava, il riquadro si stringeva e il testo
+	# andava a capo (la pagina si allungava).
+	dentro += "
+[img width=%d height=1]%s[/img]" % [int(maxf(1.0, largo + 2.0)), SPACER_IMG]
 	var bordo := "#000080" if attivo else CAMPO_BORDO
-	return "[table=1,center][cell bg=%s border=%s padding=4,2,4,2][url=%s%s]%s[/url][/cell][/table]" % [
-			CAMPO_FONDO, bordo, meta, id, dentro]
+	return "[table=1,center][cell bg=%s border=%s padding=1,1,1,1][url=%s%s]%s[/url][/cell][/table]" % [
+			CAMPO_FONDO, bordo, meta, id, _ctrl(dentro)]
+
+const CAMPO_ATTACCO := 3.0      # il margine sinistro del testo, DENTRO il link (si clicca anche li')
+
+# La larghezza di un campo, mai piu' di quella che c'e': in una colonna stretta un campo
+# size=30 era piu' largo della cella, e appena ci si scriveva la barretta finale andava a
+# capo e la pagina si allungava. Come in un browser vero il campo resta dentro la cella.
+static func _largo_campo(chiesto: float, ctx: Dictionary) -> float:
+	var c := float(ctx.get("page_width", 0.0))
+	if c <= 0.0:
+		return chiesto
+	return clampf(c - CAMPO_CORNICE, 24.0, chiesto) if c - CAMPO_CORNICE < chiesto else chiesto
+
+const CAMPO_CORNICE := 16.0     # padding e bordo del riquadro, piu' un margine per gli arrotondamenti
+const CTRL_FONT := 14           # il testo dei controlli: sempre questo, qualunque <font> ci sia intorno
+const CTRL_PX := 6.0            # quanto occupa il cursore "|"
+
+# Il testo di un controllo, isolato dalla pagina: font, misura e colore suoi.
+static func _ctrl(bb: String) -> String:
+	return "[font=%s][font_size=%d][color=#000000]%s[/color][/font_size][/font]" % [
+			_font_file("sans", false, false), CTRL_FONT, bb]
+
+# Una riga sola che sta in "largo": mentre si scrive se ne vede la fine, se no l'inizio.
+static func _taglia(t: String, font: Font, largo: float, coda: bool) -> String:
+	var r := t
+	while r != "" and font.get_string_size(r, HORIZONTAL_ALIGNMENT_LEFT, -1, CTRL_FONT).x > largo:
+		r = r.substr(1) if coda else r.substr(0, r.length() - 1)
+	return r
+
+# Un paragrafo spezzato in righe larghe al massimo "largo" (a parola; una parola troppo
+# lunga viene spezzata dove capita, come faceva il controllo di Windows).
+static func _a_capo(par: String, font: Font, largo: float) -> Array:
+	var out: Array = []
+	var riga := ""
+	for parola in par.split(" "):
+		var prova := parola if riga == "" else riga + " " + parola
+		if font.get_string_size(prova, HORIZONTAL_ALIGNMENT_LEFT, -1, CTRL_FONT).x <= largo:
+			riga = prova
+			continue
+		if riga != "":
+			out.append(riga)
+		riga = parola
+		while riga.length() > 1 and font.get_string_size(riga, HORIZONTAL_ALIGNMENT_LEFT, -1, CTRL_FONT).x > largo:
+			var k := riga.length() - 1
+			while k > 1 and font.get_string_size(riga.substr(0, k), HORIZONTAL_ALIGNMENT_LEFT, -1, CTRL_FONT).x > largo:
+				k -= 1
+			out.append(riga.substr(0, k))
+			riga = riga.substr(k)
+	out.append(riga)
+	return out
 
 # Un pulsante: <input type=submit/button/reset/image> o <button>. Invia il modulo in cui
 # sta (reset lo riporta ai valori della pagina); "image" e' un'immagine cliccabile.
@@ -503,13 +622,32 @@ static func _pulsante(tag: String, etichetta: String, ctx: Dictionary) -> String
 	# Il pulsante diventa un link vero (barra di stato, link visitati, regole del sito).
 	var vai := pulsante_link(tag)
 	if vai != "":
-		meta = vai
+		# __vai: e' un pulsante che porta a una pagina: il browser lo segue come un link
+		# (la barra di stato mostra dove porta, sopra c'e' la manina)
+		meta = "__vai:" + vai
 	if tipo == "image":
 		return "[url=%s][img]%s[/img][/url]" % [meta, img_path(_attr(tag, "src"))]
 	if etichetta.strip_edges() == "":
 		etichetta = TranslationServer.translate("WEB_FORM_RESET" if tipo == "reset" else "WEB_FORM_SUBMIT")
-	return "[table=1,center][cell bg=%s border=%s padding=10,2,10,2][url=%s][color=#000000]%s[/color][/url][/cell][/table]" % [
-			BOTTONE_FONDO, BOTTONE_BORDO, meta, _txt(etichetta)]
+	# il pulsante di Windows 95 vero, in rilievo, scritta compresa: un'immagine sola (si
+	# clicca ovunque, non va a capo, e premuto si abbassa: vedi PageView._premi)
+	return "[url=%s][img]%s[/img][/url]" % [meta, tex_pulsante(etichetta.strip_edges(), false)]
+
+# Il pulsante disegnato (Win95._tex_pulsante) con la scritta "etichetta", su un percorso
+# virtuale. Si registra anche la versione PREMUTA, sullo stesso percorso con "_giu": la
+# pagina la mostra mentre il pulsante e' tenuto premuto.
+const PULSANTE_SUFFISSO_GIU := "_giu.tex"
+static var _pulsanti: Dictionary = {}
+
+static func tex_pulsante(etichetta: String, premuto: bool) -> String:
+	var radice := IMG_DIR + "_pulsante_" + str(etichetta.hash())
+	if not _pulsanti.has(radice):
+		var su := Win95._tex_pulsante(etichetta, false, CTRL_FONT)
+		var giu := Win95._tex_pulsante(etichetta, true, CTRL_FONT)
+		su.take_over_path(radice + ".tex")
+		giu.take_over_path(radice + PULSANTE_SUFFISSO_GIU)
+		_pulsanti[radice] = [su, giu]
+	return radice + (PULSANTE_SUFFISSO_GIU if premuto else ".tex")
 
 # L'indirizzo di un onclick="location.href='x'" (o window.location / location=), "" se non c'e'.
 static func pulsante_link(tag: String) -> String:
@@ -539,8 +677,37 @@ static func _tendina(tag: String, interno: String, ctx: Dictionary) -> String:
 	for o in opzioni:
 		if str(o[0]) == v2:
 			mostra = str(o[1])
-	return "[table=1,center][cell bg=%s border=%s padding=4,1,2,1][url=__tendina:%s][color=#000000]%s  [/color][bgcolor=%s][color=#000000] ▼ [/color][/bgcolor][/url][/cell][/table]" % [
-			CAMPO_FONDO, CAMPO_BORDO, c["id"], _txt(mostra), BOTTONE_FONDO]
+	# come quella vera, la tendina e' larga quanto la sua opzione piu' lunga, qualunque sia
+	# quella scelta: cambiando scelta non cambia misura
+	var font := Win95.font_pagina("sans")
+	var piu_larga := 0.0
+	for o in opzioni:
+		piu_larga = maxf(piu_larga, font.get_string_size(str(o[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, CTRL_FONT).x)
+	# ...ma non piu' larga della cella in cui sta (una voce lunghissima viene tagliata)
+	piu_larga = minf(piu_larga, _largo_campo(piu_larga + 40.0, ctx) - 40.0)
+	mostra = _taglia(mostra, font, piu_larga, false)
+	var resto := int(maxf(1.0, piu_larga - font.get_string_size(mostra, HORIZONTAL_ALIGNMENT_LEFT, -1, CTRL_FONT).x)) + 6
+	# la voce scelta su fondo bianco, poi il pulsantino in rilievo con la freccia (disegnato
+	# da Win95, non un carattere): tutto dentro il link, si apre cliccando ovunque
+	var attacco := "[img width=%d height=%d]%s[/img]" % [int(CAMPO_ATTACCO), int(PX_RIGA), SPACER_IMG]
+	var corpo := attacco + _txt(mostra).replace(" ", char(0xA0)) 			+ "[img width=%d height=%d]%s[/img]" % [resto, int(PX_RIGA), SPACER_IMG] 			+ "[img width=16 height=%d]%s[/img]" % [int(PX_RIGA), freccia_tendina(false)]
+	# la riga di 1 px piu' larga della riga vera (vedi _scatola): la tendina non si stringe
+	# mai e la voce non va a capo a uno spazio
+	var tutta := ceilf(CAMPO_ATTACCO + piu_larga + 6.0 + 1.0 + 16.0) + 2.0
+	corpo += "
+[img width=%d height=1]%s[/img]" % [int(tutta), SPACER_IMG]
+	return "[table=1,center][cell bg=%s border=%s padding=1,1,1,1][url=__tendina:%s]%s[/url][/cell][/table]" % [
+			CAMPO_FONDO, CAMPO_BORDO, c["id"], _ctrl(corpo)]
+
+# Il pulsantino della tendina (vedi Win95._tex_freccia_tendina), su un percorso virtuale.
+static func freccia_tendina(premuta: bool) -> String:
+	var chiave := "freccia_giu" if premuta else "freccia"
+	var path := IMG_DIR + "_" + chiave + ".tex"
+	if not _controlli.has(chiave):
+		var tex := Win95._tex_freccia_tendina(premuta, int(PX_RIGA))
+		tex.take_over_path(path)
+		_controlli[chiave] = tex
+	return path
 
 # <textarea>: piu' righe; Invio va a capo invece di inviare.
 static func _area_testo(tag: String, interno: String, ctx: Dictionary) -> String:
@@ -549,7 +716,7 @@ static func _area_testo(tag: String, interno: String, ctx: Dictionary) -> String
 	var testo := _ent(interno).trim_prefix("\n").trim_prefix("\r\n")
 	var c := _nuovo_campo(ctx, "textarea", _attr(tag, "name"), testo)
 	return _scatola(c["id"], "__campo:", _valore(c, ctx), str(ctx.get("campo_attivo", "")) == c["id"],
-			float(clampi(cols, 5, 90)) * PX_CARATTERE, float(clampi(rows, 1, 30)) * PX_RIGA)
+			_largo_campo(float(clampi(cols, 5, 90)) * PX_CARATTERE, ctx), float(clampi(rows, 1, 30)) * PX_RIGA)
 
 # Le caselle e i pallini disegnati da Win95, registrati su un percorso virtuale come le
 # GIF, cosi' [img] li trova.
@@ -649,7 +816,11 @@ static func _font_file(fam: String, b: bool, i: bool) -> String:
 		nome = fam + "_b"
 	elif i:
 		nome = fam + "_i"
-	return Win95.FONT_DIR + str(Win95._FONT_FILES.get(nome, Win95._FONT_FILES["sans"]))
+	if not Win95._FONT_FILES.has(nome):
+		nome = fam if Win95._FONT_FILES.has(fam) else "sans"
+	# la versione nitida per le pagine (Win95.font_pagina), registrata sul suo percorso
+	Win95.font_pagina(nome)
+	return Win95.percorso_font_pagina(nome)
 
 static func _img(tag: String) -> String:
 	var opts := ""
@@ -1008,6 +1179,40 @@ static func _pop_tag(stack: Array, nm: String) -> String:
 		stack.push_back(t)
 		out += str(t["open"])
 	return out
+
+# Lo stacco verticale prima/dopo un blocco, come i margini di un browser: "righe" = 1 per
+# andare solo a capo, 2 per una riga vuota. Conta gli a capo che ci sono GIA' in fondo a
+# "out" (i tag non contano), cosi' due margini vicini non si sommano: un </p> seguito da
+# un <h2> lascia UNA riga vuota, non due. In cima a una cella o alla pagina non si mette
+# niente (Internet Explorer non metteva il margine sopra il primo paragrafo di una cella).
+# Restituisce il pezzo da aggiungere: chiude i tag aperti, va a capo, li riapre.
+static func _spazio(out: String, stack: Array, righe: int) -> String:
+	var gia := _a_capo_finali(out)
+	# niente da aggiungere: niente da chiudere e riaprire (coppie di tag vuote cambiano il
+	# BBCode per niente, e il controllo delle chiavi le vedrebbe come pezzi persi)
+	if gia < 0 or righe - gia <= 0:
+		return ""
+	return _close_all(stack) + "\n".repeat(righe - gia) + _reopen_all(stack)
+
+# Quanti a capo ci sono in fondo a un pezzo di BBCode prima dell'ultima cosa visibile
+# (i tag [..] e gli spazi non contano). -1 se non c'e' ancora niente di visibile.
+static func _a_capo_finali(bb: String) -> int:
+	var i := bb.length() - 1
+	var n := 0
+	while i >= 0:
+		var ch := bb[i]
+		if ch == "]":
+			var j := bb.rfind("[", i)
+			if j < 0:
+				return n
+			i = j - 1
+			continue
+		if ch == "\n":
+			n += 1
+		elif ch != " " and ch != "\t":
+			return n
+		i -= 1
+	return -1
 
 static func _close_all(stack: Array) -> String:
 	var out := ""

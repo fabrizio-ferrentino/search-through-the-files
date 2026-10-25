@@ -68,7 +68,10 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_check("EMBED_MUTO", not _browser.sta_suonando() and not _browser.musica_in_attesa(),
 			"autostart=\"false\" suona da solo")
-	_check("EMBED_LETTORE", _browser._rtl.get_parsed_text().find("■") >= 0, "il lettore non si vede")
+	# il lettore disegnato (Media Player): i suoi pulsanti sono immagini con i link play/stop
+	var bb: String = _browser._rtl.text
+	_check("EMBED_LETTORE", bb.find("[url=%s][img]" % HtmlBB.META_PLAY) >= 0 and bb.find("[url=%s][img]" % HtmlBB.META_STOP) >= 0,
+			"il lettore non si vede")
 	_browser._on_meta(HtmlBB.META_PLAY)
 	await _aspetta_musica()
 	_check("EMBED_PLAY", _browser.sta_suonando(), "il play non suona")

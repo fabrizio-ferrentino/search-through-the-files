@@ -21,8 +21,8 @@ static func tutti(fermo := false) -> Array:
 # [marquee w=<largo> len=<testo> v=<px/s> dir=l|r mode=s|a]: la riga intera scorre.
 # Tutti i caratteri ricevono lo STESSO spostamento, quindi il testo si muove come un
 # blocco: entra da destra, esce a sinistra e ricomincia (mode=s), oppure rimbalza
-# fra i due bordi (mode=a, behavior="alternate"). Fuori dalla pagina lo taglia il
-# RichTextLabel stesso, che ritaglia il suo contenuto.
+# fra i due bordi (mode=a, behavior="alternate"). Fuori dal riquadro (largo w) i
+# caratteri si nascondono, come il ritaglio di un marquee vero.
 class Marquee extends RichTextEffect:
 	var bbcode := "marquee"
 	var fermo := false
@@ -45,6 +45,13 @@ class Marquee extends RichTextEffect:
 		else:
 			dx = w - fposmod(t, w + lun)
 		fx.offset = Vector2(dx, 0.0)
+		# come in un browser il testo si vede solo DENTRO il riquadro del marquee: entra
+		# dal bordo destro e sparisce a quello sinistro, invece di sbordare fino alla barra.
+		# L'engine non dice dove sta il carattere: lo si stima dalla sua posizione nel testo.
+		var n: float = maxf(1.0, float(fx.env.get("n", 1)))
+		var x := float(fx.relative_index) * lun / n + dx
+		if x < 0.0 or x > w - lun / n:
+			fx.visible = false
 		return true
 
 

@@ -24,6 +24,9 @@ var _ctx_layer: Control
 var _ctx_menu: VBoxContainer
 var _ctx_panel: Panel
 var _menu_aperto: Button = null
+var _tend_panel: Panel                 # l'elenco aperto di una tendina della pagina
+var _tend_scorri: ScrollContainer
+var _tend_lista: VBoxContainer
 var _barra_menu: Array = []          # le voci della barra, per ALT+lettera      # voce di menu premuta (resta "giu'" mentre e' aperta)
 var _btn_back: Button
 var _btn_fwd: Button
@@ -245,8 +248,13 @@ func launch(arg) -> void:
 	_rtl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var pad := StyleBoxEmpty.new()
 	pad.set_content_margin_all(PageView.PAD)    # margine della pagina
+	pad.content_margin_right = PageView.PAD + PageView.BARRA   # piu' la striscia della barra
 	_rtl.add_theme_stylebox_override("normal", pad)
 	_rtl.add_theme_font_size_override("normal_font_size", 16)
+	# il testo delle pagine e' nitido come sugli schermi del 1999 (Win95.font_pagina)
+	for coppia in [["normal_font", "sans"], ["bold_font", "sans_b"], ["italics_font", "sans_i"],
+			["bold_italics_font", "sans_bi"], ["mono_font", "mono"]]:
+		_rtl.add_theme_font_override(coppia[0], Win95.font_pagina(coppia[1]))
 	_rtl.meta_clicked.connect(_on_meta)         # UNICO meccanismo di navigazione
 	_rtl.resized.connect(_on_page_resized)
 	# passando su un link, in basso compare l'indirizzo dove porta (Netscape, IE)
@@ -399,6 +407,19 @@ func _render_html(body: String) -> void:
 			"vlink_color": _body_vlink(_html_text), "visitato": _visitato,
 			"valori": _valori, "campo_attivo": _campo}
 	_rtl.set_page(HtmlBB.compile(body, ctx))
+	# Una colonna con dentro una parola o un'immagine piu' larga della sua parte allarga la
+	# tabella oltre il bordo: un browser vero restringe allora le ALTRE colonne. Qui si fa lo
+	# stesso ricompilando con una pagina piu' stretta di quanto e' uscito (le colonne
+	# elastiche cedono quei pixel). Due tentativi bastano; se non cede, si lascia com'e'.
+	var pw := _page_width()
+	for _tentativo in range(2):
+		var fuori := _rtl.get_content_width() - _page_width()
+		if fuori <= 1.0 or not bool(ctx.get("uses_width", false)):
+			break
+		pw -= fuori + 2.0
+		ctx = {"link_color": ctx["link_color"], "page_width": pw, "vlink_color": ctx["vlink_color"],
+				"visitato": _visitato, "valori": _valori, "campo_attivo": _campo}
+		_rtl.set_page(HtmlBB.compile(body, ctx))
 	_moduli = ctx.get("moduli", [])
 	_audio_pagina = ctx.get("audio", {})
 	# le tabelle con width="N%" dipendono dalla larghezza: se la pagina ne ha,
@@ -406,8 +427,11 @@ func _render_html(body: String) -> void:
 	_reflow_width = _page_width() if bool(ctx.get("uses_width", false)) else -1.0
 
 # Larghezza utile della pagina in pixel (tolti i margini): serve alle tabelle in %.
+# Tolta anche la barra di scorrimento: su una pagina lunga compare e il testo si stringe, e
+# una tabella al 100% calcolata sulla misura intera finiva col bordo destro sotto la barra.
+# Come IE d'epoca, lo spazio della barra si toglie sempre.
 func _page_width() -> float:
-	return maxf(0.0, _rtl.size.x - 2.0 * PageView.PAD)
+	return maxf(0.0, _rtl.size.x - 2.0 * PageView.PAD - PageView.BARRA)
 
 # Ricompila la pagina alla nuova larghezza (solo se contiene tabelle in %).
 func _on_page_resized() -> void:
@@ -439,6 +463,9 @@ func _on_meta(meta) -> void:
 	if m.begins_with("__azzera:"):
 		_azzera(int(m.substr(9)))
 		return
+	if m.begins_with("__vai:"):
+		m = m.substr(6)          # un pulsante-menu: da qui e' un link come gli altri
+		meta = m
 	_scrivi_in("")
 	# i pulsanti del lettore di un <embed> non sono indirizzi
 	if str(meta) == HtmlBB.META_PLAY:
@@ -784,21 +811,91 @@ func _spunta(id: String) -> void:
 		_valori[id] = "" if _valore(c) != "" else "1"
 	_ridisegna()
 
-# La tendina: lo stesso menu a discesa del browser, dove si e' cliccato.
+# La tendina come quella di Windows: l'elenco scende PROPRIO sotto la casella, largo
+# quanto lei, bianco con un filo nero; la voce sotto il mouse si accende di blu e la voce
+# scelta e' accesa quando si apre. Se sotto non c'e' posto, sale sopra la casella. (Prima
+# si apriva il menu del tasto destro dove si era cliccato: sembrava un'altra cosa.)
+const TENDINA_RIGA := 18.0
+const TENDINA_MAX_RIGHE := 10
+
 func _apri_tendina(id: String) -> void:
 	var c := _campo_da_id(id)
-	if c.is_empty():
+	if c.is_empty() or (c.get("opzioni", []) as Array).is_empty():
 		return
+	var pagina := _current
+	var mouse := get_local_mouse_position()
+	var r: Rect2 = await _rtl.rettangolo_di("__tendina:" + id)
+	if pagina != _current or _campo_da_id(id).is_empty():
+		return                 # nel frattempo si e' cambiata pagina
+	for k in _tend_lista.get_children():
+		_tend_lista.remove_child(k)
+		k.queue_free()
+	var scelto := _valore(c)
 	var voci: Array = []
 	for o in c.get("opzioni", []):
 		var valore := str(o[0])
-		voci.append([str(o[1]), func() -> void:
+		var b := Button.new()
+		b.text = str(o[1])
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.focus_mode = Control.FOCUS_NONE
+		b.clip_text = true
+		b.custom_minimum_size = Vector2(0, TENDINA_RIGA)
+		b.add_theme_font_override("font", Win95.font_pagina("sans"))
+		b.add_theme_font_size_override("font_size", HtmlBB.CTRL_FONT)
+		b.add_theme_stylebox_override("normal", _tend_stile(false))
+		b.add_theme_stylebox_override("hover", _tend_stile(true))
+		b.add_theme_stylebox_override("pressed", _tend_stile(true))
+		b.add_theme_stylebox_override("hover_pressed", _tend_stile(true))
+		b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+		b.add_theme_color_override("font_color", Win95.C_TEXT)
+		for stato in ["font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+			b.add_theme_color_override(stato, Win95.C_TITLE_TEXT)
+		b.pressed.connect(func() -> void:
+			_chiudi_menu()
 			_valori[id] = valore
-			_ridisegna()])
-	if voci.is_empty():
-		return
-	_riempi_menu(voci)
-	_mostra_menu(get_local_mouse_position())
+			_ridisegna())
+		_tend_lista.add_child(b)
+		voci.append(b)
+		if valore == scelto:
+			_accendi_voce(b, true)
+	# appena il mouse passa su una voce, la scelta di prima si spegne: acceso e' solo
+	# quello che c'e' sotto il mouse
+	for b in voci:
+		(b as Button).mouse_entered.connect(func() -> void:
+			for altro in voci:
+				_accendi_voce(altro, false))
+	var origine: Vector2 = _rtl.global_position - global_position
+	var largo := 150.0
+	var dove := mouse
+	var sopra := mouse.y
+	if r.size.x > 0.0:
+		largo = r.size.x
+		dove = origine + Vector2(r.position.x, r.end.y)
+		sopra = origine.y + r.position.y
+	var righe := mini(voci.size(), TENDINA_MAX_RIGHE)
+	var alto := float(righe) * TENDINA_RIGA + 2.0
+	_tend_scorri.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if voci.size() > righe \
+			else ScrollContainer.SCROLL_MODE_DISABLED
+	if dove.y + alto > size.y - 4.0:
+		dove.y = sopra - alto          # sotto non ci sta: si apre verso l'alto
+	dove.x = clampf(dove.x, 0.0, maxf(0.0, size.x - largo))
+	_tend_panel.position = dove
+	_tend_panel.size = Vector2(largo, alto)
+	_ctx_panel.visible = false
+	_tend_panel.visible = true
+	_ctx_layer.visible = true
+	_ctx_layer.move_to_front()
+
+func _accendi_voce(b: Button, acceso: bool) -> void:
+	b.add_theme_stylebox_override("normal", _tend_stile(acceso))
+	b.add_theme_color_override("font_color", Win95.C_TITLE_TEXT if acceso else Win95.C_TEXT)
+
+func _tend_stile(acceso: bool) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Win95.C_SELECT if acceso else Color.WHITE
+	sb.content_margin_left = 3
+	sb.content_margin_right = 3
+	return sb
 
 func _azzera(fi: int) -> void:
 	if fi < 0 or fi >= _moduli.size():
@@ -850,7 +947,9 @@ func _su_link(meta) -> void:
 	if _in_carica or _stato_lbl == null:
 		return
 	var m := str(meta)
-	if m.begins_with("__"):
+	if m.begins_with("__vai:"):
+		m = m.substr(6)          # un pulsante-menu: la barra dice dove porta, come un link
+	elif m.begins_with("__"):
 		return
 	var dove := WebRuntime.risolvi_link(m, _current)
 	_stato_lbl.text = WebRuntime.display_url(dove) if dove != "" else (m if m.begins_with("http") else "http://" + m)
@@ -1024,6 +1123,28 @@ func _build_ctx_menu() -> void:
 	_ctx_menu.offset_right = -3
 	_ctx_menu.offset_bottom = -3
 	_ctx_panel.add_child(_ctx_menu)
+	# l'elenco di una tendina della pagina (vedi _apri_tendina): bianco, filo nero
+	_tend_panel = Panel.new()
+	_tend_panel.name = "Tendina"
+	var cornice := StyleBoxFlat.new()
+	cornice.bg_color = Color.WHITE
+	cornice.border_color = Win95.C_DARK
+	cornice.set_border_width_all(1)
+	_tend_panel.add_theme_stylebox_override("panel", cornice)
+	_tend_panel.visible = false
+	_ctx_layer.add_child(_tend_panel)
+	_tend_scorri = ScrollContainer.new()
+	_tend_scorri.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_tend_scorri.offset_left = 1
+	_tend_scorri.offset_top = 1
+	_tend_scorri.offset_right = -1
+	_tend_scorri.offset_bottom = -1
+	_tend_scorri.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_tend_panel.add_child(_tend_scorri)
+	_tend_lista = VBoxContainer.new()
+	_tend_lista.add_theme_constant_override("separation", 0)
+	_tend_lista.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tend_scorri.add_child(_tend_lista)
 
 # Il menu del tasto destro sulla pagina. "Copia" e "Indietro" ci sono solo quando hanno
 # senso: col tasto destro su una pagina appena aperta, in Win95, "Indietro" era grigio.
@@ -1335,6 +1456,7 @@ func _apri_menu(voci: Array, sotto: Control) -> void:
 
 func _chiudi_menu() -> void:
 	_ctx_layer.visible = false
+	_tend_panel.visible = false
 	if _menu_aperto != null:
 		_menu_aperto.set_pressed_no_signal(false)
 		_menu_aperto.toggle_mode = false
@@ -1376,6 +1498,8 @@ func _mostra_menu(pos: Vector2) -> void:
 	pos.y = minf(pos.y, size.y - h - 4.0)
 	_ctx_panel.position = pos
 	_ctx_panel.size = Vector2(larga, h)
+	_ctx_panel.visible = true
+	_tend_panel.visible = false
 	_ctx_layer.visible = true
 	_ctx_layer.move_to_front()
 

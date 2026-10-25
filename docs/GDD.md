@@ -110,7 +110,7 @@ the game's texts — write around it.*
 ### TODO
 
 - **Lore on the websites** (owner, 2026-10-18; planned in [WEB_CATALOG.md](WEB_CATALOG.md),
-  16 lore sites out of 34 since 2026-10-23, 12 out of 30 before): fragments about the
+  16 lore sites out of 40 since 2026-10-24, out of 34 from 2026-10-23, 12 out of 30 before): fragments about the
   original young man and about the father,
   spread across the fake sites. 2026-10-23 (owner): the young man keeps ONE site (`treno`)
   and appears in at most two others (chat, annunci); the threads of lavoro, vincente and

@@ -231,7 +231,7 @@ func _ready() -> void:
 	# --- INDIRIZZI: dominio d'epoca, e quello che si legge si puo' anche digitare ---
 	# Prima la barra diceva "http://news" (il nome del file): nessun suffisso, e
 	# scriverlo era l'unico modo di raggiungere il sito.
-	var tld := ["it", "com", "net", "org"]
+	var tld := ["it", "com", "net", "org", "edu"]
 	var malfatti: Array = []
 	var giro: Array = []
 	var siti_e_home: Array = [WebRuntime.HOME]

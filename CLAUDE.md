@@ -34,6 +34,7 @@ $proj  = "z:\Progetti\Search Through the Files"
   Silent test = run `--import` and read the parse error (usually rule 3 below).
 - In a `-s` script, `_initialize()` must `get_root().add_child(...)` then `await process_frame`.
 - Sabotage new checks: break the code on purpose, require red, restore.
+- After touching the browser, the HTML compiler or many pages, run `siti_audit_test` (headless, ~13 min, every page of every site).
 - **Do not commit or push unless asked.** `docs/`, `web/` and `CLAUDE.md` are tracked: commit their changes too.
 
 ## 3. Architecture in one picture
@@ -120,7 +121,7 @@ Full text with the reasons: [docs/code/README.md](docs/code/README.md).
    (`Win95.menubar_button` / `premi_acceleratore`); strip it elsewhere with `Win95.testo_semplice()`.
 10. **Web sites** (rules in [docs/WEB_CATALOG.md](docs/WEB_CATALOG.md), enforced by
     `siti_catalogo_test`): a site is closed in itself (links only inside it, to the WebNet portal
-    or to dead addresses in `morti`); forms stay inside the site (they work; scripts answer 500); dates absolute and not
+    or to dead addresses in `morti`); forms stay inside the site (they work; scripts answer 500); no footer link back to WebNet; dates absolute and not
     after 1999. Everywhere: **no text shaped like a key** (digit, dash, 4 letters/digits).
 11. Every chrome button either works or is visibly disabled; a dead button is a bug.
 

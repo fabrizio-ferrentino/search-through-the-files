@@ -22,7 +22,11 @@ CRT: `tests/siti_check.tscn -- it <site>/<page> ...`.
 - **Closed in itself.** A site never links to another site of the catalog. The only
   links that leave a site go to the **WebNet portal**, or to an address that is **gone**
   (listed in the site's `morti`: it answers "cannot find server"). A name of another
-  site may appear as plain text, never as a link. `siti_catalogo_test` SITI_CHIUSI.
+  site may appear as plain text, never as a link. `siti_catalogo_test` SITI_CHIUSI (it also
+  reads the targets of button menus, `onclick="location.href='x.html'"`; `siti_audit_test` LINK
+  checks every link and button menu in the real browser). A link to the portal is allowed, but
+  since 2026-10-24 no site page has the old footer link back to WebNet (owner: "tutti i siti hanno
+  in fondo un link per tornare a webnet rimuovilo"); only the 404 and 500 error pages keep theirs.
 - **Forms stay in the site.** Forms are allowed (owner, 2026-10-24; the browser now types in
   them). A form's `action` is empty, a page of its own site, or a script of its own server
   (`/cgi-bin/...pl`, `.cgi`, `.asp`); never `http`, `www` or `mailto`. A script answers the

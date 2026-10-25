@@ -53,6 +53,38 @@ static func font(nome := "sans") -> Font:
 	_fonts[nome] = f
 	return f
 
+# Il testo delle PAGINE WEB come sullo schermo del 1999: senza sfumatura dei bordi. Arial e
+# Times alle misure del testo uscivano a pixel pieni (Windows 95 non sfumava, e anche con
+# "smussa i caratteri" di Windows 98 le misure normali restavano nitide); il testo
+# sfumato di oggi e' una delle cose che fanno sembrare "finte" le pagine. Interruttore
+# qui: false = il testo delle pagine torna sfumato come quello del resto dell'OS.
+const TESTO_PAGINE_NITIDO := true
+static var _fonts_pagina: Dictionary = {}
+
+# Il font "nome" per le pagine web: lo stesso file, ma nitido (vedi TESTO_PAGINE_NITIDO).
+static func font_pagina(nome := "sans") -> Font:
+	if not TESTO_PAGINE_NITIDO:
+		return font(nome)
+	if _fonts_pagina.has(nome):
+		return _fonts_pagina[nome]
+	var base := font(nome)
+	var f: Font = base
+	if base is FontFile:
+		var g := (base as FontFile).duplicate() as FontFile
+		g.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+		g.hinting = TextServer.HINTING_NORMAL
+		g.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+		# un percorso suo, cosi' il BBCode della pagina lo puo' chiedere con [font=...]
+		g.take_over_path(percorso_font_pagina(nome))
+		f = g
+	_fonts_pagina[nome] = f
+	return f
+
+# Il percorso da mettere in [font=...] per il font "nome" di una pagina.
+static func percorso_font_pagina(nome: String) -> String:
+	var file := FONT_DIR + str(_FONT_FILES.get(nome, _FONT_FILES["sans"]))
+	return (file + ".pagina.res") if TESTO_PAGINE_NITIDO else file
+
 # Disegna un bordo 3D in stile Win95 (rilevato o incassato) sul canvas item dato.
 static func bevel_rid(ci: RID, rect: Rect2, raised: bool, double: bool = true) -> void:
 	var x := rect.position.x
@@ -365,6 +397,162 @@ static func _tex_casella(segnata: bool) -> ImageTexture:
 		for p in punti:
 			for dy in range(3):
 				im.set_pixel(p.x, p.y + dy, C_DARK)
+	return ImageTexture.create_from_image(im)
+
+# Il pulsantino della tendina (combo box) di Win95: grigio in rilievo (luce in alto a
+# sinistra, ombra e nero in basso a destra) col triangolino nero che punta in giu'.
+# Premuto, il rilievo si rovescia e il triangolo scende di un pixel.
+static func _tex_freccia_tendina(premuta: bool, alta: int) -> ImageTexture:
+	var w := 16
+	var h := maxi(alta, 12)
+	var im := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	im.fill(C_FACE)
+	var su := C_SHADOW if premuta else C_LIGHT
+	var su2 := C_FACE if premuta else C_HILIGHT
+	var giu := C_SHADOW if premuta else C_DARK
+	var giu2 := C_FACE if premuta else C_SHADOW
+	for x in range(w):
+		im.set_pixel(x, 0, su2)
+		im.set_pixel(x, 1, su)
+		im.set_pixel(x, h - 1, giu)
+		im.set_pixel(x, h - 2, giu2)
+	for y in range(h):
+		im.set_pixel(0, y, su2)
+		im.set_pixel(1, y, su)
+		im.set_pixel(w - 1, y, giu)
+		im.set_pixel(w - 2, y, giu2)
+	# il triangolo: righe di 7, 5, 3, 1 pixel, centrato
+	var cy := h / 2 - 2 + (1 if premuta else 0)
+	var cx := w / 2 - 1 + (1 if premuta else 0)
+	for r in range(4):
+		for x in range(cx - 3 + r, cx + 4 - r):
+			im.set_pixel(x, cy + r, C_DARK)
+	return ImageTexture.create_from_image(im)
+
+# Un pulsante di un modulo come quello di Windows 95, scritta compresa, in un'immagine sola:
+# grigio, in rilievo (luce in alto a sinistra, ombra e nero in basso a destra); premuto il
+# rilievo si rovescia e la scritta scende di un pixel a destra e in basso. Le lettere si
+# copiano dalla cache dei glifi del font (lo stesso, nitido, delle pagine): niente disegno
+# sullo schermo, quindi l'immagine e' pronta subito, anche senza finestra.
+const PULSANTE_MARGINE := 8      # spazio fra la scritta e il bordo, a destra e a sinistra
+const PULSANTE_ALTO := 21
+
+static func _tex_pulsante(testo: String, premuto: bool, corpo: int) -> ImageTexture:
+	var f := font_pagina("sans")
+	var largo_testo := ceili(f.get_string_size(testo, HORIZONTAL_ALIGNMENT_LEFT, -1, corpo).x)
+	var w := maxi(largo_testo + PULSANTE_MARGINE * 2 + 4, 24)
+	var h := PULSANTE_ALTO
+	var im := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	im.fill(C_FACE)
+	var su := C_DARK if premuto else C_LIGHT
+	var su2 := C_SHADOW if premuto else C_HILIGHT
+	var giu := C_LIGHT if premuto else C_DARK
+	var giu2 := C_HILIGHT if premuto else C_SHADOW
+	for x in range(w):
+		im.set_pixel(x, 0, su)
+		im.set_pixel(x, 1, su2)
+		im.set_pixel(x, h - 1, giu)
+		im.set_pixel(x, h - 2, giu2)
+	for y in range(h):
+		im.set_pixel(0, y, su)
+		im.set_pixel(1, y, su2)
+		im.set_pixel(w - 1, y, giu)
+		im.set_pixel(w - 2, y, giu2)
+	# di nuovo gli angoli, come in Windows: in alto a destra e in basso a sinistra vince l'ombra
+	im.set_pixel(w - 1, 0, giu)
+	im.set_pixel(0, h - 1, giu)
+	var sposta := 1 if premuto else 0
+	var asc := f.get_ascent(corpo)
+	var alto_testo := asc + f.get_descent(corpo)
+	var x0 := (w - largo_testo) / 2 + sposta
+	var base := int(roundf((float(h) - alto_testo) / 2.0 + asc)) + sposta
+	scrivi_in_immagine(im, testo, f, corpo, Vector2i(x0, base), C_TEXT)
+	return ImageTexture.create_from_image(im)
+
+# Scrive "testo" dentro un'Image, con la linea di base all'altezza origine.y: i glifi si
+# prendono dalla cache del font (TextServer) e si stampano col colore dato.
+static func scrivi_in_immagine(im: Image, testo: String, f: Font, corpo: int, origine: Vector2i, colore: Color) -> void:
+	var ts := TextServerManager.get_primary_interface()
+	var forma := ts.create_shaped_text()
+	ts.shaped_text_add_string(forma, testo, f.get_rids(), corpo)
+	var x := float(origine.x)
+	var chiave := Vector2i(corpo, 0)
+	for g in ts.shaped_text_get_glyphs(forma):
+		var rid: RID = g["font_rid"]
+		var indice: int = g["index"]
+		if rid.is_valid() and indice != 0:
+			ts.font_render_glyph(rid, chiave, indice)
+			var t := ts.font_get_glyph_texture_idx(rid, chiave, indice)
+			if t >= 0:
+				var atlante := ts.font_get_texture_image(rid, chiave, t)
+				var uv := ts.font_get_glyph_uv_rect(rid, chiave, indice)
+				var off := ts.font_get_glyph_offset(rid, chiave, indice)
+				if atlante != null and uv.size.x > 0.0:
+					atlante.decompress()
+					var pezzo := atlante.get_region(Rect2i(uv.position, uv.size))
+					var dx := int(roundf(x + float(g["offset"].x) + off.x))
+					var dy := origine.y + int(roundf(float(g["offset"].y) + off.y))
+					for py in range(pezzo.get_height()):
+						for px in range(pezzo.get_width()):
+							var a := pezzo.get_pixel(px, py).a
+							var tx := dx + px
+							var ty := dy + py
+							if a > 0.0 and tx >= 0 and ty >= 0 and tx < im.get_width() and ty < im.get_height():
+								im.set_pixel(tx, ty, im.get_pixel(tx, ty).lerp(colore, a))
+		x += float(g["advance"]) * float(g.get("repeat", 1))
+	ts.free_rid(forma)
+
+# I pulsantini del lettore multimediale che IE mostrava per un <embed> (Media Player):
+# grigi in rilievo, col simbolo nero: "play" triangolo, "pausa" due sbarre, "stop" quadrato.
+static func _tex_tasto_lettore(tipo: String) -> ImageTexture:
+	var w := 23
+	var h := 21
+	var im := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	im.fill(C_FACE)
+	for x in range(w):
+		im.set_pixel(x, 0, C_LIGHT)
+		im.set_pixel(x, h - 1, C_DARK)
+		im.set_pixel(x, h - 2, C_SHADOW)
+	for y in range(h):
+		im.set_pixel(0, y, C_LIGHT)
+		im.set_pixel(w - 1, y, C_DARK)
+		im.set_pixel(w - 2, y, C_SHADOW)
+	match tipo:
+		"play":
+			for k in range(5):
+				for y in range(6 + k, 15 - k):
+					im.set_pixel(9 + k, y, C_DARK)
+		"pausa":
+			for y in range(6, 15):
+				for x in [8, 9, 13, 14]:
+					im.set_pixel(x, y, C_DARK)
+		_:
+			for y in range(6, 14):
+				for x in range(7, 15):
+					im.set_pixel(x, y, C_DARK)
+	return ImageTexture.create_from_image(im)
+
+# La barra di avanzamento del lettore: un solco incassato con il cursore in rilievo all'inizio.
+static func _tex_traccia_lettore(w: int) -> ImageTexture:
+	var h := 18
+	var im := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	im.fill(C_FACE)
+	var y0 := h / 2 - 2
+	for x in range(w):
+		im.set_pixel(x, y0, C_SHADOW)
+		im.set_pixel(x, y0 + 1, C_DARK)
+		im.set_pixel(x, y0 + 2, C_HILIGHT)
+		im.set_pixel(x, y0 + 3, C_LIGHT)
+	for y in range(h):
+		for x in range(2, 12):
+			var c := C_FACE
+			if y == 0 or x == 2:
+				c = C_LIGHT
+			elif y == h - 1 or x == 11:
+				c = C_DARK
+			elif y == h - 2 or x == 10:
+				c = C_SHADOW
+			im.set_pixel(x, y, c)
 	return ImageTexture.create_from_image(im)
 
 # Il pallino di un radio button di Win95: cerchio bianco incassato (ombra in alto a

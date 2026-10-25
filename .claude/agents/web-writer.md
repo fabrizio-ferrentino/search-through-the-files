@@ -10,7 +10,7 @@ are invented and must feel real and ordinary. Never commit.
 
 ## Read first
 
-- `docs/WEB_CATALOG.md`: the 34 sites, the RULES (top of the file), the shared invented world
+- `docs/WEB_CATALOG.md`: the 40 sites, the RULES (top of the file), the shared invented world
   (the town Millbrook / San Vito al Lago, the WebNet provider, March 1999).
 - `docs/WEB_AUTHORING.md`: the HTML subset the browser understands (tables, `<font>`, colours
   on `<body>`; NO CSS, NO colspan/rowspan).

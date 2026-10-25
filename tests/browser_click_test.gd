@@ -17,6 +17,11 @@ extends Node
 #   8 lo stesso DENTRO UNA TABELLA  -> il caso peggiore: per l'engine una tabella
 #     e' una riga sola alta tutto il blocco, quindi senza la maschera del testo
 #     (page_view.gd::_prepara_maschera) l'I-beam copriva la tabella intera.
+#   9 i MODULI come in un browser vero -> stanghetta su tutto il campo (anche vicino al
+#     bordo), freccia su tendina e pulsante; un clic vicino al bordo del campo lo attiva;
+#     la tendina si apre PROPRIO sotto la sua casella, larga uguale, e la voce cliccata
+#     diventa il valore (prima: la mano sul campo, e la tendina era il menu del tasto
+#     destro aperto dove si cliccava).
 #
 # NOTA sui tempi: gli eventi vanno spinti con i tempi di una mano umana
 # (~90 ms di pressione, ~110 ms tra i due clic di un doppio clic). Con eventi
@@ -42,7 +47,7 @@ var _meta: Array = []
 var _fails: Array = []
 
 func _ready() -> void:
-	get_tree().create_timer(90.0).timeout.connect(_timeout)   # salvagente
+	get_tree().create_timer(150.0).timeout.connect(_timeout)   # salvagente
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)
 	GameManager.debug_tutti_i_siti = true   # le pagine sono fisse: devono rispondere in ogni partita
@@ -175,6 +180,9 @@ func _ready() -> void:
 		print("[cursore] vuoto DENTRO la tabella ", buco_tab, " -> ", c_tab)
 		_check("CURSORE_VUOTO_IN_TABELLA", c_tab == Control.CURSOR_ARROW,
 				"nel vuoto dentro una tabella vale %d" % c_tab)
+
+	# --- 9) i moduli ---
+	await _prova_moduli()
 
 	if _fails.is_empty():
 		print("RISULTATO: PASS (comportamenti del mouse ok)")
@@ -396,11 +404,82 @@ func _vuoto_in_tabella() -> Vector2:
 		y += 5
 	return Vector2(-1, -1)
 
+# La forma che il gioco mostrerebbe: la chiede OSDesktop.cursor_shape_at alla pagina
+# (cursore_a), non al RichTextLabel nudo, che metterebbe la mano su ogni link.
 func _forma_dopo_hover(p: Vector2) -> int:
 	_motion(p)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	return _pagina.get_cursor_shape(p - _pagina.get_global_rect().position)
+	return _pagina.cursore_a(p - _pagina.get_global_rect().position)
+
+const MODULO := "<body bgcolor=\"#FFFFFF\"><p>Cerca nel sito:</p><form action=\"/cgi-bin/cerca.pl\">" 		+ "<p>Nome: <input type=\"text\" name=\"q\" size=\"24\"></p>" 		+ "<p>Sezione: <select name=\"s\"><option value=\"a\">Tutte le sezioni<option value=\"b\">Hardware<option value=\"c\">Software</select></p>" 		+ "<p><input type=\"submit\" value=\"Cerca\"></p></form><p><a href=\"rules.html\">Regolamento</a></p></body>"
+
+func _prova_moduli() -> void:
+	await _browser.attendi_caricamento()
+	_browser._html_text = MODULO
+	_browser._current = "forum/index"
+	_browser._render_html(HtmlBB.strip_comments(HtmlBB.body_inner(MODULO)))
+	for i in range(4):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var base := _pagina.get_global_rect().position
+	var campo: Rect2 = await _pagina.rettangolo_di("__campo:m0_0")
+	var tendina: Rect2 = await _pagina.rettangolo_di("__tendina:m0_1")
+	var bottone: Rect2 = await _pagina.rettangolo_di("__invia:0")
+	print("[moduli] campo=", campo, " tendina=", tendina, " pulsante=", bottone)
+	if campo.size.x < 20.0 or tendina.size.x < 20.0 or bottone.size.x < 10.0:
+		_check("MODULI_TROVATI", false, "non trovo i controlli: %s %s %s" % [campo, tendina, bottone])
+		return
+	# il cursore: stanghetta sul campo, anche a 3 px dal bordo sinistro; freccia altrove
+	var c_campo := await _forma_dopo_hover(base + campo.get_center())
+	var c_bordo := await _forma_dopo_hover(base + Vector2(campo.position.x + 3.0, campo.get_center().y))
+	var c_tend := await _forma_dopo_hover(base + tendina.get_center())
+	var c_bott := await _forma_dopo_hover(base + bottone.get_center())
+	print("[moduli] cursore campo=", c_campo, " bordo=", c_bordo, " tendina=", c_tend, " pulsante=", c_bott)
+	_check("CURSORE_CAMPO", c_campo == Control.CURSOR_IBEAM, "sul campo vale %d" % c_campo)
+	_check("CURSORE_CAMPO_BORDO", c_bordo == Control.CURSOR_IBEAM, "vicino al bordo del campo vale %d" % c_bordo)
+	_check("CURSORE_TENDINA", c_tend == Control.CURSOR_ARROW, "sulla tendina vale %d" % c_tend)
+	_check("CURSORE_PULSANTE", c_bott == Control.CURSOR_POINTING_HAND, "sul pulsante vale %d" % c_bott)
+	# premuto, il pulsante si abbassa; lasciato, torna su (il mouse ci e' gia' passato sopra:
+	# la pagina sa dove sta)
+	for i in range(6):
+		await get_tree().process_frame
+	_press(base + bottone.get_center())
+	await get_tree().process_frame
+	var giu := _pagina.pulsante_premuto()
+	_release(base + Vector2(bottone.position.x - 40.0, bottone.get_center().y))
+	await get_tree().process_frame
+	_check("PULSANTE_SI_ABBASSA", giu and not _pagina.pulsante_premuto(),
+			"premuto si vede abbassato: %s, lasciato torna su: %s" % [str(giu), str(not _pagina.pulsante_premuto())])
+	await _browser.attendi_caricamento()
+	# un clic vicino al bordo sinistro attiva il campo
+	await _clic(base + Vector2(campo.position.x + 3.0, campo.get_center().y), [])
+	_check("CAMPO_CLIC_BORDO", _browser._campo == "m0_0", "campo attivo: '%s'" % _browser._campo)
+	_browser._scrivi_in("")
+	_browser._ridisegna()
+	await get_tree().process_frame
+	# la tendina: si apre sotto la casella, larga uguale
+	await _clic(base + tendina.get_center(), [])
+	for i in range(20):
+		if _browser._tend_panel.visible:
+			break
+		await get_tree().process_frame
+	var origine: Vector2 = _pagina.global_position - _browser.global_position
+	var atteso := origine + Vector2(tendina.position.x, tendina.end.y)
+	_check("TENDINA_SOTTO_LA_CASELLA", _browser._tend_panel.visible
+			and _browser._tend_panel.position.distance_to(atteso) < 2.0
+			and absf(_browser._tend_panel.size.x - tendina.size.x) < 2.0,
+			"casella %s, elenco in %s largo %d (visibile %s)" % [tendina, _browser._tend_panel.position,
+			int(_browser._tend_panel.size.x), str(_browser._tend_panel.visible)])
+	# clic sulla seconda voce: diventa il valore e l'elenco si chiude
+	var voci := _browser._tend_lista.get_children()
+	if voci.size() == 3:
+		var v2 := voci[1] as Button
+		await get_tree().process_frame
+		await _clic(v2.get_global_rect().get_center(), [])
+		await get_tree().process_frame
+	_check("TENDINA_SCEGLIE", str(_browser._valori.get("m0_1", "")) == "b" and not _browser._tend_panel.visible,
+			"valore '%s', elenco visibile %s" % [str(_browser._valori.get("m0_1", "")), str(_browser._tend_panel.visible)])
 
 func _check(nome: String, ok: bool, perche: String) -> void:
 	if ok:

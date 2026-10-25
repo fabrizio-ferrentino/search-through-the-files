@@ -38,7 +38,7 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 | `<b> <i> <u>` | bold / italic / underline |
 | `<font color="#..." size="1..7" face="...">` | color + size + family (see Fonts) |
 | `<h1>..<h6>` | bold heading sizes |
-| `<br>`, `<p>`, `<p align="center/right">` | line break / paragraph (blank line) / aligned paragraph |
+| `<br>`, `<p>`, `<p align="center/right">` | line break / paragraph (blank line) / aligned paragraph (margins: see "Vertical margins") |
 | `<center>`, `<div align="center">` | centered block |
 | `<a href="pagina.html">` | link (color from `<body link>`) |
 | `<hr>`, `<hr width="50%" size="4" color="#...">` | native horizontal rule |
@@ -46,15 +46,15 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 | `<blockquote>` | indented block (forum quotes) |
 | `<img src="file.png" width="W" height="H">` | image from `web/img/`, PNG or **animated GIF** (see below); inside `<a>` it is a clickable picture |
 | `<body background="tile.gif">` | **tiled background** (PNG or GIF, animated too) that scrolls with the page; keep `bgcolor` too, it shows while loading |
-| `<marquee>` | **scrolling line** (`scrollamount`, `scrolldelay`, `direction="right"`, `behavior="alternate"`, `width="N"`); top level only, and it must FIT ON ONE LINE (about 90 characters at size 3 in a full-width window): inside a table cell, or when longer than the page, it is shown STILL, as Netscape did |
+| `<marquee>` | **scrolling line** (`scrollamount`, `scrolldelay`, `direction="right"`, `behavior="alternate"`, `width="N"`); top level only, and it must FIT ON ONE LINE (about 90 characters at size 3 in a full-width window): inside a table cell, or when longer than the page, it is shown STILL, as Netscape did. The moving text is clipped to the marquee's width (it enters at the right edge and vanishes at the left, it never spills over the page) |
 | `<blink>` | **blinking** text |
 | `<bgsound src="tune.mid" loop="infinite">` | **background music** from `web/audio/` (`.mid`, or `.wav`/`.ogg`); starts when the page has finished loading; no `loop` = plays once |
-| `<embed src="tune.mid" autostart="true/false" hidden="true" loop="true">` | music too; NOT hidden = a small period player (play ► / stop ■) drawn on the page |
+| `<embed src="tune.mid" autostart="true/false" hidden="true" loop="true">` | music too; NOT hidden = a period Media Player drawn on the page (grey panel, sunken seek bar, raised play / pause / stop buttons; pause stops, as with MIDI); `width=` sets its width, 120-320 (default 200). No text, nothing to write |
 | `<form action="..." method="get/post">` | a REAL form (owner, 2026-10-24). Fields are small inline tables; you can type in them. `action` must stay inside the site: empty, a page of the site, or a script of the site's own server (`/cgi-bin/x.pl`, `.cgi`, `.asp`); never `http://`, `www.` or `mailto:` (`siti_catalogo_test` MODULI_NEL_SITO) |
-| `<input type="text">`, `type="password"` (dots), `<textarea rows= cols=>` | typeable field (click it; Backspace, Tab = next field of the form, Enter sends, newline in a textarea, ESC stops typing). An empty field has the height of a line; a textarea is `rows` x 19 px |
+| `<input type="text">`, `type="password"` (dots), `<textarea rows= cols=>` | typeable field (click it; Backspace, Tab = next field of the form, Enter sends, newline in a textarea, ESC stops typing). An empty field has the height of a line; a textarea is `rows` x 19 px. Like a real control it has a FIXED size (`size=` / `cols=` / `rows=`): text that does not fit scrolls inside it (see "Form controls behave like real ones") |
 | `<input type="checkbox/radio" name= value= checked>` | toggles on click; radios of the same form+name are exclusive; a checked box sends its `value` |
-| `<select name><option value>` | Win95 drop-down (the field shows the chosen option and a ▼). `<option>` may stay unclosed |
-| `<input type="submit/button/reset">`, `<button>` | button; label from `value=`, else the CSV texts WEB_FORM_SUBMIT / WEB_FORM_RESET. Reset puts the values back. `type="hidden"` is sent but not drawn |
+| `<select name><option value>` | Win95 drop-down (the chosen option on white plus a raised arrow button, drawn; clicking opens a white list right under the box, same width). `<option>` may stay unclosed |
+| `<input type="submit/button/reset">`, `<button>` | Win95 push button (one drawn image, label inside, shows pressed); label from `value=`, else the CSV texts WEB_FORM_SUBMIT / WEB_FORM_RESET. Reset puts the values back. `type="hidden"` is sent but not drawn. **Button menu:** `<input type="button" value="Home" onclick="location.href='index.html'">` (or `<button onclick=...>`) works as a LINK to that address (period navigation bars made of buttons) |
 | `<pre>` | monospace block: spaces kept (become U+00A0), newlines kept, a leading newline dropped. Use it for ASCII tables and art |
 | `<tt> <kbd> <samp>` | monospace inline |
 | `<s> <strike> <del>` | strike-through |
@@ -99,8 +99,15 @@ The raw HTML file is also what the player sees in **"Visualizza sorgente"**
 - `<hr>` inside a table cell is as wide as the CELL (a `%`, or no width, is turned into pixels
   of the cell); Godot alone would measure it on the whole page and push the table out.
 - **Known limit:** a full-width table with several text-heavy columns can still exceed the page
-  by 5-10 px (Godot distributes the column widths itself; news/index measured 910 on 900). Give
-  such columns explicit `width`s.
+  by a few px per column (Godot distributes the column widths itself and does not count the cell
+  borders when it shrinks them; news/index measured 910 on 900). Refined 2026-10-25: Godot 4.6 also
+  ignores a cell's padding inconsistently when a table fills its line; a probe measured an overrun
+  from 0 to ~48 px. Give such columns explicit
+  `width`s. The page always keeps a 20 px strip on the right for the scrollbar (`PageView.BARRA`),
+  which absorbs a small overrun, and the browser recompiles a page narrower (twice at most) when
+  the content comes out wider than the page. A table that fills the line and still sticks out:
+  write `width="96%"` instead of `100%` (the news layout table is 96% for this reason).
+  `siti_audit_test` LARGHEZZA fails when something ends up under the scrollbar.
 - Without a `width`, a table stays as wide as its content — which is also
   period-accurate (e.g. a small login box). Give banners
   `width="100%"` if you want them to span the page like the forum's does.
@@ -117,7 +124,8 @@ like a real browser instead of like a bare Godot text box:
 | Click with a few px of hand shake | Still a click (drag needs > `DRAG_SOGLIA` = 6 px) |
 | Double click | Selects the word (plain paragraphs — see quirks) |
 | Drag | Selects a range and does **not** navigate |
-| Cursor | Hand over links, I-beam over text, arrow in the margins and below the text |
+| Cursor | Hand over links and over buttons (submit, reset, button menus), I-beam over text and over text fields, arrow in the margins, below the text and over check boxes, radios and drop-downs |
+| Press on a button | The button shows pressed while the mouse button is held on it |
 
 Why the subclass is needed (all verified with `tests/browser_click_test.gd`):
 
@@ -133,7 +141,10 @@ Why the subclass is needed (all verified with `tests/browser_click_test.gd`):
 - `Control.get_cursor_shape()` **cannot be overridden from GDScript** in Godot 4.
   `RichTextLabel` already hit-tests links (hand) and returns the control's
   *default* cursor elsewhere, so `PageView` keeps that default up to date as the
-  mouse moves (I-beam only where text actually is).
+  mouse moves (I-beam only where text actually is). The cursor the game shows comes from
+  `PageView.cursore_a`, which fixes the one thing the engine gets wrong: the hand on form
+  controls (they are links underneath). I-beam on text fields and textareas, arrow on check
+  boxes, radios and drop-downs, hand on real links and on buttons.
 
 ### Engine quirks (by design)
 
@@ -158,6 +169,60 @@ Why the subclass is needed (all verified with `tests/browser_click_test.gd`):
 CSS (classes, `style=`), `colspan`/`rowspan`, `<span>`,
 `<script>` (so no JavaScript effects), Java applets, image maps (`<map>`; cost vs value, owner's call 2026-10-24), `cellspacing`, `bordercolorlight/dark` (parsed but ignored), `valign`,
 floating images (`<img align="left">`: an image sits in the line), frames.
+
+### Vertical margins (2026-10-25)
+
+The compiler spaces blocks like a 1999 browser (owner: the pages still felt "artificiali"), so do not
+add `<br><br>` to imitate it:
+- `<p>`, `<h1>`-`<h6>`, `<blockquote>`, `<address>`, a top-level `<ul>`/`<ol>` and the end of a
+  `<form>` leave ONE blank line before and after (the form one is IE's well-known bottom margin).
+- Margins never add up: `</p><h2>` leaves one blank line, not two.
+- `<div>`, `<center>`, `<li>` and nested lists only break the line.
+- A `<table>` has no margins of its own: two tables in a row touch, as in a real browser. A blank line
+  above a table can only come from the paragraph before it.
+- Nothing is added at the top of the page or at the top of a table cell (IE put no margin above the
+  first paragraph of a cell).
+- Spaces at the start of a source line are ignored, so you can indent the HTML freely (the space
+  between `<ul>` and the first `<li>` used to push the first bullet in).
+
+### Crisp text (2026-10-25)
+
+Page text is drawn WITHOUT antialiasing, like a 1999 screen (`Win95.font_pagina`; the switch
+`Win95.TESTO_PAGINE_NITIDO` in `win95.gd`, true today). Nothing to do when writing a page; it matters
+when judging a screenshot (the letters are sharp-edged on purpose) and when adding a font: the compiler
+asks `Win95.font_pagina` / `percorso_font_pagina` for it. The rest of the OS keeps its normal fonts.
+
+### Form controls behave like real ones (2026-10-24/25)
+
+Owner: fields must behave "come nella vita reale". What an author can rely on (implementation:
+docs/code/WEB.md, html_bbcode.gd):
+- **Fixed size.** A text field is `size=` characters wide (default 20), a textarea `cols=` x `rows=`
+  (defaults 40 x 4), whatever is typed. Too much text scrolls: a one-line field shows the END while
+  typed in and the START when not; a textarea wraps by itself and shows its last rows while typed
+  in. Typing, clearing or leaving a field never changes the size of the page.
+- **Their own font.** Text inside a control is Arial 14 black, whatever `<font>` or `<b>` is
+  around it; do not try to style it.
+- **Never wider than the cell.** In a narrow column a `size=30` field is cut to the column.
+- **Whole box clickable and hoverable**, empty or not, left edge included (the I-beam shows there
+  too). The caret of the field being typed in blinks.
+- **Buttons look and act like Windows 95 push buttons.** `submit`, `reset`, `button`, `<button>` and
+  button menus are ONE drawn image each: grey, raised, with the label (crisp page font, centred) in
+  it. The label is not selectable text and never wraps; the whole button is clickable. While the
+  mouse button is held on it the button shows pressed (bevel inverted, label 1 px down-right). Do
+  not try to style buttons or put markup in their label: only the text counts. `type="image"`
+  buttons stay a plain clickable image.
+- **A `<select>` is as wide as its longest `<option>`**, whichever is chosen; changing the choice
+  or ticking a checkbox/radio does not change the page size. It is drawn with a Win95 arrow button
+  (no "▼" character). Clicking opens a white list with a black 1 px border exactly under the box,
+  same width, items in the control font, the item under the mouse in navy, the current value
+  highlighted when it opens; it opens upward if there is no room below and scrolls past 10 items.
+- **Button menus** (`onclick="location.href='x.html'"`) are links: they must lead to a page of the
+  site (or the portal, or a dead address of `morti`) like any link; SITI_CHIUSI checks them. They
+  show the hand cursor and, on hover, the target address in the status bar (a submit/reset button
+  shows the hand but no address). History: a first version gave them the arrow and no address;
+  the owner called the buttons "strange" and it was reverted.
+- Every form still lands on a page of its site or on the 500 page (see below).
+All of this is proved over every real page by `siti_audit_test` (CAMPI, SPUNTE, INVIO, MENU).
 
 ### How a form is sent (2026-10-24)
 
@@ -252,7 +317,10 @@ any of their pages.
 Inside a site, link pages **relatively** (`<a href="rules.html">`): a relative href
 always stays in the site of the page it is on. Link other sites and the portal
 **absolutely** (`<a href="http://www.webnet.it">` in Italian pages,
-`http://www.webnet.com` in English ones).
+`http://www.webnet.com` in English ones). A link to the portal is allowed, but the sites NO
+LONGER end with a "back to WebNet" footer link (owner, 2026-10-24: "tutti i siti hanno in fondo un
+link per tornare a webnet rimuovilo"): do not add one to a new page. The 404 and 500 error pages
+keep theirs.
 
 ## Addresses (the URL of a site)
 

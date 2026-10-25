@@ -83,8 +83,28 @@ func _ready() -> void:
 	_check("PALLINI", str(_browser._valori.get("m0_3", "")) == "1" and str(_browser._valori.get("m0_2", "x")) == "",
 			"i pallini non si escludono: %s" % [_browser._valori])
 	_browser._on_meta("__tendina:m0_4")
-	var voci := _browser._ctx_menu.get_children().filter(func(b): return b is Button)
-	_check("TENDINA_APERTA", voci.size() == 2, "voci della tendina: %d" % voci.size())
+	# l'elenco si apre dopo un paio di fotogrammi (si cerca dov'e' la casella)
+	for i in range(20):
+		if _browser._tend_panel.visible:
+			break
+		await get_tree().process_frame
+	var voci := _browser._tend_lista.get_children().filter(func(b): return b is Button)
+	_check("TENDINA_APERTA", _browser._tend_panel.visible and voci.size() == 2, "voci della tendina: %d" % voci.size())
+	# come in Windows: l'elenco scende proprio sotto la casella, largo quanto lei
+	# (senza finestra non si disegna niente e la casella non si trova: la prova vera e'
+	# nel test in finestra browser_click_test, TENDINA_SOTTO_LA_CASELLA)
+	if DisplayServer.get_name() != "headless":
+		var casella: Rect2 = await _browser._rtl.rettangolo_di("__tendina:m0_4")
+		var origine: Vector2 = _browser._rtl.global_position - _browser.global_position
+		var atteso := origine + Vector2(casella.position.x, casella.end.y)
+		_check("TENDINA_SOTTO_LA_CASELLA", casella.size.x > 20.0
+				and _browser._tend_panel.position.distance_to(atteso) < 2.0
+				and absf(_browser._tend_panel.size.x - casella.size.x) < 2.0,
+				"casella %s, elenco in %s largo %d" % [str(casella), str(_browser._tend_panel.position), int(_browser._tend_panel.size.x)])
+	# la voce scelta e' accesa quando si apre (la prima: nessuna e' "selected")
+	if voci.size() == 2:
+		_check("TENDINA_VOCE_ACCESA", (voci[0] as Button).get_theme_color("font_color") == Win95.C_TITLE_TEXT,
+				"la voce scelta non e' evidenziata")
 	if voci.size() == 2:
 		(voci[1] as Button).pressed.emit()
 	_check("TENDINA_SCELTA", str(_browser._valori.get("m0_4", "")) == "2", "valore: %s" % _browser._valori.get("m0_4", ""))

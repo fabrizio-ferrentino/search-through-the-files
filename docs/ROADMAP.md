@@ -109,7 +109,8 @@ Make every run different (prevents memorized solutions).
   each run picks 10-15 of them, 4-5 with lore; the web keys land on any page of two
   sites of the run; a site not in the run answers "cannot find server". **Done:** all 30
   sites written (2026-10-20); 34 since 2026-10-23 (four lore sites added, the young man
-  reduced to one site of his own, nickname ~missedtrain) — see [WEB_CATALOG.md](WEB_CATALOG.md).
+  reduced to one site of his own, nickname ~missedtrain); 40 since 2026-10-24 (six more ordinary
+  sites: anime, prof, band, hosting, y2k, radio) — see [WEB_CATALOG.md](WEB_CATALOG.md).
 - [~] **Web variety** (owner, 2026-10-23: "most sites are very similar, if not identical").
   **Done:** the engine (animated GIFs, MIDI music with a synth, tiled backgrounds, side-bar
   columns, Times and Comic faces, marquee/blink, `&nbsp;` ASCII art), the placeholder media
@@ -117,7 +118,10 @@ Make every run different (prevents memorized solutions).
   in the room), six pilot sites restyled and four new sites each with its own look; since
   2026-10-24 ALL sites are restyled (the last twenty: ordinary ones by web-writer, lore ones
   by a script that touched only header/nav, fonts, colours and container), plus the narrow-table
-  and `<hr>`-in-cell fixes in the compiler. **Next:** the owner's review of the sites; the owner
+  and `<hr>`-in-cell fixes in the compiler. 2026-10-24/25 (owner: 1:1 late-90s web, "test accurati"):
+button menus, real-size form fields, a reserved scrollbar strip, no WebNet footer link on the
+sites, period extras (counters, guestbooks, polls, webrings) and the new `siti_audit_test` that
+opens every page of every site in the real browser. **Next:** the owner's review of the sites; the owner
   will also rewrite or replace some sites himself. **Later:** simplifying what "view source" shows, to
   help the player spot the key (owner: "vedremo dopo"); real art and music replacing the
   placeholders (same file names).

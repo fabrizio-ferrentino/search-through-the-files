@@ -576,7 +576,7 @@ that period HTML splits words across tags -- searching for
 DISK_CONTENT.md (the recipe for the OWNER to add or change a file,
 a user folder, a program or an extra folder on the random disk:
 which CSV rows, which catalog line, the zones, the two rules),
-WEB_CATALOG.md (the 34 sites and their rules) and docs/code/ (this
+WEB_CATALOG.md (the 40 sites and their rules) and docs/code/ (this
 folder: the code, area by area). [2026-10-22: GLOSSARY.md was merged
 into docs/code/README.md and the beginner's Claude Code guide removed.]
 

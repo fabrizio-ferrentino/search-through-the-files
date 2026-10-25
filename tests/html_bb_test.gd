@@ -78,11 +78,18 @@ func _initialize() -> void:
 	# che il browser usa; il funzionamento e' in web_moduli_test)
 	var cm := {}
 	var fm := HtmlBB.compile("<form action=\"/cgi-bin/cerca.pl\" method=\"get\">Cerca: <input type=\"text\" name=\"q\" size=\"20\" value=\"floppy\"> <input type=\"submit\" value=\"Vai\"></form>", cm)
-	_has("input_submit", fm, "[url=__invia:0][color=#000000]Vai[/color][/url]")
-	_has("input_text", fm, "[img width=1 height=19]res://web/img/spacer.png[/img][color=#000000]floppy[/color]")
+	_has("input_submit", fm, "[url=__invia:0][img]" + HtmlBB.tex_pulsante("Vai", false) + "[/img][/url]")
+	# il pulsante e' un'immagine di Windows 95 con la scritta, e c'e' anche quella premuta
+	_has("pulsante_premuto_registrato", str(load(HtmlBB.tex_pulsante("Vai", true)) != null), "true")
+	_has("input_text", fm, "floppy[img width=")
 	# il pulsante-menu d'epoca e' un link alla pagina dell'onclick
 	_has("pulsante_menu", HtmlBB.compile("<form><input type=\"button\" value=\"Home\" onclick=\"location.href='index.html'\"></form>", {}),
-			"[url=index.html][color=#000000]Home[/color][/url]")
+			"[url=__vai:index.html][img]")
+	# tutto il riquadro di un campo vuoto risponde al clic: la barretta e' alta una riga
+	# un campo ha la sua misura: il testo troppo lungo non lo allarga, scorre dentro
+	_no("campo_misura_fissa", HtmlBB.compile("<input type=\"text\" size=\"10\" value=\"%s\">" % "x".repeat(60), {}), "x".repeat(60))
+	_has("campo_font_suo", HtmlBB.compile("<font face=\"Times\" size=\"1\"><b><input type=\"text\" size=\"10\"></b></font>", {}), "[font_size=14]")
+	_has("campo_vuoto_cliccabile", HtmlBB.compile("<input type=\"text\" name=\"v\" size=\"10\">", {}), "height=19]res://web/img/spacer.png[/img]\n[img width=")
 	var moduli: Array = cm.get("moduli", [])
 	if moduli.size() == 1 and str(moduli[0]["action"]) == "/cgi-bin/cerca.pl" and str(moduli[0]["campi"][0]["nome"]) == "q":
 		print("PASS  moduli_ctx")
@@ -90,13 +97,14 @@ func _initialize() -> void:
 		print("FAIL  moduli_ctx: %s" % [moduli])
 		_fails.append("moduli_ctx")
 	# il valore scritto dal giocatore vince su quello della pagina, e il campo attivo ha il cursore
-	_has("input_valore", HtmlBB.compile("<input type=\"text\" name=\"q\" value=\"a\">", {"valori": {"m0_0": "ciao"}, "campo_attivo": "m0_0"}), "ciao|")
+	_has("input_valore", HtmlBB.compile("<input type=\"text\" name=\"q\" value=\"a\">", {"valori": {"m0_0": "ciao"}, "campo_attivo": "m0_0"}), "ciao[blink]|[/blink]")
 	_has("input_password", HtmlBB.compile("<input type=\"password\" name=\"p\">", {"valori": {"m0_0": "segreto"}}), "*******")
 	_has("checkbox", HtmlBB.compile("<input type=\"checkbox\" name=\"c\" checked>"), "[url=__spunta:m0_0][img width=16 height=16]res://web/img/_casella_on.tex[/img][/url]")
 	_has("radio", HtmlBB.compile("<input type=\"radio\" name=\"r\" value=\"a\">"), "_pallino_off.tex")
-	_has("select", HtmlBB.compile("<select name=\"s\"><option value=\"1\">Uno<option value=\"2\" selected>Due</select>"), "[url=__tendina:m0_0][color=#000000]Due")
-	_has("textarea", HtmlBB.compile("<textarea name=\"t\" rows=\"3\" cols=\"30\">riga</textarea>"), "[url=__campo:m0_0][img width=1 height=57]")
-	_has("button", HtmlBB.compile("<form><button type=\"submit\"><b>Entra</b></button></form>"), "[color=#000000]Entra[/color]")
+	_has("select", HtmlBB.compile("<select name=\"s\"><option value=\"1\">Uno<option value=\"2\" selected>Due</select>"), "spacer.png[/img]Due[img")
+	_has("textarea", HtmlBB.compile("<textarea name=\"t\" rows=\"3\" cols=\"30\">riga</textarea>"), "spacer.png[/img]riga[img width=")
+	_has("textarea_tre_righe", str(HtmlBB.compile("<textarea name=\"t\" rows=\"3\" cols=\"30\">riga</textarea>").count("height=19]")), "6")
+	_has("button", HtmlBB.compile("<form><button type=\"submit\"><b>Entra</b></button></form>"), "[url=__invia:0][img]" + HtmlBB.tex_pulsante("Entra", false))
 	_has("reset", HtmlBB.compile("<form><input type=\"reset\" value=\"Pulisci\"></form>"), "[url=__azzera:0]")
 	_eq("hidden", HtmlBB.compile("<input type=\"hidden\" name=\"h\" value=\"x\">"), "")
 
@@ -178,7 +186,7 @@ func _prova_varieta() -> void:
 	_has("gif_mancante", HtmlBB.compile("<img src=\"non_ce.gif\">"), "_rotta_.imgtex")
 
 	# 18. famiglie: Times -> Tinos, Comic -> Comic Neue, Arial = il sans del tema
-	_has("face_serif", HtmlBB.compile("<font face=\"Times New Roman\">a</font>"), "[font=res://assets/fonts/Tinos-Regular.ttf]a[/font]")
+	_has("face_serif", HtmlBB.compile("<font face=\"Times New Roman\">a</font>"), "[font=" + Win95.percorso_font_pagina("serif") + "]a[/font]")
 	_has("face_comic", HtmlBB.compile("<font face=\"Comic Sans MS\">a</font>"), "ComicNeue-Regular.ttf")
 	_eq("face_arial", HtmlBB.compile("<font face=\"Verdana, Arial\">a</font>"), "a")
 	_has("face_mono", HtmlBB.compile("<font face=\"Courier New\">a</font>"), "[code]a[/code]")
@@ -219,7 +227,7 @@ func _prova_varieta() -> void:
 	var mq := HtmlBB.compile("<p>prima</p><marquee scrollamount=\"3\">Benvenuti!</marquee><p>dopo</p>", {"page_width": 700.0})
 	_has("marquee", mq, "[left][marquee w=700 len=")
 	_has("marquee_testo", mq, "]Benvenuti![/marquee][/left]")
-	_has("marquee_v", mq, " v=35 dir=l mode=s]")
+	_has("marquee_v", mq, " v=35 dir=l mode=s n=")
 	_has("marquee_alt", HtmlBB.compile("<marquee behavior=\"alternate\" direction=\"right\">x</marquee>"), "dir=r mode=a")
 	var mc := HtmlBB.compile("<table><tr><td><marquee>fermo</marquee></td></tr></table>")
 	_has("marquee_cella", mc, "fermo")
@@ -356,8 +364,8 @@ func _invariante(pagina: String, raw: String, anc: Dictionary, visibile: bool) -
 	var tipo := str(anc["tipo"])
 	var r: Dictionary = WA.inserisci(raw, anc, FRASE, CHIAVE)
 	var ctx := {"link_color": "#0000ee", "page_width": 900.0}
-	var pulito := _norm(HtmlBB.compile(HtmlBB.strip_comments(HtmlBB.body_inner(raw)), ctx))
-	var con := _norm(HtmlBB.compile(HtmlBB.strip_comments(HtmlBB.body_inner(str(r["html"]))), ctx))
+	var pulito := _senza_vuoti(_norm(HtmlBB.compile(HtmlBB.strip_comments(HtmlBB.body_inner(raw)), ctx)))
+	var con := _senza_vuoti(_norm(HtmlBB.compile(HtmlBB.strip_comments(HtmlBB.body_inner(str(r["html"]))), ctx)))
 	var d := _differenza(pulito, con)
 	var perso := str(d[0])
 	var aggiunto := str(d[1])
@@ -454,6 +462,18 @@ func _leggi(path: String) -> String:
 
 # Spazi collassati: le righe vuote in piu' introdotte da un <p>/<li> nuovo non
 # sono un cambio di struttura, i tag BBCode invece si'.
+# Via le coppie di tag che non avvolgono niente ("[color=#CCC][font_size=16][/font_size][/color]"):
+# non disegnano nulla, e i margini dei blocchi (HtmlBB._spazio) ne lasciano di diverse a
+# seconda di cosa c'e' prima. Contano i pezzi che si VEDONO.
+func _senza_vuoti(s: String) -> String:
+	# solo i tag di formato: una [cell][/cell] vuota tiene la griglia e deve contare
+	var re := RegEx.create_from_string("\\[(color|font_size|font|bgcolor|b|i|u|s|center|left|right|code|blink)(=[^\\]]*)?( [^\\]]*)?\\]\\s*\\[/\\1\\]")
+	var prima := ""
+	while prima != s:
+		prima = s
+		s = re.sub(s, "", true)
+	return s
+
 func _norm(s: String) -> String:
 	var re := RegEx.create_from_string(r"\s+")
 	return re.sub(s, " ", true).strip_edges()

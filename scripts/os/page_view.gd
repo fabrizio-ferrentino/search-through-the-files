@@ -29,11 +29,23 @@ const DRAG_SOGLIA := 6.0
 
 # Margine interno della pagina (deve combaciare con lo stylebox "normal").
 const PAD := 18.0
+# A destra la pagina tiene SEMPRE libera la striscia della barra di scorrimento, come IE e
+# Netscape d'epoca: in 4.6 una tabella che riempie la riga non si stringe abbastanza quando
+# la barra compare, e il suo bordo destro finiva sotto la barra. Il margine destro dello
+# stylebox e' quindi PAD + BARRA (il browser lo imposta, _page_width lo toglie).
+const BARRA := 20.0
 
 var _press_pos := Vector2.ZERO
 var _held := false
 var _dragging := false
 var _multi := false               # doppio/triplo clic: la selezione va tenuta
+var _meta_sotto := ""             # il link/controllo sotto il mouse (segnali meta_hover_*)
+# Il pulsante tenuto premuto: la sua immagine "abbassata" disegnata sopra quella normale.
+# Dove sta ogni pulsante si cerca al primo passaggio del mouse (rettangolo_di costa un
+# paio di fotogrammi), cosi' al clic e' gia' pronto. Coordinate del CONTENUTO (scorrimento
+# tolto), meta -> Rect2.
+var _premuto: TextureRect = null
+var _rett_pulsanti: Dictionary = {}
 # Come e' allineato ogni carattere della pagina (vedi _mappa_allineamenti):
 # l'engine dice quanto e' larga una riga ma non dove comincia, e questa mappa
 # copre quel buco. Vuota = modello non attendibile, si usa il ripiego.
@@ -60,6 +72,13 @@ func _init() -> void:
 	# <marquee> e <blink> (HtmlBB li compila in [marquee]/[blink])
 	for fx in WebEffetti.tutti():
 		install_effect(fx)
+	# quale link (o controllo di un modulo) ha sotto il mouse: serve a cursore_a
+	meta_hover_started.connect(func(m) -> void:
+		_meta_sotto = str(m)
+		_prepara_pulsante(_meta_sotto))
+	meta_hover_ended.connect(func(m) -> void:
+		if str(m) == _meta_sotto:
+			_meta_sotto = "")
 
 func _ready() -> void:
 	# Con la rotellina il testo scorre SOTTO un mouse fermo: senza questo il
@@ -83,6 +102,11 @@ func set_page(bbcode: String) -> void:
 	_ha_centro = bbcode.find("[center]") >= 0
 	_ha_destra = bbcode.find("[right]") >= 0
 	text = bbcode
+	_rett_pulsanti.clear()
+	_rilascia()
+	# ridisegnando (si scrive in un campo) il controllo sotto il mouse resta quello
+	if _meta_sotto != "" and bbcode.find("[url=" + _meta_sotto + "]") < 0:
+		_meta_sotto = ""
 	_mappa_allineamenti(bbcode)
 	# la maschera NON si costruisce qui: disegnare il gemello e rileggerne i pixel
 	# costa un fotogramma, e al caricamento ci si pesta i piedi con il primo clic o
@@ -98,6 +122,10 @@ func set_page(bbcode: String) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_premi(_meta_sotto)
+		else:
+			_rilascia()
 		if event.pressed:
 			_held = true
 			_dragging = false
@@ -140,13 +168,151 @@ func _gui_input(event: InputEvent) -> void:
 func _aggiorna_cursore(pos: Vector2) -> void:
 	mouse_default_cursor_shape = _forma_a(pos)
 
+# La forma del cursore come in un browser vero (la chiede OSDesktop.cursor_shape_at):
+# la stanghetta sopra un campo dove si scrive, la freccia sopra pulsanti, caselle e
+# tendine, la mano solo sui link veri. L'engine da solo mette la mano su OGNI link, e i
+# controlli dei moduli sono link anche loro (__campo:, __tendina:...). Se l'engine NON
+# vede un link sotto il punto, quello che ricordavamo e' vecchio e non conta.
+func cursore_a(pos: Vector2) -> int:
+	var forma := get_cursor_shape(pos)
+	if _held or forma != Control.CURSOR_POINTING_HAND:
+		return forma
+	if _meta_sotto.begins_with("__campo:"):
+		return Control.CURSOR_IBEAM
+	if _meta_sotto.begins_with("__") and not _e_pulsante(_meta_sotto):
+		return Control.CURSOR_ARROW      # caselle, pallini, tendine
+	return forma                         # i link e i pulsanti: la manina
+
+# I link che sono PULSANTI disegnati (invia, azzera, pulsante-menu, lettore musicale).
+static func _e_pulsante(meta: String) -> bool:
+	for p in ["__vai:", "__invia:", "__azzera:", "__audio:"]:
+		if meta.begins_with(p):
+			return true
+	return false
+
+# ---------------- i pulsanti che si abbassano ----------------
+
+# Il percorso dell'immagine "premuta" del pulsante col link meta ("" se non e' un pulsante
+# disegnato da HtmlBB.tex_pulsante).
+func _immagine_giu(meta: String) -> String:
+	var i := text.find("[url=" + meta + "][img]")
+	if i < 0:
+		return ""
+	var da := i + meta.length() + 11
+	var a := text.find("[/img]", da)
+	if a < 0:
+		return ""
+	var su := text.substr(da, a - da)
+	if not su.ends_with(".tex") or su.get_file().begins_with("_pulsante_") == false:
+		return ""
+	return su.trim_suffix(".tex") + HtmlBB.PULSANTE_SUFFISSO_GIU
+
+func _prepara_pulsante(meta: String) -> void:
+	if not _e_pulsante(meta) or _rett_pulsanti.has(meta) or _immagine_giu(meta) == "":
+		return
+	_rett_pulsanti[meta] = Rect2()           # in arrivo: non chiederlo due volte
+	var pagina := text
+	var r := await rettangolo_di(meta)
+	if pagina != text or r.size.x <= 0.0:
+		return
+	var scroll: float = get_v_scroll_bar().value if get_v_scroll_bar() != null else 0.0
+	_rett_pulsanti[meta] = Rect2(r.position + Vector2(0.0, scroll), r.size)
+
+func _premi(meta: String) -> void:
+	var r: Rect2 = _rett_pulsanti.get(meta, Rect2())
+	if r.size.x <= 0.0:
+		return
+	var tex := load(_immagine_giu(meta)) as Texture2D
+	if tex == null:
+		return
+	if _premuto == null:
+		_premuto = TextureRect.new()
+		_premuto.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_premuto.stretch_mode = TextureRect.STRETCH_KEEP
+		add_child(_premuto)
+	var scroll: float = get_v_scroll_bar().value if get_v_scroll_bar() != null else 0.0
+	_premuto.texture = tex
+	_premuto.position = r.position - Vector2(0.0, scroll)
+	_premuto.size = tex.get_size()
+	_premuto.visible = true
+
+func _rilascia() -> void:
+	if _premuto != null:
+		_premuto.visible = false
+
+# Vero se in questo momento si vede un pulsante abbassato (per i test).
+func pulsante_premuto() -> bool:
+	return _premuto != null and _premuto.visible
+
+# Dove sta, nella pagina, il controllo col link "meta" (la tendina da aprire proprio
+# sotto la sua casella, come in Windows). L'engine non lo dice: si ridisegna la pagina
+# fuori schermo con TUTTO trasparente tranne la cella di quel controllo, dipinta, e se ne
+# legge il rettangolo. Coordinate del PageView (scorrimento compreso); Rect2() se non si
+# trova. E' una coroutine: costa un paio di fotogrammi.
+func rettangolo_di(meta: String) -> Rect2:
+	# senza finestra (i test headless) non si disegna niente: l'immagine non arriverebbe mai
+	if not is_inside_tree() or size.x < 8.0 or DisplayServer.get_name() == "headless":
+		return Rect2()
+	var alt: int = int(ceilf(float(get_content_height()) + PAD * 2.0))
+	if alt < 4 or alt > MASC_ALT_MAX:
+		return Rect2()
+	var bb := _solo_controllo(text, meta)
+	if bb == "":
+		return Rect2()
+	var vp := SubViewport.new()
+	vp.size = Vector2i(int(size.x), alt)
+	vp.transparent_bg = true
+	vp.disable_3d = true
+	vp.gui_disable_input = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var gemello := _gemello(alt)
+	gemello.add_theme_color_override("default_color", Color(0, 0, 0, 0))
+	gemello.text = bb
+	vp.add_child(gemello)
+	add_child(vp)
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var img: Image = vp.get_texture().get_image() if vp.get_texture() != null else null
+	vp.queue_free()
+	if img == null:
+		return Rect2()
+	var r := img.get_used_rect()
+	if r.size.x <= 0:
+		return Rect2()
+	var scroll: float = get_v_scroll_bar().value if get_v_scroll_bar() != null else 0.0
+	return Rect2(Vector2(r.position.x, float(r.position.y) - scroll), Vector2(r.size))
+
+# Il BBCode della pagina con dipinta SOLO la cella del controllo "meta": fondi, bordi,
+# immagini e testo trasparenti (lo spazio resta lo stesso, l'impaginato non cambia).
+func _solo_controllo(bb: String, meta: String) -> String:
+	var fuori := _senza_fondi(bb)
+	fuori = RegEx.create_from_string("\\[color=[^\\]]*\\]").sub(fuori, "[color=#00000000]", true)
+	# un pulsante e' un'immagine dentro il link: si dipinge lei
+	var img := fuori.find("[url=" + meta + "][img")
+	if img >= 0:
+		var fine := fuori.find("]", img + meta.length() + 6)
+		var trasparente := fuori.rfind("color=#00000000", fine)
+		if fine < 0 or trasparente < img:
+			return ""
+		return fuori.substr(0, trasparente) + "color=#FF00FF" + fuori.substr(trasparente + 15)
+	var chiave := "][url=" + meta + "]"
+	var dove := fuori.find(chiave)
+	if dove < 0:
+		return ""
+	var inizio := fuori.rfind("[cell", dove)
+	if inizio < 0:
+		return ""
+	var attr := fuori.substr(inizio + 5, dove - inizio - 5)
+	attr = RegEx.create_from_string("\\s(bg|border)=[^\\s\\]]+").sub(attr, "", true)
+	return fuori.substr(0, inizio) + "[cell bg=#FF00FF border=#FF00FF" + attr + fuori.substr(dove)
+
 # I-beam solo dove c'e' davvero del testo, RIGA PER RIGA. Prima si guardava solo
 # se il punto stava dentro l'altezza del contenuto, e quindi l'I-beam restava
 # acceso su tutta la pagina: anche negli stacchi fra i paragrafi e nel vuoto a
 # destra delle righe corte. L'engine sa dove sono le righe (get_line_offset /
 # _height / _width) e quelle misure bastano.
 func _forma_a(pos: Vector2) -> CursorShape:
-	if pos.x < PAD or pos.x > size.x - PAD or pos.y < PAD:
+	if pos.x < PAD or pos.x > PAD + _utile() or pos.y < PAD:
 		return Control.CURSOR_ARROW
 	var scroll := 0.0
 	var vs := get_v_scroll_bar()
@@ -194,20 +360,26 @@ func _riga_a(y: float) -> int:
 # ma mai in difetto. La scelta e' di non avere FALSI NEGATIVI -- sopra il testo
 # l'I-beam c'e' sempre, ed e' quello che conta: dice "questo si puo' selezionare",
 # e in questo gioco le chiavi si trovano proprio selezionando il testo.
+# La larghezza in cui l'engine dispone il testo: tolti i margini (quello destro tiene la
+# striscia riservata, vedi BARRA) e, quando c'e', anche la barra vera.
+func _utile() -> float:
+	var vs := get_v_scroll_bar()
+	return size.x - PAD * 2.0 - BARRA - (vs.size.x if vs != null and vs.visible else 0.0)
+
 func _in_banda(x: float, larg: float, come: int) -> bool:
-	var utile: float = size.x - PAD * 2.0
+	var utile: float = _utile()
 	larg = minf(larg, utile)
 	match come:
 		A_SINISTRA:
 			return x <= PAD + larg
 		A_DESTRA:
-			return x >= size.x - PAD - larg
+			return x >= PAD + utile - larg
 		A_CENTRO:
 			return absf(x - (PAD + utile * 0.5)) <= larg * 0.5
 	# ripiego: l'unione delle posizioni che la pagina puo' avere
 	if x <= PAD + larg:
 		return true
-	if _ha_destra and x >= size.x - PAD - larg:
+	if _ha_destra and x >= PAD + utile - larg:
 		return true
 	return _ha_centro and absf(x - (PAD + utile * 0.5)) <= larg * 0.5
 
@@ -358,34 +530,7 @@ func _prepara_maschera(bbcode: String) -> void:
 	vp.disable_3d = true
 	vp.gui_disable_input = true
 	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
-	var gemello := RichTextLabel.new()
-	gemello.bbcode_enabled = true
-	# gli stessi tag della pagina, ma fermi: il gemello deve impaginare identico
-	for fx in WebEffetti.tutti(true):
-		gemello.install_effect(fx)
-	gemello.theme = _tema()
-	gemello.autowrap_mode = autowrap_mode
-	gemello.tab_size = tab_size
-	gemello.scroll_active = false
-	gemello.selection_enabled = false
-	# la pagina vera ha degli override di tema (il browser le impone corpo 16 e un
-	# suo stylebox): senza copiarli il gemello impagina con altre metriche
-	_copia_tema(gemello)
-	# fondo trasparente ma con gli STESSI margini, o il testo partirebbe altrove
-	var sb := get_theme_stylebox("normal")
-	var vuoto := StyleBoxEmpty.new()
-	if sb != null:
-		vuoto.content_margin_left = sb.get_margin(SIDE_LEFT)
-		vuoto.content_margin_right = sb.get_margin(SIDE_RIGHT)
-		vuoto.content_margin_top = sb.get_margin(SIDE_TOP)
-		vuoto.content_margin_bottom = sb.get_margin(SIDE_BOTTOM)
-	gemello.add_theme_stylebox_override("normal", vuoto)
-	gemello.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	# se la pagina vera mostra la barra di scorrimento il testo ha meno spazio: il
-	# gemello deve andare a capo negli stessi punti
-	var barra := get_v_scroll_bar()
-	var largh: float = size.x - (barra.size.x if barra != null and barra.visible else 0.0)
-	gemello.size = Vector2(largh, float(alt))
+	var gemello := _gemello(alt)
 	gemello.text = _senza_fondi(bbcode)
 	vp.add_child(gemello)
 	add_child(vp)
@@ -419,6 +564,39 @@ func _prepara_maschera(bbcode: String) -> void:
 		img.resize(maxi(img.get_width() / 2, 1), maxi(img.get_height() / 2, 1),
 				Image.INTERPOLATE_BILINEAR)
 	_masc = img
+
+# Il gemello fuori schermo della pagina: stesso tema, stessi margini, stessa larghezza,
+# effetti fermi. Impagina identico alla pagina vera (la maschera lo verifica).
+func _gemello(alt: int) -> RichTextLabel:
+	var gemello := RichTextLabel.new()
+	gemello.bbcode_enabled = true
+	# gli stessi tag della pagina, ma fermi: il gemello deve impaginare identico
+	for fx in WebEffetti.tutti(true):
+		gemello.install_effect(fx)
+	gemello.theme = _tema()
+	gemello.autowrap_mode = autowrap_mode
+	gemello.tab_size = tab_size
+	gemello.scroll_active = false
+	gemello.selection_enabled = false
+	# la pagina vera ha degli override di tema (il browser le impone corpo 16 e un
+	# suo stylebox): senza copiarli il gemello impagina con altre metriche
+	_copia_tema(gemello)
+	# fondo trasparente ma con gli STESSI margini, o il testo partirebbe altrove
+	var sb := get_theme_stylebox("normal")
+	var vuoto := StyleBoxEmpty.new()
+	if sb != null:
+		vuoto.content_margin_left = sb.get_margin(SIDE_LEFT)
+		vuoto.content_margin_right = sb.get_margin(SIDE_RIGHT)
+		vuoto.content_margin_top = sb.get_margin(SIDE_TOP)
+		vuoto.content_margin_bottom = sb.get_margin(SIDE_BOTTOM)
+	gemello.add_theme_stylebox_override("normal", vuoto)
+	gemello.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	# se la pagina vera mostra la barra di scorrimento il testo ha meno spazio: il
+	# gemello deve andare a capo negli stessi punti
+	var barra := get_v_scroll_bar()
+	var largh: float = size.x - (barra.size.x if barra != null and barra.visible else 0.0)
+	gemello.size = Vector2(largh, float(alt))
+	return gemello
 
 func _masc_valida(tok: int) -> bool:
 	return tok == _masc_token and is_inside_tree()

@@ -974,6 +974,9 @@ func cursor_shape_at(pos: Vector2) -> int:
 	# 3) cursore del controllo effettivamente sotto il mouse nel SubViewport
 	var hov := get_viewport().gui_get_hovered_control()
 	if hov != null:
+		# la pagina del browser sa distinguere un link da un campo o da un pulsante
+		if hov.has_method("cursore_a"):
+			return int(hov.call("cursore_a", hov.get_local_mouse_position()))
 		return hov.get_cursor_shape(hov.get_local_mouse_position())
 	return Control.CURSOR_ARROW
 

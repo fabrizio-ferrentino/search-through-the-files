@@ -43,7 +43,7 @@ because it accepted the logo **or** the word `GATEWAY` — it now demands both.
 
 Since 2026-10-19 **a site is a folder**: `web/pages/<lang>/<site>/`, with `index.html`
 and its other pages. The list of sites, with everything about each one, is the **site
-catalog**: `scripts/os/catalogo_siti.gd`. The 34 sites and how far each one is
+catalog**: `scripts/os/catalogo_siti.gd`. The 40 sites and how far each one is
 are in [WEB_CATALOG.md](WEB_CATALOG.md).
 
 | What you see | Where it lives | Notes |
