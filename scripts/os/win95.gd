@@ -190,8 +190,15 @@ static func fade(b: Button, spento: bool) -> void:
 	if b == null:
 		return
 	var box := b.get_node_or_null("Contenuto") as Control
-	if box != null:
-		box.modulate = Color(1, 1, 1, 0.38) if spento else Color(1, 1, 1, 1)
+	if box == null:
+		return
+	# l'icona si spegne come in Win95, in rilievo grigio (OSIcon.spenta); la didascalia
+	# si sbiadisce
+	for c in box.get_children():
+		if c is OSIcon:
+			(c as OSIcon).spenta = spento
+		elif c is CanvasItem:
+			(c as CanvasItem).modulate = Color(1, 1, 1, 0.38) if spento else Color(1, 1, 1, 1)
 
 # Una striscia in rilievo che attraversa la finestra: e' il contenitore delle barre in
 # Win95, e senza di lei i pulsanti sembrano appoggiati sul niente.

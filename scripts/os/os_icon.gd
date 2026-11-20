@@ -1,19 +1,112 @@
 class_name OSIcon
 extends Control
 
-# Icone disegnate via codice (placeholder "provvisori" ma riconoscibili).
+# Le icone. Dal 20/11/2026 (proprietario: "icone realistiche per l'epoca") quasi tutte
+# sono PNG in pixel art, 16x16 e 32x32 come nel '95, in res://assets/icons/<16|32>/:
+# il set di SerenityOS (licenza BSD-2) piu' quelle disegnate a mano con la stessa
+# tavolozza da tools/icons/build_icons.py. Restano disegnate qui sotto solo quelle che un
+# PNG non ha: la balena (il logo del sistema, inventato) e il triangolino delle tendine.
+# Le funzioni di disegno delle altre restano come ripiego, se un PNG mancasse.
 @export var kind: String = "file"
+
+# Pulsante spento: l'icona diventa la sagoma in rilievo grigio di Win95 (grigio scuro con
+# la luce bianca un pixel sotto a destra) invece dei colori. La accende Win95.fade.
+var spenta := false:
+	set(v):
+		if spenta != v:
+			spenta = v
+			queue_redraw()
+
+const _CARTELLA := "res://assets/icons/"
+# altri nomi con cui il codice chiede la stessa icona
+const _ALIAS := {"ie": "web", "globe": "web", "text": "file"}
+# Sotto questa misura si parte dal PNG 16, da qui in su dal 32: a 24 px (barre strumenti)
+# un 16 ingrandito di meta' tiene i pixel netti, un 32 rimpicciolito li impasterebbe.
+const _SOGLIA_32 := 28
+
+# Le texture gia' pronte, per "tipo@lato" (e "@spenta"): un'icona si scala una volta sola
+# per misura, non a ogni ridisegno. Non e' stato della partita: vale per tutto il gioco.
+static var _cache: Dictionary = {}
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# la texture e' gia' della misura esatta: niente filtro, i pixel restano pixel
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 func set_kind(k: String) -> void:
 	kind = k
 	queue_redraw()
 
+# L'icona di quel tipo pronta per un riquadro di "lato" pixel, o null se il tipo non ha
+# PNG (allora si disegna a codice). Scala "nitida": prima si ingrandisce il pixel art a
+# blocchi interi (NEAREST), poi si riduce alla misura giusta (BILINEAR); cosi' a 1,5x i
+# pixel restano quadrati e solo i bordi tra due colori si sfumano di mezzo pixel.
+static func texture_per(tipo: String, lato: int, spenta_ := false) -> Texture2D:
+	tipo = _ALIAS.get(tipo, tipo)
+	lato = maxi(lato, 1)
+	var chiave := "%s@%d%s" % [tipo, lato, "@spenta" if spenta_ else ""]
+	if _cache.has(chiave):
+		return _cache[chiave]
+	var tex: Texture2D = null
+	var img := _sorgente(tipo, lato)
+	if img != null:
+		var n := img.get_width()
+		if lato % n == 0:
+			img.resize(lato, lato, Image.INTERPOLATE_NEAREST)
+		else:
+			var k := maxi(2, ceili(lato * 2.0 / n))
+			img.resize(n * k, n * k, Image.INTERPOLATE_NEAREST)
+			img.resize(lato, lato, Image.INTERPOLATE_BILINEAR)
+		if spenta_:
+			img = _in_rilievo(img)
+		tex = ImageTexture.create_from_image(img)
+	_cache[chiave] = tex
+	return tex
+
+# Il PNG piu' adatto alla misura (16 o 32), in RGBA8; se ce n'e' uno solo, quello.
+static func _sorgente(tipo: String, lato: int) -> Image:
+	var ordine := [32, 16] if lato >= _SOGLIA_32 else [16, 32]
+	for n in ordine:
+		var path := "%s%d/%s.png" % [_CARTELLA, n, tipo]
+		if ResourceLoader.exists(path):
+			var t := load(path) as Texture2D
+			if t != null:
+				var img := t.get_image()
+				if img != null:
+					img = img.duplicate() as Image
+					if img.is_compressed():
+						img.decompress()
+					img.convert(Image.FORMAT_RGBA8)
+					return img
+	return null
+
+# Il rilievo dei pulsanti spenti di Win95: i pixel scuri dell'icona diventano grigio ombra,
+# con la loro copia bianca un pixel sotto a destra; i chiari spariscono.
+static func _in_rilievo(src: Image) -> Image:
+	var w := src.get_width()
+	var h := src.get_height()
+	var out := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var scuri: Array[Vector2i] = []
+	for y in range(h):
+		for x in range(w):
+			var c := src.get_pixel(x, y)
+			if c.a > 0.5 and c.get_luminance() < 0.6:
+				scuri.append(Vector2i(x, y))
+	for p in scuri:
+		if p.x + 1 < w and p.y + 1 < h:
+			out.set_pixel(p.x + 1, p.y + 1, Color.WHITE)
+	for p in scuri:
+		out.set_pixel(p.x, p.y, Win95.C_SHADOW)
+	return out
+
 func _draw() -> void:
 	var w := size.x
 	var h := size.y
+	var lato := int(minf(w, h))
+	var tex := OSIcon.texture_per(kind, lato, spenta)
+	if tex != null:
+		draw_texture(tex, ((size - Vector2(lato, lato)) * 0.5).floor())
+		return
 	match kind:
 		"folder":
 			_folder(w, h)

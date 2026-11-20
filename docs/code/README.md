@@ -73,9 +73,13 @@ These are not optional — match them or the code will feel foreign.
    the OS, build nodes in code the same way (see `desktop.gd`), do not author a
    new scene unless there is a strong reason.
 
-2. **Icons and chrome are drawn, not imported.** `os_icon.gd` and the Win95
-   bevels draw everything with `_draw()` / `RenderingServer`. There are almost no
-   image assets for the UI. Add new icons as a `match` case in `os_icon.gd`.
+2. **Chrome is drawn; icons are period PNGs (changed 2026-11-20).** The Win95
+   bevels are drawn with `_draw()` / `RenderingServer`. Icons are pixel-art PNGs
+   in `assets/icons/16|32/<kind>.png` (SerenityOS set, BSD-2, plus a few drawn by
+   hand), built by `tools/icons/build_icons.py` and loaded by `OSIcon.texture_per`.
+   History: before, every icon was drawn in `_draw()`; that code stays only for
+   kinds without a PNG (whale, win, dropdown) and as fallback. Add a new icon as
+   a PNG named by its kind (edit/rerun the build script), see OS.md `os_icon.gd`.
 
 3. **Strict typing — beware `Variant` inference.** Godot here treats inferring
    `:=` from a `Variant` value as an error. The global `min()` / `max()` return

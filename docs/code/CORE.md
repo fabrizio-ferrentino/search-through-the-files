@@ -423,7 +423,9 @@ keys in locale/ui.csv. Game author, 3D models (Household Props/
 CreativeTrio CC0, Retro Computer Setup/Brandon Westlake Sketchfab
 Standard, Quaternius CC0, and the CC BY 3.0 ones that REQUIRE
 attribution: Op Art/Ryan Murray, Book Stack/Danni Bittman, books/Tiff
-Eidmann, Books/Alex Safayan), fonts (Arimo + Cousine, OFL), Godot (MIT).
+Eidmann, Books/Alex Safayan), fonts (Arimo + Cousine, OFL), Icons
+(CR_SEC_ICONS / CR_ICONS, 2026-11-20: SerenityOS, BSD-2, which requires
+reproducing the notice), Godot (MIT).
 Full sources are in each assets/.../CREDITS.md. NOT listed: Door.glb
 (source unknown) and the Jester placeholder (local only, not shipped).
 Adding an asset = a CR_ key in the CSV + its name in SEZIONI.
