@@ -1,33 +1,123 @@
 <html>
-<head><title>TeleGuida - Stasera</title></head>
+<head>
+<title>TeleGuida - Stasera</title>
+</head>
 <body bgcolor="#FFFFFF" text="#000000" link="#552288" vlink="#884488">
-<table width="100%" bgcolor="#000000" cellpadding="8"><tr><td><font face="Times New Roman" size="7" color="#FFFFFF"><b>Tele</b></font><font face="Times New Roman" size="7" color="#FFCC00"><b><i>Guida</i></b></font><br><font face="Arial" size="2" color="#CCBBEE">cosa c'e', prima di accendere</font></td><td align="right" bgcolor="#330066"><font face="Arial" size="2" color="#FFCC00"><b>EDIZIONE DEL</b><br>31/03/1999</font></td></tr></table>
-<table width="100%" border="1" bordercolor="#000000" bgcolor="#552288" cellpadding="3"><tr><td align="center"><form><input type="button" value="Stasera" onclick="location.href='index.html'"></form></td><td align="center"><form><input type="button" value="La settimana" onclick="location.href='week.html'"></form></td><td align="center"><form><input type="button" value="Film" onclick="location.href='films.html'"></form></td><td align="center"><form><input type="button" value="Telefilm" onclick="location.href='series.html'"></form></td><td align="center"><form><input type="button" value="Ragazzi" onclick="location.href='kids.html'"></form></td><td align="center"><form><input type="button" value="Posta dei lettori" onclick="location.href='letters.html'"></form></td></tr></table>
+<table width="100%" bgcolor="#000000" cellpadding="8">
+<tr>
+<td><font face="Times New Roman" size="7" color="#FFFFFF"><b>Tele</b></font><font face="Times New Roman" size="7" color="#FFCC00"><b><i>Guida</i></b></font><br><font face="Arial" size="2" color="#CCBBEE">cosa c'e', prima di accendere</font></td>
+<td align="right" bgcolor="#330066"><font face="Arial" size="2" color="#FFCC00"><b>EDIZIONE DEL</b><br>31/03/1999</font></td>
+</tr>
+</table>
+<table width="100%" border="1" bordercolor="#000000" bgcolor="#552288" cellpadding="3">
+<tr>
+<td align="center"><form><input type="button" value="Stasera" onclick="location.href='index.html'"></form></td>
+<td align="center"><form><input type="button" value="La settimana" onclick="location.href='week.html'"></form></td>
+<td align="center"><form><input type="button" value="Film" onclick="location.href='films.html'"></form></td>
+<td align="center"><form><input type="button" value="Telefilm" onclick="location.href='series.html'"></form></td>
+<td align="center"><form><input type="button" value="Ragazzi" onclick="location.href='kids.html'"></form></td>
+<td align="center"><form><input type="button" value="Posta dei lettori" onclick="location.href='letters.html'"></form></td>
+</tr>
+</table>
 <p><font face="Times New Roman" size="5" color="#330066"><b>Stasera in TV - mercoledi' 31/03/1999</b></font></p>
 <p><font face="Arial" size="2">Come si legge la griglia: una colonna per ogni rete, una riga per ogni orario d'inizio. Le stelle: * e' una serata per leggere, ***** una serata da non perdere.</font></p>
-<table width="100%" border="1" bordercolor="#330066" cellpadding="6" bgcolor="#EFE6F8" align="center"><tr><td><font face="Arial" size="2" color="#000000"><b>Cerca nei programmi</b><br>Scrivete un titolo e scegliete la rete.</font></td></tr></table>
+<table width="100%" border="1" bordercolor="#330066" cellpadding="6" bgcolor="#EFE6F8" align="center">
+<tr>
+<td><font face="Arial" size="2" color="#000000"><b>Cerca nei programmi</b><br>Scrivete un titolo e scegliete la rete.</font></td>
+</tr>
+</table>
 <form action="/cgi-bin/guida/cerca.pl" method="post">
 <table width="100%" border="1" bordercolor="#330066" cellpadding="6" bgcolor="#EFE6F8" align="center">
-<tr><td width="160" valign="top"><font face="Arial" size="2" color="#000000">Titolo o parola:</font></td><td><font face="Arial" size="2" color="#000000"><input type="text" name="titolo" size="24" maxlength="40"></font></td></tr>
-<tr><td width="160" valign="top"><font face="Arial" size="2" color="#000000">Rete:</font></td><td><font face="Arial" size="2" color="#000000"><select name="canale"><option value="all">Tutte le reti</option><option value="1">Canale Uno</option><option value="2">Rete Due</option><option value="3">Televalle</option></select></font></td></tr>
-<tr><td width="160">&nbsp;</td><td><input type="submit" value="Cerca"></td></tr>
+<tr>
+<td width="160" valign="top"><font face="Arial" size="2" color="#000000">Titolo o parola:</font></td>
+<td><font face="Arial" size="2" color="#000000"><input type="text" name="titolo" size="24" maxlength="40"></font></td>
+</tr>
+<tr>
+<td width="160" valign="top"><font face="Arial" size="2" color="#000000">Rete:</font></td>
+<td><font face="Arial" size="2" color="#000000"><select name="canale"><option value="all">Tutte le reti</option><option value="1">Canale Uno</option><option value="2">Rete Due</option><option value="3">Televalle</option></select></font></td>
+</tr>
+<tr>
+<td width="160">&nbsp;</td>
+<td><input type="submit" value="Cerca"></td>
+</tr>
 </table>
 </form>
 <br>
 <table width="100%" border="1" bordercolor="#330066" cellpadding="5">
-<tr><td width="85" bgcolor="#000000"><font face="Arial" size="2" color="#FFCC00"><b>ORA</b></font></td><td bgcolor="#7A1F5C"><font face="Arial" size="2" color="#FFFFFF"><b>CANALE UNO</b></font></td><td bgcolor="#1F3F7A"><font face="Arial" size="2" color="#FFFFFF"><b>RETE DUE</b></font></td><td bgcolor="#1F6B3A"><font face="Arial" size="2" color="#FFFFFF"><b>TELEVALLE (locale)</b></font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>20:00</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2">Telegiornale</font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2">TG della Valle</font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>20:30</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2"><b>Medico di guardia</b> - episodio 14, "Il turno di notte"</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2"><b>La settimana dei Grifoni</b> - interviste dallo stadio</font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>20:40</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2"><b>Il Grande Quiz</b> - il campione e' un postino in pensione del nord, alla sua nona sera</font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>21:00</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2"><b>FILM: Le luci del porto</b> (drammatico) ****<br>vedi <a href="films.html">Film</a></font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2">Televendite</font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>21:30</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2"><b>Parliamone</b> - dibattito in diretta: "I nostri figli sono soli davanti al computer?"</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>23:10</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2">Ultima edizione e meteo</font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>23:30</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2">Musica a mezzanotte</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td></tr>
-<tr><td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>24:00</b></font></td><td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td><td bgcolor="#E3F4E6"><font face="Arial" size="2">Televendite, di nuovo</font></td></tr>
+<tr>
+<td width="85" bgcolor="#000000"><font face="Arial" size="2" color="#FFCC00"><b>ORA</b></font></td>
+<td bgcolor="#7A1F5C"><font face="Arial" size="2" color="#FFFFFF"><b>CANALE UNO</b></font></td>
+<td bgcolor="#1F3F7A"><font face="Arial" size="2" color="#FFFFFF"><b>RETE DUE</b></font></td>
+<td bgcolor="#1F6B3A"><font face="Arial" size="2" color="#FFFFFF"><b>TELEVALLE (locale)</b></font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>20:00</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2">Telegiornale</font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2">TG della Valle</font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>20:30</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2"><b>Medico di guardia</b> - episodio 14, "Il turno di notte"</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2"><b>La settimana dei Grifoni</b> - interviste dallo stadio</font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>20:40</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2"><b>Il Grande Quiz</b> - il campione e' un postino in pensione del nord, alla sua nona sera</font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>21:00</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2"><b>FILM: Le luci del porto</b> (drammatico) ****<br>vedi <a href="films.html">Film</a></font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2">Televendite</font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>21:30</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2"><b>Parliamone</b> - dibattito in diretta: "I nostri figli sono soli davanti al computer?"</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>23:10</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2">Ultima edizione e meteo</font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>23:30</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2">Musica a mezzanotte</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#E8E8E8"><font face="Arial" size="2"><b>24:00</b></font></td>
+<td bgcolor="#FDEBD0"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3ECFA"><font face="Arial" size="2">&nbsp;</font></td>
+<td bgcolor="#E3F4E6"><font face="Arial" size="2">Televendite, di nuovo</font></td>
+</tr>
 </table>
 <br>
 <p><font face="Arial" size="3"><b>Il nostro consiglio per stasera:</b> il dibattito su Rete Due. La settimana scorsa gli ospiti hanno litigato cosi' tanto che il conduttore e' andato in pubblicita' a meta' di una frase. Stasera sara' uguale, e noi guarderemo.</font></p>
-<form action="/cgi-bin/tv/listings.cgi" method="post"><center><table cellpadding="4" bgcolor="#E6DDF2" border="1"><tr><th><font face="Arial" size="2" color="#000000"><b>Ricevi il programma della settimana per e-mail</b></font></th></tr><tr><td><table cellpadding="2"><tr><td><font face="Arial" size="2" color="#000000">La tua e-mail</font></td><td><input type="text" name="email" size="20"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Iscriviti"></td></tr></table></td></tr></table></center></form>
+<form action="/cgi-bin/tv/listings.cgi" method="post"><center><table cellpadding="4" bgcolor="#E6DDF2" border="1">
+<tr>
+<th><font face="Arial" size="2" color="#000000"><b>Ricevi il programma della settimana per e-mail</b></font></th>
+</tr>
+<tr>
+<td><table cellpadding="2">
+<tr>
+<td><font face="Arial" size="2" color="#000000">La tua e-mail</font></td>
+<td><input type="text" name="email" size="20"></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td><input type="submit" value="Iscriviti"></td>
+</tr>
+</table></td>
+</tr>
+</table></center></form>
 
 <hr width="100%" size="3" color="#330066">
 <center><font face="Arial" size="2" color="#000000">Fai di noi la tua pagina iniziale: il programma e' sempre a un clic.</font></center>
