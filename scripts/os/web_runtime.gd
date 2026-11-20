@@ -88,7 +88,15 @@ static var _built_seed := -9999
 
 # Sceglie i siti del run + portatore/modalita'/chiave dal seme. La chiama
 # BrowserApp.reset_pages() (da GameManager.start_new_run); _ensure() la rifa' se serve.
+# Le pagine aperte in questa partita: i link che portano li' hanno il colore "visitato"
+# della pagina (vlink), come nei browser d'epoca. Si azzera a ogni partita (build).
+static var visitate: Dictionary = {}
+
+static func visita(page: String) -> void:
+	visitate[page] = true
+
 static func build() -> void:
+	visitate.clear()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = GameManager.run_seed + SITE_SALT
 	_chosen = _scegli_siti(_pool(), rng)

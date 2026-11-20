@@ -17,6 +17,11 @@ extends Node
 #   8 lo stesso DENTRO UNA TABELLA  -> il caso peggiore: per l'engine una tabella
 #     e' una riga sola alta tutto il blocco, quindi senza la maschera del testo
 #     (page_view.gd::_prepara_maschera) l'I-beam copriva la tabella intera.
+#   9 i MODULI come in un browser vero -> stanghetta su tutto il campo (anche vicino al
+#     bordo), freccia su tendina e pulsante; un clic vicino al bordo del campo lo attiva;
+#     la tendina si apre PROPRIO sotto la sua casella, larga uguale, e la voce cliccata
+#     diventa il valore (prima: la mano sul campo, e la tendina era il menu del tasto
+#     destro aperto dove si cliccava).
 #
 # NOTA sui tempi: gli eventi vanno spinti con i tempi di una mano umana
 # (~90 ms di pressione, ~110 ms tra i due clic di un doppio clic). Con eventi
@@ -27,8 +32,13 @@ extends Node
 # ============================================================
 
 const VP_SIZE := Vector2i(1440, 1080)
-const TABELLE := "forum/index"        # pagina ricca: tabelle, link, righe colorate
-const PARAGRAFI := "cronaca/tragedia" # pagina a paragrafi semplici su sfondo chiaro
+# Le pagine di prova sono FISSE e stanno qui, non nei siti: il test trova i punti da
+# cliccare guardando i pixel (il blu dei link, il testo neutro), e un sito ridisegnato
+# lo faceva fallire senza che il browser avesse niente (24/10/2026: la fascia blu notte
+# del forum nuovo, col testo bianco sfumato ai bordi, sembrava un link). Sono le
+# versioni del forum e della gazzetta com'erano fino al 23/10/2026.
+const TABELLE := "res://tests/pagine_prova/tabelle.html"     # tabelle, link, righe colorate
+const PARAGRAFI := "res://tests/pagine_prova/paragrafi.html" # paragrafi semplici su sfondo chiaro
 
 var _sub: SubViewport
 var _browser: BrowserApp
@@ -37,7 +47,7 @@ var _meta: Array = []
 var _fails: Array = []
 
 func _ready() -> void:
-	get_tree().create_timer(90.0).timeout.connect(_timeout)   # salvagente
+	get_tree().create_timer(150.0).timeout.connect(_timeout)   # salvagente
 	await get_tree().process_frame
 	GameManager.start_new_run(12345)
 	GameManager.debug_tutti_i_siti = true   # le pagine sono fisse: devono rispondere in ogni partita
@@ -171,6 +181,9 @@ func _ready() -> void:
 		_check("CURSORE_VUOTO_IN_TABELLA", c_tab == Control.CURSOR_ARROW,
 				"nel vuoto dentro una tabella vale %d" % c_tab)
 
+	# --- 9) i moduli ---
+	await _prova_moduli()
+
 	if _fails.is_empty():
 		print("RISULTATO: PASS (comportamenti del mouse ok)")
 	else:
@@ -184,8 +197,12 @@ func _timeout() -> void:
 # Ricarica la pagina e azzera lo stato tra un caso e l'altro.
 func _reset(pagina: String) -> void:
 	_meta.clear()
-	_browser._load(pagina)
+	# un clic di prima su un link ha fatto navigare davvero il browser: si aspetta che quel
+	# caricamento finisca, o il suo velo resterebbe sopra la pagina di prova a prendersi i clic
 	await _browser.attendi_caricamento()
+	var html := FileAccess.get_file_as_string(pagina)
+	_browser._html_text = html
+	_browser._render_html(HtmlBB.strip_comments(HtmlBB.body_inner(html)))
 	for i in range(4):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
@@ -224,6 +241,23 @@ func _doppio_clic(pos: Vector2, pagina: String) -> String:
 # saltare l'intestazione), non una coordinata dello schermo: la cornice del browser e'
 # cresciuta due volte e ogni altezza scritta a mano si e' rotta -- una volta la scansione
 # partiva dentro il banner, un'altra il punto "sotto l'intestazione" cadeva nel vuoto.
+# Il centro del tratto continuo piu' lungo fra le x trovate (campionate ogni 2 px; un buco
+# fino a 10 px, lo spazio fra due lettere della stessa parola, non spezza il tratto).
+func _centro_tratto_lungo(xs: Array) -> int:
+	var da: int = xs[0]
+	var meglio_da: int = da
+	var meglio_a: int = da
+	var prima: int = da
+	for k in range(1, xs.size()):
+		var x: int = xs[k]
+		if x - prima > 10:
+			da = x
+		prima = x
+		if x - da > meglio_a - meglio_da:
+			meglio_da = da
+			meglio_a = x
+	return (meglio_da + meglio_a) / 2
+
 func _trova(pagina: String, cerca_link: bool, salta := 0) -> Vector2:
 	await _reset(pagina)
 	var img := _sub.get_texture().get_image()
@@ -262,7 +296,12 @@ func _trova(pagina: String, cerca_link: bool, salta := 0) -> Vector2:
 		# punto "sul testo" cadeva su una linea -- dove il cursore e' giustamente una freccia.
 		# Le lettere invece danno tanti gruppetti separati da spazi: se ne servono almeno 3.
 		if xs.size() >= soglia and (cerca_link or _gruppi(xs) >= 3):
-			if cerca_link or x_forte < 0:
+			if cerca_link:
+				# il centro del tratto blu PIU' LUNGO della riga, cioe' di un solo link: la
+				# mediana di tutti i pixel blu poteva cadere nello stacco fra due link (una
+				# barra "Indice | Hardware | ..."), e 3 px di tremolio uscivano dal link
+				return Vector2(float(_centro_tratto_lungo(xs)), float(y))
+			if x_forte < 0:
 				return Vector2(float(xs[xs.size() / 2]), float(y))
 			return Vector2(float(x_forte), float(y))
 	return Vector2(-1, -1)
@@ -365,11 +404,82 @@ func _vuoto_in_tabella() -> Vector2:
 		y += 5
 	return Vector2(-1, -1)
 
+# La forma che il gioco mostrerebbe: la chiede OSDesktop.cursor_shape_at alla pagina
+# (cursore_a), non al RichTextLabel nudo, che metterebbe la mano su ogni link.
 func _forma_dopo_hover(p: Vector2) -> int:
 	_motion(p)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	return _pagina.get_cursor_shape(p - _pagina.get_global_rect().position)
+	return _pagina.cursore_a(p - _pagina.get_global_rect().position)
+
+const MODULO := "<body bgcolor=\"#FFFFFF\"><p>Cerca nel sito:</p><form action=\"/cgi-bin/cerca.pl\">" 		+ "<p>Nome: <input type=\"text\" name=\"q\" size=\"24\"></p>" 		+ "<p>Sezione: <select name=\"s\"><option value=\"a\">Tutte le sezioni<option value=\"b\">Hardware<option value=\"c\">Software</select></p>" 		+ "<p><input type=\"submit\" value=\"Cerca\"></p></form><p><a href=\"rules.html\">Regolamento</a></p></body>"
+
+func _prova_moduli() -> void:
+	await _browser.attendi_caricamento()
+	_browser._html_text = MODULO
+	_browser._current = "forum/index"
+	_browser._render_html(HtmlBB.strip_comments(HtmlBB.body_inner(MODULO)))
+	for i in range(4):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var base := _pagina.get_global_rect().position
+	var campo: Rect2 = await _pagina.rettangolo_di("__campo:m0_0")
+	var tendina: Rect2 = await _pagina.rettangolo_di("__tendina:m0_1")
+	var bottone: Rect2 = await _pagina.rettangolo_di("__invia:0")
+	print("[moduli] campo=", campo, " tendina=", tendina, " pulsante=", bottone)
+	if campo.size.x < 20.0 or tendina.size.x < 20.0 or bottone.size.x < 10.0:
+		_check("MODULI_TROVATI", false, "non trovo i controlli: %s %s %s" % [campo, tendina, bottone])
+		return
+	# il cursore: stanghetta sul campo, anche a 3 px dal bordo sinistro; freccia altrove
+	var c_campo := await _forma_dopo_hover(base + campo.get_center())
+	var c_bordo := await _forma_dopo_hover(base + Vector2(campo.position.x + 3.0, campo.get_center().y))
+	var c_tend := await _forma_dopo_hover(base + tendina.get_center())
+	var c_bott := await _forma_dopo_hover(base + bottone.get_center())
+	print("[moduli] cursore campo=", c_campo, " bordo=", c_bordo, " tendina=", c_tend, " pulsante=", c_bott)
+	_check("CURSORE_CAMPO", c_campo == Control.CURSOR_IBEAM, "sul campo vale %d" % c_campo)
+	_check("CURSORE_CAMPO_BORDO", c_bordo == Control.CURSOR_IBEAM, "vicino al bordo del campo vale %d" % c_bordo)
+	_check("CURSORE_TENDINA", c_tend == Control.CURSOR_ARROW, "sulla tendina vale %d" % c_tend)
+	_check("CURSORE_PULSANTE", c_bott == Control.CURSOR_POINTING_HAND, "sul pulsante vale %d" % c_bott)
+	# premuto, il pulsante si abbassa; lasciato, torna su (il mouse ci e' gia' passato sopra:
+	# la pagina sa dove sta)
+	for i in range(6):
+		await get_tree().process_frame
+	_press(base + bottone.get_center())
+	await get_tree().process_frame
+	var giu := _pagina.pulsante_premuto()
+	_release(base + Vector2(bottone.position.x - 40.0, bottone.get_center().y))
+	await get_tree().process_frame
+	_check("PULSANTE_SI_ABBASSA", giu and not _pagina.pulsante_premuto(),
+			"premuto si vede abbassato: %s, lasciato torna su: %s" % [str(giu), str(not _pagina.pulsante_premuto())])
+	await _browser.attendi_caricamento()
+	# un clic vicino al bordo sinistro attiva il campo
+	await _clic(base + Vector2(campo.position.x + 3.0, campo.get_center().y), [])
+	_check("CAMPO_CLIC_BORDO", _browser._campo == "m0_0", "campo attivo: '%s'" % _browser._campo)
+	_browser._scrivi_in("")
+	_browser._ridisegna()
+	await get_tree().process_frame
+	# la tendina: si apre sotto la casella, larga uguale
+	await _clic(base + tendina.get_center(), [])
+	for i in range(20):
+		if _browser._tend_panel.visible:
+			break
+		await get_tree().process_frame
+	var origine: Vector2 = _pagina.global_position - _browser.global_position
+	var atteso := origine + Vector2(tendina.position.x, tendina.end.y)
+	_check("TENDINA_SOTTO_LA_CASELLA", _browser._tend_panel.visible
+			and _browser._tend_panel.position.distance_to(atteso) < 2.0
+			and absf(_browser._tend_panel.size.x - tendina.size.x) < 2.0,
+			"casella %s, elenco in %s largo %d (visibile %s)" % [tendina, _browser._tend_panel.position,
+			int(_browser._tend_panel.size.x), str(_browser._tend_panel.visible)])
+	# clic sulla seconda voce: diventa il valore e l'elenco si chiude
+	var voci := _browser._tend_lista.get_children()
+	if voci.size() == 3:
+		var v2 := voci[1] as Button
+		await get_tree().process_frame
+		await _clic(v2.get_global_rect().get_center(), [])
+		await get_tree().process_frame
+	_check("TENDINA_SCEGLIE", str(_browser._valori.get("m0_1", "")) == "b" and not _browser._tend_panel.visible,
+			"valore '%s', elenco visibile %s" % [str(_browser._valori.get("m0_1", "")), str(_browser._tend_panel.visible)])
 
 func _check(nome: String, ok: bool, perche: String) -> void:
 	if ok:

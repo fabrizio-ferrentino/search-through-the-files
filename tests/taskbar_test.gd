@@ -13,7 +13,10 @@ extends Node
 #     compaiano le due frecce e se ne mostri una finestra alla volta;
 #   4 i pulsanti mostrati stiano SEMPRE dentro la barra, con qualunque numero di finestre
 #     (e' la meta' "escono fuori dallo schermo" della segnalazione);
-#   5 le frecce scorrano davvero, e ai capi non si possa andare oltre.
+#   5 le frecce scorrano davvero, e ai capi non si possa andare oltre;
+#   6 l'ALTOPARLANTE del vassoio (23/10/2026, come in Win98): un clic apre il pannellino
+#     del volume, "Disattiva" zittisce davvero il bus del PC e cambia l'icona, il cursore
+#     cambia il volume, e un clic fuori chiude il pannello.
 #
 # Va eseguito come SCENA (serve l'autoload GameManager).
 #   & $godot --headless --path $proj res://tests/taskbar_test.tscn
@@ -47,6 +50,7 @@ func _ready() -> void:
 	await _prova_una_sola()
 	await _prova_si_stringono()
 	await _prova_scorrimento()
+	await _prova_volume()
 
 	if _fails.is_empty():
 		print("RISULTATO: PASS (la barra si comporta come su Win95)")
@@ -123,6 +127,41 @@ func _prova_scorrimento() -> void:
 			% [_visibili().size(), vis.size()])
 
 # ---------- helper ----------
+# ---------- 6: l'altoparlante del vassoio ----------
+func _prova_volume() -> void:
+	var muto_prima: bool = GameManager.pc_muto
+	var volume_prima: float = GameManager.pc_volume
+	AudioPC.imposta_muto(false)
+	var bus := AudioServer.get_bus_index(AudioPC.bus())
+	_check("VOLUME_ICONA", _os._icona_volume.kind == "speaker", "icona: %s" % _os._icona_volume.kind)
+	_os._btn_volume.pressed.emit()
+	await get_tree().process_frame
+	var pop: Panel = _os._volume_pop
+	_check("VOLUME_SI_APRE", pop != null and pop.is_inside_tree(), "il pannello non si apre")
+	if pop == null:
+		return
+	_check("VOLUME_SOPRA_LA_BARRA", pop.get_global_rect().end.y <= _os.taskbar.get_global_rect().position.y + 1.0
+			and pop.get_global_rect().end.x <= float(OS_SIZE.x), "pannello fuori posto: %s" % pop.get_global_rect())
+	_os._casella_muto.button_pressed = true
+	await get_tree().process_frame
+	_check("VOLUME_MUTO", AudioServer.is_bus_mute(bus) and _os._icona_volume.kind == "speaker_muto",
+			"muto=%s icona=%s" % [AudioServer.is_bus_mute(bus), _os._icona_volume.kind])
+	_os._casella_muto.button_pressed = false
+	_check("VOLUME_RIACCESO", not AudioServer.is_bus_mute(bus) and _os._icona_volume.kind == "speaker", "")
+	_os._cursore_volume.value = 25.0
+	_check("VOLUME_CURSORE", is_equal_approx(GameManager.pc_volume, 0.25), "volume: %f" % GameManager.pc_volume)
+	# un clic fuori lo chiude
+	var fuori := InputEventMouseButton.new()
+	fuori.button_index = MOUSE_BUTTON_LEFT
+	fuori.pressed = true
+	fuori.position = Vector2(400, 300)
+	fuori.global_position = fuori.position
+	_vp.push_input(fuori)
+	await get_tree().process_frame
+	_check("VOLUME_SI_CHIUDE", _os._volume_pop == null, "il pannello resta aperto")
+	AudioPC.imposta_muto(muto_prima)
+	AudioPC.imposta_volume(volume_prima)
+
 func _apri(quante: int) -> void:
 	for i in range(quante):
 		_os.open_app("explorer", VFS.get_root())

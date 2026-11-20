@@ -31,8 +31,10 @@ extends RefCounted
 #             inglese su un .it si nota subito. Puo' avere un percorso (lo spazio
 #             personale sull'ISP: www.webnet.it/~jack99)
 #   tipo      "normale" o "lore"
-#   voce      solo per la lore: di chi parla -- "padre", "ragazzo" o "maledizione" (la
-#             regola di estrazione vuole almeno un sito del padre e uno del ragazzo)
+#   voce      solo per la lore: di chi parla -- "padre", "ragazzo", "maledizione" o "altri"
+#             (le storie di altre persone, non del ragazzo: dal 23/10/2026 lui ha un sito
+#             solo e compare al massimo in due altri, la chat e gli annunci). La regola di
+#             estrazione vuole almeno un sito del padre e uno del ragazzo
 #   featured  nel portale fra i PREFERITI (true) o fra i visitati di RECENTE (false)
 #   stato     "segnaposto" (da riscrivere) o "completo" (scritto per davvero: il test
 #             pretende almeno COMPLETO_PAGINE pagine e COMPLETO_TESTO caratteri di testo)
@@ -84,11 +86,13 @@ const SITI := [
 		"pagine": ["index", "dads", "school", "thread_seaside", "thread_sleep", "thread_voice",
 				"thread_boys", "profile_dad", "login"]},
 	# la pagina personale del ragazzo da cui la maledizione e' partita (GDD §2b), sullo
-	# spazio gratuito dell'ISP. I link morti sono le pagine degli amici, sparite
-	{"id": "balena", "nome": "WS_WHALE", "desc": "WS_WHALE_D",
-		"en": "www.webnet.com/~whale52", "it": "www.webnet.it/~balena52",
+	# spazio gratuito dell'ISP. Il suo nome e' il treno che non ferma piu' alla stazione
+	# dietro casa (23/10/2026: prima era una balena, come il logo dell'OS, e si
+	# confondeva con il simbolo della maledizione). I link morti sono pagine sparite
+	{"id": "treno", "nome": "WS_TRAIN", "desc": "WS_TRAIN_D",
+		"en": "www.webnet.com/~missedtrain", "it": "www.webnet.it/~trenoperso",
 		"tipo": "lore", "voce": "ragazzo", "featured": false, "stato": "completo",
-		"pagine": ["index", "about", "whale", "links", "thoughts", "guestbook", "update"],
+		"pagine": ["index", "about", "binario", "links", "thoughts", "guestbook", "update"],
 		"morti": ["www.webnet.com/~danny", "www.webnet.com/~steve_and_amy", "www.lonelyring.com",
 				"www.webnet.it/~gianlu", "www.webnet.it/~sere_e_ale", "www.anellodeisolitari.it"]},
 	{"id": "news", "nome": "WS_NEWS", "desc": "WS_NEWS_D",
@@ -107,7 +111,7 @@ const SITI := [
 		"en": "webmail.webnet.com", "it": "webmail.webnet.it",
 		"tipo": "normale", "voce": "", "featured": true, "stato": "completo",
 		"pagine": ["index", "help", "news", "safety", "space", "terms"]},
-	# la pagina di un ragazzo felice, con gli amici e un guestbook pieno: il rovescio di balena
+	# la pagina di un ragazzo felice, con gli amici e un guestbook pieno: il rovescio di treno
 	{"id": "blog", "nome": "WS_JACK", "desc": "WS_JACK_D",
 		"en": "www.webnet.com/~jack99", "it": "www.webnet.it/~jack99",
 		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
@@ -172,21 +176,44 @@ const SITI := [
 		"en": "www.chatpointlive.com", "it": "www.chatpoint.it",
 		"tipo": "lore", "voce": "ragazzo", "featured": true, "stato": "completo",
 		"pagine": ["index", "archive", "log_last", "log_owls", "log_party", "rooms", "rules", "smileys"]},
-	# sembra normale: nel forum le sue domande ricevono risposte sbrigative
+	# sembra normale: nel forum le domande di una guardia notturna ricevono risposte sbrigative
 	{"id": "lavoro", "nome": "WS_JOBS", "desc": "WS_JOBS_D",
 		"en": "www.jobfinderboard.com", "it": "www.cercolavoro.it",
-		"tipo": "lore", "voce": "ragazzo", "featured": false, "stato": "completo",
+		"tipo": "lore", "voce": "altri", "featured": false, "stato": "completo",
 		"pagine": ["index", "cv", "forum", "interview", "offers", "rules", "thread_night", "thread_smile"]},
-	# il "metodo" venduto per corrispondenza, e l'area clienti dove lui ha scritto
+	# il "metodo" venduto per corrispondenza, e l'area clienti col diario di un cliente
 	{"id": "vincente", "nome": "WS_METHOD", "desc": "WS_METHOD_D",
 		"en": "www.thewinnermethod.com", "it": "www.metodovincente.it",
-		"tipo": "lore", "voce": "ragazzo", "featured": false, "stato": "completo",
+		"tipo": "lore", "voce": "altri", "featured": false, "stato": "completo",
 		"pagine": ["index", "clients", "faq", "method", "order", "stories", "thread_diary"]},
-	# la linea d'ascolto rimasta senza volontari: i suoi messaggi, senza risposta
+	# la linea d'ascolto rimasta senza volontari: i messaggi di un fornaio, senza risposta
 	{"id": "ascolto", "nome": "WS_LISTEN", "desc": "WS_LISTEN_D",
 		"en": "www.someonelistens.org", "it": "www.qualcunoascolta.it",
-		"tipo": "lore", "voce": "ragazzo", "featured": false, "stato": "completo",
+		"tipo": "lore", "voce": "altri", "featured": false, "stato": "completo",
 		"pagine": ["index", "board", "how", "letter", "volunteers", "waiting"]},
+	# 23/10/2026: un forum del 1997 in stile WWWBoard dove ci si dice "la verita'" sul proprio
+	# aspetto; a novembre 1998 un ospite scrive con le parole della pagina del ragazzo
+	{"id": "brutti", "nome": "WS_UGLY", "desc": "WS_UGLY_D",
+		"en": "www.uglyguysboard.com", "it": "www.forumdeibrutti.it",
+		"tipo": "lore", "voce": "altri", "featured": false, "stato": "completo",
+		"pagine": ["index", "rules", "thread_truth", "thread_hypergamy", "thread_33",
+				"thread_measures", "thread_leaving", "thread_nosubject"]},
+	# 23/10/2026: un trattato amatoriale che misura i volti e ne trae una sentenza
+	{"id": "volto", "nome": "WS_FACE", "desc": "WS_FACE_D",
+		"en": "www.measureoftheface.net", "it": "www.misuradelvolto.it",
+		"tipo": "lore", "voce": "altri", "featured": false, "stato": "completo",
+		"pagine": ["index", "method", "tables", "gallery", "letters", "about"]},
+	# 23/10/2026: le statistiche del "Professore" del forum, e il suo quaderno di osservazioni
+	{"id": "numeri", "nome": "WS_NUMBERS", "desc": "WS_NUMBERS_D",
+		"en": "www.webnet.com/~numbersdontlie", "it": "www.webnet.it/~inumerinonmentono",
+		"tipo": "lore", "voce": "altri", "featured": false, "stato": "completo",
+		"pagine": ["index", "eighty", "hypergamy", "age", "survey", "observations"]},
+	# 23/10/2026: il diario di un insegnante di quarant'anni che conta i giorni; l'ultimo
+	# aggiornamento non e' per i lettori del 1999
+	{"id": "diario", "nome": "WS_DAYS", "desc": "WS_DAYS_D",
+		"en": "www.webnet.com/~dayswithout", "it": "www.webnet.it/~giornisenza",
+		"tipo": "lore", "voce": "maledizione", "featured": false, "stato": "completo",
+		"pagine": ["index", "y1998", "y1999", "list", "letters", "last"]},
 	# il tecnico a domicilio: le note di intervento a casa del padre
 	{"id": "tecnico", "nome": "WS_REPAIR", "desc": "WS_REPAIR_D",
 		"en": "www.pcdoctorathome.com", "it": "www.dottoredelpc.it",
@@ -202,6 +229,38 @@ const SITI := [
 		"en": "www.nobodyhome.net", "it": "www.nessunoincasa.it",
 		"tipo": "lore", "voce": "maledizione", "featured": false, "stato": "completo",
 		"pagine": ["index", "door", "family", "keys", "visitors", "whale", "windows", "you"]},
+	# 24/10/2026: santuario di una tredicenne per un cartone inventato (pois rosa, pulsanti, web ring)
+	{"id": "anime", "nome": "WS_ANIME", "desc": "WS_ANIME_D",
+		"en": "www.webnet.com/~hikarishrine", "it": "www.webnet.it/~santuariohikari",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "awards", "characters", "episodes", "gallery", "guestbook", "ring"],
+		"morti": ["www.webnet.com/~starring", "www.webnet.com/~moonpie", "www.webnet.com/~hikari_fan2", "www.webnet.it/~cerchiostellare", "www.webnet.it/~tortalunare", "www.webnet.it/~hikari_fan2"]},
+	# 24/10/2026: la pagina accademica spoglia di un professore di analisi numerica
+	{"id": "prof", "nome": "WS_PROF", "desc": "WS_PROF_D",
+		"en": "www.lakeland.edu/~wbrandt", "it": "www.unilago.it/~brandi",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "contact", "notes", "papers", "students", "teaching"]},
+	# 24/10/2026: il sito di un gruppo rock da garage (nero e rosso, date, testi, demo MIDI, mailing list)
+	{"id": "band", "nome": "WS_BAND", "desc": "WS_BAND_D",
+		"en": "www.concreteswans.com", "it": "www.cignidicemento.it",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "band", "guestbook", "list", "lyrics", "music", "tour"]},
+	# 24/10/2026: un servizio di pagine personali gratuite in stile GeoCities (quartieri, elenco soci, modulo d'iscrizione)
+	{"id": "hosting", "nome": "WS_HOSTING", "desc": "WS_HOSTING_D",
+		"en": "www.homeplot.com", "it": "www.paginedicasa.it",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "districts", "faq", "members", "signup", "terms", "tips"],
+		"morti": ["www.webnet.com/~jenny_k", "www.webnet.com/~rocketboy", "www.webnet.com/~the_budgie_page", "www.webnet.com/~chefmarco", "www.webnet.com/~oldtimers_club", "www.webnet.com/~susanna_and_pets", "www.webnet.it/~jenny_k", "www.webnet.it/~razzoboy", "www.webnet.it/~la_pagina_del_pappagallo", "www.webnet.it/~chef_marco", "www.webnet.it/~circolo_vecchi_amici", "www.webnet.it/~susanna_e_animali"]},
+	# 24/10/2026: la pagina di un dilettante in ansia per il baco del millennio (strisce gialle e nere, tabella degli apparecchi)
+	{"id": "y2k", "nome": "WS_Y2K", "desc": "WS_Y2K_D",
+		"en": "www.webnet.com/~y2kready", "it": "www.webnet.it/~pronti2000",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "about", "appliances", "checklist", "letters", "money", "supplies"]},
+	# 24/10/2026: la stazione di un radioamatore (verde militare, tabelle di frequenze, log in Courier)
+	{"id": "radio", "nome": "WS_RADIO", "desc": "WS_RADIO_D",
+		"en": "www.webnet.com/~w3mbk", "it": "www.webnet.it/~i2svl",
+		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
+		"pagine": ["index", "antenna", "bands", "cb", "club", "logbook", "qsl"]},
 ]
 
 # Il sito con quell'id ({} se non c'e').

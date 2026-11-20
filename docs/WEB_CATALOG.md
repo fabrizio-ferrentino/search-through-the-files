@@ -1,6 +1,6 @@
-# The site catalog: the 30 sites
+# The site catalog: the 40 sites
 
-The fake web the player browses. **30 sites** in all; **every run picks 10 to 15**, of
+The fake web the player browses. **40 sites** in all (30 until 2026-10-23, when four lore sites were added; on 2026-10-24 six more ordinary ones: anime, prof, band, hosting, y2k, radio); **every run picks 10 to 15**, of
 which **4 or 5 carry lore** (owner, 2026-10-19). All of tonight's sites are listed on the
 WebNet gateway; the others answer "cannot find server". They are period sites of
 1998-99, complex (6-14 pages each, navigation, real text), most of them ordinary, some
@@ -22,11 +22,18 @@ CRT: `tests/siti_check.tscn -- it <site>/<page> ...`.
 - **Closed in itself.** A site never links to another site of the catalog. The only
   links that leave a site go to the **WebNet portal**, or to an address that is **gone**
   (listed in the site's `morti`: it answers "cannot find server"). A name of another
-  site may appear as plain text, never as a link. `siti_catalogo_test` SITI_CHIUSI.
-- **No form controls.** No `<input>`, `<form>`, `<select>`, `<textarea>`, `<button>`: the
-  browser cannot use them. Logins, searches, carts, guestbooks are written as **closed**
-  ("access suspended during the move to the new server", "online orders are suspended",
-  "the guestbook service has been discontinued"). NIENTE_CONTROLLI.
+  site may appear as plain text, never as a link. `siti_catalogo_test` SITI_CHIUSI (it also
+  reads the targets of button menus, `onclick="location.href='x.html'"`; `siti_audit_test` LINK
+  checks every link and button menu in the real browser). A link to the portal is allowed, but
+  since 2026-10-24 no site page has the old footer link back to WebNet (owner: "tutti i siti hanno
+  in fondo un link per tornare a webnet rimuovilo"); only the 404 and 500 error pages keep theirs.
+- **Forms stay in the site.** Forms are allowed (owner, 2026-10-24; the browser now types in
+  them). A form's `action` is empty, a page of its own site, or a script of its own server
+  (`/cgi-bin/...pl`, `.cgi`, `.asp`); never `http`, `www` or `mailto`. A script answers the
+  period "500 Internal Server Error" page. MODULI_NEL_SITO. History: from 2026-10-20 to 2026-10-24
+  the rule was NIENTE_CONTROLLI (no `<input>`/`<form>`/`<select>`/`<textarea>`/`<button>`, logins
+  and carts written as "closed") because the browser could not use them; it was dropped when the
+  owner asked for the late-90s look ("se i pulsanti esistevano creamoli").
 - **Dates are absolute and stop at 1999.** The web on the father's PC is frozen in 1999
   (the timeline is in GDD §2b): no date after 1999, and no relative timestamps like
   "today, 9:05 PM" or "yesterday". Prose may still say "yesterday" inside a dated
@@ -35,28 +42,46 @@ CRT: `tests/siti_check.tscn -- it <site>/<page> ...`.
   dollars, Italian pages lire.
 - **Nothing shaped like a key** (a digit, a dash and four letters/digits). NIENTE_CHIAVI_FINTE.
 
-## Ordinary sites (18)
+## Style: every site looks like itself (owner, 2026-10-23)
 
-| id | Site (EN / IT) | Pages | Notes |
-|---|---|---|---|
-| forum | RetroForum | 14 | computer message board: sections, long threads, members, rules |
-| shop | BuyItAll / CompraTutto | 9 | mail-order shop; online orders suspended |
-| news | NewsToday / NotizieOggi | 11 | news portal, 31/03/1999 edition, six articles |
-| meteo | WeatherNow / MeteoNow | 6 | forecasts, cities, satellite (offline), seasonal, glossary |
-| giochi | PlayWeb / GiocaWeb | 7 | shareware, chart, cheats, reviews; downloads closed |
-| mail | WebNet WebMail | 6 | login closed during the move; service news, help, terms |
-| blog | ~jack99 | 7 | a happy sixteen-year-old: friends, band, school trip, a full guestbook |
-| biblioteca | Millbrook Public Library / Biblioteca Civica di San Vito | 7 | hours, new books, events, card catalogue |
-| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 8 | recipes, readers' letters |
-| calcio | Griffins Fan Club / Fan Club Grifoni | 7 | results, squad, away trips, notice board |
-| tv | CouchGuide / TeleGuida | 6 | listings, films, series, letters |
-| musica | MidiMania / MidiWorld | 6 | MIDI archive (downloads suspended), invented lyrics, chart |
-| viaggi | Sun & Sea Travel / Viaggi Sole e Mare | 7 | offers, destinations; online booking closed |
-| comune | Town of Millbrook / Comune di San Vito al Lago | 7 | offices, notices, events, certificates, waste collection |
-| scuola | Millbrook High / Liceo G. Galilei | 7 | circulars, trips, computer room, school paper |
-| driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ |
-| animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers |
-| oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters |
+Until 2026-10-23 almost every site was the same skeleton (coloured banner table, light
+nav-bar table, Arial text, centred footer) in different colours. The column **Style** gives
+each site its own period archetype (the shapes are described in
+[WEB_AUTHORING.md](WEB_AUTHORING.md) "Style templates"): no two sites share a skeleton. The
+six sites were restyled first with the new tools (GIFs, tiled backgrounds, side
+bars, serif and Comic fonts, marquee/blink, MIDI); on 2026-10-24 the other twenty that still
+shared the old skeleton followed (the ordinary ones by the web-writer agent, the lore ones in
+the main chat, texts untouched). **Every site now has its own look**; the Style column is the
+reference when a site is rewritten. A restyle keeps the texts, the pages and every rule below.
+
+## Ordinary sites (24)
+
+| id | Site (EN / IT) | Pages | Notes | Style |
+|---|---|---|---|---|
+| forum | RetroForum | 14 | computer message board: sections, long threads, members, rules | UBB message board: grey bevelled tables, avatars, quotes |
+| shop | BuyItAll / CompraTutto | 9 | mail-order shop; online orders suspended | mail-order catalogue: price-tag grid, star bursts, product pictures |
+| news | NewsToday / NotizieOggi | 11 | news portal, 31/03/1999 edition, six articles | news portal in three columns: sections, headlines, a right-hand box of quick news |
+| meteo | WeatherNow / MeteoNow | 6 | forecasts, cities, satellite (offline), seasonal, glossary | teletext page: black, blocky cyan/yellow/green Courier, page numbers |
+| giochi | PlayWeb / GiocaWeb | 7 | shareware, chart, cheats, reviews; downloads closed | game zone: black, neon grid tile, flames, scrolling chart |
+| mail | WebNet WebMail | 6 | login closed during the move; service news, help, terms | web application: grey Win95 boxes, no pictures |
+| blog | ~jack99 | 7 | a happy sixteen-year-old: friends, band, school trip, a full guestbook | GeoCities teen page: tiled sky, Comic, GIFs, counter, MIDI, marquee |
+| biblioteca | Millbrook Public Library / Biblioteca Civica di San Vito | 7 | hours, new books, events, card catalogue | card catalogue: parchment tile, Times, typed index cards |
+| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 8 | recipes, readers' letters | grandma: narrow card on gingham, Times + Comic, clip-art, waltz |
+| calcio | Griffins Fan Club / Fan Club Grifoni | 7 | results, squad, away trips, notice board | loud fan club: flames, blink, results marquee, anthem player |
+| tv | CouchGuide / TeleGuida | 6 | listings, films, series, letters | TV guide: time-slot grid, coloured channel columns |
+| musica | MidiMania / MidiWorld | 6 | MIDI archive (downloads suspended), invented lyrics, chart | MIDI archive: Courier file lists, embedded players |
+| viaggi | Sun & Sea Travel / Viaggi Sole e Mare | 7 | offers, destinations; online booking closed | travel brochure: postcards, big pictures, sky colours |
+| comune | Town of Millbrook / Comune di San Vito al Lago | 7 | offices, notices, events, certificates, waste collection | bare 1995 institutional page: grey, Times, lists, no tables |
+| scuola | Millbrook High / Liceo G. Galilei | 7 | circulars, trips, computer room, school paper | student-made: notice board, typewriter Courier |
+| driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ | tech portal: dark left side-bar, badges, mono tables |
+| animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers | charity notice board: a two-column grid of animal cards, paw prints |
+| oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters | splash page + mystical pages: night tile, serif gold, ambient MIDI |
+| anime | Hikari's Shrine / Il Santuario di Hikari | 7 | fan shrine of a thirteen-year-old for the invented cartoon Pixie Pilot Hikari: episode guide, characters, fan art described, awards, web ring (dead links), guestbook form | fan shrine: pink polka-dot tile, Comic, a row of button links, star GIFs, counter, 88x31 badges |
+| prof | Walter H. Brandt / Prof. Aldo Brandi | 6 | a numerical analysis professor: courses and exam dates, lecture notes in `<pre>`, publications, theses, office hours | bare academic page: white, Times, h1, ul, hr, no pictures, no tables |
+| band | Concrete Swans / Cigni di Cemento | 7 | local garage band: news, tour dates 1998-99 in local venues, discography, lyrics, members, MIDI riff, mailing-list and guestbook forms | band site: black, red Arial caps, lightning GIFs, dark date tables |
+| hosting | HomePlot / Pagine di Casa | 7 | free home-page provider: six neighbourhoods, member directory (dead addresses), sign-up form to a cgi script, tips, FAQ, rules | GeoCities-like provider: blue/yellow banner, coloured tab row, cream side column, banner-ad cell |
+| y2k | The Year 2000 Problem / Il problema del 2000 | 7 | an anxious amateur's millennium-bug guide as of 03/31/1999: checklist, appliance compliance table, money, supplies, readers' letters (never writes the date 2000 in slash form) | hazard page: black/yellow stripes, red blinking warnings, Times, countdown bar |
+| radio | The Shack of W3MBK / Il Radiopiano di I2SVL | 7 | ham radio hobby: band tables, logbook in Courier, QSL cards described, dipole build notes, club notices, CB channels | radio shack: olive green, gold headings, Courier tables, amber log on black, antenna GIFs |
 
 The ordinary sites share one invented world: the town of **Millbrook / San Vito al
 Lago** (library, town hall, school, shelter, football club, PC repair), the WebNet
@@ -64,28 +89,48 @@ provider, the same weeks of March 1999. They cross-reference each other in their
 (jack99's school trip is the school's fourth-year trip; his dog came from the shelter),
 never with links.
 
-## Lore sites (12)
+## Lore sites (16)
 
-The catalog's `voce` says whose story a site tells (`padre`, `ragazzo`, `maledizione`):
-every run has at least one about the father and one about the young man.
+The catalog's `voce` says whose story a site tells (`padre`, `ragazzo`, `maledizione`,
+`altri`): every run has at least one about the father and one about the young man.
 
-| id | Site (EN / IT) | Voice | Pages | Content |
-|---|---|---|---|---|
-| balena | ~whale52 / ~balena52 | young man | 7 | his personal page: about, the 52 Hz whale, dead links, night thoughts, the empty guestbook, the last update |
-| annunci | FreeAds Board / AnnunciGratis | young man | 8 | looks ordinary; the lonely hearts archive with his ad, the same every month, then expired; an answer that came too late |
-| chat | ChatPoint | young man | 8 | rooms closed; the archive: he says hello and nobody answers, the room empties, the last night alone |
-| lavoro | JobFinder / CercoLavoro | young man | 8 | job offers and advice; in the forum his questions get brisk answers |
-| vincente | The Winner Method / Il Metodo Vincente | young man | 7 | the mail-order "method" (the company has closed); his thread in the customer area |
-| ascolto | Someone Listens / Qualcuno Ascolta | young man | 6 | a listening line left without volunteers; his messages, unanswered |
-| cronaca | The County Herald / La Gazzetta della Provincia | father | 8 | the newspaper archive: the tragedy, the follow-up, ordinary local news |
-| genitori | The Kitchen Table / Il Tavolo di Cucina | father | 9 | a parents' forum; the father's posts slipping, the last one to his boys |
-| tecnico | PC Doctor at Home / Il Dottore del PC | father | 6 | a technician's job notes from the father's house; the notice afterwards |
-| misteri | Hidden Truths / Verita' Nascoste | curse | 7 | reports of computers that watch, objects that pass something on, the whale; the webmaster's last update |
-| mercatino | Used PC Market / Mercatino PC | curse | 8 | ordinary ads, and one beige 486 sold again and again, with "don't buy it" |
-| nessuno | nobody / nessuno | curse | 8 | the page that should not exist: the curse speaking to whoever is at the PC now |
+**The young man is not the protagonist** (owner, 2026-10-23: he "almost becomes a main
+character", with more appearances than the father). He has **one site of his own** (`treno`)
+and appears in **at most two others**: the chat and the lonely hearts ads. The sites that
+used to carry his threads (`lavoro`, `vincente`, `ascolto`) now tell the stories of OTHER
+people (voice `altri`), and none of them repeats a detail of his life (night warehouse, the
+twelve windows, the girl at the bar).
+
+**His nickname is `~missedtrain / ~trenoperso`** (owner, 2026-10-23). It used to be
+`~whale52 / ~balena52`, the same animal as the OS logo, which the owner did not like. The
+**52 Hz whale stays the CURSE's emblem** (death screen line, secret-folder glitch, the disk
+files 52HZ.TXT and whale.txt, `misteri/whale`, `nessuno/whale`): only the young man lost it.
+His symbol is the 23:52 regional train that no longer stops at the closed station behind
+his building (the station clock stopped at ten past six); "the train only comes once" is
+what people told him.
+
+| id | Site (EN / IT) | Voice | Pages | Content | Style |
+|---|---|---|---|---|---|
+| treno | ~missedtrain / ~trenoperso | young man | 7 | his personal page: about, the 23:52 train that does not stop, dead links, night thoughts, the empty guestbook, the last update | dark personal page: ASCII art, night blue |
+| annunci | FreeAds Board / AnnunciGratis | young man | 8 | looks ordinary; the lonely hearts archive with his ad, the same every month, then expired; an answer that came too late | classifieds: dense small type on newsprint yellow |
+| chat | ChatPoint | young man | 8 | rooms closed; the archive: he says hello and nobody answers, the room empties, the last night alone | chat client: room list side-bar, Courier logs |
+| lavoro | JobFinder / CercoLavoro | others | 8 | job offers and advice; in the forum a night security guard's questions get brisk answers | corporate job portal: navy, Times headings |
+| vincente | The Winner Method / Il Metodo Vincente | others | 7 | the mail-order "method" (the company has closed); a 33-year-old surveyor's thirty days in the customer area | sales letter: one long page, red headlines, yellow highlights, blinking |
+| ascolto | Someone Listens / Qualcuno Ascolta | others | 6 | a listening line left without volunteers; a night baker's messages, unanswered | helpline: calm, plain centred text, almost no ornament |
+| cronaca | The County Herald / La Gazzetta della Provincia | father | 8 | the newspaper archive: the tragedy, the follow-up, ordinary local news | newspaper: Times masthead, date line, serif columns |
+| genitori | The Kitchen Table / Il Tavolo di Cucina | father | 9 | a parents' forum; the father's posts slipping, the last one to his boys | homely forum: cream, Georgia, little clip-art |
+| tecnico | PC Doctor at Home / Il Dottore del PC | father | 6 | a technician's job notes from the father's house; the notice afterwards | plain text notes: Courier, like a .txt put online |
+| misteri | Hidden Truths / Verita' Nascoste | curse | 7 | reports of computers that watch, objects that pass something on, the whale; the webmaster's last update | conspiracy page: black, green, eyes, blink |
+| mercatino | Used PC Market / Mercatino PC | curse | 8 | ordinary ads, and one beige 486 sold again and again, with "don't buy it" | flea market: ad table with pictures, beige |
+| nessuno | nobody / nessuno | curse | 8 | the page that should not exist: the curse speaking to whoever is at the PC now | the page that should not exist: almost empty, dark |
+| brutti | The Ugly Guys' Board / Il Forum dei Brutti | others | 8 | a 1997 board where men ask to be told "the truth" about their looks; the long words (hypergamy, genetic determinism, the 80/20) are used, never explained (owner, 2026-10-23: no glossaries, no definitions); one member leaves for a dancing class; on 21/11/1998 at 23:52:00 a "guest" posts with the words of the young man's page | WWWBoard: white, Times, threaded message list |
+| volto | The Measure of the Face / La Misura del Volto | others | 6 | an amateur "essay" that measures faces with a ruler and turns the score into a sentence; readers' scores; reader 52 sent a photograph of a man on a station bench with a white space for a face (postmark: June) | treatise: numbered sections, figure, ratio tables |
+| numeri | Numbers Don't Lie / I Numeri Non Mentono | others | 6 | the board's "Professor": invented statistics presented as truth, a survey of the members, and his field notebook, which in January 1999 records a train where there is no railway | print-out: Courier on pale paper, ASCII bar charts |
+| diario | Days Without / Giorni Senza | curse | 6 | a forty-year-old teacher counts the days since he turned eighteen; letters never posted; the last update (29/03/1999, 23:52) is not for the readers of 1999 but for whoever reads it now, in a new house, alone tonight | sepia diary: dark brown, Georgia, a narrow column, a counter |
 
 **Timeline the lore sites agree on:** the young man's traces run from October 1997 (his
-page) to June 1998 (the last chat log); the father's from February to the night of
+page) to June 1998 (the last chat log); after that only echoes of him, never signed (the
+board's guest post and the face site's envelope, both on 21/11/1998; 23:52 recurs); the father's from February to the night of
 Tuesday 30/03/1999 (the forum); the newspaper and the technician write after it, in
 1999. **Lore choice to confirm with the owner:** `mercatino` and `nessuno` show the same
 old PC passing through several owners between the young man's flat and the father's

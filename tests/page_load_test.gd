@@ -137,12 +137,12 @@ func _ready() -> void:
 			"%.2f s: praticamente istantaneo" % durata)
 	var durate: Array = []
 	for i in range(4):
-		var d := await _carica_e_cronometra("balena/index")
+		var d := await _carica_e_cronometra("treno/index")
 		durate.append(snappedf(d, 0.01))
 	var diverse: Dictionary = {}
 	for d in durate:
 		diverse[d] = true
-	print("   quattro aperture di balena: %s" % str(durate))
+	print("   quattro aperture di treno: %s" % str(durate))
 	_check("ATTESA_CASUALE", diverse.size() >= 2,
 			"sempre la stessa durata: %s" % str(durate))
 

@@ -10,8 +10,77 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 
 - Dev test scripts (run with -s or as scene, see WEB_AUTHORING.md):
 
+- web_moduli_test.tscn/.gd (2026-10-24, headless: the browser's forms. Typing, Backspace, ESC,
+  checkbox, exclusive radios, drop-down, submit to a cgi -> 500 page with the query in the address
+  bar, Enter submits to a page of the site, reset, status bar on link hover and back, vlink colour).
+  2026-10-25: the drop-down opens after a couple of frames (the browser first looks for the select
+  box), so the test WAITS (up to 20 frames) for `_tend_panel.visible` before reading the items.
+  TENDINA_APERTA (2 items), TENDINA_VOCE_ACCESA (the first item, the chosen one, has the navy
+  `Win95.C_TITLE_TEXT` font colour when it opens) and TENDINA_SCELTA run headless;
+  TENDINA_SOTTO_LA_CASELLA (list at the box's left/bottom, same width) runs ONLY when windowed
+  (`DisplayServer.get_name() != "headless"`: headless draws nothing, `rettangolo_di` returns Rect2()
+  and the real proof is in browser_click_test section 9).
+- html_bb_test.gd 2026-10-24 additions: forms (moduli_ctx, input_valore, input_password, checkbox,
+  radio, select, textarea, button, reset, hidden), text tags (pre_spazi, tt, strike, small, address),
+  vlink_visto / vlink_non_visto. pause_test and rinomina_test still pass.
+- html_bb_test.gd 2026-10-25 additions, the real-life controls: pulsante_menu (a `type=button`
+  with `onclick="location.href='index.html'"` compiles to a link to that address),
+  campo_vuoto_cliccabile (an empty field's line ends with a 19 px high transparent spacer followed by
+  a newline, so the whole box answers the click), campo_misura_fissa (60 `x` in a `size=10` field: the 60-`x` string does not appear
+  whole in the output, the text is cut to the box), campo_font_suo (a field inside `<font face=Times><b>` still has
+  `[font_size=14]`), textarea_tre_righe (`rows=3` draws three 19 px lines).
+- html_bb_test.gd 2026-10-25 changes (cursor/crisp text/margins pass): pulsante_menu now expects the
+  meta `__vai:index.html` (button menus are `__vai:` links); the expectations of campo_vuoto_cliccabile,
+  input_valore (the caret is `ciao[blink]|[/blink]`), select and textarea follow the new box (3 px
+  spacer first, `spacer.png[/img]Due[img`); face_serif expects `Win95.percorso_font_pagina("serif")`
+  (the crisp font's path, not the plain file); marquee_v expects ` v=35 dir=l mode=s n=` (the char
+  count). The key-injection invariant (`_invariante`) now strips EMPTY pairs of FORMAT tags before
+  comparing (`_senza_vuoti`: color, font_size, font, bgcolor, b, i, u, s, center, left, right, code,
+  blink), because the new vertical margins (`HtmlBB._spazio`) add or drop such pairs depending on what
+  precedes; an empty `[cell][/cell]` or a table still counts, so a lost cell is still caught.
+- html_bb_test.gd 2026-10-25 (later, buttons as drawn push buttons): input_submit, button and
+  pulsante_menu no longer expect a table with a text label. input_submit expects
+  `[url=__invia:0][img]` + `HtmlBB.tex_pulsante("Vai", false)` + `[/img][/url]`; button
+  (`<button type=submit><b>Entra</b></button>`) expects `[url=__invia:0][img]` +
+  `HtmlBB.tex_pulsante("Entra", false)` (the markup inside is dropped, only the text counts);
+  pulsante_menu expects `[url=__vai:index.html][img]`. New pulsante_premuto_registrato: the "_giu"
+  path returned by `HtmlBB.tex_pulsante("Vai", true)` loads a texture (`load(...) != null`), i.e. the
+  pressed image really is registered on its virtual path. Headless (the button is drawn without a
+  window).
 - html_bb_test.gd (compiler unit test + the per-page census of
-  hiding spots, over EVERY language folder, headless),
+  hiding spots, over EVERY language folder, headless). 2026-10-23, check "nbsp":
+  `a&nbsp;&nbsp;&nbsp;b  c` compiles to `a   b c` (&nbsp; survives the whitespace
+  collapsing). 2026-10-23, section
+  _prova_varieta: the gif path, font families + the bold/italic FILES, <td width>
+  px and %, a nested table's width relative to its cell, bordercolor, marquee
+  (incl. the in-cell and too-long static fallback), blink, bgsound/embed in ctx and
+  the player links, anchors never inside moving text, tiled-background textures,
+  2026-10-24, narrow tables: stretta_centrata (a 500 px centred table in a 904 page gets
+  3 columns with a 200 px filler), stretta_niente_center (no [center] is emitted),
+  stretta_sinistra / stretta_sinistra_resto (50% left-aligned: 2 columns, 398 px filler),
+  piena_non_stretta (a 100% table is NOT wrapped), hr_in_cella (an `<hr>` in a 400 px cell
+  with padding 0 is `width=396`); the expected widths of the other table checks were updated
+  for CELLA_EXTRA = 4,
+
+- gif_test.gd (-s, headless, 2026-10-23: every web/img/*.gif decodes; frame
+  counts and delays, colours, transparency, disposal 2/3, the textures
+  (animated vs single frame), broken files rejected, interlace. Sabotaged:
+  LZW code-size growth broken - red),
+
+- midi_test.gd (-s, headless, 2026-10-23: a hand-built SMF with a tempo change,
+  running status and drums; the real melodies of web/audio parse; the render is
+  not silent, stays limited and ends in a silent tail; the stream loops and
+  the cache answers. Sabotaged: tempo changes ignored - red),
+
+- web_media_test.tscn/.gd (headless, 2026-10-23, the real BrowserApp: <bgsound>
+  starts only when the load ENDS and loops; navigating stops it; <embed
+  autostart=false> stays mute, its play/stop links work and do not navigate (2026-10-25,
+  EMBED_LETTORE: the compiled page holds the drawn player, `[url=__audio:play][img]` and
+  `[url=__audio:stop][img]`); the
+  tiled background shows, scrolls with the page and is removed on the next
+  page; marquee/blink leave no printed tags. Section 6 (PC audio): the music plays on
+  bus "PC"; inside the PC the sound is clean; in the room it is muffled, with echo and
+  quieter; monitor on the right -> pan right; back turned -> darker and quieter),
 
 - disco_casuale_test.tscn/.gd (the RANDOM disk, headless, and the
   guard for whoever edits the catalog: every entry translated in
@@ -83,18 +152,52 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   subpages and ~user pages resolve, a relative link stays in its site,
   and a site not in the run does not answer. Plus the owner's rules of
   2026-10-20: SITI_CHIUSI (no link to another site of the catalog),
-  NIENTE_CONTROLLI (no input/form/select/textarea/button),
+  MODULI_NEL_SITO (check 8; was NIENTE_CONTROLLI until 2026-10-24: a form's action must be empty,
+  a page of the site or a script of its own server, never http/www/mailto),
   NIENTE_DATE_RELATIVE and NIENTE_DATE_DOPO_1999, and DEBUG_TUTTI_I_SITI
   (the F12 switch opens every site, keeps the keys where they were,
-  and closes them again). Sabotaged: a relative link leaving its site,
+  and closes them again). 2026-10-23, check 10 MEDIA_ESISTONO: every file
+  referenced by an <img>, <embed>, <bgsound> or <body background> must exist
+  (MEDIA_ROTTI is the list of INTENDED broken images, empty today). Sabotaged: a relative link leaving its site,
   the pick without the lore rule, a complete site with 2 pages, a date
   in 2000, the debug switch ignored - all red; the three rules went red
-  on the real defects before they were fixed),
+  on the real defects before they were fixed). 2026-10-25: SITI_CHIUSI also reads the targets of
+  button menus (`onclick="location.href='x.html'"`),
+
+- siti_audit_test.tscn/.gd (2026-10-25, headless, SLOW: ~13 minutes, its own timeout LIMITE =
+  1500 s; owner asked for "test accurati" to find the problems of the sites and components. For
+  every language (en, it) it rebuilds the web with `debug_tutti_i_siti` on, and opens EVERY page of
+  EVERY site of the catalog in the REAL BrowserApp at the in-game window size (820x560 host in a
+  1440x1080 SubViewport, `attesa_scala = 0`), using it as the player would. Checks, each printed as
+  `PASS/FAIL name (N verifiche, M problemi)` with the first 25 problems and the page:
+  APRE (the page opens: not the 404, not "server not found"); LARGHEZZA (the content is at most
+  `_page_width() + PageView.PAD` wide, so nothing ends under the scrollbar strip); RESIDUI (the
+  visible text contains no HTML tag, BBCode tag or `&entity;`, except text deliberately written as
+  `&lt;..&gt;` / `&amp;..` in the source: chat nicks, the provider's HTML lesson); IMMAGINI (no
+  `_rotta_.imgtex` placeholder in the page: no broken `src=`); LINK (every `[url]` that is not an
+  internal `__` meta leads to a page that exists, the portal, an address listed in the site's
+  `morti`, or a site's deliberate `.../removed` page); CAMPI (for every text/password/textarea:
+  activating, typing a little, typing a lot (90 characters), pressing Enter 12 times in a textarea,
+  clearing and leaving the field never change the content size of the page by more than 1 px);
+  SPUNTE (ticking a checkbox/radio and choosing each option of a select never change the size);
+  INVIO (every form, sent from a freshly opened page, lands on the 500 page or on a page of its own
+  site); MENU (every button menu found in the source opens exactly the page its link resolves to).
+  Prints `RISULTATO: PASS` or `FAIL -> N problemi`. Run it when the browser, the compiler or any
+  page changes in a way that can move widths; not on every change (13 min). Run it through
+  godot-tester with a long timeout. Sabotages: not recorded here, none was run for this entry
+  when it was written),
 
 - siti_check.tscn/.gd (dev tool, WINDOWED: the real browser in the real
   room through the CRT, maximized, on the sample pages or the ones
   after "--" (first the language: "-- en forum/index") ->
-  user://sito_<site>_<page>.png, to judge a site by eye),
+  user://sito_<site>_<page>.png, to judge a site by eye. 2026-10-25: a page argument ending
+  with "!" ("forum/index!") is also photographed with its source open in Notepad ("Origine")
+  -> user://sorgente_<site>_<page>.png),
+
+- vassoio_check.tscn/.gd (dev tool, WINDOWED: the taskbar tray with the
+  volume popup open, then muted -> user://vassoio_volume.png and
+  user://vassoio_muto.png, the bottom-right corner at 2x, to judge by eye
+  that nothing overflows and that slider/checkbox match the Win95 theme),
 
 - web_locale_test.tscn/.gd (the game in every language: every page
   must EXIST in that language - read_page's fallback to "en" would
@@ -115,7 +218,20 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   space inside the page and inside a TABLE must give the arrow;
   glyph points are found by LOCAL CONTRAST, not by differing from the
   page background, or a point on a coloured cell would pass as "text"
-  and the cursor checks would be fake, windowed),
+  and the cursor checks would be fake, windowed). 2026-10-25: `_forma_dopo_hover` now asks
+  `PageView.cursore_a` (the game's path: `OSDesktop.cursor_shape_at`), not the bare RichTextLabel,
+  which puts the hand on every link; the safety timeout is 150 s. New section 9 (`_prova_moduli`)
+  loads a small form (a text field, a 3-option select, a submit button) and finds each control's box
+  with `PageView.rettangolo_di`: CURSORE_CAMPO (I-beam on the field), CURSORE_CAMPO_BORDO (I-beam 3 px
+  from the field's left edge), CURSORE_TENDINA (arrow) and CURSORE_PULSANTE (CORRECTED later the same
+  day: the HAND, it was the arrow; the submit button is a button now), PULSANTE_SI_ABBASSA (new: after
+  the hover has let the page find the button's rect, a left press on the button's centre makes
+  `PageView.pulsante_premuto()` true, and the release away from it - 40 px to the left - makes it
+  false; fails if either half is wrong), CAMPO_CLIC_BORDO (a click
+  3 px from the left edge activates the field), TENDINA_SOTTO_LA_CASELLA (the open list sits at the
+  box's left and bottom, within 2 px, and is as wide as the box), TENDINA_SCEGLIE (clicking the
+  second item sets the value `b` and closes the list). If the controls cannot be found it prints
+  FAIL MODULI_TROVATI. Sabotages: none recorded when this was written,
 
 - photo_key_test.tscn/.gd (the photo key: per-photo census with
   the findability FLOOR vs the invisibility CEILING and whether the
@@ -289,7 +405,9 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   never below the minimum, and past that the spinner appears and
   scrolls them - plus, at every count, the shown buttons must fit
   INSIDE the bar, which is the "they run off the screen" half of
-  the report),
+  the report). Section 6 (_prova_volume, 2026-10-23): the tray speaker icon exists,
+  its popup opens above the taskbar, Mute really mutes bus "PC" and swaps the icon to
+  "speaker_muto", the slider sets the volume, a click outside closes the popup),
 
 - finestre_contorno_test.tscn/.gd (WINDOWED - it reads pixels.
   The Win95 DRAG OUTLINE: while the bottom edge is being pulled the
@@ -428,7 +546,30 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   left click first; and with two windows visible, a right click on
   the inactive one must activate it AND open its menu in one go),
 
-- browser_e2e.tscn/.gd (real browser + real pages + key, windowed).
+- browser_e2e.tscn/.gd (real browser + real pages + key, windowed). 2026-10-25, VIEW SOURCE: the
+  browser's `os` is a `FintoOS` (a Control with only `open_app`, which really launches a
+  `NotepadApp` and records what was opened). New checks: SORGENTE_NEL_BLOCCO_NOTE (exactly one
+  "notepad" opened, file name `index[1].htm`, the Notepad's text == the served `_html_text`),
+  SORGENTE_FONT_FISSO (the Notepad text font is `Win95.font_pagina("mono_b")`, a FontFile with
+  antialiasing NONE), SORGENTE_NON_DURANTE_IL_CARICAMENTO (with `attesa_scala = 1.0` and the
+  page still loading, pressing "Origine" opens nothing). SORGENTE_MOSTRA_CHIAVE and
+  SORGENTE_MOSTRA_<tipo>_<seed> (the key shows in the source) now read the text of the Notepad
+  that was opened. The old checks on the in-browser inspector's snapshots were dropped with the
+  inspector. Sabotages: not recorded, none was run for these entries when they were written.
+  Earlier, 2026-10-25: its address check
+  accepts `.edu` domains too (TLD list it, com, net, org, edu), since the new `prof` site is at www.lakeland.edu/~wbrandt. 2026-10-23: the site
+  balena became treno (check TRENO, was the balena one: treno/thoughts and treno/update).
+  The same rename in browser_chrome_test (treno/index), page_load_test (four openings of
+  treno/index), siti_catalogo_test (the address cases `www.webnet.it/~trenoperso...`) and
+  the siti_check sample pages.
+  2026-10-24: its banner check now loads the FIXED fixture tests/pagine_prova/tabelle.html.
+  FIXTURES FOLDER tests/pagine_prova/: tabelle.html (the old forum index: tables, links,
+  coloured rows) and paragrafi.html (the old newspaper article: plain paragraphs on a light
+  background). WHY: browser_click_test and browser_e2e find click points by pixel colour; a
+  restyled live site broke them without any browser bug, so they must not read live sites.
+  browser_click_test uses TABELLE / PARAGRAFI, picks the link point at the CENTRE of the longest
+  blue run, and its _reset waits (attendi_caricamento) for any loading started by a previous
+  link click, or the loading veil swallowed the next click.
   NOTE for browser_click_test: finding "a point on a glyph" from
   the pixels is where this test kept breaking when the chrome grew,
   and each fix is a different trap. It locates a glyph by LOCAL

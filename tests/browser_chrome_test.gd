@@ -139,7 +139,7 @@ func _prova_preferiti() -> void:
 	_check("SITI_DEL_RUN", siti.size() > 0, "WebRuntime non elenca nessun sito")
 
 	# serve comunque una navigazione per le prove sulla cronologia qui sotto
-	_app._go("balena/index")
+	_app._go("treno/index")
 	await _app.attendi_caricamento()
 	await get_tree().process_frame
 

@@ -22,10 +22,13 @@ extends Node
 #   7 i siti sono CHIUSI in se stessi (proprietario, 20/10/2026: "non mi piace che un sito ti
 #     porta su un altro sito"): un link porta a una pagina dello STESSO sito, al portale
 #     WebNet o a un indirizzo MORTO del catalogo (una pagina sparita: "server non trovato");
-#   8 nessun campo o pulsante (<input>, <form>, <select>, <textarea>, <button>): il browser
-#     non li sa usare, quindi un accesso, una ricerca, un carrello si scrivono CHIUSI;
+#   8 i MODULI restano nel sito: l'action di un <form> e' la pagina stessa, una pagina del
+#     sito o uno script del suo server, mai un altro sito (dal 24/10/2026 i moduli ci sono);
 #   9 le DATE: il web del PC e' fermo al 1999 (proprietario: la tragedia e' nella primavera
-#     1999) -- nessuna data dopo il 1999 e niente orari relativi ("oggi, 21:05").
+#     1999) -- nessuna data dopo il 1999 e niente orari relativi ("oggi, 21:05");
+#  10 ogni IMMAGINE, sfondo e MUSICA che una pagina cita esiste (web/img/, web/audio/): un
+#     file sbagliato diventerebbe un'immagine rotta o una pagina muta senza che nessuno se
+#     ne accorga. Un'immagine rotta VOLUTA va elencata in MEDIA_ROTTI.
 #
 # Va eseguito come SCENA (serve l'autoload GameManager). Headless va bene.
 #   & $godot --headless --path $proj res://tests/siti_catalogo_test.tscn
@@ -33,6 +36,8 @@ extends Node
 
 const LINGUE := ["en", "it"]
 const PAGINE := "res://web/pages/"
+# immagini che una pagina mostra rotte APPOSTA (nessuna, per ora)
+const MEDIA_ROTTI: Array = []
 
 var _fails: Array = []
 var _chiave_re := RegEx.new()
@@ -56,6 +61,7 @@ func _ready() -> void:
 	_prova_chiusi()
 	_prova_controlli()
 	_prova_date()
+	_prova_media()
 	_prova_debug_tutti()
 
 	GameManager.set_lingua(lingua_prima, false)
@@ -186,8 +192,8 @@ func _ids(siti: Array) -> Array:
 
 func _prova_indirizzi() -> void:
 	var casi := {
-		"http://www.webnet.it/~balena52/thoughts.html": "balena/thoughts",
-		"www.webnet.it/~balena52": "balena/index",
+		"http://www.webnet.it/~trenoperso/thoughts.html": "treno/thoughts",
+		"www.webnet.it/~trenoperso": "treno/index",
 		"www.gazzettadellaprovincia.it/tragedia.html": "cronaca/tragedia",
 		"www.webnet.it": WebRuntime.HOME,
 		"http://www.retroforum.com/rules.html": "forum/rules",
@@ -202,8 +208,8 @@ func _prova_indirizzi() -> void:
 
 	var link := [
 		["rules.html", "forum/index", "forum/rules"],
-		["index.html", "balena/thoughts", "balena/index"],
-		["http://www.retroforum.it", "balena/links", "forum/index"],
+		["index.html", "treno/thoughts", "treno/index"],
+		["http://www.retroforum.it", "treno/links", "forum/index"],
 		["http://www.webnet.it", "forum/rules", WebRuntime.HOME],
 	]
 	var rotti: Array = []
@@ -229,7 +235,8 @@ func _prova_indirizzi() -> void:
 
 func _prova_chiusi() -> void:
 	var href_re := RegEx.new()
-	href_re.compile("href\\s*=\\s*\"([^\"]*)\"")
+	# anche i pulsanti-menu: onclick="location.href='x.html'" e' un link come gli altri
+	href_re.compile("(?:href\\s*=\\s*\"|location(?:\\.href)?\\s*=\\s*')([^\"']*)")
 	var fuori: Array = []
 	for l in LINGUE:
 		for pagina in _tutte_le_pagine():
@@ -246,18 +253,24 @@ func _prova_chiusi() -> void:
 					fuori.append("%s/%s -> %s" % [l, pagina, h])
 	_check("SITI_CHIUSI", fuori.is_empty(), "link verso un altro sito: %s" % ", ".join(fuori.slice(0, 8)))
 
-# ---------- 8: niente controlli ----------
+# ---------- 8: i moduli restano nel sito ----------
+# Dal 24/10/2026 i moduli ci sono e funzionano (proprietario: "se i pulsanti esistevano
+# creamoli"; prima erano vietati perche' il browser non li sapeva usare). Un modulo, come un
+# link, resta CHIUSO NEL SITO: la sua action e' vuota (la pagina stessa), una pagina del sito
+# o uno script del suo server (/cgi-bin/..., un .pl, .cgi, .asp: risponde l'errore 500
+# d'epoca), mai l'indirizzo di un altro sito.
 
 func _prova_controlli() -> void:
 	var re := RegEx.new()
-	re.compile("(?i)<(input|form|select|textarea|button)\\b")
-	var con: Array = []
+	re.compile("(?i)<form\\b[^>]*>")
+	var fuori: Array = []
 	for l in LINGUE:
 		for pagina in _tutte_le_pagine():
-			var m := re.search(_leggi("%s%s/%s.html" % [PAGINE, l, pagina]))
-			if m != null:
-				con.append("%s/%s <%s>" % [l, pagina, m.get_string(1)])
-	_check("NIENTE_CONTROLLI", con.is_empty(), "campi o pulsanti: %s" % ", ".join(con.slice(0, 8)))
+			for m in re.search_all(_leggi("%s%s/%s.html" % [PAGINE, l, pagina])):
+				var azione := HtmlBB._attr(m.get_string(), "action").strip_edges().to_lower()
+				if azione.begins_with("http") or azione.begins_with("www.") or azione.begins_with("mailto:"):
+					fuori.append("%s/%s action=%s" % [l, pagina, azione])
+	_check("MODULI_NEL_SITO", fuori.is_empty(), "moduli che escono dal sito: %s" % ", ".join(fuori.slice(0, 8)))
 
 # ---------- 9: le date ----------
 
@@ -281,6 +294,26 @@ func _prova_date() -> void:
 					dopo.append("%s/%s '%s'" % [l, pagina, a.get_string()])
 	_check("NIENTE_DATE_RELATIVE", relative.is_empty(), ", ".join(relative.slice(0, 8)))
 	_check("NIENTE_DATE_DOPO_1999", dopo.is_empty(), ", ".join(dopo.slice(0, 8)))
+
+# ---------- 10: immagini, sfondi e musica ----------
+
+func _prova_media() -> void:
+	var re := RegEx.new()
+	re.compile("(?i)<(img|embed|bgsound|body)\\b[^>]*?\\b(src|background)\\s*=\\s*\"([^\"]*)\"")
+	var mancano: Array = []
+	var quanti := 0
+	for l in LINGUE:
+		for pagina in _tutte_le_pagine():
+			for m in re.search_all(_leggi("%s%s/%s.html" % [PAGINE, l, pagina])):
+				var src := m.get_string(3)
+				if MEDIA_ROTTI.has(src):
+					continue
+				quanti += 1
+				var tag := m.get_string(1).to_lower()
+				var c := HtmlBB.audio_path(src) if tag == "embed" or tag == "bgsound" 						else HtmlBB.img_path(src)
+				if c == "" or c.find("_rotta_") >= 0:
+					mancano.append("%s/%s %s" % [l, pagina, src])
+	_check("MEDIA_ESISTONO", mancano.is_empty(), "%d citati, mancano: %s" % [quanti, ", ".join(mancano.slice(0, 8))])
 
 # ---------- il debug "tutti i siti" (pannello F12) ----------
 

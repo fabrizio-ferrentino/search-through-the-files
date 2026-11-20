@@ -56,6 +56,10 @@ UI_NO,No,No
 SHELL_START,Start,Avvio
 SHELL_EXPLORER,File Explorer,Esplora risorse
 SHELL_SHUTDOWN,Shut Down,Spegni il PC
+TRAY_VOLUME,Volume,Volume
+TRAY_MUTE,Mute,Disattiva
+WEB_FORM_SUBMIT,Submit Query,Invia richiesta
+WEB_FORM_RESET,Reset,Annulla
 NP_UNTITLED,Untitled,Senza nome
 BOOT_STARTING,Starting 52-hz Whale...,Avvio di 52-hz Whale in corso...
 BOOT_VERSION,Version 4.02,Versione 4.02
@@ -109,7 +113,6 @@ BR_SOURCE,Source,Origine
 BR_PRINT,Print,Stampa
 BR_ADDR_HINT,Type an address like http://www.site.com,Digita un indirizzo come http://www.sito.it
 BR_GO,Go,Vai
-BR_SOURCE_TITLE,Page source (HTML),Sorgente della pagina (HTML)
 BR_READY,Ready,Pronto
 BR_CONNECTING,Connecting to %s...,Connessione a %s in corso...
 BR_RECEIVING,Receiving data: %d KB of %d KB,Ricezione dati: %d KB di %d KB
@@ -139,8 +142,16 @@ FC_5,proof %s - to print,provino %s - da stampare
 FC_6,personal archive %s,archivio personale %s
 WS_FORUM,RetroForum - Message board,RetroForum - Bacheca
 WS_FORUM_D,"Floppies, 56k modems and other nostalgia.","Floppy, modem 56k e altre nostalgie."
-WS_WHALE,~whale52,~balena52
-WS_WHALE_D,Personal page. Under construction.,Pagina personale. In costruzione.
+WS_TRAIN,~missedtrain,~trenoperso
+WS_TRAIN_D,Personal page. Under construction.,Pagina personale. In costruzione.
+WS_UGLY,The Ugly Guys' Board,Il Forum dei Brutti
+WS_UGLY_D,Message board. Honesty only.,Forum. Solo sincerita'.
+WS_FACE,The Measure of the Face,La Misura del Volto
+WS_FACE_D,An essay on facial proportion.,Saggio sulle proporzioni del viso.
+WS_NUMBERS,Numbers Don't Lie,I Numeri Non Mentono
+WS_NUMBERS_D,Personal page. Statistics.,Pagina personale. Statistiche.
+WS_DAYS,Days Without,Giorni Senza
+WS_DAYS_D,Personal page. A counter.,Pagina personale. Un contatore.
 WS_SHOP,BuyItAll,CompraTutto
 WS_SHOP_D,Mail order shopping delivered to your door.,Vendita per corrispondenza con consegna a casa.
 WS_HERALD,The County Herald - Archive,La Gazzetta della Provincia - Archivio
@@ -197,6 +208,18 @@ WS_MARKET,Used PC Market,Mercatino PC
 WS_MARKET_D,Second-hand computers between private people.,Computer usati fra privati.
 WS_NOBODY,nobody,nessuno
 WS_NOBODY_D,you came by yourself.,sei venuto da solo.
+WS_ANIME,Hikari's Shrine,Il Santuario di Hikari
+WS_ANIME_D,"A fan shrine for the cartoon Pixie Pilot Hikari: episodes, characters, fan art, awards.","Un santuario di fan per il cartone Pixie Pilot Hikari: episodi, personaggi, fan art, premi."
+WS_PROF,Walter H. Brandt - Numerical Analysis,Prof. Aldo Brandi - Analisi Numerica
+WS_PROF_D,"A professor's plain home page: courses, lecture notes, publications, office hours.","La pagina spartana di un professore: corsi, appunti, pubblicazioni, ricevimento."
+WS_BAND,Concrete Swans,Cigni di Cemento
+WS_BAND_D,"The official site of a local garage band: tour dates, records, lyrics, mailing list.","Il sito ufficiale di un gruppo rock locale: date, dischi, testi, mailing list."
+WS_HOSTING,HomePlot,Pagine di Casa
+WS_HOSTING_D,"Free web space for everybody: neighbourhoods, member pages, sign-up.","Spazio web gratis per tutti: quartieri, pagine dei soci, iscrizione."
+WS_Y2K,The Year 2000 Problem,Il problema del 2000
+WS_Y2K_D,"An anxious amateur's guide to the millennium bug: checklist, appliances, supplies, letters.","La guida di un appassionato ansioso al baco del millennio: lista, elettrodomestici, scorte, lettere."
+WS_RADIO,The Shack of W3MBK,Il Radiopiano di I2SVL
+WS_RADIO_D,"A ham radio amateur's page: bands, logbook, QSL cards, antennas, club notices, CB.","La pagina di un radioamatore: bande, log, cartoline QSL, antenne, avvisi del club, CB."
 WEB_HOME_TITLE,Welcome to WebNet Gateway v3.1,Benvenuto su WebNet Gateway v3.1
 WEB_HOME_TAGLINE,Your on-ramp to the Information Superhighway,Il tuo punto d'accesso all'Autostrada dell'Informazione
 WEB_HOME_FAVS,YOUR BOOKMARKS:,I TUOI PREFERITI:
@@ -236,7 +259,8 @@ CR_M_BOOKSTACK,Book Stack · Danni Bittman · CC BY 3.0 · via Poly Pizza,Book S
 CR_M_BOOKS1,books · Tiff Eidmann · CC BY 3.0 · via Poly Pizza,books · Tiff Eidmann · CC BY 3.0 · via Poly Pizza
 CR_M_BOOKS2,Books · Alex Safayan · CC BY 3.0 · via Poly Pizza,Books · Alex Safayan · CC BY 3.0 · via Poly Pizza
 CR_SEC_FONTS,Fonts,Caratteri
-CR_FONTS,Arimo and Cousine · Steve Matteson · SIL Open Font License 1.1,Arimo e Cousine · Steve Matteson · SIL Open Font License 1.1
+CR_FONTS,Arimo / Cousine / Tinos · Steve Matteson · SIL Open Font License 1.1,Arimo / Cousine / Tinos · Steve Matteson · SIL Open Font License 1.1
+CR_FONTS_COMIC,Comic Neue · Craig Rozynski · SIL Open Font License 1.1,Comic Neue · Craig Rozynski · SIL Open Font License 1.1
 CR_SEC_ENGINE,Engine,Motore
 CR_ENGINE,Made with Godot Engine · godotengine.org · MIT License,Realizzato con Godot Engine · godotengine.org · Licenza MIT
 CR_ENGINE_COPY,"© Juan Linietsky, Ariel Manzur and the Godot Engine contributors","© Juan Linietsky, Ariel Manzur e i contributori di Godot Engine"
