@@ -36,6 +36,18 @@ NP_COPY,Copy,Copia
 NP_PASTE,Paste,Incolla
 NP_DELETE,Delete,Elimina
 NP_SELECT_ALL,Select All,Seleziona tutto
+NP_APP,Notepad,Blocco note
+NP_TITLE_FMT,%s - Notepad,%s - Blocco note
+NP_NEW,New,Nuovo
+NP_OPEN,Open...,Apri...
+NP_SAVE_AS,Save As...,Salva con nome...
+NP_PAGE_SETUP,Page Setup...,Imposta pagina...
+NP_PRINT,Print,Stampa
+NP_EXIT,Exit,Esci
+NP_WORD_WRAP,Word Wrap,A capo automatico
+NP_SET_FONT,Set Font...,Imposta carattere...
+NP_HELP_TOPICS,Help Topics,Guida in linea
+NP_ABOUT,About Notepad,Informazioni su Blocco note
 IV_TITLE,Image adjustments,Regolazioni immagine
 IV_RESET,Reset,Reimposta
 IV_BRIGHTNESS,Brightness,Luminosita'

@@ -252,6 +252,9 @@ AudioPC (scripts/os/audio_pc.gd, see OS.md) from the tray speaker. They are
 session-wide and NOT reset by start_new_run: whoever muted does not want the
 sound back next game. Not saved to disk.
 
+Notepad Word Wrap (2026-11-20): `np_a_capo` (false at start), the Word Wrap choice of Notepad
+(see OS.md app_notepad.gd). Session-wide, NOT reset by start_new_run, not saved to disk.
+
 Autoload. Global run state + run lifecycle
 (start_new_run / game_over / restart) + the LANGUAGE:
 LINGUA_BASE "en", LINGUE ["en","it"], NOMI_LINGUA (the endonyms,

@@ -379,6 +379,39 @@ static func _tex_rilievo(w: int, h: int) -> ImageTexture:
 	im.set_pixel(0, h - 1, C_DARK)
 	return ImageTexture.create_from_image(im)
 
+# Il pulsante con la freccia di una barra di scorrimento: tassello in rilievo con un
+# triangolo nero pieno (9 px di base, 5 di altezza: il 7x4 di allora alla scala dell'OS).
+# Premuto, come in Win95, diventa piatto con un filo grigio e la freccia scende di 1 px.
+static func _tex_freccia(verso: String, premuto: bool, n := 20) -> ImageTexture:
+	var im: Image
+	if premuto:
+		im = Image.create(n, n, false, Image.FORMAT_RGBA8)
+		im.fill(C_FACE)
+		for i in range(n):
+			im.set_pixel(i, 0, C_SHADOW)
+			im.set_pixel(i, n - 1, C_SHADOW)
+			im.set_pixel(0, i, C_SHADOW)
+			im.set_pixel(n - 1, i, C_SHADOW)
+	else:
+		im = _tex_rilievo(n, n).get_image()
+	var o := 1 if premuto else 0
+	var cx := (n >> 1) - 1 + o       # la punta, un pixel a sinistra del centro come allora
+	var cy := (n >> 1) - 1 + o
+	for i in range(5):               # riga i del triangolo: 1 + 2i pixel
+		for j in range(-i, i + 1):
+			var p: Vector2i
+			match verso:
+				"su":
+					p = Vector2i(cx + j, cy - 2 + i)
+				"giu":
+					p = Vector2i(cx + j, cy + 2 - i)
+				"sinistra":
+					p = Vector2i(cx - 2 + i, cy + j)
+				_:
+					p = Vector2i(cx + 2 - i, cy + j)
+			im.set_pixel(p.x, p.y, C_TEXT)
+	return ImageTexture.create_from_image(im)
+
 # La casella di Win95: quadrato bianco incassato (bordo doppio al contrario del rilievo)
 # e, se segnata, il segno di spunta nero.
 static func _tex_casella(segnata: bool) -> ImageTexture:
@@ -658,6 +691,18 @@ static func make_theme() -> Theme:
 	t.set_stylebox("grabber", "HScrollBar", _sb(true, C_FACE, true, 12, mezzo, 12, mezzo))
 	t.set_stylebox("grabber_highlight", "HScrollBar", _sb(true, C_FACE, true, 12, mezzo, 12, mezzo))
 	t.set_stylebox("grabber_pressed", "HScrollBar", _sb(false, C_FACE, true, 12, mezzo, 12, mezzo))
+	# I PULSANTI CON LE FRECCE alle due estremita' (20/11/2026): in Win95 ogni barra li aveva,
+	# un clic sposta di una riga. Senza, la barra sembrava quella di un programma moderno.
+	# ScrollBar li prende come icone, e la loro misura (20 = lo spessore della barra) e'
+	# anche l'area che risponde al clic.
+	for asse in [["VScrollBar", "su", "giu"], ["HScrollBar", "sinistra", "destra"]]:
+		var cls: String = asse[0]
+		t.set_icon("decrement", cls, _tex_freccia(asse[1], false))
+		t.set_icon("decrement_highlight", cls, _tex_freccia(asse[1], false))
+		t.set_icon("decrement_pressed", cls, _tex_freccia(asse[1], true))
+		t.set_icon("increment", cls, _tex_freccia(asse[2], false))
+		t.set_icon("increment_highlight", cls, _tex_freccia(asse[2], false))
+		t.set_icon("increment_pressed", cls, _tex_freccia(asse[2], true))
 
 	# CURSORI (HSlider/VSlider: il volume del vassoio, le regolazioni del visualizzatore
 	# di immagini). Erano quelli di Godot, scuri e tondi, come le barre prima del 18/09.

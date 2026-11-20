@@ -194,6 +194,11 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   with "!" ("forum/index!") is also photographed with its source open in Notepad ("Origine")
   -> user://sorgente_<site>_<page>.png),
 
+- notepad_check.tscn/.gd (dev tool, WINDOWED, 2026-11-20: the real desktop + Notepad on a text
+  with long lines at widths 560 / 300 / 220, Word Wrap off and on, and the Edit menu open at 560
+  -> user://notepad_<560|300|220>[_acapo].png, to judge by eye the menu bar wrapping to a second
+  row, the horizontal scrollbar and the ellipsis title. No asserts, no sabotages),
+
 - vassoio_check.tscn/.gd (dev tool, WINDOWED: the taskbar tray with the
   volume popup open, then muted -> user://vassoio_volume.png and
   user://vassoio_muto.png, the bottom-right corner at 2x, to judge by eye
