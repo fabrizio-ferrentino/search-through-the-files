@@ -29,9 +29,32 @@ whole document is one control:
 
 The raw HTML file is also what the player sees in **"Visualizza sorgente"**: since 2026-10-25
 it opens in a separate Notepad window (fixed-width font, file `<page>[1].htm`), **exactly as
-served - NOT pretty-printed or reformatted** - so the indentation and line breaks you write
-are what the player reads. Write source that is pleasant to snoop through — the
+served - NOT pretty-printed by the game** - so the line breaks in the file are what the
+player reads (the tool breaks lines and applies the dialect when it writes the page). Write source that is pleasant to snoop through — the
 `<!-- comment -->` key can hide there.
+
+**Source dialects (2026-11-20).** Write normal lowercase HTML: `tools/web/sito.py` (`genera()`,
+or `python tools/web/sito.py dialetti` for existing pages) rewrites the SOURCE in the dialect of
+whoever made the site in 1999. Rendering does not change. Never write the dialect by hand. The
+four dialects and their sites (`DIALETTI` in sito.py):
+- `mano` (hand-written in Notepad): tags and attributes UPPERCASE, simple layout values unquoted
+  (`<TABLE BORDER=0 WIDTH=600>`; href/src/alt/title/value/name/action/onclick stay quoted),
+  comments "written by hand with Notepad", "counter", "form"/"end form", "music", "scrolling
+  text", "end of page". Sites: blog, anime, band, prof, radio, calcio, musica, y2k, driver,
+  giochi, treno, diario, nessuno, misteri, tecnico, numeri.
+- `editor` (office editor, invented "Hydrophone HomePage 3.0"): `<meta name="GENERATOR">`,
+  `<!--hpbot bot="HitCounter" ...-->`, `<!--hpbot bot="SaveResults" ...-->`, `#BeginEditable
+  "body"` / `#EndEditable`. Sites: news, cronaca, shop, meteo, mail, tv, viaggi, comune,
+  biblioteca, hosting, vincente.
+- `composer` (the browser's editor, "WebNet Composer 4.5 [EN|IT] (Win95; I)"): GENERATOR +
+  "counter". Sites: ricette, animali, scuola, oroscopo, ascolto, volto, annunci, mercatino.
+- `bacheca` (forum software "Corkboard 5.1"): GENERATOR, "this page is built by the server, do
+  not edit", "post form"/"end post form", "end Corkboard". Sites: forum, genitori, brutti,
+  lavoro, chat.
+
+Brands are invented. Comments are ENGLISH in every language, like the key-hiding comments
+(`WebRuntime._COMMENT`): a comment is no longer a giveaway, the player must read the source.
+The tool is idempotent. Pages may now contain comments; the key scanner (`WebAnchor`) skips them.
 
 ## Supported HTML subset
 

@@ -145,7 +145,13 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - bb_dump.gd (DEV TOOL, not a test; `-s`, headless, 2026-11-20): compiles every page with HtmlBB and
   writes all the BBCode to one file. Dump before and after reformatting the sources and diff: after
   `sito.py snellisci` the only difference left was invisible trailing spaces at the end of left-aligned
-  lines, so the reformat changes nothing the player sees,
+  lines, so the reformat changes nothing the player sees. Since 2026-11-20 it also writes, per page,
+  "ANCORE visibili/sorgente": the `WebAnchor.ancore()` spot counts per type (used to prove
+  `sito.py dialetti` changed no spot: BBCode and counts identical before/after),
+- html_bb_test.gd, 2026-11-20: the old check `senza_commenti_<page>` (no `<!--` in a page, "the
+  scanner assumes no comments") is replaced by `ancore_fuori_dai_commenti_<page>`: no key spot may
+  fall inside an existing comment (WebAnchor already skips comments). Why: the source dialects
+  put comments in the pages. siti_catalogo_test: the href regex is case-insensitive (`HREF=`),
 
 - siti_catalogo_test.tscn/.gd (the SITE CATALOG, headless: every site
   has all its pages in every language and no page outside its list,

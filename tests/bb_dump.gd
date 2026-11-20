@@ -29,6 +29,19 @@ func _initialize() -> void:
 			var ctx := {"link_color": "#0000ee", "page_width": 900.0, "vlink_color": "#551a8b"}
 			righe.append("=== " + p)
 			righe.append(HtmlBB.compile(body, ctx))
+			# e i posti dove la chiave web si puo' nascondere, per tipo: un ritocco del codice
+			# della pagina non deve farne sparire nessuno
+			for vis in [true, false]:
+				var tipi := {}
+				for a in WebAnchor.ancore(html, vis):
+					var t := str((a as Dictionary).get("tipo", "?"))
+					tipi[t] = int(tipi.get(t, 0)) + 1
+				var chiavi := tipi.keys()
+				chiavi.sort()
+				var r := "ANCORE " + ("visibili" if vis else "sorgente")
+				for k in chiavi:
+					r += " %s=%d" % [k, tipi[k]]
+				righe.append(r)
 			n += 1
 	var fa := FileAccess.open(uscita, FileAccess.WRITE)
 	fa.store_string("\n".join(righe))

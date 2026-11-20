@@ -14,7 +14,7 @@ PORTALE = {"en": "http://www.webnet.com", "it": "http://www.webnet.it"}
 _tag = re.compile(r"<[^>]*>")
 _spazi = re.compile(r"\s+")
 _chiave = re.compile(r"\b\d-[A-Z0-9]{4}\b")
-_href = re.compile(r'href\s*=\s*"([^"]*)"')
+_href = re.compile(r'(?i)href\s*=\s*"([^"]*)"')   # anche HREF= delle pagine scritte a mano
 # i moduli ci sono (dal 24/10/2026) ma restano nel sito: action vuota, una pagina del sito o
 # uno script del suo server (risponde l'errore 500), mai un altro sito
 _ctrl = re.compile(r'(?i)<form\b[^>]*\baction\s*=\s*"((?:https?:|www\.|mailto:)[^"]*)"')
@@ -59,6 +59,131 @@ def snellisci(html):
     return "".join(pezzi)
 
 
+# DIALETTI (20/11/2026, proprietario: "manca ancora qualcosa per sembrare dei siti autentici
+# di fine anni 90"). Nel '99 il sorgente diceva CHI aveva fatto la pagina e con che cosa:
+#   mano      scritta a mano nel Blocco note: tag e attributi in MAIUSCOLO, valori semplici
+#             senza virgolette (<TABLE BORDER=0 WIDTH=600>), commenti di chi la scriveva;
+#   editor    fatta con un editor da ufficio (il FrontPage dell'epoca; qui "Hydrophone
+#             HomePage", della stessa ditta del sistema): la riga GENERATOR, i segnaposto
+#             <!--hpbot ...--> e la zona modificabile del modello;
+#   composer  fatta con l'editor del browser (qui "WebNet Composer"): la riga GENERATOR;
+#   bacheca   generata dal programma del forum (qui "Corkboard"): GENERATOR e commenti suoi.
+# Marche INVENTATE, come il browser e il sistema. Commenti in inglese in ogni lingua, come
+# quelli che nascondono la chiave (WebRuntime._COMMENT): cosi' <!-- --> non e' piu' un
+# indizio, e nel sorgente bisogna leggere. A schermo non cambia niente: i commenti si
+# tolgono prima di disegnare, un commento a inizio riga si porta il suo a capo (spazi in
+# piu' fra due blocchi non contano) e gli attributi si leggono senza badare a maiuscole
+# e virgolette. Lo prova tests/bb_dump.gd (BBCode e posti per la chiave identici).
+DIALETTI = {
+    "mano": ["blog", "anime", "band", "prof", "radio", "calcio", "musica", "y2k", "driver",
+             "giochi", "treno", "diario", "nessuno", "misteri", "tecnico", "numeri"],
+    "editor": ["news", "cronaca", "shop", "meteo", "mail", "tv", "viaggi", "comune",
+               "biblioteca", "hosting", "vincente"],
+    "composer": ["ricette", "animali", "scuola", "oroscopo", "ascolto", "volto", "annunci",
+                 "mercatino"],
+    "bacheca": ["forum", "genitori", "brutti", "lavoro", "chat"],
+}
+_GENERATORE = {
+    "editor": '<meta name="GENERATOR" content="Hydrophone HomePage 3.0">',
+    "composer": '<META NAME="GENERATOR" CONTENT="WebNet Composer 4.5 [%s] (Win95; I)">',
+    "bacheca": '<meta name="GENERATOR" content="Corkboard 5.1">',
+}
+# il commento che si mette prima di certi tag, per dialetto ("" = nessuno)
+_COMMENTI = {
+    "mano": {"contatore": "counter", "form": "form", "/form": "end form",
+             "musica": "music", "marquee": "scrolling text",
+             "inizio": "written by hand with Notepad", "fine": "end of page"},
+    "editor": {"contatore": 'hpbot bot="HitCounter" i-image="0" i-digits="6"',
+               "form": 'hpbot bot="SaveResults" s-format="TEXT/TSV"', "/form": "",
+               "musica": "", "marquee": "",
+               "inizio": '#BeginEditable "body"', "fine": "#EndEditable"},
+    "composer": {"contatore": "counter", "form": "", "/form": "", "musica": "", "marquee": "",
+                 "inizio": "", "fine": ""},
+    "bacheca": {"contatore": "", "form": "post form", "/form": "end post form",
+                "musica": "", "marquee": "",
+                "inizio": "Corkboard 5.1 - this page is built by the server, do not edit",
+                "fine": "end Corkboard"},
+}
+# attributi il cui valore, se semplice, chi scriveva a mano lasciava senza virgolette
+_SENZA_VIRGOLETTE = {"width", "height", "border", "cellpadding", "cellspacing", "bgcolor",
+                     "color", "size", "align", "valign", "colspan", "rowspan", "text", "link",
+                     "vlink", "alink", "method", "type", "maxlength", "cols", "rows", "loop",
+                     "autostart", "hidden", "behavior", "direction", "scrollamount", "hspace",
+                     "vspace", "noshade"}
+_tag_html = re.compile(r"<(/?)([A-Za-z][A-Za-z0-9]*)([^<>]*)>")
+_attributo = re.compile(r"""([A-Za-z][A-Za-z-]*)(\s*=\s*)("[^"]*"|'[^']*'|[^\s"'>]+)""")
+_semplice = re.compile(r"^[A-Za-z0-9#%]+$")
+
+
+def dialetto_di(sid):
+    for d, siti in DIALETTI.items():
+        if sid in siti:
+            return d
+    return ""
+
+
+def _in_maiuscolo(html):
+    def attr(m):
+        nome, uguale, valore = m.group(1), m.group(2), m.group(3)
+        if valore[:1] == '"' and nome.lower() in _SENZA_VIRGOLETTE and _semplice.match(valore[1:-1]):
+            valore = valore[1:-1]
+        return nome.upper() + uguale + valore
+
+    def tag(m):
+        return "<" + m.group(1) + m.group(2).upper() + _attributo.sub(attr, m.group(3)) + ">"
+    return _tag_html.sub(tag, html)
+
+
+def _commenta(html, regola, testo):
+    """Mette <!-- testo --> prima di ogni tag che risponde alla regola: su una riga sua se
+    il tag e' a inizio riga, attaccato al tag altrimenti (un a capo in mezzo a un testo si
+    vedrebbe come spazio)."""
+    if not testo:
+        return html
+
+    def metti(m):
+        a_capo = m.start() > 0 and html[m.start() - 1] == "\n"
+        return "<!-- %s -->%s%s" % (testo, "\n" if a_capo else "", m.group(0))
+    return regola.sub(metti, html)
+
+
+_R_CONTATORE = re.compile(r"(?i)<img\b[^>]*\bsrc\s*=\s*\"[^\"]*contatore[^\"]*\"[^>]*>")
+_R_FORM = re.compile(r"(?i)<form\b[^>]*>")
+_R_FINE_FORM = re.compile(r"(?i)</form\s*>")
+_R_MUSICA = re.compile(r"(?i)<(?:embed|bgsound)\b[^>]*>")
+_R_MARQUEE = re.compile(r"(?i)<marquee\b[^>]*>")
+
+
+def dialetto(html, sid, lang="en"):
+    """Il sorgente nel dialetto del suo sito (vedi DIALETTI). Una seconda passata non
+    cambia niente: se la pagina ha gia' il suo dialetto si lascia com'e'."""
+    d = dialetto_di(sid)
+    if not d:
+        return html
+    c = _COMMENTI[d]
+    firma = c["inizio"] or "GENERATOR"
+    if firma.lower() in html.lower():
+        return html
+    if d in _GENERATORE:
+        riga = _GENERATORE[d] % lang.upper() if "%s" in _GENERATORE[d] else _GENERATORE[d]
+        html = re.sub(r"(?i)</title>", lambda m: m.group(0) + "\n" + riga, html, count=1)
+    html = _commenta(html, _R_CONTATORE, c["contatore"])
+    html = _commenta(html, _R_FORM, c["form"])
+    if c["/form"]:
+        html = _R_FINE_FORM.sub(lambda m: m.group(0) + "<!-- %s -->" % c["/form"], html)
+    html = _commenta(html, _R_MUSICA, c["musica"])
+    html = _commenta(html, _R_MARQUEE, c["marquee"])
+    if c["inizio"]:
+        html = re.sub(r"(?i)(<body\b[^>]*>\n?)", lambda m: m.group(1) + "<!-- %s -->\n" % c["inizio"],
+                      html, count=1)
+    if c["fine"]:
+        html = re.sub(r"(?i)\n?</body>", lambda m: "\n<!-- %s -->%s" % (c["fine"], m.group(0)),
+                      html, count=1)
+    if d == "mano":
+        html = _in_maiuscolo(html)
+    return html
+
+
 def genera(sid, skin, pagine, morti=()):
     errori = []
     for lang in ("en", "it"):
@@ -74,7 +199,7 @@ def genera(sid, skin, pagine, morti=()):
             testa, coda, body = skin(lang, nome, titolo)
             html = "<html>\n<head><title>%s</title></head>\n<body %s>\n%s\n%s\n%s\n</body>\n</html>\n" % (
                 titolo, body, testa.strip("\n"), corpo.strip("\n"), coda.strip("\n"))
-            html = snellisci(html)
+            html = dialetto(snellisci(html), sid, lang)
             io.open(cartella + "/" + nome + ".html", "w", encoding="utf-8", newline="\n").write(html)
             totale += len(visibile(html))
             for m in _chiave.finditer(html):
@@ -152,3 +277,24 @@ if __name__ == "__main__" and sys.argv[1:] == ["snellisci"]:
                     io.open(percorso, "w", encoding="utf-8", newline="").write(dopo)
                     cambiate += 1
     print("snellite %d pagine" % cambiate)
+
+
+# python tools/web/sito.py dialetti  -> mette ogni pagina esistente nel dialetto del suo sito
+if __name__ == "__main__" and sys.argv[1:] == ["dialetti"]:
+    cambiate = 0
+    for lang in sorted(os.listdir(RADICE)):
+        if not os.path.isdir(RADICE + lang):
+            continue
+        for sid in sorted(os.listdir(RADICE + lang)):
+            cartella = RADICE + lang + "/" + sid
+            if not os.path.isdir(cartella):
+                continue
+            for f in os.listdir(cartella):
+                if f.endswith(".html"):
+                    percorso = os.path.join(cartella, f)
+                    prima = io.open(percorso, encoding="utf-8", newline="").read()
+                    dopo = dialetto(prima, sid, lang)
+                    if dopo != prima:
+                        io.open(percorso, "w", encoding="utf-8", newline="").write(dopo)
+                        cambiate += 1
+    print("pagine nel loro dialetto: %d" % cambiate)

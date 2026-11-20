@@ -22,6 +22,15 @@ the HTML subset in [docs/WEB_AUTHORING.md](../../docs/WEB_AUTHORING.md).
   Why: the key hides in the source and the player reads it. Lines over 200 characters went from 30% to
   10%, lines per page from 22 to 55. Check a reformat with `tests/bb_dump.gd` (see docs/code/TESTS.md).
 
+- `dialetto(html, sid, lang)` (2026-11-20; owner: "manca ancora qualcosa per sembrare dei siti
+  autentici di fine anni 90 ... tutto cio che pensi sia essenziale"): puts the page SOURCE in the
+  dialect of its site, `DIALETTI` maps all 40 sites to `mano` / `editor` / `composer` / `bacheca`
+  (what each does and which sites: docs/WEB_AUTHORING.md, "Source dialects"). `genera()` applies
+  `dialetto(snellisci(html))`; `python tools/web/sito.py dialetti` applies it to every page (310 of
+  316 changed; 404 and nonserver have no site). Idempotent. Write normal lowercase HTML. A comment
+  at line start carries its own newline, otherwise it is attached to the tag. The href regexes of
+  the checks are case-insensitive (`HREF=`). Rendering is unchanged (`tests/bb_dump.gd`).
+
 The checks are the same rules `tests/siti_catalogo_test` enforces, so they catch problems
 before Godot runs:
 - at least 2000 characters of visible text per language (`CatalogoSiti.COMPLETO_TESTO`; 6000 until 2026-11-20);

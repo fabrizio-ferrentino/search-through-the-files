@@ -717,6 +717,20 @@ original mockup, ref.)
 
 ## Feature notes
 
+- **Source dialects (2026-11-20).** Owner (Italian): "secondo me manca ancora qualcosa per
+  sembrare dei siti autentici di fine anni 90 ... si puo migliorare in qualche modo? anche
+  stravolgendo il tutto", then "tutto cio che pensi sia essenziale". `tools/web/sito.py`
+  `DIALETTI` (site id -> mano | editor | composer | bacheca, all 40 mapped) and `dialetto()`: the
+  page source gets the dialect of whoever made it in 1999 (uppercase hand-written HTML with
+  unquoted values; an office editor's GENERATOR and bot comments; the browser editor's GENERATOR;
+  forum software's GENERATOR and comments). Details and site lists: docs/WEB_AUTHORING.md. Brands
+  are invented, like the browser and the OS. Comments are English in every language, so a comment
+  is no longer a giveaway of the key. Rendering is unchanged (bb_dump before/after identical,
+  including the per-page WebAnchor spot counts); WebAnchor skips comments, so pages may have them
+  (html_bb_test check `ancore_fuori_dai_commenti_<page>`). Considered and NOT done: a Times New
+  Roman default font for text without `<font face>` (only 2% of the text, 8 pages), IE 3D table
+  borders (RichTextLabel cells have one border colour), frames.
+
 - **"Still artificial": cursor, drop-down, crisp text, margins (2026-10-25).** Owner (Italian): "mi
   sembrano ancora artificiali e non come se fossero veri siti anni 90. problema numero 1 il menu a
   tendina si comporta in modo strano. 2 quando passo vicino ad un campo input deve uscire l'icona a

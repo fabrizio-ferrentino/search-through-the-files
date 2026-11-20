@@ -236,7 +236,8 @@ func _prova_indirizzi() -> void:
 func _prova_chiusi() -> void:
 	var href_re := RegEx.new()
 	# anche i pulsanti-menu: onclick="location.href='x.html'" e' un link come gli altri
-	href_re.compile("(?:href\\s*=\\s*\"|location(?:\\.href)?\\s*=\\s*')([^\"']*)")
+	# (?i): le pagine "scritte a mano" hanno tag e attributi in MAIUSCOLO (HREF=)
+	href_re.compile("(?i)(?:href\\s*=\\s*\"|location(?:\\.href)?\\s*=\\s*')([^\"']*)")
 	var fuori: Array = []
 	for l in LINGUE:
 		for pagina in _tutte_le_pagine():
