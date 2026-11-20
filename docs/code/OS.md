@@ -144,6 +144,10 @@ FONTS — Win95.font("sans"/"sans_b"/"sans_i"/"sans_bi"/"mono") from
 assets/fonts/, wired in make_theme() as default_font + the
 RichTextLabel normal/bold/italics/bold_italics/mono slots (cell
 separation 0 = cellspacing="0").
+SCROLLBAR ARROWS (2026-11-20): make_theme() gives VScrollBar and HScrollBar the
+decrement/increment icons (+ _highlight / _pressed), 20x20, from _tex_freccia(verso,
+premuto): a raised tile with a black 9x5 triangle; pressed = flat with a grey line and the
+arrow 1 px down-right. It hits every scrollbar in the OS (browser, Explorer, Notepad).
 
 ### `scripts/os/stylebox_win95.gd`
 
@@ -152,6 +156,8 @@ StyleBoxWin95: custom StyleBox that draws the Win95 bevel.
 ### `scripts/os/os_window.gd`
 
 OSWindow: draggable/resizable window with title bar.
+TITLE (2026-11-20): the title label uses TextServer.OVERRUN_TRIM_ELLIPSIS: a title that does
+not fit ends with "..." like Win95, instead of being cut against the buttons.
 IT CANNOT LEAVE THE SCREEN (2026-09-20, owner's request "come
 quando usi un pc nella vita reale"): area_utile() is the screen
 MINUS the taskbar - the same rect maximize fills, so a window
@@ -374,6 +380,34 @@ spaziatura fissa, come Courier New o Fixedsys, senza antialiasing"; Notepad on W
 the project, so Cousine Bold stands in for its weight and blocky pixels. It applies to EVERY
 file opened in Notepad, not only page sources. The browser's "Origine" opens its page source
 here (a temp file `<page>[1].htm`, see WEB.md "VIEW SOURCE").
+
+PERIOD UI (2026-11-20). Owner: "voglio sistemare la ui dei file txt... se la finestra ha una
+larghezza troppo bassa succede che il testo è tagliato, all'epoca come funzionava". Online
+check: Win95/98 Notepad had File / Edit / Search / Help; Word Wrap, Time/Date and (98) Set Font
+were in the EDIT menu (moved to Format in Windows 2000); Word Wrap was off by default and not
+saved; without it long lines ran off the right edge and you scrolled horizontally.
+- Title "NAME - Notepad" (`tr("NP_TITLE_FMT")`, IT "NAME - Blocco note"). No "* " for unsaved
+  changes (period Notepad showed none). Untitled uses `tr("NP_UNTITLED")`.
+- The menubar is an HFlowContainer named "BarraMenu": in a narrow window it WRAPS to a second
+  row, as Windows did (before, at 220 px "Cerca" and "?" disappeared).
+- Menus as in Win98 (rule 11: what does not work is greyed). File = New, Open..., Save,
+  Save As... | Page Setup..., Print | Exit: only Save and Exit work (Save also greyed in the
+  read-only image/bin views). Edit = Undo | Cut, Copy, Paste, Delete | Select All | Word Wrap
+  (check mark), Set Font... (greyed). The right-click menu is the same without the last group
+  (`_open_edit_menu(at, completo)`). Cut/Paste/Delete/Undo are greyed in read-only views.
+  Search stays greyed. "?" works: Help Topics (greyed) | About Notepad ->
+  `os.apri_informazioni(NP_ABOUT, "notepad", [NP_APP, BOOT_VERSION, "", EX_ABOUT_COPY])`.
+  Time/Date deliberately NOT added: which date the PC shows is an open story question.
+- `_open_menu` items are `[label, Callable, disabled?, checked?]`; an invalid Callable = always
+  greyed. Items with checks get a 14 px check-mark icon (a blank icon on the others, so the
+  labels align).
+- WORD WRAP: TextEdit wrap_mode NONE (period default: long lines run off, horizontal
+  scrollbar) or BOUNDARY with autowrap WORD_SMART (also breaks a word longer than the line);
+  `a_capo()` reports it. The choice lives in `GameManager.np_a_capo` (false at start,
+  session-wide, not reset per run).
+- Strings in locale/ui.csv: NP_APP, NP_TITLE_FMT, NP_NEW, NP_OPEN, NP_SAVE_AS, NP_PAGE_SETUP,
+  NP_PRINT, NP_EXIT, NP_WORD_WRAP, NP_SET_FONT, NP_HELP_TOPICS, NP_ABOUT.
+- Dev tool: tests/notepad_check.tscn (see TESTS.md).
 
 ## Feature notes
 

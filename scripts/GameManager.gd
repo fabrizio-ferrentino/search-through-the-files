@@ -70,6 +70,11 @@ var debug_tutti_i_siti := false
 var pc_volume := 0.8
 var pc_muto := false
 
+# "A capo automatico" del Blocco note (Modifica > A capo automatico). Spento all'inizio,
+# com'era nel Blocco note del '95; una volta acceso resta acceso per tutta la sessione,
+# cosi' chi l'ha scelto non deve rifarlo a ogni file.
+var np_a_capo := false
+
 # ---------------- lingua ----------------
 # L'INGLESE e' la lingua base del gioco (scelta del proprietario, 19/09/2026), e va imposto
 # a mano: Godot parte dalla lingua del SISTEMA, quindi su una macchina italiana il gioco

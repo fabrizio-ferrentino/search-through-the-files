@@ -75,6 +75,9 @@ func setup(title: String, win_size: Vector2, ikind: String) -> void:
 	_title_label.add_theme_font_size_override("font_size", 18)
 	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_title_label.clip_text = true
+	# Un titolo che non ci sta finisce con "...", come in Win95, invece di essere tagliato
+	# a meta' lettera contro i pulsanti (20/11/2026).
+	_title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_title_label)
 
