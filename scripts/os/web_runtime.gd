@@ -18,8 +18,10 @@ const SITE_SALT := 2002
 # Quanti siti per partita (proprietario, 19/10/2026: una trentina in tutto, 10-15 a
 # partita) e quanti di lore fra questi ("2 sono troppo pochi": 4-5). Se il catalogo ne ha
 # meno, si prendono tutti quelli che ci sono.
+# 20/11/2026 (proprietario): SEMPRE 10, con i siti normali ridotti a 1-2 pagine, perche' la
+# pagina con la chiave sia cercabile (~40 pagine a partita invece di ~90).
 const SITI_MIN := 10
-const SITI_MAX := 15
+const SITI_MAX := 10
 const LORE_MIN := 4
 const LORE_MAX := 5
 const NONSERVER := "nonserver"      # la pagina "impossibile trovare il server"

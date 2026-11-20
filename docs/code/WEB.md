@@ -546,14 +546,24 @@ One entry per site in SITI: id (= the folder), nome/desc (WS_* CSV
 keys), en/it (the period domain per language, may carry a path:
 www.webnet.it/~jack99), tipo (normale/lore), voce (lore only:
 padre / ragazzo / maledizione / altri - altri, added 2026-10-23, is other people's stories, not the young man's), featured, stato (segnaposto /
-completo - a complete site needs COMPLETO_PAGINE 5 pages and
-COMPLETO_TESTO 6000 characters of visible text per language),
+completo - a complete site needs COMPLETO_PAGINE 1 page and
+COMPLETO_TESTO 2000 characters of visible text per language; was 5 and
+6000 until 2026-11-20, see the ordinary-sites cut below),
 pagine (every page of the folder, index first: the key can land in
 any) and morti (dead links ON PURPOSE: a missing page of the site,
 or the address of a site that is gone). All 40 sites (30 written
 2026-10-20, four lore sites added 2026-10-23, six ordinary ones - anime, prof, band, hosting, y2k,
 radio - added 2026-10-24) and the RULES every site follows: docs/WEB_CATALOG.md;
 the recipe: docs/WEB_SITES.md §3. Test: siti_catalogo_test.tscn.
+
+2026-11-20, FEWER PAGES (owner: "per me è molto difficile trovare la chiave" - the web key lives only in
+a page's SOURCE; "snellire le pagine ... sostituire proprio i siti con pagine da una sola tab"; research:
+Welcome to the Game II has 21 of 50 sites with one page, ~19 pages per key). The 24 ordinary sites went
+from 175 pages to 39: 14 index only (meteo, mail, musica, viaggi, comune, scuola, oroscopo, tv, driver,
+animali, biblioteca, calcio, ricette, giochi), 8 index + one page (shop product_pc, blog guestbook,
+anime episodes, prof notes, band tour, hosting members, y2k checklist, radio logbook), forum 5 (index,
+hardware, rules, thread, thread_y2k), news 4 (index, art_y2k, tech, world). Per run ~91 -> ~42 pages,
+~5150 -> ~2450 source lines to read. Lore sites untouched (next step).
 
 ### `scripts/os/web_runtime.gd`
 
@@ -566,7 +576,7 @@ page is called "<site>/<page>" (forum/index, treno/thoughts); the
 pages outside the sites have one name (home, 404, NONSERVER).
 build() (from BrowserApp.reset_pages on start_new_run) takes the
 pool from the catalog and _scegli_siti picks SITI_MIN..SITI_MAX
-10-15 sites, LORE_MIN..LORE_MAX 4-5 of them lore (owner: "2 are too
+sites (10..10 since 2026-11-20, owner: "lasciare sempre 10 siti a partita"; was 10-15), LORE_MIN..LORE_MAX 4-5 of them lore (owner: "2 are too
 few"), at least one lore site with voce "padre" and one "ragazzo"
 when the catalog has them - or ALL of them while the catalog is
 smaller; then the carriers + modes of the TWO web keys (since

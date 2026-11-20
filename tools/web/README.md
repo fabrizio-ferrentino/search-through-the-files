@@ -15,9 +15,16 @@ the HTML subset in [docs/WEB_AUTHORING.md](../../docs/WEB_AUTHORING.md).
 - `controlla(id, morti=())` runs the **same checks** on pages that already exist, without
   touching them. Use it after editing a page by hand.
 
+- `snellisci(html)` (2026-11-20, commit cbdc853) breaks a page source into readable lines: a newline
+  between adjacent BLOCK tags, only where the previous tag closes a block or opens a table/list (the page
+  is already at a line start, so no visible space appears), never inside `<pre>` or `<textarea>`.
+  `genera()` applies it; `python tools/web/sito.py snellisci` applies it to every existing page.
+  Why: the key hides in the source and the player reads it. Lines over 200 characters went from 30% to
+  10%, lines per page from 22 to 55. Check a reformat with `tests/bb_dump.gd` (see docs/code/TESTS.md).
+
 The checks are the same rules `tests/siti_catalogo_test` enforces, so they catch problems
 before Godot runs:
-- at least 6000 characters of visible text per language;
+- at least 2000 characters of visible text per language (`CatalogoSiti.COMPLETO_TESTO`; 6000 until 2026-11-20);
 - no text shaped like a key;
 - no `<input>`, `<form>` and the like;
 - no relative timestamps;

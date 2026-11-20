@@ -457,7 +457,7 @@ returns the WHOLE catalog, so every site answers and the portal lists
 them all (the ones not in tonight's run marked "[DEBUG: not in
 tonight's run]"); the keys stay on the sites the seed picked - and
 "Open the portal" opens a browser on it. The browser tests switch it
-on too, because they open fixed pages and a run picks 10-15 of 30.
+on too, because they open fixed pages and a run picks 10 of 40.
 A STATUS block rewritten 4x a second:
 PC state and where the player is, the peek state (who, GRACE/WAIT/PEEK, light
 progress or PC state, with seconds), Ghosty's distance, heat, torch

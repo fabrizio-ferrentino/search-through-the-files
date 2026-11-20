@@ -1,10 +1,14 @@
 # The site catalog: the 40 sites
 
-The fake web the player browses. **40 sites** in all (30 until 2026-10-23, when four lore sites were added; on 2026-10-24 six more ordinary ones: anime, prof, band, hosting, y2k, radio); **every run picks 10 to 15**, of
+The fake web the player browses. **40 sites** in all (30 until 2026-10-23, when four lore sites were added; on 2026-10-24 six more ordinary ones: anime, prof, band, hosting, y2k, radio); **every run picks exactly 10** (10-15 until 2026-11-20, owner: "lasciare sempre 10 siti a partita"; `WebRuntime.SITI_MIN = SITI_MAX = 10`), of
 which **4 or 5 carry lore** (owner, 2026-10-19). All of tonight's sites are listed on the
 WebNet gateway; the others answer "cannot find server". They are period sites of
-1998-99, complex (6-14 pages each, navigation, real text), most of them ordinary, some
-disturbing. All 30 were written on 2026-10-20, in English and Italian.
+1998-99, most of them ordinary, some disturbing. All 30 were written on 2026-10-20, in English and Italian,
+with 6-14 pages each. **2026-11-20 (owner: "per me è molto difficile trovare la chiave", then "bisognerebbe
+snellire le pagine ... sostituire proprio i siti con pagine da una sola tab"):** the 24 ordinary sites
+were cut to 1-5 pages (table below; 175 -> 39 pages), because a web key hidden only in a page's SOURCE was
+too hard to find among ~91 pages. Research: in Welcome to the Game II, 21 of 50 sites have one page and
+there are ~19 pages per key. The 16 lore sites are untouched (next step).
 
 This file is the **map**. The data the game reads is `scripts/os/catalogo_siti.gd`; how
 to add a site is in [WEB_SITES.md](WEB_SITES.md) §3; how to write the HTML is in
@@ -58,30 +62,36 @@ reference when a site is rewritten. A restyle keeps the texts, the pages and eve
 
 | id | Site (EN / IT) | Pages | Notes | Style |
 |---|---|---|---|---|
-| forum | RetroForum | 14 | computer message board: sections, long threads, members, rules | UBB message board: grey bevelled tables, avatars, quotes |
-| shop | BuyItAll / CompraTutto | 9 | mail-order shop; online orders suspended | mail-order catalogue: price-tag grid, star bursts, product pictures |
-| news | NewsToday / NotizieOggi | 11 | news portal, 31/03/1999 edition, six articles | news portal in three columns: sections, headlines, a right-hand box of quick news |
-| meteo | WeatherNow / MeteoNow | 6 | forecasts, cities, satellite (offline), seasonal, glossary | teletext page: black, blocky cyan/yellow/green Courier, page numbers |
-| giochi | PlayWeb / GiocaWeb | 7 | shareware, chart, cheats, reviews; downloads closed | game zone: black, neon grid tile, flames, scrolling chart |
-| mail | WebNet WebMail | 6 | login closed during the move; service news, help, terms | web application: grey Win95 boxes, no pictures |
-| blog | ~jack99 | 7 | a happy sixteen-year-old: friends, band, school trip, a full guestbook | GeoCities teen page: tiled sky, Comic, GIFs, counter, MIDI, marquee |
-| biblioteca | Millbrook Public Library / Biblioteca Civica di San Vito | 7 | hours, new books, events, card catalogue | card catalogue: parchment tile, Times, typed index cards |
-| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 8 | recipes, readers' letters | grandma: narrow card on gingham, Times + Comic, clip-art, waltz |
-| calcio | Griffins Fan Club / Fan Club Grifoni | 7 | results, squad, away trips, notice board | loud fan club: flames, blink, results marquee, anthem player |
-| tv | CouchGuide / TeleGuida | 6 | listings, films, series, letters | TV guide: time-slot grid, coloured channel columns |
-| musica | MidiMania / MidiWorld | 6 | MIDI archive (downloads suspended), invented lyrics, chart | MIDI archive: Courier file lists, embedded players |
-| viaggi | Sun & Sea Travel / Viaggi Sole e Mare | 7 | offers, destinations; online booking closed | travel brochure: postcards, big pictures, sky colours |
-| comune | Town of Millbrook / Comune di San Vito al Lago | 7 | offices, notices, events, certificates, waste collection | bare 1995 institutional page: grey, Times, lists, no tables |
-| scuola | Millbrook High / Liceo G. Galilei | 7 | circulars, trips, computer room, school paper | student-made: notice board, typewriter Courier |
-| driver | DriverZone | 7 | drivers by category (files on the FTP server), utilities, FAQ | tech portal: dark left side-bar, badges, mono tables |
-| animali | Faithful Friend / Rifugio Amico Fedele | 7 | dogs, cats, adoption, volunteers | charity notice board: a two-column grid of animal cards, paw prints |
-| oroscopo | The Stars / Le Stelle | 6 | the week, signs, compatibility, moon, letters | splash page + mystical pages: night tile, serif gold, ambient MIDI |
-| anime | Hikari's Shrine / Il Santuario di Hikari | 7 | fan shrine of a thirteen-year-old for the invented cartoon Pixie Pilot Hikari: episode guide, characters, fan art described, awards, web ring (dead links), guestbook form | fan shrine: pink polka-dot tile, Comic, a row of button links, star GIFs, counter, 88x31 badges |
-| prof | Walter H. Brandt / Prof. Aldo Brandi | 6 | a numerical analysis professor: courses and exam dates, lecture notes in `<pre>`, publications, theses, office hours | bare academic page: white, Times, h1, ul, hr, no pictures, no tables |
-| band | Concrete Swans / Cigni di Cemento | 7 | local garage band: news, tour dates 1998-99 in local venues, discography, lyrics, members, MIDI riff, mailing-list and guestbook forms | band site: black, red Arial caps, lightning GIFs, dark date tables |
-| hosting | HomePlot / Pagine di Casa | 7 | free home-page provider: six neighbourhoods, member directory (dead addresses), sign-up form to a cgi script, tips, FAQ, rules | GeoCities-like provider: blue/yellow banner, coloured tab row, cream side column, banner-ad cell |
-| y2k | The Year 2000 Problem / Il problema del 2000 | 7 | an anxious amateur's millennium-bug guide as of 03/31/1999: checklist, appliance compliance table, money, supplies, readers' letters (never writes the date 2000 in slash form) | hazard page: black/yellow stripes, red blinking warnings, Times, countdown bar |
-| radio | The Shack of W3MBK / Il Radiopiano di I2SVL | 7 | ham radio hobby: band tables, logbook in Courier, QSL cards described, dipole build notes, club notices, CB channels | radio shack: olive green, gold headings, Courier tables, amber log on black, antenna GIFs |
+| forum | RetroForum | 5 (index, hardware, rules, thread, thread_y2k) | computer message board: sections, long threads, members, rules | UBB message board: grey bevelled tables, avatars, quotes |
+| shop | BuyItAll / CompraTutto | 2 (+ product_pc) | mail-order shop; online orders suspended | mail-order catalogue: price-tag grid, star bursts, product pictures |
+| news | NewsToday / NotizieOggi | 4 (index, art_y2k, tech, world) | news portal, 31/03/1999 edition, six articles | news portal in three columns: sections, headlines, a right-hand box of quick news |
+| meteo | WeatherNow / MeteoNow | 1 | forecasts, cities, satellite (offline), seasonal, glossary | teletext page: black, blocky cyan/yellow/green Courier, page numbers |
+| giochi | PlayWeb / GiocaWeb | 1 | shareware, chart, cheats, reviews; downloads closed | game zone: black, neon grid tile, flames, scrolling chart |
+| mail | WebNet WebMail | 1 | login closed during the move; service news, help, terms | web application: grey Win95 boxes, no pictures |
+| blog | ~jack99 | 2 (+ guestbook) | a happy sixteen-year-old: friends, band, school trip, a full guestbook | GeoCities teen page: tiled sky, Comic, GIFs, counter, MIDI, marquee |
+| biblioteca | Millbrook Public Library / Biblioteca Civica di San Vito | 1 | hours, new books, events, card catalogue | card catalogue: parchment tile, Times, typed index cards |
+| ricette | Granny Rose's Kitchen / La cucina di nonna Rosa | 1 | recipes, readers' letters | grandma: narrow card on gingham, Times + Comic, clip-art, waltz |
+| calcio | Griffins Fan Club / Fan Club Grifoni | 1 | results, squad, away trips, notice board | loud fan club: flames, blink, results marquee, anthem player |
+| tv | CouchGuide / TeleGuida | 1 | listings, films, series, letters | TV guide: time-slot grid, coloured channel columns |
+| musica | MidiMania / MidiWorld | 1 | MIDI archive (downloads suspended), invented lyrics, chart | MIDI archive: Courier file lists, embedded players |
+| viaggi | Sun & Sea Travel / Viaggi Sole e Mare | 1 | offers, destinations; online booking closed | travel brochure: postcards, big pictures, sky colours |
+| comune | Town of Millbrook / Comune di San Vito al Lago | 1 | offices, notices, events, certificates, waste collection | bare 1995 institutional page: grey, Times, lists, no tables |
+| scuola | Millbrook High / Liceo G. Galilei | 1 | circulars, trips, computer room, school paper | student-made: notice board, typewriter Courier |
+| driver | DriverZone | 1 | drivers by category (files on the FTP server), utilities, FAQ | tech portal: dark left side-bar, badges, mono tables |
+| animali | Faithful Friend / Rifugio Amico Fedele | 1 | dogs, cats, adoption, volunteers | charity notice board: a two-column grid of animal cards, paw prints |
+| oroscopo | The Stars / Le Stelle | 1 | the week, signs, compatibility, moon, letters | splash page + mystical pages: night tile, serif gold, ambient MIDI |
+| anime | Hikari's Shrine / Il Santuario di Hikari | 2 (+ episodes) | fan shrine of a thirteen-year-old for the invented cartoon Pixie Pilot Hikari: episode guide, characters, fan art described, awards, web ring (dead links), guestbook form | fan shrine: pink polka-dot tile, Comic, a row of button links, star GIFs, counter, 88x31 badges |
+| prof | Walter H. Brandt / Prof. Aldo Brandi | 2 (+ notes) | a numerical analysis professor: courses and exam dates, lecture notes in `<pre>`, publications, theses, office hours | bare academic page: white, Times, h1, ul, hr, no pictures, no tables |
+| band | Concrete Swans / Cigni di Cemento | 2 (+ tour) | local garage band: news, tour dates 1998-99 in local venues, discography, lyrics, members, MIDI riff, mailing-list and guestbook forms | band site: black, red Arial caps, lightning GIFs, dark date tables |
+| hosting | HomePlot / Pagine di Casa | 2 (+ members) | free home-page provider: six neighbourhoods, member directory (dead addresses), sign-up form to a cgi script, tips, FAQ, rules | GeoCities-like provider: blue/yellow banner, coloured tab row, cream side column, banner-ad cell |
+| y2k | The Year 2000 Problem / Il problema del 2000 | 2 (+ checklist) | an anxious amateur's millennium-bug guide as of 03/31/1999: checklist, appliance compliance table, money, supplies, readers' letters (never writes the date 2000 in slash form) | hazard page: black/yellow stripes, red blinking warnings, Times, countdown bar |
+| radio | The Shack of W3MBK / Il Radiopiano di I2SVL | 2 (+ logbook) | ham radio hobby: band tables, logbook in Courier, QSL cards described, dipole build notes, club notices, CB channels | radio shack: olive green, gold headings, Courier tables, amber log on black, antenna GIFs |
+
+Since 2026-11-20 the Notes column describes the site BEFORE the cut; what is left is the best of
+those pages merged into the kept ones (forum: the removed sections and threads are listed as
+"(archived)" plain text; some forms became "suspended during the move to the new server" notes).
+A "completo" site now needs `COMPLETO_PAGINE` = 1 page (was 5) and `COMPLETO_TESTO` = 2000
+characters of visible text per language (was 6000; `sito.py controlla` checks the same).
 
 The ordinary sites share one invented world: the town of **Millbrook / San Vito al
 Lago** (library, town hall, school, shelter, football club, PC repair), the WebNet

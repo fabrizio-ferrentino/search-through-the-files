@@ -9,7 +9,7 @@ one file per area: read the one for the area you are about to touch, not all of 
 *Five Nights at Freddy's* (watch the room, survive) meets *Welcome to the Game* (dig through a
 fake Win95/98 OS). The player sits at a desk and hunts **4 keys** hidden in the PC - on the disk,
 on two web sites, in a photo - to open a protected folder, while enemies threaten **both the room
-and the PC**. Every run randomizes the disk, the sites (10-15 of 40), the keys and their places.
+and the PC**. Every run randomizes the disk, the sites (10 of 40), the keys and their places.
 
 **The story** (GDD §2b): Noah finds the old PC of his **father** and switches it on alone one
 night (2022). The PC carries a curse started by a lonely young man who hanged himself; it
@@ -135,7 +135,7 @@ Implemented (details in the area docs):
   rename (F2, copyable names), browser (selection, links, view-source, loading wait), image
   viewer with sliders.
 - Random disk per run; 4 keys (disk / two sites / photo) and the secret folder that wins.
-- 40 web sites (24 ordinary, 16 lore), 10-15 per run, generated WebNet portal.
+- 40 web sites (24 ordinary, 16 lore), 10 per run, generated WebNet portal.
 - Room threats: Jester, HaloMan, Ghosty, held torch with battery.
 - PC threats: lethal apparitions, false alarms, YouAreStupid, blue screen.
 - Game over with per-cause lines; F12 debug panel (dev-only) with every threat on a button.

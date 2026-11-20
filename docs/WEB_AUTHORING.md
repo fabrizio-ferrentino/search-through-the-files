@@ -312,7 +312,7 @@ A site is a **folder**, `web/pages/<lang>/<site>/`, one per language with the sa
 names, and an entry in the site catalog `scripts/os/catalogo_siti.gd`. The full recipe
 (CSV rows, catalog fields, dead links on purpose) is in
 [WEB_SITES.md](WEB_SITES.md) §3; the planned sites are in
-[WEB_CATALOG.md](WEB_CATALOG.md). Each run picks 10-15 of the catalog's sites (4-5 of
+[WEB_CATALOG.md](WEB_CATALOG.md). Each run picks 10 of the catalog's sites (4-5 of
 them lore), the generated home lists them, and two of them host the two web keys, on
 any of their pages.
 

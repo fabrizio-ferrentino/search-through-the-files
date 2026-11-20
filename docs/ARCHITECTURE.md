@@ -301,7 +301,7 @@ The site pages are authored files (§4.5), but **which sites appear and where th
 per-run. `WebRuntime` (static, no file IO, no engine):
 - `build()` (from `BrowserApp.reset_pages()` on each `start_new_run`): seeds an RNG from
   `run_seed + SITE_SALT` and picks the run's sites from the **site catalog**
-  (`scripts/os/catalogo_siti.gd`, one folder per site under `web/pages/<lang>/`): 10-15
+  (`scripts/os/catalogo_siti.gd`, one folder per site under `web/pages/<lang>/`): 10
   sites, 4-5 of them lore, at least one about the father and one about the young man (all
   of them while the catalog is smaller). Then, for each of the TWO web keys, a site of the
   run and a page of that site as the **carrier**, plus the **mode** (visible / comment) and

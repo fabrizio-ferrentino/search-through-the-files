@@ -98,7 +98,7 @@ def genera(sid, skin, pagine, morti=()):
                 else:
                     errori.append("%s/%s href strano %s" % (lang, nome, h))
         print("%s/%s: %d pagine, %d caratteri" % (lang, sid, len(pagine), totale))
-        if totale < 6000:
+        if totale < 2000:   # come CatalogoSiti.COMPLETO_TESTO
             errori.append("%s/%s troppo corto (%d)" % (lang, sid, totale))
     for e in errori:
         print("  ERRORE " + e)

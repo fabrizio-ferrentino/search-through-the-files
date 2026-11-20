@@ -142,12 +142,17 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   closes and it reopens. It restores the language that was saved
   before it ran - headless),
 
+- bb_dump.gd (DEV TOOL, not a test; `-s`, headless, 2026-11-20): compiles every page with HtmlBB and
+  writes all the BBCode to one file. Dump before and after reformatting the sources and diff: after
+  `sito.py snellisci` the only difference left was invisible trailing spaces at the end of left-aligned
+  lines, so the reformat changes nothing the player sees,
+
 - siti_catalogo_test.tscn/.gd (the SITE CATALOG, headless: every site
   has all its pages in every language and no page outside its list,
   domains never repeat, NO TEXT SHAPED LIKE A KEY in any page (dates
-  with slashes!), a "completo" site has at least 5 pages and ~6000
-  characters per language, the run pick on a FAKE 30-site catalog
-  gives 10-15 sites, 4-5 lore, a father and a young-man site, the
+  with slashes!), a "completo" site has at least COMPLETO_PAGINE (1) pages and
+  COMPLETO_TESTO (2000) characters per language (5 and 6000 until 2026-11-20), the run pick on a FAKE
+  30-site catalog gives SITI_MIN..SITI_MAX (10) sites, 4-5 lore, a father and a young-man site, the
   same for the same seed and every site over 300 seeds, addresses of
   subpages and ~user pages resolve, a relative link stays in its site,
   and a site not in the run does not answer. Plus the owner's rules of
