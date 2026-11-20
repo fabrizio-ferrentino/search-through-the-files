@@ -20,7 +20,7 @@ passes) is written around, never invented. Build order: [docs/ROADMAP.md](docs/R
 ## 2. How to run and validate
 
 ```powershell
-$godot = "C:\Users\ffria\Desktop\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe"
+$godot = "C:\Users\ffria\Desktop\Dev\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe"
 $proj  = "z:\Progetti\Search Through the Files"
 & $godot --headless --path $proj --import                                   # parse everything
 & $godot --headless --path $proj "res://tests/<name>.tscn"                  # a headless test
@@ -106,7 +106,8 @@ docs/                    GDD, ROADMAP, ARCHITECTURE, recipes, docs/code/ (the de
 Full text with the reasons: [docs/code/README.md](docs/code/README.md).
 
 1. **UI is built in code**, not in `.tscn` (see `desktop.gd`).
-2. **Icons and chrome are drawn** (`os_icon.gd`, Win95 bevels), not imported.
+2. **Icons are period pixel art** (PNG 16/32 in `assets/icons/`, built by `tools/icons/build_icons.py`
+   from SerenityOS BSD-2 icons + hand-drawn ones; never Microsoft's); **chrome is drawn** (Win95 bevels).
 3. **Strict typing:** never infer `:=` from a `Variant` (`min`/`max` return Variant): write
    `var x: float = min(a, b)` or use `minf/maxf/clampf`.
 4. **Code comments in Italian**; docs and this file in English.

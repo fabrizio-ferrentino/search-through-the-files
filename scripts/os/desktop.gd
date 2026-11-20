@@ -327,7 +327,7 @@ func _build_start_menu() -> void:
 		{"name": "Web", "icon": "web", "open": func(): open_app("browser", "start")},
 		{"name": tr("VFS_DOCUMENTS"), "icon": "folder", "open": func(): open_app("explorer", _folder_path([tr("VFS_C_DRIVE"), tr("VFS_DOCUMENTS")]))},
 		{"sep": true},
-		{"name": tr("SHELL_SHUTDOWN"), "icon": "whale", "open": func(): _show_shutdown()},
+		{"name": tr("SHELL_SHUTDOWN"), "icon": "shutdown", "open": func(): _show_shutdown()},
 	]
 	var menu_w := 250
 	var stripe_w := 34

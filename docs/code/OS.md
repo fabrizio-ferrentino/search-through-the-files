@@ -191,7 +191,50 @@ Test: finestre_contorno_test.tscn.
 
 ### `scripts/os/os_icon.gd`
 
-OSIcon: every icon, drawn procedurally in _draw() (no PNGs).
+OSIcon: since 2026-11-20 the icons are PERIOD PIXEL-ART PNGs, no longer
+drawn procedurally. (Owner, 2026-11-20: "mi sostituisci le icone sia del
+desktop sia della ui con delle icone realistiche per l'epoca ... vedi cosa
+si puo salvare e cosa sostituire. Puoi prenderle su internet". He picked the
+SerenityOS set, BSD-2, over Chicago95 (GPL/MIT, near-copies of Microsoft's)
+and real Microsoft Win98 icons (copyright): licensing reasons.)
+- Files: assets/icons/16/<kind>.png and assets/icons/32/<kind>.png, named by
+  OSIcon kind (folder, folder_open, locked, computer, shutdown, web, file,
+  floppy, hdd, cdrom, exe, image, notepad, trash, trash_full; 16 only: smiley
+  and the toolbar ones back, fwd, up, cut, copy, paste, delete, props, views,
+  stop, refresh, home, star, print, search, speaker, speaker_muto).
+- Built by tools/icons/build_icons.py (Python + Pillow; rerun with
+  `python tools/icons/build_icons.py`). SerenityOS sources stay in
+  tools/icons/serenity/{16x16,32x32}/ with their LICENSE; tools/icons/.gdignore
+  keeps Godot from importing them. Drawn by hand in the script, same palette:
+  computer (monitor on a desktop case, teal screen), shutdown (same, navy
+  screen with moon + stars; NEW kind, used by the Start menu "Shut down"
+  item instead of the whale), floppy and cdrom (Serenity hard-disk body with
+  a floppy / CD above, like the Win95 My Computer units), empty trash
+  (Serenity bin, papers removed, open mouth), trash_full 16, locked (Serenity
+  folder + brass padlock), stop 16, print 16, smiley 16 (round). web 32 =
+  Serenity browser globe with their ladybug brand removed (mirrored from the
+  right half); web 16 = Serenity "internet" desk globe. up = Serenity
+  open-parent-directory, star = bookmark ribbon, views = icon-view.
+- static texture_per(tipo, lato, spenta): loads the PNG (32 if lato >=
+  _SOGLIA_32 = 28, else 16; falls back to the other size), scales "sharp
+  bilinear" (NEAREST up to an integer multiple >= 2x the target, then BILINEAR
+  down to the exact size; exact multiples stay NEAREST), caches per
+  "kind@size[@spenta]" in a static Dictionary (a cache, not run state).
+  texture_filter NEAREST, drawn centred and floored. Aliases ie/globe -> web,
+  text -> file.
+- OSIcon.spenta: the Win95 disabled emboss (dark pixels -> C_SHADOW, a white
+  copy 1 px down-right, light pixels vanish). Win95.fade() sets spenta on the
+  OSIcon in the button's "Contenuto" box and modulates only the other children
+  (the caption) at 0.38, instead of fading the whole box.
+- Kinds with NO PNG (whale, whale_pale, win, dropdown) still use the
+  procedural drawing below; the old procedural functions also stay as the
+  fallback if a PNG is missing. The notes below describe that procedural code
+  (History: it was all of it before 2026-11-20).
+- Credits: CR_SEC_ICONS / CR_ICONS (BSD-2 requires reproducing the notice).
+- Tests run after the change: browser_chrome_test, taskbar_test,
+  os_finestre_test, finestre_confine_test, esplora_griglia_test,
+  esplora_chrome_test, finestre_contorno_test, rinomina_test (all PASS).
+
 "floppy" / "hdd" / "cdrom" are the three UNITS of My Computer and
 "exe" is a program without its own icon (a little window with a
 blue title bar): with the folder icon on all of them, that first

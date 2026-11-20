@@ -261,6 +261,8 @@ CR_M_BOOKS2,Books · Alex Safayan · CC BY 3.0 · via Poly Pizza,Books · Alex S
 CR_SEC_FONTS,Fonts,Caratteri
 CR_FONTS,Arimo / Cousine / Tinos · Steve Matteson · SIL Open Font License 1.1,Arimo / Cousine / Tinos · Steve Matteson · SIL Open Font License 1.1
 CR_FONTS_COMIC,Comic Neue · Craig Rozynski · SIL Open Font License 1.1,Comic Neue · Craig Rozynski · SIL Open Font License 1.1
+CR_SEC_ICONS,Icons,Icone
+"CR_ICONS","SerenityOS icon set · © 2018-2026 the SerenityOS developers · BSD 2-Clause License","Icone di SerenityOS · © 2018-2026 the SerenityOS developers · licenza BSD 2-Clause"
 CR_SEC_ENGINE,Engine,Motore
 CR_ENGINE,Made with Godot Engine · godotengine.org · MIT License,Realizzato con Godot Engine · godotengine.org · Licenza MIT
 CR_ENGINE_COPY,"© Juan Linietsky, Ariel Manzur and the Godot Engine contributors","© Juan Linietsky, Ariel Manzur e i contributori di Godot Engine"

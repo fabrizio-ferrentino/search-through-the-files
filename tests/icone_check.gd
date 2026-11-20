@@ -13,7 +13,7 @@ extends Node
 
 const TIPI := ["folder", "folder_open", "locked", "computer", "web", "file", "floppy",
 		"hdd", "cdrom", "exe", "smiley", "image", "notepad", "trash", "trash_full", "whale",
-		"whale_pale", "back", "fwd", "up", "cut", "copy", "paste", "delete", "props",
+		"whale_pale", "shutdown", "back", "fwd", "up", "cut", "copy", "paste", "delete", "props",
 		"views", "dropdown", "stop", "refresh", "home", "star", "print", "search"]
 const PER_RIGA := 11
 const CELLA := Vector2(104, 74)

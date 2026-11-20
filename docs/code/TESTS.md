@@ -339,7 +339,8 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   = just those at 16-48 px x4 (user://icone_zoom.png); "-- web" =
   the network icon at 16-64 px plus the real desktop with the
   browser open (user://icona_web.png, icona_web_desktop.png).
-  Add a new icon kind to its TIPI list),
+  Add a new icon kind to its TIPI list; since 2026-11-20 the list includes
+  "shutdown" and it shows the PNG icons from assets/icons),
 
 - glitch_look_check.tscn/.gd (dev tool, WINDOWED: a CONTACT SHEET
   of 16 frames of the secret-folder guasto in the real room
