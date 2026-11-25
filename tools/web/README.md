@@ -24,7 +24,7 @@ the HTML subset in [docs/WEB_AUTHORING.md](../../docs/WEB_AUTHORING.md).
 
 - `dialetto(html, sid, lang)` (2026-11-20; owner: "manca ancora qualcosa per sembrare dei siti
   autentici di fine anni 90 ... tutto cio che pensi sia essenziale"): puts the page SOURCE in the
-  dialect of its site, `DIALETTI` maps all 40 sites to `mano` / `editor` / `composer` / `bacheca`
+  dialect of its site, `DIALETTI` maps all 39 sites to `mano` / `editor` / `composer` / `bacheca`
   (what each does and which sites: docs/WEB_AUTHORING.md, "Source dialects"). `genera()` applies
   `dialetto(snellisci(html))`; `python tools/web/sito.py dialetti` applies it to every page (310 of
   316 changed; 404 and nonserver have no site). Idempotent. Write normal lowercase HTML. A comment

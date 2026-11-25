@@ -41,7 +41,7 @@ four dialects and their sites (`DIALETTI` in sito.py):
   (`<TABLE BORDER=0 WIDTH=600>`; href/src/alt/title/value/name/action/onclick stay quoted),
   comments "written by hand with Notepad", "counter", "form"/"end form", "music", "scrolling
   text", "end of page". Sites: blog, anime, band, prof, radio, calcio, musica, y2k, driver,
-  giochi, treno, diario, nessuno, misteri, tecnico, numeri.
+  giochi, treno, diario, nessuno, tecnico, numeri.
 - `editor` (office editor, invented "Hydrophone HomePage 3.0"): `<meta name="GENERATOR">`,
   `<!--hpbot bot="HitCounter" ...-->`, `<!--hpbot bot="SaveResults" ...-->`, `#BeginEditable
   "body"` / `#EndEditable`. Sites: news, cronaca, shop, meteo, mail, tv, viaggi, comune,

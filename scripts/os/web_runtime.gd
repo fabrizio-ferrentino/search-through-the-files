@@ -213,7 +213,7 @@ const HOME := "home"          # nome di pagina della wiki (non e' un file)
 # INDIRIZZI. I domini stanno nel catalogo (catalogo_siti.gd), uno per lingua: un sito
 # inglese su un .it si nota subito, ed e' l'indirizzo la prima cosa che il giocatore legge
 # nella barra. Quelli della rete di fine anni '90: .it per i siti italiani, .com per il
-# negozio e i giochi, .net per il sito di misteri, la pagina personale ospitata dall'ISP
+# negozio e i giochi, .net per qualche sito strano (il volto, nessuno in casa), la pagina personale ospitata dall'ISP
 # sotto ~utente (era la norma: Geocities, Tripod, il "webspace" del provider) e la webmail
 # su un sottodominio del provider.
 # L'indirizzo di una pagina e' il dominio del sito piu' "/<pagina>.html" (l'index e' il

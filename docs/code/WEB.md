@@ -551,9 +551,9 @@ COMPLETO_TESTO 2000 characters of visible text per language; was 5 and
 6000 until 2026-11-20, see the ordinary-sites cut below),
 pagine (every page of the folder, index first: the key can land in
 any) and morti (dead links ON PURPOSE: a missing page of the site,
-or the address of a site that is gone). All 40 sites (30 written
+or the address of a site that is gone). All 39 sites (30 written
 2026-10-20, four lore sites added 2026-10-23, six ordinary ones - anime, prof, band, hosting, y2k,
-radio - added 2026-10-24) and the RULES every site follows: docs/WEB_CATALOG.md;
+radio - added 2026-10-24, the lore site misteri removed 2026-11-25) and the RULES every site follows: docs/WEB_CATALOG.md;
 the recipe: docs/WEB_SITES.md §3. Test: siti_catalogo_test.tscn.
 
 2026-11-20, FEWER PAGES (owner: "per me è molto difficile trovare la chiave" - the web key lives only in
@@ -712,11 +712,19 @@ the recipe for ADDING A LANGUAGE. The HOME is GENERATED per-run by
 WebRuntime (tonight's sites) — there is no home.html. To add a site:
 its folder in every web/pages/<lang>/, its WS_* rows in
 locale/ui.csv and its entry in scripts/os/catalogo_siti.gd. The
-40 sites: docs/WEB_CATALOG.md. (webnet.html = the user's
+39 sites: docs/WEB_CATALOG.md. (webnet.html = the user's
 original mockup, ref.)
 
 ## Feature notes
 
+- **Lore texts revised by the owner, `misteri` removed (2026-11-25).** The owner rewrote parts of
+  the ITALIAN lore pages himself (chat/log_last, log_owls; diario/index, last, letters, list, y1998,
+  y1999; genitori/thread_boys, thread_sleep; treno/about) on branch `feature/modifiche-siti-web`
+  (commit ebe5700), and deleted the site `misteri` ("non mi piaceva"). Merged onto the reformatted
+  sources by running `dialetto(snellisci(...))` on his versions (the pipeline reproduced the old
+  files byte for byte). `misteri` is gone from the catalog, both languages, `WS_MYST*` in ui.csv
+  and `DIALETTI`: 39 sites, 15 lore (3 with the curse's voice: diario, mercatino, nessuno).
+  The English versions of the revised pages still carry the OLD text.
 - **Source dialects (2026-11-20).** Owner (Italian): "secondo me manca ancora qualcosa per
   sembrare dei siti autentici di fine anni 90 ... si puo migliorare in qualche modo? anche
   stravolgendo il tutto", then "tutto cio che pensi sia essenziale". `tools/web/sito.py`

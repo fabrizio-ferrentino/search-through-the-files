@@ -163,11 +163,6 @@ const SITI := [
 		"en": "www.thestarsweekly.com", "it": "www.lestelle.it",
 		"tipo": "normale", "voce": "", "featured": false, "stato": "completo",
 		"pagine": ["index"]},
-	# un sito di misteri: computer che guardano, oggetti che passano qualcosa, la balena dei 52 Hz
-	{"id": "misteri", "nome": "WS_MYST", "desc": "WS_MYST_D",
-		"en": "www.hiddentruths.net", "it": "www.veritanascoste.net",
-		"tipo": "lore", "voce": "maledizione", "featured": false, "stato": "completo",
-		"pagine": ["index", "about", "last", "letters", "objects", "reports", "whale"]},
 	# sembra normale: fra case e auto, la rubrica dei cuori solitari col suo annuncio che torna uguale
 	{"id": "annunci", "nome": "WS_ADS", "desc": "WS_ADS_D",
 		"en": "www.freeadsboard.com", "it": "www.annuncigratis.it",

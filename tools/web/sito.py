@@ -76,7 +76,7 @@ def snellisci(html):
 # e virgolette. Lo prova tests/bb_dump.gd (BBCode e posti per la chiave identici).
 DIALETTI = {
     "mano": ["blog", "anime", "band", "prof", "radio", "calcio", "musica", "y2k", "driver",
-             "giochi", "treno", "diario", "nessuno", "misteri", "tecnico", "numeri"],
+             "giochi", "treno", "diario", "nessuno", "tecnico", "numeri"],
     "editor": ["news", "cronaca", "shop", "meteo", "mail", "tv", "viaggi", "comune",
                "biblioteca", "hosting", "vincente"],
     "composer": ["ricette", "animali", "scuola", "oroscopo", "ascolto", "volto", "annunci",

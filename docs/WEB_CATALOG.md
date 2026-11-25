@@ -1,6 +1,6 @@
-# The site catalog: the 40 sites
+# The site catalog: the 39 sites
 
-The fake web the player browses. **40 sites** in all (30 until 2026-10-23, when four lore sites were added; on 2026-10-24 six more ordinary ones: anime, prof, band, hosting, y2k, radio); **every run picks exactly 10** (10-15 until 2026-11-20, owner: "lasciare sempre 10 siti a partita"; `WebRuntime.SITI_MIN = SITI_MAX = 10`), of
+The fake web the player browses. **39 sites** in all (30 until 2026-10-23, when four lore sites were added; on 2026-10-24 six more ordinary ones: anime, prof, band, hosting, y2k, radio; on 2026-11-25 the lore site `misteri` was removed, the owner did not like it); **every run picks exactly 10** (10-15 until 2026-11-20, owner: "lasciare sempre 10 siti a partita"; `WebRuntime.SITI_MIN = SITI_MAX = 10`), of
 which **4 or 5 carry lore** (owner, 2026-10-19). All of tonight's sites are listed on the
 WebNet gateway; the others answer "cannot find server". They are period sites of
 1998-99, most of them ordinary, some disturbing. All 30 were written on 2026-10-20, in English and Italian,
@@ -8,7 +8,7 @@ with 6-14 pages each. **2026-11-20 (owner: "per me è molto difficile trovare la
 snellire le pagine ... sostituire proprio i siti con pagine da una sola tab"):** the 24 ordinary sites
 were cut to 1-5 pages (table below; 175 -> 39 pages), because a web key hidden only in a page's SOURCE was
 too hard to find among ~91 pages. Research: in Welcome to the Game II, 21 of 50 sites have one page and
-there are ~19 pages per key. The 16 lore sites are untouched (next step).
+there are ~19 pages per key. The lore sites (15 since 2026-11-25) are untouched (next step).
 
 This file is the **map**. The data the game reads is `scripts/os/catalogo_siti.gd`; how
 to add a site is in [WEB_SITES.md](WEB_SITES.md) §3; how to write the HTML is in
@@ -114,7 +114,7 @@ twelve windows, the girl at the bar).
 **His nickname is `~missedtrain / ~trenoperso`** (owner, 2026-10-23). It used to be
 `~whale52 / ~balena52`, the same animal as the OS logo, which the owner did not like. The
 **52 Hz whale stays the CURSE's emblem** (death screen line, secret-folder glitch, the disk
-files 52HZ.TXT and whale.txt, `misteri/whale`, `nessuno/whale`): only the young man lost it.
+files 52HZ.TXT and whale.txt, `nessuno/whale`): only the young man lost it.
 His symbol is the 23:52 regional train that no longer stops at the closed station behind
 his building (the station clock stopped at ten past six); "the train only comes once" is
 what people told him.
@@ -130,7 +130,6 @@ what people told him.
 | cronaca | The County Herald / La Gazzetta della Provincia | father | 8 | the newspaper archive: the tragedy, the follow-up, ordinary local news | newspaper: Times masthead, date line, serif columns |
 | genitori | The Kitchen Table / Il Tavolo di Cucina | father | 9 | a parents' forum; the father's posts slipping, the last one to his boys | homely forum: cream, Georgia, little clip-art |
 | tecnico | PC Doctor at Home / Il Dottore del PC | father | 6 | a technician's job notes from the father's house; the notice afterwards | plain text notes: Courier, like a .txt put online |
-| misteri | Hidden Truths / Verita' Nascoste | curse | 7 | reports of computers that watch, objects that pass something on, the whale; the webmaster's last update | conspiracy page: black, green, eyes, blink |
 | mercatino | Used PC Market / Mercatino PC | curse | 8 | ordinary ads, and one beige 486 sold again and again, with "don't buy it" | flea market: ad table with pictures, beige |
 | nessuno | nobody / nessuno | curse | 8 | the page that should not exist: the curse speaking to whoever is at the PC now | the page that should not exist: almost empty, dark |
 | brutti | The Ugly Guys' Board / Il Forum dei Brutti | others | 8 | a 1997 board where men ask to be told "the truth" about their looks; the long words (hypergamy, genetic determinism, the 80/20) are used, never explained (owner, 2026-10-23: no glossaries, no definitions); one member leaves for a dancing class; on 21/11/1998 at 23:52:00 a "guest" posts with the words of the young man's page | WWWBoard: white, Times, threaded message list |
