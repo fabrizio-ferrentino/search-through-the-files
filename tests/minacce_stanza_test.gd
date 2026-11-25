@@ -74,13 +74,13 @@ func _prova_torcia() -> void:
 	_td.torch_spegni()
 	var spenta: bool = not _td._torcia_accesa()
 	_passi(2.0)
-	_check("TORCIA_A_PRESSIONE", accesa and ancora and spenta and dopo1 < 95.0 and dopo1 > 80.0
+	_check("TORCIA_A_PRESSIONE", accesa and ancora and spenta and dopo1 < 90.0 and dopo1 > 65.0
 			and _td._battery > dopo1 + 8.0,
 			"accesa %s, ancora dopo 1 s %s, spenta al rilascio %s, batteria %.1f -> %.1f" % [str(accesa),
 			str(ancora), str(spenta), dopo1, _td._battery])
 	_td._battery = 100.0
 	_td.torch_accendi()
-	_passi(8.6)                        # 100 / BATTERY_DRAIN = 8,3 s di luce
+	_passi(4.5)                        # 100 / BATTERY_DRAIN = 4,2 s di luce
 	var vuota: bool = not _td._torcia_accesa() and _td._battery < 5.0
 	_td.torch_spegni()
 	_td.torch_accendi()

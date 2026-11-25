@@ -145,7 +145,7 @@ left = window); Ghosty comes from behind on a clock of his own.
 - [x] **Ghosty** *(working name).* From behind: approaches while unwatched, rushes when
   watched without light (since 2026-11-25; it used to freeze), vanishes in the torch light; light tell inside the PC; else → `game_over("ghosty")`.
 - [x] **Flashlight.** **Held** (press = on, release = off), a real beam that follows the
-  view, a battery that drains while lit and recharges while off (HUD bar). **Still TODO:**
+  view, a battery that drains while lit and recharges while off (~4 s of light; the HUD bar was removed 2026-11-25). **Still TODO:**
   SFX.
 - [ ] **Real models and animations** for the three enemies (placeholders today) — LAST.
 - [~] **Attention mechanic & pacing.** Framework in `scripts/threats/threat_director.gd`

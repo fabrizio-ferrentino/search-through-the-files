@@ -97,7 +97,8 @@ threats in the same instant are a lottery). Causes "jester",
 (owner: "la torcia non si comanda quanto tempo deve rimanere
 accesa"): player.gd calls torch_accendi on press (looking
 left/right/back, near the centre of the screen) and torch_spegni
-on release; BATTERY_DRAIN 12/s while lit (~8 s), RECHARGE 6/s
+on release; BATTERY_DRAIN 24/s while lit (~4 s; was 12/s, ~8 s, halved by the owner
+2026-11-25), RECHARGE 6/s
 while off, empty -> off and no relight under BATTERIA_RIACCENDE
 15, flickers under 20; the beam follows the camera every frame
 (_punta_torcia: from the hand, 0.2 right / 0.05 below the eye, aimed
@@ -390,7 +391,7 @@ foundation for M5. NOT the secret folder any more (see below).
   - **Ghosty** (`ghosty.tscn`, working name, placeholder): from **behind**; the longer you do
     not look back (or sit in the PC) the closer he gets; looking back without light makes him rush (twice as fast), the **torch**
     makes him vanish. He never strikes during a peek or the lethal PC virus.
-  The **torch** is HELD (press = on, release = off) with a battery (HUD bar in the room). Inside
+  The **torch** is HELD (press = on, release = off) with a battery (~4 s of light; no HUD bar since 2026-11-25, owner: the flicker under 20 is the only sign). Inside
   the PC a glitch pulse warns of a peek and the screen edges cool down as Ghosty approaches. The
   room is kept dark (`player._setup_atmosphere`: low ambient, **no fog** — FNAF4-style). Deaths:
   `game_over("jester" / "halo" / "ghosty")`, each with its own subtitles

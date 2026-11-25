@@ -27,7 +27,8 @@ extends Node
 # LA TORCIA (19/10/2026) non e' piu' un lampo di 2 s: si accende TENENDO PREMUTO il tasto
 # del mouse e si spegne rilasciandolo (torch_accendi / torch_spegni, chiamate da
 # player.gd). La batteria si scarica mentre e' accesa e si ricarica da spenta; vuota, la
-# torcia si spegne e non si riaccende finche' non ha di nuovo BATTERIA_RIACCENDE.
+# torcia si spegne e non si riaccende finche' non ha di nuovo BATTERIA_RIACCENDE. Niente
+# barra a schermo (tolta 25/11/2026, proprietario): la carica si intuisce dal tremolio.
 
 var player = null         # la Camera3D (player.gd): posa per la mira + is_in_pc()
 var virus = null          # il VirusDirector (M5): niente affacci durante il virus mortale
@@ -62,9 +63,6 @@ var _peek_zone := "right"   # "right" (corridoio) / "left" (finestra)
 var _torch: SpotLight3D = null
 var _torch_energy := 5.0    # luminosita' "piena"
 var _battery := 100.0       # carica della torcia, 0..BATTERY_MAX
-var _bat_layer: CanvasLayer = null
-var _bat_bg: ColorRect = null
-var _bat_fill: ColorRect = null
 var _rng := RandomNumberGenerator.new()
 # Ghosty
 var _g_arriva := false      # false = non c'e' (aspetta il suo turno), true = sta arrivando
@@ -104,7 +102,7 @@ const GHOSTY_TELL_DA := 0.35        # da qui il PC comincia a raffreddarsi ai bo
 # --- Torcia ---
 const AIM_TOL_DEG := 30.0           # quanto devi essere girato "verso la zona" per illuminarla
 const BATTERY_MAX := 100.0
-const BATTERY_DRAIN := 12.0         # carica al secondo mentre e' accesa (~8 s di fila)
+const BATTERY_DRAIN := 24.0         # carica al secondo mentre e' accesa (~4 s di fila; erano ~8, dimezzati 25/11/2026)
 const BATTERY_RECHARGE := 6.0       # ricarica al secondo mentre e' spenta
 const BATTERIA_RIACCENDE := 15.0    # sotto questa, da vuota, non si riaccende
 const BATTERIA_DEBOLE := 20.0       # sotto questa la luce tremola
@@ -141,8 +139,6 @@ func stop() -> void:
 	_ghosty.sparisci()
 	if _torch != null:
 		_torch.visible = false
-	if _bat_layer != null:
-		_bat_layer.visible = false
 	_reset_tell()
 	_velo_ghosty.visible = false
 
@@ -367,7 +363,6 @@ func _setup_torch() -> void:
 	_torch.light_color = Color(1.0, 0.97, 0.85)
 	add_child(_torch)
 	_torch_energy = _torch.light_energy
-	_setup_battery_ui()
 
 # Premuto (in stanza, girato a destra/sinistra/dietro): si accende, se c'e' carica.
 func torch_accendi() -> void:
@@ -403,7 +398,6 @@ func _update_torch(delta: float) -> void:
 				_torch.light_energy = _torch_energy * tremola
 	else:
 		_battery = minf(BATTERY_MAX, _battery + BATTERY_RECHARGE * delta)
-	_update_battery_ui()
 
 # Luce VERA, non "stampata": parte dalla MANO (un po' sotto/destra dell'occhio) e punta
 # dove guardi, all'altezza del nemico (non sul pavimento): il fascio graza pareti e nemici
@@ -431,40 +425,6 @@ func _punta_torcia() -> void:
 		# stanza dove arriva Ghosty. Con la mira della finestra illuminava il quadro.
 		aim = cam_t.origin + fwd * 4.0
 	_torch.look_at(aim, Vector3.UP)
-
-# --- barra batteria (HUD, visibile solo in stanza) ---
-func _setup_battery_ui() -> void:
-	_bat_layer = CanvasLayer.new()
-	_bat_layer.layer = 14
-	add_child(_bat_layer)
-	var root := Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_bat_layer.add_child(root)
-	_bat_bg = ColorRect.new()
-	_bat_bg.color = Color(0, 0, 0, 0.55)
-	_bat_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_bat_bg.anchor_top = 1.0
-	_bat_bg.anchor_bottom = 1.0
-	_bat_bg.offset_left = 24
-	_bat_bg.offset_right = 228
-	_bat_bg.offset_top = -52
-	_bat_bg.offset_bottom = -24
-	root.add_child(_bat_bg)
-	_bat_fill = ColorRect.new()
-	_bat_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_bat_fill.position = Vector2(2, 2)
-	_bat_fill.size = Vector2(200, 24)
-	_bat_bg.add_child(_bat_fill)
-
-func _update_battery_ui() -> void:
-	if _bat_layer == null:
-		return
-	_bat_layer.visible = not player.is_in_pc()
-	if _bat_fill != null:
-		var f: float = clampf(_battery / BATTERY_MAX, 0.0, 1.0)
-		_bat_fill.size = Vector2(200.0 * f, 24.0)
-		_bat_fill.color = Color(0.85, 0.2, 0.2).lerp(Color(0.3, 0.85, 0.35), f)
 
 # --- heat: aggiornamento e timer derivati ---
 func _update_heat(delta: float) -> void:
