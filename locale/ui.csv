@@ -146,6 +146,15 @@ BR_ABOUT_VER,Version 2.0 (build 412),Versione 2.0 (build 412)
 BR_ABOUT_COPY,(c) 1998 WebNet Telematic Services,(c) 1998 WebNet Servizi Telematici
 BR_NO_SITES,(no sites),(nessun sito)
 UI_YOU_WIN,YOU WIN,HAI VINTO
+STATS_SEED,Seed: %d,Seme: %d
+STATS_TIME,Time survived: %s,Tempo sopravvissuto: %s
+STATS_PAGES,Web pages opened: %d,Pagine web aperte: %d
+STATS_FILES,Files opened: %d,File aperti: %d
+STATS_JESTER,Jester driven away: %d,Jester scacciato: %d
+STATS_HALO,HaloMan avoided: %d,HaloMan evitato: %d
+STATS_GHOSTY,Ghosty driven away: %d,Ghosty scacciato: %d
+STATS_VIRUS,Lethal viruses survived: %d,Virus mortali sventati: %d
+STATS_TRIES,Tries at the protected folder: %d,Tentativi alla cartella protetta: %d
 FC_1,holiday photos - archive %s,foto vacanze - archivio %s
 FC_2,scan %s - do not delete,scansione %s - non cancellare
 FC_3,backup copy %s,copia di sicurezza %s

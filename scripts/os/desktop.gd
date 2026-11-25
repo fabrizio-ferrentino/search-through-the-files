@@ -442,6 +442,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			app.launch(arg if arg is String else "start")
 			return win
 		"notepad":
+			GameManager.conta("file")
 			var file: Dictionary = arg if arg is Dictionary else {}
 			var win := open_window(str(file.get("name", tr("NP_UNTITLED"))), Vector2(560, 460), "notepad")
 			var app := NotepadApp.new()
@@ -451,6 +452,7 @@ func open_app(kind: String, arg = null) -> OSWindow:
 			app.launch(file)
 			return win
 		"image":
+			GameManager.conta("file")
 			var node: Dictionary = arg if arg is Dictionary else {}
 			# grande abbastanza da mostrare la foto SENZA rimpicciolirla: la composizione
 			# arriva a 640x480 e il pannello dei cursori si mangia 210 px. Rimpicciolire
@@ -1486,6 +1488,7 @@ func open_secret_folder(_node: Dictionary) -> void:
 		var rows: Array = []
 		for le2 in fields:
 			rows.append(str(le2.text))
+		GameManager.conta("tentativi")
 		if GameManager.check_keys(rows):
 			layer.queue_free()
 			game_won.emit()

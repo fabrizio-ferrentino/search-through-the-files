@@ -270,6 +270,11 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - photo_banda_scan.tscn/.gd (dev tool: the quietest spot in the
   shader's real band on each photo and the offset it would need),
 
+- statistiche_test.gd (script, headless, 2026-11-25: the end-of-run summary carries the seed,
+  the time as m:ss and every counter (RIEPILOGO), a new run resets them (AZZERA), every STATS_*
+  line exists in EN and IT (LINGUE)); minacce_stanza_test also checks the counters of the
+  enemies driven away / avoided (STATISTICHE_NEMICI),
+
 - visualizzatore_layout_test.tscn/.gd (WINDOWED, 2026-11-25: the photo viewer never cuts its
   controls - at the opening size every slider and "Reimposta" are whole (APERTURA_TUTTO_VISIBILE);
   in a 560x340 window the scroll bar appears, nothing sticks out sideways and scrolling down

@@ -168,6 +168,8 @@ func _segui() -> void:
 				_fine()
 		"mortale":
 			if not GameManager.pc_on or not GameManager.pc_threats_enabled:
+				if not GameManager.pc_on:
+					GameManager.conta("virus")   # spento in tempo: sventato
 				if is_instance_valid(_nodo):
 					_nodo.pulisci()
 				_fine()

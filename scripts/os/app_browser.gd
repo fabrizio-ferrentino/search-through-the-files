@@ -341,6 +341,7 @@ static func read_page(name: String) -> String:
 	return ""
 
 func _load(name: String) -> void:
+	GameManager.conta("pagine")
 	_ferma_musica()
 	_valori.clear()
 	_scrivi_in("")

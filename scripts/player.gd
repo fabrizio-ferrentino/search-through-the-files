@@ -412,6 +412,14 @@ func _show_ending() -> void:
 	title.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 	vb.add_child(title)
 
+	var stat := Label.new()
+	stat.name = "Statistiche"
+	stat.text = GameManager.riepilogo()
+	stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stat.add_theme_font_size_override("font_size", 22)
+	stat.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	vb.add_child(stat)
+
 	var btn := Button.new()
 	btn.text = tr("UI_BACK_TO_MENU")
 	btn.custom_minimum_size = Vector2(240, 56)

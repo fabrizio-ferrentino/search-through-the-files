@@ -233,6 +233,17 @@ Reusable black ColorRect + AnimationPlayer (fade_in / fade_out).
 
 ### `scripts/GameManager.gd`
 
+End-of-run summary (2026-11-25, owner: "mostrare seed e tempo a fine partita e statistiche
+varie"): `tempo_partita` grows in `_process` while `run_active` (not in pause: GameManager stops
+with the paused tree); `conta(nome)` bumps `statistiche[nome]`; both are reset by
+`start_new_run`. `STATISTICHE` lists the counters and their CSV keys (STATS_*): pagine
+(app_browser `_load`, refresh included), file (desktop `open_app` notepad/image), jester (driven
+away) and halo (avoided by switching the PC off) from `ThreatDirector._fine_affaccio`, ghosty
+(torch, not the debug button), virus (lethal virus ended by switching the PC off), tentativi
+(each try at the protected folder). `riepilogo()` returns seed, time (m:ss) and the counters,
+one per line; the death screen and the win screen (player.gd `_show_ending`) show it in a
+grey Label "Statistiche".
+
 Video settings (2026-10-23): schermo_intero, vsync, risoluzione
 (Vector2i, ZERO = never chosen = keep project.godot's window), saved in
 user://impostazioni.cfg section [video] next to the language, loaded in
@@ -497,7 +508,8 @@ with hysteresis so jitter won't re-trigger).
 Game-over overlay (M2): jumpscare → GAME OVER screen → menu.
 Built in code; spawned at root by GameManager.game_over().
 Per-cause subtitles (M4: Jester lines when cause=="jester";
-M5: DEATH_VIRUS_* when cause=="virus").
+M5: DEATH_VIRUS_* when cause=="virus"). Under the subtitle: GameManager.riepilogo()
+(seed, time, stats).
 
 ### `scripts/pause_screen.gd`
 

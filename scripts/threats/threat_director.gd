@@ -232,6 +232,7 @@ func _to_calm() -> void:
 	_timer = 0.0
 
 func _fine_affaccio() -> void:
+	GameManager.conta(_chi)       # scacciato il Jester / evitato HaloMan
 	if _chi == "jester":
 		_jester.nascondi()       # e' gia' dietro lo stipite: sparisce
 	_nemico = null
@@ -318,6 +319,7 @@ func _avanza_ghosty(delta: float) -> void:
 		return
 	var guardato := _guardi_dietro()
 	if guardato and _torcia_accesa() and _g_p >= GHOSTY_VISIBILE:
+		GameManager.conta("ghosty")
 		_ghosty_via()                      # la luce lo cancella
 		return
 	_g_p += delta / lerpf(GHOSTY_DURATA_CALM, GHOSTY_DURATA_HOT, _heat) * (GHOSTY_GUARDATO if guardato else 1.0)

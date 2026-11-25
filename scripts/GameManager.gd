@@ -57,6 +57,15 @@ var key_hints: Dictionary = {}
 var key_kinds: Dictionary = {}
 var _keys_panel: DebugPanel = null   # il pannello di debug F12 (debug_panel.gd)
 var _keys_label: Label = null        # le sue righe delle chiavi
+# Le statistiche della partita, mostrate a fine partita (morte e vittoria) col seme e il
+# tempo (proprietario, 25/11/2026). conta() le aumenta dai punti del gioco dove succedono;
+# STATISTICHE da' l'ordine e la chiave di testo. tempo_partita conta solo a partita in corso
+# e non in pausa (GameManager si ferma con l'albero in pausa).
+const STATISTICHE := [["pagine", "STATS_PAGES"], ["file", "STATS_FILES"],
+		["jester", "STATS_JESTER"], ["halo", "STATS_HALO"], ["ghosty", "STATS_GHOSTY"],
+		["virus", "STATS_VIRUS"], ["tentativi", "STATS_TRIES"]]
+var statistiche: Dictionary = {}
+var tempo_partita := 0.0
 var debug_compatto := false          # pannello ridotto alle sole chiavi (resta fra un F12 e l'altro)
 # DEV-ONLY (20/10/2026, proprietario: "fai in modo che io li possa vedere tutti"): il web
 # risponde con TUTTI i siti del catalogo e il portale li elenca tutti, non solo quelli
@@ -247,6 +256,8 @@ func start_new_run(new_seed: int = 0) -> void:
 	_generate_keys()          # genera le chiavi PRIMA di costruire i contenuti che le ospitano
 	key_hints.clear()         # le posizioni le riannotano i generatori qui sotto
 	key_kinds.clear()
+	statistiche.clear()
+	tempo_partita = 0.0
 	first_time_in_room = true
 	pc_on = false
 	logged_in = false
@@ -274,6 +285,23 @@ func game_over(cause := "") -> void:
 # Fine della partita (morte o vittoria): da qui in poi non c'e' piu' nulla da mostrare,
 # quindi si chiude il pannello di debug e i tasti di debug si disattivano. La chiamano
 # game_over() e player._on_game_won().
+func _process(delta: float) -> void:
+	if run_active:
+		tempo_partita += delta
+
+func conta(nome: String) -> void:
+	statistiche[nome] = int(statistiche.get(nome, 0)) + 1
+
+# Il riepilogo di fine partita, una voce per riga: seme, tempo e le statistiche.
+func riepilogo() -> String:
+	var s := int(tempo_partita)
+	var righe: PackedStringArray = [tr("STATS_SEED") % run_seed,
+			tr("STATS_TIME") % ("%d:%02d" % [s / 60, s % 60])]
+	for st in STATISTICHE:
+		righe.append(tr(str(st[1])) % int(statistiche.get(str(st[0]), 0)))
+	return "
+".join(righe)
+
 func finish_run() -> void:
 	run_active = false
 	close_keys_panel()
