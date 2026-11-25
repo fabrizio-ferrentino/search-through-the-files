@@ -270,6 +270,12 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - photo_banda_scan.tscn/.gd (dev tool: the quietest spot in the
   shader's real band on each photo and the offset it would need),
 
+- visualizzatore_layout_test.tscn/.gd (WINDOWED, 2026-11-25: the photo viewer never cuts its
+  controls - at the opening size every slider and "Reimposta" are whole (APERTURA_TUTTO_VISIBILE);
+  in a 560x340 window the scroll bar appears, nothing sticks out sideways and scrolling down
+  shows "Reimposta" whole (PICCOLA_SI_SCORRE). Sabotaged (scroll bar never shown): red.
+  Saves user://visualizzatore_apertura.png and visualizzatore_piccolo.png),
+
 - photo_chain_test.tscn/.gd (the code must survive the REAL chain:
   viewer window -> OS screen -> game window + CRT, and the sliders
   must reveal it — windowed),

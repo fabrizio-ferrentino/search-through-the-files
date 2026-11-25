@@ -12,7 +12,10 @@ ImageViewerApp (M3): opens a photo + adjustment sliders
 (brightness/contrast/saturation/levels/Nitidezza via
 adjust.gdshader); the key photo hides a code revealed only by
 adjusting it (Nitidezza is the one that actually separates it
-from photo detail — see the M3 bullet below).
+from photo detail — see the M3 bullet below). The slider panel (210 px) is a PanelContainer
+with a ScrollContainer ("Scorri") around the column: in a short window a Win95 scroll bar
+appears instead of cutting the last sliders and "Reimposta" (owner, 2026-11-25: "alcuni pulsanti
+sono tagliati"); long labels wrap.
 
 ### `scripts/os/adjust.gdshader`
 

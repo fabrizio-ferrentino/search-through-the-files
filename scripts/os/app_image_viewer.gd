@@ -98,18 +98,29 @@ func launch(node) -> void:
 	display.add_child(view)
 
 	# --- pannello regolazioni ---
-	var side := Panel.new()
-	side.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 8, 8, 8, 8))
+	# Prima era un Panel con la colonna a offset fissi: la colonna non contava nella misura
+	# della finestra e, appena la finestra era piu' bassa dei cursori, "Ripristina" e gli
+	# ultimi cursori uscivano tagliati. Ora la colonna sta in uno ScrollContainer: se non
+	# c'e' posto compare la barra di scorrimento, come nei pannelli di Windows 95.
+	var side := PanelContainer.new()
+	side.add_theme_stylebox_override("panel", Win95._sb(true, Win95.C_FACE, true, 10, 10, 10, 10))
 	side.custom_minimum_size = Vector2(210, 0)
 	root.add_child(side)
+	var scorri := ScrollContainer.new()
+	scorri.name = "Scorri"
+	scorri.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	side.add_child(scorri)
 	var col := VBoxContainer.new()
-	col.set_anchors_preset(Control.PRESET_FULL_RECT)
-	col.offset_left = 10
-	col.offset_top = 10
-	col.offset_right = -10
-	col.offset_bottom = -10
-	col.add_theme_constant_override("separation", 18)   # 6 cursori nella finestra
-	side.add_child(col)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.size_flags_vertical = Control.SIZE_EXPAND_FILL   # con posto, "Ripristina" va in fondo
+	col.add_theme_constant_override("separation", 6)
+	# un margine a destra: quando compare, la barra di scorrimento non tocca i cursori
+	var aria_barra := MarginContainer.new()
+	aria_barra.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	aria_barra.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	aria_barra.add_theme_constant_override("margin_right", 12)
+	scorri.add_child(aria_barra)
+	aria_barra.add_child(col)
 
 	var title := Label.new()
 	title.text = tr("IV_TITLE")
@@ -130,6 +141,7 @@ func launch(node) -> void:
 	col.add_child(spacer)
 
 	var reset := Button.new()
+	reset.name = "Ripristina"
 	reset.text = tr("IV_RESET")
 	reset.focus_mode = Control.FOCUS_NONE
 	reset.pressed.connect(_reset)
@@ -201,6 +213,7 @@ func _fit_size(src: Vector2, maxv: Vector2) -> Vector2i:
 func _add_slider(parent: VBoxContainer, text: String, param: String, minv: float, maxv: float) -> void:
 	var lbl := Label.new()
 	lbl.text = text
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # un nome lungo va a capo, non esce
 	parent.add_child(lbl)
 	var s := HSlider.new()
 	s.min_value = minv
@@ -210,6 +223,9 @@ func _add_slider(parent: VBoxContainer, text: String, param: String, minv: float
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	s.value_changed.connect(func(value: float): _mat.set_shader_parameter(param, value))
 	parent.add_child(s)
+	var aria := Control.new()   # stacco fra un cursore e il nome del successivo
+	aria.custom_minimum_size = Vector2(0, 8)
+	parent.add_child(aria)
 	_sliders.append({"node": s, "default": float(DEFAULTS[param])})
 
 # Riporta cursori e shader ai valori di default (l'immagine torna "non regolata").
