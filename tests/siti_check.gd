@@ -9,7 +9,7 @@ extends Node
 # Una pagina con "!" in fondo (forum/index!) si fotografa anche col suo sorgente aperto nel
 # Blocco note ("Origine" del browser): user://sorgente_<sito>_<pagina>.png
 
-const PAGINE := ["forum/index", "forum/hardware", "forum/thread", "forum/members",
+const PAGINE := ["forum/index", "forum/hardware", "forum/thread",
 		"treno/index", "treno/about", "treno/thoughts", "treno/guestbook", "treno/update"]
 
 func _ready() -> void:

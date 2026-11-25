@@ -1,20 +1,25 @@
-<html>
-<head><title>Prof. Aldo Brandi - Appunti</title></head>
-<body bgcolor="#FFFFFF" text="#000000" link="#0000EE" vlink="#551A8B">
-<font face="Times New Roman"><h1>Prof. Aldo Brandi</h1><p><i>Dipartimento di Matematica, Universita' degli Studi del Lago</i></p><p>[ <a href="index.html">Home</a> | <a href="teaching.html">Didattica</a> | <b>Appunti</b> | <a href="papers.html">Pubblicazioni</a> | <a href="students.html">Studenti</a> | <a href="contact.html">Ricevimento</a> ]</p></font><hr>
-<font face="Times New Roman"><h2>Appunti delle lezioni</h2>
-<p>Sono gli appunti del mio corso di Analisi Numerica I, in testo semplice, in modo da poterli stampare con qualsiasi stampante e leggere su qualsiasi schermo. Non sono un libro: contengono le definizioni, gli algoritmi e gli esercizi, non le spiegazioni, che do a lezione. Vi prego di non ridistribuirli senza questa intestazione.</p>
-<ul>
-<li>Capitolo 1 - Numeri in virgola mobile (versione del 01/02/1999)</li>
-<li>Capitolo 2 - Equazioni non lineari (versione del 08/02/1999)</li>
-<li>Capitolo 3 - Eliminazione di Gauss (qui sotto, versione del 15/03/1999)</li>
-<li>Capitolo 4 - Pivoting e decomposizione LU</li>
-<li>Capitolo 5 - Norme e condizionamento</li>
-<li>Capitolo 6 - Interpolazione (in preparazione)</li>
-<li>Capitolo 7 - Metodi iterativi, corretto il 15/03/1999</li>
-</ul>
-<p>In questa pagina e' stampato solo il capitolo 3, come esempio; gli altri sono disponibili presso la segreteria del dipartimento su dischetto, o in fotocopia al costo delle copie. Uno studente ha chiesto perche' non siano semplicemente sul Web. Il motivo e' che i file sono in un formato di word processor che nessun browser capisce, e non ho il tempo di convertirli. E' nella mia lista.</p>
-<h3>Capitolo 3</h3></font><pre>
+<HTML>
+<HEAD>
+<TITLE>Prof. Aldo Brandi - Appunti</TITLE>
+</HEAD>
+<BODY BGCOLOR=#FFFFFF TEXT=#000000 LINK=#0000EE VLINK=#551A8B>
+<!-- written by hand with Notepad -->
+<FONT FACE="Times New Roman"><H1>Prof. Aldo Brandi</H1>
+<P><I>Dipartimento di Matematica, Universita' degli Studi del Lago</I></P>
+<P>[ <A HREF="index.html">Home</A> | <B>Appunti</B> ]</P></FONT><HR>
+<FONT FACE="Times New Roman"><H2>Appunti delle lezioni</H2>
+<P>Sono gli appunti del mio corso di Analisi Numerica I, in testo semplice, in modo da poterli stampare con qualsiasi stampante e leggere su qualsiasi schermo. Non sono un libro: contengono le definizioni, gli algoritmi e gli esercizi, non le spiegazioni, che do a lezione. Vi prego di non ridistribuirli senza questa intestazione.</P>
+<UL>
+<LI>Capitolo 1 - Numeri in virgola mobile (versione del 01/02/1999)</LI>
+<LI>Capitolo 2 - Equazioni non lineari (versione del 08/02/1999)</LI>
+<LI>Capitolo 3 - Eliminazione di Gauss (qui sotto, versione del 15/03/1999)</LI>
+<LI>Capitolo 4 - Pivoting e decomposizione LU</LI>
+<LI>Capitolo 5 - Norme e condizionamento</LI>
+<LI>Capitolo 6 - Interpolazione (in preparazione)</LI>
+<LI>Capitolo 7 - Metodi iterativi, corretto il 15/03/1999</LI>
+</UL>
+<P>In questa pagina e' stampato solo il capitolo 3, come esempio; gli altri sono disponibili presso la segreteria del dipartimento su dischetto, o in fotocopia al costo delle copie. Uno studente ha chiesto perche' non siano semplicemente sul Web. Il motivo e' che i file sono in un formato di word processor che nessun browser capisce, e non ho il tempo di convertirli. E' nella mia lista.</P>
+<H3>Capitolo 3</H3></FONT><PRE>
 ANALISI NUMERICA I - APPUNTI DELLE LEZIONI
 Capitolo 3: eliminazione di Gauss (versione del 15/03/1999)
 
@@ -62,10 +67,52 @@ Il pivot non deve essere piccolo rispetto agli altri elementi.
 (b) Scrivete un programma che risolve un sistema letto da un file e
     stampa il residuo.  Provate una matrice di Hilbert di ordine 8.
     Spiegate quello che vedete.
-</pre><font face="Times New Roman"><h3>Una nota sugli errori di arrotondamento</h3>
-<p>Un errore frequente dei principianti e' confrontare due numeri in virgola mobile per vedere se sono uguali. Il numero 0.1 non si puo' rappresentare esattamente in binario, quindi sommare 0.1 dieci volte non da' esattamente 1. Un programma che cicla finche' una variabile e' uguale a 1 puo' non fermarsi mai. Confrontate con una tolleranza, e dite qual e' la tolleranza.</p>
-<p>Lo stesso vale per la cancellazione: sottrarre due numeri quasi uguali distrugge la maggior parte delle cifre significative. L'esempio classico e' la soluzione dell'equazione di secondo grado con la formula del libro quando una radice e' molto piu' piccola dell'altra. Usate il prodotto delle radici per evitarlo.</p>
-<p>Una storia per i curiosi: negli anni sessanta un programma per un modello meteorologico diede previsioni diverse su due calcolatori che dovevano essere identici, per una differenza nell'ultima cifra di una costante. La discussione di quel caso e' nella seconda ora della lezione 4.</p></font>
-<hr><font face="Times New Roman" size="2"><address>Ultima modifica: 22/03/1999<br>Questa pagina e' mia e non rappresenta la posizione dell'Universita'. Scritta a mano con un editor di testo.<br>Questa pagina e' stata visitata 1847 volte dal 14 settembre 1996.</address></font>
-</body>
-</html>
+</PRE><FONT FACE="Times New Roman"><H3>Una nota sugli errori di arrotondamento</H3>
+<P>Un errore frequente dei principianti e' confrontare due numeri in virgola mobile per vedere se sono uguali. Il numero 0.1 non si puo' rappresentare esattamente in binario, quindi sommare 0.1 dieci volte non da' esattamente 1. Un programma che cicla finche' una variabile e' uguale a 1 puo' non fermarsi mai. Confrontate con una tolleranza, e dite qual e' la tolleranza.</P>
+<P>Lo stesso vale per la cancellazione: sottrarre due numeri quasi uguali distrugge la maggior parte delle cifre significative. L'esempio classico e' la soluzione dell'equazione di secondo grado con la formula del libro quando una radice e' molto piu' piccola dell'altra. Usate il prodotto delle radici per evitarlo.</P>
+<P>Una storia per i curiosi: negli anni sessanta un programma per un modello meteorologico diede previsioni diverse su due calcolatori che dovevano essere identici, per una differenza nell'ultima cifra di una costante. La discussione di quel caso e' nella seconda ora della lezione 4.</P>
+<H2>Pubblicazioni</H2>
+<P>Prima gli articoli su rivista, poi i rapporti tecnici, poi gli interventi a convegni. Gli estratti sono disponibili su richiesta; ne ho una scatola sotto la scrivania. Scrivete nome e indirizzo su un biglietto e lasciatelo in segreteria.</P>
+<H3>Articoli su rivista</H3>
+<OL>
+<LI>A. Brandi, <I>Sulla convergenza dei metodi iterativi a blocchi per sistemi simmetrici sparsi</I>, Annali di Calcolo Applicato 14 (1981), pp. 211-229.</LI>
+<LI>A. Brandi e L. Okafor, <I>Una nota sulle strategie di pivoting per matrici a banda</I>, Giornale di Metodi Computazionali 6 (1984), pp. 87-95.</LI>
+<LI>A. Brandi, <I>Stime dell'errore per la regola dei trapezi in presenza di singolarita'</I>, Annali di Calcolo Applicato 19 (1986), pp. 301-316.</LI>
+<LI>A. Brandi, M. Eklund e P. Santini, <I>Regioni di stabilita' di alcune formule implicite a piu' passi</I>, Giornale di Metodi Computazionali 11 (1989), pp. 140-162.</LI>
+<LI>A. Brandi, <I>Un rivelatore di rigidita' per piccoli calcolatori</I>, Lettere di Calcolo 3 (1992), pp. 19-27.</LI>
+<LI>A. Brandi e M. Eklund, <I>Accuratezza dei risolutori lineari su macchine senza moltiplicatore hardware</I>, Giornale di Metodi Computazionali 17 (1995), pp. 5-21.</LI>
+<LI>A. Brandi, <I>Qual e' una buona tolleranza? Osservazioni sui criteri di arresto</I>, Annali di Calcolo Applicato 31 (1997), pp. 55-68.</LI>
+</OL>
+<H3>Libri</H3>
+<UL>
+<LI>A. Brandi, <I>Metodi numerici per principianti</I>, seconda edizione, Edizioni Lungolago, 1994 (prima edizione 1988). La prima edizione ha errori nel capitolo 5; non usatela.</LI>
+</UL>
+<H3>In preparazione</H3>
+<P>Un articolo sui criteri di arresto dei metodi iterativi con il dottor Eklund, previsto per l'estate del 1999. Una terza edizione del libro e' promessa all'editore per l'autunno, e l'editore ha promesso che stavolta non perdera' i file.</P>
+<H2>Studenti</H2>
+<H3>Tesi che ho seguito</H3>
+<P>Tesi di laurea in matematica, con l'anno della discussione. I nomi sono pubblicati con il permesso degli studenti.</P>
+<UL>
+<LI>1993 - Marta Vitali: <I>Il metodo del gradiente coniugato in pratica</I></LI>
+<LI>1994 - Pietro Lindgren: <I>Interpolazione e fenomeno di Runge: un'indagine numerica</I></LI>
+<LI>1995 - Sofia Mancini: <I>Soluzione numerica dell'equazione del calore su una sbarra</I></LI>
+<LI>1996 - Tommaso Greco: <I>Matrici sparse dal metodo delle differenze finite: memoria e velocita'</I></LI>
+<LI>1997 - Elena Corti: <I>L'effetto dell'arrotondamento sulla serie armonica</I></LI>
+<LI>1998 - Paolo Wagner: <I>Confronto di quattro criteri di arresto</I></LI>
+</UL>
+<H3>Pensi di fare la tesi con me?</H3>
+<P>Accetto tre o quattro studenti all'anno. La tesi deve avere una parte di calcolo: scrivete programmi, li eseguite e guardate i risultati con occhio critico. Una tesi fatta solo di teoria copiata non sara' accettata. Venite al ricevimento con un argomento o, se non l'avete, con l'elenco dei corsi che vi sono piaciuti.</P>
+<P>Qualche consiglio, dall'esperienza:</P>
+<UL>
+<LI>Cominciate presto. Gli studenti che vengono all'ultimo semestre dicono sempre di aver bisogno di altri due mesi.</LI>
+<LI>Fate una copia del lavoro. Non una volta: due. Su due dischetti diversi, in due posti diversi. Ogni anno qualcuno perde un capitolo.</LI>
+<LI>Scrivete frasi brevi. Una tesi non e' un romanzo, e io la leggo con la matita.</LI>
+<LI>Provate il programma su un caso di cui conoscete la risposta prima di provarlo su uno di cui non la conoscete.</LI>
+<LI>Non usate una routine di libreria per la cosa che state studiando. Non imparerete niente e si vedra'.</LI>
+</UL>
+<H3>Statistiche d'esame, marzo 1999</H3>
+<P>Nella sessione invernale 128 studenti si sono iscritti a MAT 341, 94 hanno fatto lo scritto e 61 sono stati promossi. Il voto medio e' stato 21 su 30. L'errore piu' frequente e' stato dimenticare il pivoting nella domanda 2. L'errore piu' originale e' stato quello di uno studente che ha risolto bene il sistema ma ha copiato dalla lavagna la matrice sbagliata; e' stato anche l'errore piu' triste, per lo studente.</P></FONT>
+<HR><FONT FACE="Times New Roman" SIZE=2><ADDRESS>Ultima modifica: 22/03/1999<BR>Questa pagina e' mia e non rappresenta la posizione dell'Universita'. Scritta a mano con un editor di testo.<BR>Questa pagina e' stata visitata 1847 volte dal 14 settembre 1996.</ADDRESS></FONT>
+<!-- end of page -->
+</BODY>
+</HTML>

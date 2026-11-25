@@ -1,43 +1,160 @@
-<html>
-<head><title>DriverZone - Home</title></head>
-<body background="metallo.gif" bgcolor="#C0C0C0" text="#000000" link="#CC4400" vlink="#884422">
-<table width="100%" cellpadding="8"><tr>
-<td width="170" bgcolor="#1A1A2E">
-<font face="Arial Black" size="4" color="#FF9900">DRIVER<font color="#FFFFFF">ZONE</font></font><br>
-<font face="Courier New" size="1" color="#9999CC">il driver che hai perso con la scatola, ritrovato</font><br>
-<img src="ingranaggio.gif"><br><br>
-<font face="Verdana" size="1" color="#FF9900"><b>MENU</b></font><br>
-<form><input type="button" value="Home" onclick="location.href='index.html'"></form>
-<form><input type="button" value="Schede video" onclick="location.href='video.html'"></form>
-<form><input type="button" value="Schede audio" onclick="location.href='sound.html'"></form>
-<form><input type="button" value="Modem" onclick="location.href='modem.html'"></form>
-<form><input type="button" value="Stampanti" onclick="location.href='printers.html'"></form>
-<form><input type="button" value="Utility" onclick="location.href='utilities.html'"></form>
-<form><input type="button" value="Domande frequenti" onclick="location.href='faq.html'"></form>
-<br><font face="Courier New" size="1" color="#9999CC">Aggiornato il 15/03/1999</font><br><br>
-<form action="/cgi-bin/driver/alert.cgi" method="post"><table cellpadding="4" bgcolor="#D8D8D8" border="1"><tr><th><font face="Verdana" size="2" color="#000000"><b>Novita' sui driver per e-mail</b></font></th></tr><tr><td><table cellpadding="2"><tr><td><font face="Verdana" size="2" color="#000000">La tua e-mail</font><br><input type="text" name="email" size="10"></td></tr><tr><td><input type="submit" value="Iscriviti"></td></tr></table></td></tr></table></form>
-<img src="bottone_monitor.gif"><br><img src="bottone_modem.gif"><br><img src="bottone_dischetto.gif">
-</td>
-<td bgcolor="#FFFFFF">
-<p><font face="Verdana" size="4" color="#1A1A2E"><b>Perso il dischetto del driver?</b></font></p>
-<p><font face="Verdana" size="2">Succede a tutti. Cambi computer, reinstalli il sistema, traslochi, e il dischetto col driver della scheda audio e' sparito per sempre, insieme alla scatola. DriverZone raccoglie i driver di piu' di 2.000 schede video, schede audio, modem e stampanti, con le note dei lettori su cosa funziona e cosa no.</font></p>
-<table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8" align="center"><tr><td><font face="Verdana" size="2" color="#000000"><b>Trova il tuo driver</b><br>Dite cosa avete perso.</font></td></tr></table>
-<form action="/cgi-bin/drivers/find.pl" method="post">
-<table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8" align="center">
-<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Tipo di periferica:</font></td><td><font face="Verdana" size="2" color="#000000"><select name="tipo"><option value="video">Scheda video</option><option value="audio">Scheda audio</option><option value="modem">Modem</option><option value="stampante">Stampante</option></select></font></td></tr>
-<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Produttore:</font></td><td><font face="Verdana" size="2" color="#000000"><input type="text" name="produttore" size="22" maxlength="40"></font></td></tr>
-<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Modello:</font></td><td><font face="Verdana" size="2" color="#000000"><input type="text" name="modello" size="22" maxlength="40"></font></td></tr>
-<tr><td width="170" valign="top"><font face="Verdana" size="2" color="#000000">Sistema operativo:</font></td><td><font face="Verdana" size="2" color="#000000"><select name="sistema"><option value="win95">Windows 95</option><option value="win98">Windows 98</option><option value="nt4">Windows NT 4.0</option><option value="win31">Windows 3.1</option><option value="dos">MS-DOS</option></select></font></td></tr>
-<tr><td width="170">&nbsp;</td><td><input type="submit" value="Cerca"></td></tr>
-</table>
-</form>
-<br>
-<table width="100%" border="1" cellpadding="6" bgcolor="#EEEEF8"><tr><td><font face="Verdana" size="2"><b>I piu' cercati della settimana:</b><br>1. VisionMax 3D 4MB (video) &middot; 2. SoundWave 16 (audio) &middot; 3. FastLink 56K (modem) &middot; 4. InkStar 300 (stampante) &middot; 5. VisionMax 2D (video)</font></td></tr></table>
-<table width="100%" border="1" cellpadding="6" bgcolor="#FFFFE0"><tr><td><font face="Verdana" size="2"><b>Dove sono i file?</b> Per risparmiare sul server web, tutti i driver stanno sul nostro server FTP. Il browser non puo' scaricarli da questa pagina: usate un programma FTP, collegatevi come "anonymous" e guardate nella cartella col nome della categoria. Se non sapete cos'e' un programma FTP, vedete le <a href="faq.html">domande frequenti</a>.</font></td></tr></table>
-<p><font face="Verdana" size="2"><b>Prima di installare qualunque cosa:</b> scrivetevi il nome esatto della scheda, che e' stampato sulla scheda stessa e non sempre sulla scatola. Un driver per la "VisionMax 3D" non funziona sulla "VisionMax 3D Plus", e il sistema ve lo dira' con uno schermo nero.</font></p>
-<p><font face="Verdana" size="2"><b>L'angolo del 2000:</b> molti lettori chiedono se i loro driver sono pronti per l'anno 2000. Ai driver la data non interessa. Al BIOS si': vedete la pagina delle <a href="utilities.html">utility</a> per il programma di prova.</font></p>
-</td></tr></table>
-<center><img src="busta.gif" width="40" height="28" align="middle"> <font face="Verdana" size="2" color="#000000">Scrivici: webmaster@driverzone.it (copia l'indirizzo nel tuo programma di posta)</font></center>
-<p align="center"><font face="Verdana" size="1">DriverZone &copy; 1999 &middot; tutti i marchi appartengono ai rispettivi proprietari &middot; non rispondiamo dei driver installati sulla scheda sbagliata &middot; ottimizzato per 800x600</font></p>
-</body>
-</html>
+<HTML>
+<HEAD>
+<TITLE>DriverZone - Home</TITLE>
+</HEAD>
+<BODY BACKGROUND="metallo.gif" BGCOLOR=#C0C0C0 TEXT=#000000 LINK=#CC4400 VLINK=#884422>
+<!-- written by hand with Notepad -->
+<TABLE WIDTH=100% CELLPADDING=8>
+<TR>
+<TD WIDTH=170 BGCOLOR=#1A1A2E>
+<FONT FACE="Arial Black" SIZE=4 COLOR=#FF9900>DRIVER<FONT COLOR=#FFFFFF>ZONE</FONT></FONT><BR>
+<FONT FACE="Courier New" SIZE=1 COLOR=#9999CC>il driver che hai perso con la scatola, ritrovato</FONT><BR>
+<IMG SRC="ingranaggio.gif"><BR><BR>
+<BR><FONT FACE="Courier New" SIZE=1 COLOR=#9999CC>Aggiornato il 15/03/1999</FONT><BR><BR>
+<!-- form -->
+<FORM ACTION="/cgi-bin/driver/alert.cgi" METHOD=post><TABLE CELLPADDING=4 BGCOLOR=#D8D8D8 BORDER=1>
+<TR>
+<TH><FONT FACE="Verdana" SIZE=2 COLOR=#000000><B>Novita' sui driver per e-mail</B></FONT></TH>
+</TR>
+<TR>
+<TD><TABLE CELLPADDING=2>
+<TR>
+<TD><FONT FACE="Verdana" SIZE=2 COLOR=#000000>La tua e-mail</FONT><BR><INPUT TYPE=text NAME="email" SIZE=10></TD>
+</TR>
+<TR>
+<TD><INPUT TYPE=submit VALUE="Iscriviti"></TD>
+</TR>
+</TABLE></TD>
+</TR>
+</TABLE></FORM><!-- end form -->
+<IMG SRC="bottone_monitor.gif"><BR><IMG SRC="bottone_modem.gif"><BR><IMG SRC="bottone_dischetto.gif">
+</TD>
+<TD BGCOLOR=#FFFFFF>
+<P><FONT FACE="Verdana" SIZE=4 COLOR=#1A1A2E><B>Perso il dischetto del driver?</B></FONT></P>
+<P><FONT FACE="Verdana" SIZE=2>Succede a tutti. Cambi computer, reinstalli il sistema, traslochi, e il dischetto col driver della scheda audio e' sparito per sempre, insieme alla scatola. DriverZone raccoglie i driver di piu' di 2.000 schede video, schede audio, modem e stampanti, con le note dei lettori su cosa funziona e cosa no.</FONT></P>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=6 BGCOLOR=#EEEEF8 ALIGN=center>
+<TR>
+<TD><FONT FACE="Verdana" SIZE=2 COLOR=#000000><B>Trova il tuo driver</B><BR>Dite cosa avete perso.</FONT></TD>
+</TR>
+</TABLE>
+<!-- form -->
+<FORM ACTION="/cgi-bin/drivers/find.pl" METHOD=post>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=6 BGCOLOR=#EEEEF8 ALIGN=center>
+<TR>
+<TD WIDTH=170 VALIGN=top><FONT FACE="Verdana" SIZE=2 COLOR=#000000>Tipo di periferica:</FONT></TD>
+<TD><FONT FACE="Verdana" SIZE=2 COLOR=#000000><SELECT NAME="tipo"><OPTION VALUE="video">Scheda video</OPTION><OPTION VALUE="audio">Scheda audio</OPTION><OPTION VALUE="modem">Modem</OPTION><OPTION VALUE="stampante">Stampante</OPTION></SELECT></FONT></TD>
+</TR>
+<TR>
+<TD WIDTH=170 VALIGN=top><FONT FACE="Verdana" SIZE=2 COLOR=#000000>Produttore:</FONT></TD>
+<TD><FONT FACE="Verdana" SIZE=2 COLOR=#000000><INPUT TYPE=text NAME="produttore" SIZE=22 MAXLENGTH=40></FONT></TD>
+</TR>
+<TR>
+<TD WIDTH=170 VALIGN=top><FONT FACE="Verdana" SIZE=2 COLOR=#000000>Modello:</FONT></TD>
+<TD><FONT FACE="Verdana" SIZE=2 COLOR=#000000><INPUT TYPE=text NAME="modello" SIZE=22 MAXLENGTH=40></FONT></TD>
+</TR>
+<TR>
+<TD WIDTH=170 VALIGN=top><FONT FACE="Verdana" SIZE=2 COLOR=#000000>Sistema operativo:</FONT></TD>
+<TD><FONT FACE="Verdana" SIZE=2 COLOR=#000000><SELECT NAME="sistema"><OPTION VALUE="win95">Windows 95</OPTION><OPTION VALUE="win98">Windows 98</OPTION><OPTION VALUE="nt4">Windows NT 4.0</OPTION><OPTION VALUE="win31">Windows 3.1</OPTION><OPTION VALUE="dos">MS-DOS</OPTION></SELECT></FONT></TD>
+</TR>
+<TR>
+<TD WIDTH=170>&nbsp;</TD>
+<TD><INPUT TYPE=submit VALUE="Cerca"></TD>
+</TR>
+</TABLE>
+</FORM><!-- end form -->
+<BR>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=6 BGCOLOR=#EEEEF8>
+<TR>
+<TD><FONT FACE="Verdana" SIZE=2><B>I piu' cercati della settimana:</B><BR>1. VisionMax 3D 4MB (video) &middot; 2. SoundWave 16 (audio) &middot; 3. FastLink 56K (modem) &middot; 4. InkStar 300 (stampante) &middot; 5. VisionMax 2D (video)</FONT></TD>
+</TR>
+</TABLE>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=6 BGCOLOR=#FFFFE0>
+<TR>
+<TD><FONT FACE="Verdana" SIZE=2><B>Dove sono i file?</B> Per risparmiare sul server web, tutti i driver stanno sul nostro server FTP. Il browser non puo' scaricarli da questa pagina: usate un programma FTP, collegatevi come "anonymous" e guardate nella cartella col nome della categoria. Se non sapete cos'e' un programma FTP, vedete le domande frequenti.</FONT></TD>
+</TR>
+</TABLE>
+<P><FONT FACE="Verdana" SIZE=2><B>Prima di installare qualunque cosa:</B> scrivetevi il nome esatto della scheda, che e' stampato sulla scheda stessa e non sempre sulla scatola. Un driver per la "VisionMax 3D" non funziona sulla "VisionMax 3D Plus", e il sistema ve lo dira' con uno schermo nero.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>L'angolo del 2000:</B> molti lettori chiedono se i loro driver sono pronti per l'anno 2000. Ai driver la data non interessa. Al BIOS si': vedete Y2K Check nell'elenco delle utilita' qui sotto.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=4 COLOR=#1A1A2E><B>Ultimi file: video, audio, modem, stampanti, utilita'</B></FONT></P>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 BGCOLOR=#FFFFFF>
+<TR BGCOLOR=#1A1A2E>
+<TD><FONT FACE="Courier New" SIZE=2 COLOR=#FF9900><B>File</B></FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2 COLOR=#FF9900><B>Peso</B></FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2 COLOR=#FF9900><B>Data</B></FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2 COLOR=#FF9900><B>Note</B></FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>vmax3d.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>1,8 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>11/02/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>v4.12 - VisionMax 3D 4MB. Funziona. Disattivate l'accelerazione 3D se i giochi sfarfallano.</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>pixpro64.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>1,2 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>22/07/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>v2.40 - PixelPro 64. Va installato due volte. Si', due volte. Non chiedete.</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>sw16.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>1,1 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>14/05/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>v2.2 - SoundWave 16. La scheda piu' diffusa del mondo. Funziona con tutto.</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>echoblst.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>0,8 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>08/04/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>v1.4 - EchoBlaster. Se sentite un fruscio, e' la scheda. Fruscia sempre.</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>flink56.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>0,6 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>24/02/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>v1.7 - FastLink 56K. Arriva a 56K solo se la centrale lo permette. Di solito si sta a 44.</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>nrvoice.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>0,9 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>17/10/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>v2.0 - NetRunner Voice. Fa anche da segreteria telefonica. Rispondera' a vostra madre.</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>ink300.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>2,1 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>12/03/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>v3.3 - InkStar 300. Stampa bene. Le cartucce costano piu' della stampante.</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>y2kcheck.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>0,1 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>04/01/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>Y2K Check: controlla se il BIOS del computer sopravvive all'anno 2000</FONT></TD>
+</TR>
+<TR>
+<TD><FONT FACE="Courier New" SIZE=2>whatsin.zip</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>0,4 MB</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>02/10/1999</FONT></TD>
+<TD><FONT FACE="Courier New" SIZE=2>WhatsInside: dice il nome di ogni scheda del computer, cosi' sapete quale driver cercare</FONT></TD>
+</TR>
+</TABLE>
+<P><FONT FACE="Verdana" SIZE=2><B>Schermo nero dopo l'installazione?</B> Riavviate in modalita' provvisoria (premete F8 all'accensione), andate nelle impostazioni dello schermo e rimettete l'adattatore VGA standard. Poi riprovate col driver giusto.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Nessun suono?</B> Controllate, in quest'ordine: che le casse siano accese, che il volume non sia a zero, che il cavo sia nella presa verde e non in quella rosa, e solo dopo il driver. I lettori ci dicono che il 70% dei problemi audio si risolve al primo punto.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Il modem si collega ma si stacca dopo pochi minuti?</B> Spesso e' la linea: qualcuno in casa ha alzato il telefono, o e' attivo l'avviso di chiamata. Disattivatelo prima di collegarvi, o la prima telefonata che ricevete vi buttera' fuori da Internet.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Il rumore.</B> Si', lo stridio quando si collega e' normale. Sono due macchine che si stringono la mano. Alcuni lettori spengono l'altoparlante; altri dicono che quando non c'e' ne sentono la mancanza.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Il foglio esce pieno di simboli strani?</B> E' installato il driver sbagliato: il computer parla alla stampante in una lingua che non capisce. Togliete la stampante dal sistema e reinstallatela col driver giusto.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Su Shredder.</B> Quando cancellate un file, non sparisce davvero: il sistema dimentica solo dov'e', e i dati restano sul disco finche' qualcos'altro non ci viene scritto sopra. Un file cancellato spesso si recupera anche settimane dopo. Shredder ci scrive sopra finche' non resta niente. I lettori lo usano per vecchie lettere, estratti conto e, ci ha scritto uno di loro, "cose che scrivo di notte e che la mattina non voglio ritrovare".</FONT></P>
+<P><IMG SRC="floppy.gif"> <FONT FACE="Verdana" SIZE=4 COLOR=#1A1A2E><B>Domande frequenti</B></FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Cos'e' un driver?</B> Un piccolo programma che insegna al sistema a parlare con un pezzo di hardware. Senza, la scheda e' nel computer ma il computer non sa che c'e'.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Cos'e' un programma FTP?</B> Un programma per copiare file da e verso un server. Il vostro kit di connessione probabilmente ne ha uno. Apritelo, scrivete l'indirizzo del nostro server, nome utente "anonymous" e il vostro indirizzo e-mail come password. Poi vedete le nostre cartelle come se fossero sul vostro computer.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>E' legale scaricare i driver?</B> Si'. I driver sono gratuiti: i produttori vogliono che usiate le loro schede. Quello che pubblichiamo l'hanno pubblicato prima loro.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Il driver della mia scheda non c'e'.</B> Scriveteci il nome esatto e lo cercheremo. Se il produttore ha chiuso, il driver potrebbe essere perso per sempre. Tenete i dischetti.</FONT></P>
+<P><FONT FACE="Verdana" SIZE=2><B>Il mio computer e' molto vecchio. C'e' ancora speranza?</B> C'e' sempre speranza. I computer vecchi sono testardi: continuano a funzionare molto dopo che i loro proprietari hanno rinunciato.</FONT></P>
+</TD>
+</TR>
+</TABLE>
+<CENTER><IMG SRC="busta.gif" WIDTH=40 HEIGHT=28 ALIGN=middle> <FONT FACE="Verdana" SIZE=2 COLOR=#000000>Scrivici: webmaster@driverzone.it (copia l'indirizzo nel tuo programma di posta)</FONT></CENTER>
+<P ALIGN=center><FONT FACE="Verdana" SIZE=1>DriverZone &copy; 1999 &middot; tutti i marchi appartengono ai rispettivi proprietari &middot; non rispondiamo dei driver installati sulla scheda sbagliata &middot; ottimizzato per 800x600</FONT></P>
+<!-- end of page -->
+</BODY>
+</HTML>

@@ -457,7 +457,7 @@ returns the WHOLE catalog, so every site answers and the portal lists
 them all (the ones not in tonight's run marked "[DEBUG: not in
 tonight's run]"); the keys stay on the sites the seed picked - and
 "Open the portal" opens a browser on it. The browser tests switch it
-on too, because they open fixed pages and a run picks 10-15 of 30.
+on too, because they open fixed pages and a run picks 10 of 40.
 A STATUS block rewritten 4x a second:
 PC state and where the player is, the peek state (who, GRACE/WAIT/PEEK, light
 progress or PC state, with seconds), Ghosty's distance, heat, torch
@@ -581,7 +581,7 @@ that period HTML splits words across tags -- searching for
 DISK_CONTENT.md (the recipe for the OWNER to add or change a file,
 a user folder, a program or an extra folder on the random disk:
 which CSV rows, which catalog line, the zones, the two rules),
-WEB_CATALOG.md (the 40 sites and their rules) and docs/code/ (this
+WEB_CATALOG.md (the 39 sites and their rules) and docs/code/ (this
 folder: the code, area by area). [2026-10-22: GLOSSARY.md was merged
 into docs/code/README.md and the beginner's Claude Code guide removed.]
 

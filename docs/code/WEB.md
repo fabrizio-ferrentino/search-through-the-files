@@ -546,14 +546,24 @@ One entry per site in SITI: id (= the folder), nome/desc (WS_* CSV
 keys), en/it (the period domain per language, may carry a path:
 www.webnet.it/~jack99), tipo (normale/lore), voce (lore only:
 padre / ragazzo / maledizione / altri - altri, added 2026-10-23, is other people's stories, not the young man's), featured, stato (segnaposto /
-completo - a complete site needs COMPLETO_PAGINE 5 pages and
-COMPLETO_TESTO 6000 characters of visible text per language),
+completo - a complete site needs COMPLETO_PAGINE 1 page and
+COMPLETO_TESTO 2000 characters of visible text per language; was 5 and
+6000 until 2026-11-20, see the ordinary-sites cut below),
 pagine (every page of the folder, index first: the key can land in
 any) and morti (dead links ON PURPOSE: a missing page of the site,
-or the address of a site that is gone). All 40 sites (30 written
+or the address of a site that is gone). All 39 sites (30 written
 2026-10-20, four lore sites added 2026-10-23, six ordinary ones - anime, prof, band, hosting, y2k,
-radio - added 2026-10-24) and the RULES every site follows: docs/WEB_CATALOG.md;
+radio - added 2026-10-24, the lore site misteri removed 2026-11-25) and the RULES every site follows: docs/WEB_CATALOG.md;
 the recipe: docs/WEB_SITES.md §3. Test: siti_catalogo_test.tscn.
+
+2026-11-20, FEWER PAGES (owner: "per me è molto difficile trovare la chiave" - the web key lives only in
+a page's SOURCE; "snellire le pagine ... sostituire proprio i siti con pagine da una sola tab"; research:
+Welcome to the Game II has 21 of 50 sites with one page, ~19 pages per key). The 24 ordinary sites went
+from 175 pages to 39: 14 index only (meteo, mail, musica, viaggi, comune, scuola, oroscopo, tv, driver,
+animali, biblioteca, calcio, ricette, giochi), 8 index + one page (shop product_pc, blog guestbook,
+anime episodes, prof notes, band tour, hosting members, y2k checklist, radio logbook), forum 5 (index,
+hardware, rules, thread, thread_y2k), news 4 (index, art_y2k, tech, world). Per run ~91 -> ~42 pages,
+~5150 -> ~2450 source lines to read. Lore sites untouched (next step).
 
 ### `scripts/os/web_runtime.gd`
 
@@ -566,7 +576,7 @@ page is called "<site>/<page>" (forum/index, treno/thoughts); the
 pages outside the sites have one name (home, 404, NONSERVER).
 build() (from BrowserApp.reset_pages on start_new_run) takes the
 pool from the catalog and _scegli_siti picks SITI_MIN..SITI_MAX
-10-15 sites, LORE_MIN..LORE_MAX 4-5 of them lore (owner: "2 are too
+sites (10..10 since 2026-11-20, owner: "lasciare sempre 10 siti a partita"; was 10-15), LORE_MIN..LORE_MAX 4-5 of them lore (owner: "2 are too
 few"), at least one lore site with voce "padre" and one "ragazzo"
 when the catalog has them - or ALL of them while the catalog is
 smaller; then the carriers + modes of the TWO web keys (since
@@ -702,10 +712,32 @@ the recipe for ADDING A LANGUAGE. The HOME is GENERATED per-run by
 WebRuntime (tonight's sites) — there is no home.html. To add a site:
 its folder in every web/pages/<lang>/, its WS_* rows in
 locale/ui.csv and its entry in scripts/os/catalogo_siti.gd. The
-40 sites: docs/WEB_CATALOG.md. (webnet.html = the user's
+39 sites: docs/WEB_CATALOG.md. (webnet.html = the user's
 original mockup, ref.)
 
 ## Feature notes
+
+- **Lore texts revised by the owner, `misteri` removed (2026-11-25).** The owner rewrote parts of
+  the ITALIAN lore pages himself (chat/log_last, log_owls; diario/index, last, letters, list, y1998,
+  y1999; genitori/thread_boys, thread_sleep; treno/about) on branch `feature/modifiche-siti-web`
+  (commit ebe5700), and deleted the site `misteri` ("non mi piaceva"). Merged onto the reformatted
+  sources by running `dialetto(snellisci(...))` on his versions (the pipeline reproduced the old
+  files byte for byte). `misteri` is gone from the catalog, both languages, `WS_MYST*` in ui.csv
+  and `DIALETTI`: 39 sites, 15 lore (3 with the curse's voice: diario, mercatino, nessuno).
+  The English versions of the revised pages still carry the OLD text.
+- **Source dialects (2026-11-20).** Owner (Italian): "secondo me manca ancora qualcosa per
+  sembrare dei siti autentici di fine anni 90 ... si puo migliorare in qualche modo? anche
+  stravolgendo il tutto", then "tutto cio che pensi sia essenziale". `tools/web/sito.py`
+  `DIALETTI` (site id -> mano | editor | composer | bacheca, all 40 mapped) and `dialetto()`: the
+  page source gets the dialect of whoever made it in 1999 (uppercase hand-written HTML with
+  unquoted values; an office editor's GENERATOR and bot comments; the browser editor's GENERATOR;
+  forum software's GENERATOR and comments). Details and site lists: docs/WEB_AUTHORING.md. Brands
+  are invented, like the browser and the OS. Comments are English in every language, so a comment
+  is no longer a giveaway of the key. Rendering is unchanged (bb_dump before/after identical,
+  including the per-page WebAnchor spot counts); WebAnchor skips comments, so pages may have them
+  (html_bb_test check `ancore_fuori_dai_commenti_<page>`). Considered and NOT done: a Times New
+  Roman default font for text without `<font face>` (only 2% of the text, 8 pages), IE 3D table
+  borders (RichTextLabel cells have one border colour), frames.
 
 - **"Still artificial": cursor, drop-down, crisp text, margins (2026-10-25).** Owner (Italian): "mi
   sembrano ancora artificiali e non come se fossero veri siti anni 90. problema numero 1 il menu a

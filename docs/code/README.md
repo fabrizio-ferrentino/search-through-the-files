@@ -24,7 +24,7 @@ WEB_SITES.md / WEB_CATALOG.md (the recipes for disk files and web pages).
 
 | Term | Meaning |
 |---|---|
-| **Run** | One playthrough, from starting a game to win or game over. The disk, the sites (10-15 of 30), the keys and their places are drawn from the run seed. |
+| **Run** | One playthrough, from starting a game to win or game over. The disk, the sites (10 of 40), the keys and their places are drawn from the run seed. |
 | **Room** | The 3D scene (`main.tscn`) where the player sits at the desk: the FNAF-style vigilance space. |
 | **PC / OS** | The fake Win95/98 OS (`OSDesktop`) the player investigates. Entering the PC is a fullscreen overlay of the same viewport, not a scene change. |
 | **Key** | A 4-character code shown with its index prefix (`2-7MC9`). Key 1 on the disk (a file's content or a folder name), keys 2 and 3 on two different web sites (visible text or HTML source), key 4 in a photo (pixels or the file's bytes). |
@@ -36,7 +36,7 @@ WEB_SITES.md / WEB_CATALOG.md (the recipes for disk files and web pages).
 | **Torch** | Held (press = on), with a battery; repels the Jester and Ghosty. |
 | **PC viruses** | The lethal one (an apparition: power off within 10 s), YouAreStupid (window spam), the blue screen (reboots the PC). Plus false alarms. |
 | **Apparition** | How the curse shows itself in the PC (`apparizione.gd`): the hanged child in ASCII, eyes, wrong clock, a typed line, darkness, blood, shaking windows. Brief = false alarm, lasting = real. |
-| **Site / catalog** | The 40 authored sites (`catalogo_siti.gd`, one folder each under `web/pages/<lang>/`); 24 ordinary, 16 lore. |
+| **Site / catalog** | The 39 authored sites (`catalogo_siti.gd`, one folder each under `web/pages/<lang>/`); 24 ordinary, 15 lore. |
 
 ### Code terms (and the Italian names in the code)
 

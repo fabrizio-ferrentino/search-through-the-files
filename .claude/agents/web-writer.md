@@ -10,7 +10,7 @@ are invented and must feel real and ordinary. Never commit.
 
 ## Read first
 
-- `docs/WEB_CATALOG.md`: the 40 sites, the RULES (top of the file), the shared invented world
+- `docs/WEB_CATALOG.md`: the 39 sites, the RULES (top of the file), the shared invented world
   (the town Millbrook / San Vito al Lago, the WebNet provider, March 1999).
 - `docs/WEB_AUTHORING.md`: the HTML subset the browser understands (tables, `<font>`, colours
   on `<body>`; NO CSS, NO colspan/rowspan).
@@ -31,7 +31,7 @@ are invented and must feel real and ordinary. Never commit.
 4. Nothing shaped like a key anywhere, not even in the HTML: a single digit, a dash and four
    letters/digits (`3-AB12`). Beware scores, codes, phone numbers.
 5. Both languages, SAME file names; every page listed in the site's `pagine` in the catalog.
-   A complete site has at least 5 pages and 6000 characters of visible text per language.
+   A complete site has at least 1 page and 2000 characters of visible text per language (since 2026-11-20 ordinary sites are 1-2 pages; keep a page under ~6000 characters so its source stays short).
 6. Invented brands only. EN prices in dollars, IT in lire. Italian written like the existing
    pages (`e'`, `piu'`, `perche'`).
 

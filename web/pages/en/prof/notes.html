@@ -1,20 +1,25 @@
-<html>
-<head><title>Walter H. Brandt - Lecture notes</title></head>
-<body bgcolor="#FFFFFF" text="#000000" link="#0000EE" vlink="#551A8B">
-<font face="Times New Roman"><h1>Walter H. Brandt, Ph.D.</h1><p><i>Department of Mathematics, Lakeland University</i></p><p>[ <a href="index.html">Home</a> | <a href="teaching.html">Teaching</a> | <b>Lecture notes</b> | <a href="papers.html">Publications</a> | <a href="students.html">Students</a> | <a href="contact.html">Office hours</a> ]</p></font><hr>
-<font face="Times New Roman"><h2>Lecture notes</h2>
-<p>These are the notes of my course Numerical Analysis I, in plain text, so that they can be printed on any printer and read on any screen. They are not a book: they contain the definitions, the algorithms and the exercises, not the explanations, which I give at the lectures. Please do not redistribute them without this heading.</p>
-<ul>
-<li>Chapter 1 - Floating-point numbers (version of 02/01/1999)</li>
-<li>Chapter 2 - Nonlinear equations (version of 02/08/1999)</li>
-<li>Chapter 3 - Gaussian elimination (below, version of 03/15/1999)</li>
-<li>Chapter 4 - Pivoting and LU decomposition</li>
-<li>Chapter 5 - Norms and conditioning</li>
-<li>Chapter 6 - Interpolation (in preparation)</li>
-<li>Chapter 7 - Iterative methods, corrected on 03/15/1999</li>
-</ul>
-<p>Only chapter 3 is printed on this page, as a sample; the others are available from the department secretary on a floppy disk, or as a printout at the cost of the photocopies. A student has asked why they are not simply on the Web. The reason is that the files are in a word processor format that no browser understands, and I do not have the time to convert them. It is on my list.</p>
-<h3>Chapter 3</h3></font><pre>
+<HTML>
+<HEAD>
+<TITLE>Walter H. Brandt - Lecture notes</TITLE>
+</HEAD>
+<BODY BGCOLOR=#FFFFFF TEXT=#000000 LINK=#0000EE VLINK=#551A8B>
+<!-- written by hand with Notepad -->
+<FONT FACE="Times New Roman"><H1>Walter H. Brandt, Ph.D.</H1>
+<P><I>Department of Mathematics, Lakeland University</I></P>
+<P>[ <A HREF="index.html">Home</A> | <B>Lecture notes</B> ]</P></FONT><HR>
+<FONT FACE="Times New Roman"><H2>Lecture notes</H2>
+<P>These are the notes of my course Numerical Analysis I, in plain text, so that they can be printed on any printer and read on any screen. They are not a book: they contain the definitions, the algorithms and the exercises, not the explanations, which I give at the lectures. Please do not redistribute them without this heading.</P>
+<UL>
+<LI>Chapter 1 - Floating-point numbers (version of 02/01/1999)</LI>
+<LI>Chapter 2 - Nonlinear equations (version of 02/08/1999)</LI>
+<LI>Chapter 3 - Gaussian elimination (below, version of 03/15/1999)</LI>
+<LI>Chapter 4 - Pivoting and LU decomposition</LI>
+<LI>Chapter 5 - Norms and conditioning</LI>
+<LI>Chapter 6 - Interpolation (in preparation)</LI>
+<LI>Chapter 7 - Iterative methods, corrected on 03/15/1999</LI>
+</UL>
+<P>Only chapter 3 is printed on this page, as a sample; the others are available from the department secretary on a floppy disk, or as a printout at the cost of the photocopies. A student has asked why they are not simply on the Web. The reason is that the files are in a word processor format that no browser understands, and I do not have the time to convert them. It is on my list.</P>
+<H3>Chapter 3</H3></FONT><PRE>
 NUMERICAL ANALYSIS I - LECTURE NOTES
 Chapter 3: Gaussian elimination (version of 03/15/1999)
 
@@ -62,10 +67,52 @@ The pivot must not be small compared with the other entries.
 (b) Write a program that solves a system read from a file and
     prints the residual.  Try a Hilbert matrix of order 8.
     Explain what you see.
-</pre><font face="Times New Roman"><h3>A note on rounding errors</h3>
-<p>A frequent mistake of beginners is to compare two floating-point numbers for equality. The number 0.1 cannot be represented exactly in binary, so adding 0.1 ten times does not give exactly 1. A program that loops until a variable is equal to 1 may never stop. Compare with a tolerance, and say what the tolerance is.</p>
-<p>The same holds for cancellation: subtracting two nearly equal numbers destroys most of the significant digits. The classic example is the solution of the quadratic equation by the textbook formula when one root is much smaller than the other. Use the product of the roots to avoid it.</p>
-<p>A story for the curious: in the 1960s a program for a weather model gave different forecasts on two computers that were supposed to be identical, because of a difference in the last digit of one constant. The discussion of that case is in the second hour of lecture 4.</p></font>
-<hr><font face="Times New Roman" size="2"><address>Last modified: 03/22/1999<br>These pages are mine and do not represent the position of the University. Written by hand in a text editor.<br>This page has been visited 1847 times since September 14, 1996.</address></font>
-</body>
-</html>
+</PRE><FONT FACE="Times New Roman"><H3>A note on rounding errors</H3>
+<P>A frequent mistake of beginners is to compare two floating-point numbers for equality. The number 0.1 cannot be represented exactly in binary, so adding 0.1 ten times does not give exactly 1. A program that loops until a variable is equal to 1 may never stop. Compare with a tolerance, and say what the tolerance is.</P>
+<P>The same holds for cancellation: subtracting two nearly equal numbers destroys most of the significant digits. The classic example is the solution of the quadratic equation by the textbook formula when one root is much smaller than the other. Use the product of the roots to avoid it.</P>
+<P>A story for the curious: in the 1960s a program for a weather model gave different forecasts on two computers that were supposed to be identical, because of a difference in the last digit of one constant. The discussion of that case is in the second hour of lecture 4.</P>
+<H2>Publications</H2>
+<P>Journal articles are listed first, then technical reports, then conference talks. Reprints are available from the author on request; I have a box of them under the desk. Please write your name and address on a card and leave it at the department office.</P>
+<H3>Journal articles</H3>
+<OL>
+<LI>W. Brandt, <I>On the convergence of block iterative methods for sparse symmetric systems</I>, Annals of Applied Computation 14 (1981), pp. 211-229.</LI>
+<LI>W. Brandt and L. Okafor, <I>A note on pivoting strategies for banded matrices</I>, Journal of Computational Methods 6 (1984), pp. 87-95.</LI>
+<LI>W. Brandt, <I>Error bounds for the trapezoid rule in the presence of singularities</I>, Annals of Applied Computation 19 (1986), pp. 301-316.</LI>
+<LI>W. Brandt, M. Eklund and P. Santini, <I>Stability regions of some implicit multistep formulas</I>, Journal of Computational Methods 11 (1989), pp. 140-162.</LI>
+<LI>W. Brandt, <I>A stiffness detector for small computers</I>, Computing Letters 3 (1992), pp. 19-27.</LI>
+<LI>W. Brandt and M. Eklund, <I>Accuracy of linear solvers on machines without a hardware multiplier</I>, Journal of Computational Methods 17 (1995), pp. 5-21.</LI>
+<LI>W. Brandt, <I>What is a good tolerance? Remarks on stopping criteria</I>, Annals of Applied Computation 31 (1997), pp. 55-68.</LI>
+</OL>
+<H3>Books</H3>
+<UL>
+<LI>W. Brandt, <I>Numerical Methods for Beginners</I>, second edition, Lakeside Press, 1994 (first edition 1988). The first edition has errors in chapter 5; do not use it.</LI>
+</UL>
+<H3>In preparation</H3>
+<P>A paper on stopping criteria for iterative methods with Dr. Eklund, expected in the summer of 1999. A third edition of the book is promised to the publisher for the autumn, and the publisher has promised it will not lose the files this time.</P>
+<H2>Students</H2>
+<H3>Theses I have supervised</H3>
+<P>Degree theses (laurea) in mathematics, with the year of the discussion. Names are given with the student's permission.</P>
+<UL>
+<LI>1993 - Marta Vitali: <I>The conjugate gradient method in practice</I></LI>
+<LI>1994 - Peter Lindgren: <I>Interpolation and the Runge phenomenon: a numerical investigation</I></LI>
+<LI>1995 - Sofia Mancini: <I>Numerical solution of a heat equation on a rod</I></LI>
+<LI>1996 - Tommaso Greco: <I>Sparse matrices from the finite differences method: storage and speed</I></LI>
+<LI>1997 - Elena Corti: <I>The effect of rounding on the harmonic series</I></LI>
+<LI>1998 - Paul Wagner: <I>A comparison of four stopping criteria</I></LI>
+</UL>
+<H3>Thinking of writing a thesis with me?</H3>
+<P>I accept three or four students a year. The thesis should include a computing part: you write programs, run them, and look at the results with a critical eye. A thesis that consists only of copied theory will not be accepted. Come to my office hours with a topic or, if you do not have one, with the list of the courses you liked.</P>
+<P>Some advice, from experience:</P>
+<UL>
+<LI>Start early. The students who come in the last semester always say they need two more months.</LI>
+<LI>Back up your work. Not once: twice. On two different floppy disks, in two different places. Every year somebody loses a chapter.</LI>
+<LI>Write in short sentences. A thesis is not a novel, and I read it with a pencil.</LI>
+<LI>Test your program on the case you know the answer to before you test it on the case you do not.</LI>
+<LI>Do not use a library routine for the thing you are studying. You will learn nothing and it will be obvious.</LI>
+</UL>
+<H3>Exam statistics, March 1999</H3>
+<P>In the winter session 128 students enrolled in MATH 341, 94 took the written exam and 61 passed. The average mark was 21 out of 30. The most frequent mistake was to forget the pivoting in question 2. The most original mistake was a student who solved the system correctly but copied the wrong matrix from the board; this was also the most upsetting mistake, for the student.</P></FONT>
+<HR><FONT FACE="Times New Roman" SIZE=2><ADDRESS>Last modified: 03/22/1999<BR>These pages are mine and do not represent the position of the University. Written by hand in a text editor.<BR>This page has been visited 1847 times since September 14, 1996.</ADDRESS></FONT>
+<!-- end of page -->
+</BODY>
+</HTML>

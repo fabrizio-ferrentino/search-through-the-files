@@ -18,8 +18,10 @@ const SITE_SALT := 2002
 # Quanti siti per partita (proprietario, 19/10/2026: una trentina in tutto, 10-15 a
 # partita) e quanti di lore fra questi ("2 sono troppo pochi": 4-5). Se il catalogo ne ha
 # meno, si prendono tutti quelli che ci sono.
+# 20/11/2026 (proprietario): SEMPRE 10, con i siti normali ridotti a 1-2 pagine, perche' la
+# pagina con la chiave sia cercabile (~40 pagine a partita invece di ~90).
 const SITI_MIN := 10
-const SITI_MAX := 15
+const SITI_MAX := 10
 const LORE_MIN := 4
 const LORE_MAX := 5
 const NONSERVER := "nonserver"      # la pagina "impossibile trovare il server"
@@ -211,7 +213,7 @@ const HOME := "home"          # nome di pagina della wiki (non e' un file)
 # INDIRIZZI. I domini stanno nel catalogo (catalogo_siti.gd), uno per lingua: un sito
 # inglese su un .it si nota subito, ed e' l'indirizzo la prima cosa che il giocatore legge
 # nella barra. Quelli della rete di fine anni '90: .it per i siti italiani, .com per il
-# negozio e i giochi, .net per il sito di misteri, la pagina personale ospitata dall'ISP
+# negozio e i giochi, .net per qualche sito strano (il volto, nessuno in casa), la pagina personale ospitata dall'ISP
 # sotto ~utente (era la norma: Geocities, Tripod, il "webspace" del provider) e la webmail
 # su un sottodominio del provider.
 # L'indirizzo di una pagina e' il dominio del sito piu' "/<pagina>.html" (l'index e' il

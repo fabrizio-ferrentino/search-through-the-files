@@ -318,8 +318,21 @@ func _prova_ancore() -> void:
 		# ogni pagina deve offrire scelta, in entrambe le modalita'
 		_ge("ancore_visibili_" + nome, vis.size(), 3)
 		_ge("ancore_sorgente_" + nome, src.size(), 6)
-		# lo scanner presuppone che le pagine d'autore non abbiano commenti
-		_no("senza_commenti_" + nome, raw, "<!--")
+		# Le pagine d'autore HANNO commenti dal 20/11/2026 (i "dialetti" d'epoca di
+		# tools/web/sito.py): lo scanner li salta, e nessun posto per la chiave deve cadere
+		# dentro un commento (una chiave scritta li' non si vedrebbe mai, nemmeno nel
+		# sorgente come chiave a se').
+		var dentro := ""
+		var c0 := raw.find("<!--")
+		while c0 >= 0 and dentro == "":
+			var c1 := raw.find("-->", c0 + 4)
+			if c1 < 0:
+				break
+			for a in vis + src:
+				if int(a["pos"]) > c0 and int(a["pos"]) < c1 + 3:
+					dentro = "%s a %d" % [str(a["tipo"]), int(a["pos"])]
+			c0 = raw.find("<!--", c1 + 3)
+		_eq("ancore_fuori_dai_commenti_" + nome, dentro, "")
 		# mai dentro <title>: finirebbe nella barra del titolo della finestra
 		var t0 := raw.findn("<title>")
 		var t1 := raw.findn("</title>")
