@@ -368,7 +368,15 @@ into the SubViewport.
 
 ### `scripts/main_menu.gd`
 
-Menu buttons + fade to the room. _ready() first calls
+Menu buttons + fade to the room. Start (2026-11-25, owner: "settare dei seed, cosi da
+rigiocare la stessa partita", then a field in the menu "e' brutto, metti una schermata dopo
+aver premuto avvia") opens `NuovaPartitaScreen` (scripts/nuova_partita_screen.gd, CanvasLayer
+10, same look as Options): "Partita casuale" (seed 0 = random), or a "Seme:" field (digits only,
+max 10, 0 / above 4294967295 = invalid) with "Gioca", disabled until the seed is valid (Enter
+works too), and Indietro / ESC. Its `avvia(seme)` signal calls `avvia_partita(seme)`, which
+starts the run with start_new_run(seme) and the fade. The seed drives disk, keys, sites and the
+enemies' and viruses' timing; the end screen shows it (GameManager.riepilogo).
+_ready() first calls
 GameManager.applica_video_salvato() (see GameManager video settings).
 _etichette() assigns the three button labels from tr()
 (UI_START/UI_OPTIONS/UI_QUIT):

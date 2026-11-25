@@ -256,6 +256,11 @@ WK_V_8,To log on remember: %s.,Per accedere ricordarsi di: %s.
 UI_START,Start,Avvia
 UI_OPTIONS,Settings,Impostazioni
 UI_QUIT,Quit,Esci
+UI_SEED,Seed:,Seme:
+UI_SEED_HINT,e.g. 123456,es. 123456
+UI_NEW_GAME,New game,Nuova partita
+UI_RANDOM_GAME,Random game,Partita casuale
+UI_PLAY_SEED,Play,Gioca
 UI_OPTIONS_TITLE,SETTINGS,IMPOSTAZIONI
 UI_LANGUAGE,Language,Lingua
 UI_BACK,Back,Indietro

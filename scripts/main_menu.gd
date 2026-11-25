@@ -3,6 +3,7 @@ extends Node2D
 var button_type = null
 
 var opzioni: OptionsScreen = null    # la schermata Opzioni, se aperta
+var nuova: NuovaPartitaScreen = null # la scelta della partita (a caso / col seme), se aperta
 
 func _ready() -> void:
 	GameManager.applica_video_salvato()   # schermo intero / V-Sync / finestra scelti nelle Opzioni
@@ -18,12 +19,24 @@ func _etichette() -> void:
 	$button_manager/Option.text = tr("UI_OPTIONS")
 	$button_manager/Quit.text = tr("UI_QUIT")
 
+# AVVIA apre la scelta della partita (scripts/nuova_partita_screen.gd): a caso, o col seme
+# letto a fine partita per rigiocare la stessa (proprietario, 25/11/2026).
 func _on_start_pressed() -> void:
+	if _in_partenza():
+		return
+	if nuova != null and is_instance_valid(nuova):
+		return                       # gia' aperta
+	nuova = NuovaPartitaScreen.new()
+	nuova.avvia.connect(avvia_partita)
+	add_child(nuova)
+
+# seme 0 = a caso
+func avvia_partita(seme: int) -> void:
 	if _in_partenza():
 		return                        # un secondo clic rifarebbe il run (seme e disco nuovi)
 	button_type = "start"
 	_blocca_pulsanti()
-	GameManager.start_new_run()   # nuovo run: seme, stato PC azzerato e filesystem fresco
+	GameManager.start_new_run(seme)   # nuovo run: seme, stato PC azzerato e filesystem fresco
 	$Fade_transition.show()
 	$Fade_transition/fade_timer.start()
 	$Fade_transition/AnimationPlayer.play("fade_in")

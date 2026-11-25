@@ -270,6 +270,12 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - photo_banda_scan.tscn/.gd (dev tool: the quietest spot in the
   shader's real band on each photo and the offset it would need),
 
+- seme_menu_test.tscn/.gd (headless, 2026-11-25: Start opens the new-game screen and does not
+  start yet (AVVIA_APRE_LA_SCELTA); the seed field keeps digits only and "Gioca" stays disabled
+  without a valid seed (CAMPO_SOLO_CIFRE); the same seed gives the same keys, sites and disk and
+  another seed does not (STESSO_SEME_STESSA_PARTITA); "Gioca" starts the run with the typed seed
+  (AVVIA_USA_IL_SEME). Sabotaged (the run ignoring the seed): red),
+
 - statistiche_test.gd (script, headless, 2026-11-25: the end-of-run summary carries the seed,
   the time as m:ss and every counter (RIEPILOGO), a new run resets them (AZZERA), every STATS_*
   line exists in EN and IT (LINGUE)); minacce_stanza_test also checks the counters of the
