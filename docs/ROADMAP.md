@@ -141,7 +141,7 @@ left = window); Ghosty comes from behind on a clock of his own.
 - [x] **Jester.** Peeks from a door or the window; **hold the torch** on him 1–2 s (random)
   to send him away; else → `game_over("jester")`.
 - [x] **HaloMan.** Same spots, never with the Jester, only with the PC on; **lighting him
-  kills you** — **switch the PC off**; else → `game_over("halo")`.
+  kills you**, and so does looking back at him once you turned away — **switch the PC off**; else → `game_over("halo")`.
 - [x] **Ghosty** *(working name).* From behind: approaches while unwatched, rushes when
   watched without light (since 2026-11-25; it used to freeze), vanishes in the torch light; light tell inside the PC; else → `game_over("ghosty")`.
 - [x] **Flashlight.** **Held** (press = on, release = off), a real beam that follows the

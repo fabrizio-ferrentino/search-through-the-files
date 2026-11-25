@@ -12,7 +12,7 @@ extends Node
 #     la luce verso la zona sbagliata non conti; lasciato stare uccida ("jester");
 #   3 si affacci anche dalla FINESTRA (zona sinistra), FUORI dal muro;
 #   4 HALOMAN arrivi solo a PC acceso; puntargli la torcia UCCIDA (dall'altra parte no);
-#     spegnere il PC lo mandi via;
+#     spegnere il PC lo mandi via; visto, distolto lo sguardo e RIGUARDATO uccida;
 #     lasciato stare uccida ("halo"); mai insieme al Jester;
 #   5 GHOSTY avanzi quando non lo guardi (anche dentro il PC), PIU' IN FRETTA quando lo
 #     guardi senza luce, sparisca appena lo illumini girato verso di lui (e torni dopo una pausa);
@@ -198,7 +198,8 @@ func _prova_halo() -> void:
 	_passi(1.0)
 	_td.torch_spegni()
 	var vivo: bool = _td.morte == "" and _td.in_agguato()
-	# puntargli contro la torcia: si muore, subito
+	# puntargli contro la torcia: si muore, subito (azzerato lo sguardo: qui conta solo la luce)
+	_td._halo_visto = 0
 	_gira(_player.pos_right)
 	_td.torch_accendi()
 	_passi(PASSO * 2)
@@ -221,6 +222,19 @@ func _prova_halo() -> void:
 	_check("HALO_UCCIDE", _td.morte == "halo" and _td._react_total >= 8.0,
 			"causa '%s', tempo per reagire %.1f s" % [_td.morte, _td._react_total])
 	_td.morte = ""
+	# visto, poi altrove: si vive; RIGUARDATO: si muore (senza torcia)
+	_affaccio("halo", "right")
+	_gira(_player.pos_right)
+	_passi(0.5)
+	_gira(_player.pos_center)
+	_passi(0.5)
+	var vivo_altrove: bool = _td.morte == "" and _td.in_agguato()
+	_gira(_player.pos_right)
+	_passi(PASSO * 2)
+	_check("HALO_NON_RIGUARDARLO", vivo_altrove and _td.morte == "halo",
+			"guardato e poi altrove: vivo %s; riguardato: causa '%s'" % [str(vivo_altrove), _td.morte])
+	_td.morte = ""
+	_gira(_player.pos_center)
 
 # ---------- 5: Ghosty ----------
 

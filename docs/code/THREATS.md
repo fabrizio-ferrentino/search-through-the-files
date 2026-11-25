@@ -79,6 +79,9 @@ frozen while lit; let go early and he comes back out at RIENTRO
 him KILLS - torch on while facing his zone = game_over("halo") on
 the spot (owner, 2026-10-19: his halo shows him in the dark so you
 can tell him from the Jester BEFORE switching the torch on);
+LOOKING BACK at him kills too - once seen (_halo_visto 1), turning
+away (2) and facing his zone again = game_over("halo") (owner,
+2026-11-25: it used to do nothing);
 switching the PC OFF (case button or Start > Shut down) sends him
 away; HALO_REACT 12 -> 8 s, because you must leave
 the PC, turn to the centre and click the case. GHOSTY: his own
@@ -386,8 +389,8 @@ foundation for M5. NOT the secret folder any more (see below).
     a door or the window, dark - only the torch shows him; **hold the torch on him** for 1-2 s
     (random each time) and he slides away; let go early and he comes back.
   - **HaloMan** (`halo_man.tscn`, placeholder with a glowing halo): same spots, never together
-    with the Jester, only with the PC on; **do not light him** - the torch on him kills you;
-    **switch the PC off**.
+    with the Jester, only with the PC on; **do not light him** - the torch on him kills you, and
+    so does looking back at him after turning away; **switch the PC off**.
   - **Ghosty** (`ghosty.tscn`, working name, placeholder): from **behind**; the longer you do
     not look back (or sit in the PC) the closer he gets; looking back without light makes him rush (twice as fast), the **torch**
     makes him vanish. He never strikes during a peek or the lethal PC virus.

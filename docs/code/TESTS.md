@@ -284,7 +284,8 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   clock resumes if let go early, light on the wrong zone does
   nothing, left alone he kills; he also peeks from the WINDOW,
   outside the wall; HaloMan only with the PC on, lighting him
-  KILLS (light on the other side does not), powering off sends him
+  KILLS (light on the other side does not), looking back at him
+  after turning away KILLS (HALO_NON_RIGUARDARLO), powering off sends him
   away, left alone he kills, never
   together with the Jester; Ghosty advances unwatched (also
   inside the PC) and faster when watched without light

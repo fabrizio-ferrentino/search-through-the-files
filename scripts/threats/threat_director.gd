@@ -11,6 +11,8 @@ extends Node
 #           torcia e' la morte (game_over("halo")). Se ne va solo se SPEGNI IL PC
 #           (pulsante del case o Avvio > Arresta). Arriva solo a PC acceso, e porta una
 #           luce sua, cosi' lo riconosci prima di accendere. Tempo scaduto -> stessa fine.
+#           E non va RIGUARDATO: visto una volta, se ti giri altrove e torni a guardarlo
+#           muori (proprietario, 25/11/2026: prima non succedeva niente).
 #   GHOSTY  (nome provvisorio) attacca solo DA DIETRO: piu' a lungo non ti giri, piu' si
 #           avvicina; se lo guardi senza luce corre ancora PIU' in fretta (GHOSTY_GUARDATO);
 #           appena gli punti contro la torcia accesa sparisce. Se arriva alle tue spalle -> game_over("ghosty").
@@ -56,6 +58,7 @@ var _heat := 0.0            # 0..1: "aggressivita'". Sale nel PC, scende sorvegl
 var _react_left := 0.0      # secondi rimasti per reagire durante un PEEK
 var _react_total := 1.0     # durata piena della finestra corrente (per il tell)
 var _uscita := 0.0          # Jester: 0..1, quanto se n'e' gia' andato (illuminandolo)
+var _halo_visto := 0         # HaloMan: 0 non ancora visto, 1 lo stai guardando, 2 visto e poi distolto lo sguardo
 var _uscita_serve := 1.5    # Jester: secondi di luce che servono stavolta (1-2, a caso)
 var _last_spot = null       # ultimo spot usato: per non ripeterlo due volte di fila
 var _peek_spot = null       # spot dell'affaccio in corso
@@ -192,12 +195,17 @@ func _avanza_affacci(delta: float) -> void:
 		else:
 			# HaloMan: la torcia NON va puntata su di lui -- illuminarlo e' la morte
 			# (proprietario, 19/10/2026). Si manda via solo spegnendo il PC.
-			if _torcia_accesa() and _facing_zone(_peek_zone):
+			var lo_guardi: bool = not player.is_in_pc() and _facing_zone(_peek_zone)
+			if lo_guardi and (_torcia_accesa() or _halo_visto == 2):
 				_halo.nascondi()
 				_nemico = null
 				_reset_tell()
 				_morte("halo")
 				return
+			if lo_guardi:
+				_halo_visto = 1
+			elif _halo_visto == 1:
+				_halo_visto = 2
 			_react_left -= delta
 			if not GameManager.pc_on:
 				_halo.dismiss()
@@ -253,6 +261,7 @@ func _peek(chi := "") -> void:
 	_peek_zone = _zone_of(spot)
 	_nemico.appear_at(spot.global_position, player.global_transform.origin)
 	_uscita = 0.0
+	_halo_visto = 0
 	_uscita_serve = _rng.randf_range(USCITA_MIN, USCITA_MAX)
 	_react_total = _react_time() if _chi == "jester" else _halo_react_time()
 	_react_left = _react_total

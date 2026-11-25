@@ -304,7 +304,8 @@ are placeholders**, replaced last, after the gameplay.
 - **HaloMan** — the Jester's counterpart: same spots, but a light of his own (a halo) makes
   him visible in the dark — and that is the point: **pointing the torch at him kills you**.
   Tell him from the Jester before you light anything, then **switch the PC off** (case
-  button / Start ▸ Shut down) to send him away. He only comes while the PC is on.
+  button / Start ▸ Shut down) to send him away. Once you have seen him, **do not look at him
+  again**: turning away and back to him kills you too (owner, 2026-11-25). He only comes while the PC is on.
   **Never at the same time as the Jester.**
 - **Ghosty** *(working name)* — strikes only from **behind**. The longer you do not look
   back (or sit inside the PC), the closer he gets; **looking at him without light makes him rush
