@@ -275,12 +275,13 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   outside the wall; HaloMan only with the PC on, lighting him
   KILLS (light on the other side does not), powering off sends him
   away, left alone he kills, never
-  together with the Jester; Ghosty advances only unwatched (also
-  inside the PC), freezes when watched, vanishes at the light when
+  together with the Jester; Ghosty advances unwatched (also
+  inside the PC) and faster when watched without light
+  (GHOSTY_AVANZA_E_CORRE_SE_GUARDATO), vanishes at the light when
   facing him (and comes back after a pause), the in-PC tell only
   when he is close, and he never strikes during a peek but does
   right after. Sabotaged: the Jester gone at a flash, the torch
-  sending HaloMan away, lighting HaloMan harmless, Ghosty advancing
+  sending HaloMan away, lighting HaloMan harmless, Ghosty frozen
   while watched, Ghosty
   striking during a peek - all red. Saves jester_finestra,
   halo_corridoio and ghosty_dietro .png under user://),

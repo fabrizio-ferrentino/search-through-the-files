@@ -83,9 +83,10 @@ switching the PC OFF (case button or Start > Shut down) sends him
 away; HALO_REACT 12 -> 8 s, because you must leave
 the PC, turn to the centre and click the case. GHOSTY: his own
 clock in parallel - first after GHOSTY_PRIMO 45-70 s, back
-GHOSTY_PAUSA 25-45 s after being sent away; _g_p 0..1 grows only
-while you are NOT looking back (inside the PC counts as not
-looking), GHOSTY_DURATA 60 -> 40 s from start to strike; he is in
+GHOSTY_PAUSA 25-45 s after being sent away; _g_p 0..1 grows while
+you are NOT looking back (inside the PC counts as not looking) and
+GHOSTY_GUARDATO 2x FASTER while you look at him without the torch
+(owner, 2026-11-25: he used to freeze when watched), GHOSTY_DURATA 60 -> 40 s from start to strike; he is in
 the room from GHOSTY_VISIBILE 0.15, walking the straight line
 between the Marker3Ds "ghosty_lontano" and "ghosty_vicino" in
 main.tscn; looking back FREEZES him; the torch ON while facing
@@ -387,7 +388,7 @@ foundation for M5. NOT the secret folder any more (see below).
     with the Jester, only with the PC on; **do not light him** - the torch on him kills you;
     **switch the PC off**.
   - **Ghosty** (`ghosty.tscn`, working name, placeholder): from **behind**; the longer you do
-    not look back (or sit in the PC) the closer he gets; looking back freezes him, the **torch**
+    not look back (or sit in the PC) the closer he gets; looking back without light makes him rush (twice as fast), the **torch**
     makes him vanish. He never strikes during a peek or the lethal PC virus.
   The **torch** is HELD (press = on, release = off) with a battery (HUD bar in the room). Inside
   the PC a glitch pulse warns of a peek and the screen edges cool down as Ghosty approaches. The

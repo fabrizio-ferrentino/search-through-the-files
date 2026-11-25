@@ -14,8 +14,8 @@ extends Node
 #   4 HALOMAN arrivi solo a PC acceso; puntargli la torcia UCCIDA (dall'altra parte no);
 #     spegnere il PC lo mandi via;
 #     lasciato stare uccida ("halo"); mai insieme al Jester;
-#   5 GHOSTY avanzi solo quando non lo guardi (anche dentro il PC), stia fermo quando lo
-#     guardi, sparisca appena lo illumini girato verso di lui (e torni dopo una pausa);
+#   5 GHOSTY avanzi quando non lo guardi (anche dentro il PC), PIU' IN FRETTA quando lo
+#     guardi senza luce, sparisca appena lo illumini girato verso di lui (e torni dopo una pausa);
 #     non colpisca mentre qualcuno si affaccia; arrivato in fondo uccida ("ghosty");
 #     dentro il PC lo annunci il velo ai bordi, e solo da vicino.
 # Salva foto da guardare: jester_finestra.png, halo_corridoio.png, ghosty_dietro.png.
@@ -232,15 +232,17 @@ func _prova_ghosty() -> void:
 	var avanzato: float = _td._g_p
 	_gira(_player.pos_back)
 	_passi(5.0)
-	var fermo: bool = absf(_td._g_p - avanzato) < 0.001
+	var guardato: float = _td._g_p
+	# guardato senza luce corre: in 5 s fa piu' strada di quanta ne faceva in 12 senza
+	var corre: bool = (guardato - avanzato) / 5.0 > 1.5 * avanzato / 12.0
 	_player._in_pc = true
 	_passi(3.0)
 	var nel_pc: float = _td._g_p
 	_player._in_pc = false
-	_check("GHOSTY_AVANZA_SE_NON_GUARDI", avanzato > 0.1 and fermo and nel_pc > avanzato + 0.03
+	_check("GHOSTY_AVANZA_E_CORRE_SE_GUARDATO", avanzato > 0.1 and corre and nel_pc > guardato + 0.03
 			and _td._ghosty.visible,
-			"dopo 12 s %.2f, guardato 5 s fermo %s, nel PC 3 s %.2f, visibile %s" % [avanzato,
-			str(fermo), nel_pc, str(_td._ghosty.visible)])
+			"dopo 12 s %.2f, guardato 5 s %.2f (corre %s), nel PC 3 s %.2f, visibile %s" % [avanzato,
+			guardato, str(corre), nel_pc, str(_td._ghosty.visible)])
 	# girato dietro: la foto, poi la torcia dall'altra parte non fa niente, verso di lui si'
 	_td._g_p = 0.6
 	_gira(_player.pos_back)

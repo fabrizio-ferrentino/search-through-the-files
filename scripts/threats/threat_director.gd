@@ -12,8 +12,8 @@ extends Node
 #           (pulsante del case o Avvio > Arresta). Arriva solo a PC acceso, e porta una
 #           luce sua, cosi' lo riconosci prima di accendere. Tempo scaduto -> stessa fine.
 #   GHOSTY  (nome provvisorio) attacca solo DA DIETRO: piu' a lungo non ti giri, piu' si
-#           avvicina; mentre lo guardi resta fermo; appena gli punti contro la torcia
-#           accesa sparisce. Se arriva alle tue spalle -> game_over("ghosty").
+#           avvicina; se lo guardi senza luce corre ancora PIU' in fretta (GHOSTY_GUARDATO);
+#           appena gli punti contro la torcia accesa sparisce. Se arriva alle tue spalle -> game_over("ghosty").
 # Jester e HaloMan si dividono UN SOLO turno di affaccio (mai insieme): il ritmo e' quello
 # di prima, GRACE -> WAIT -> PEEK (reazione) -> CALM (calma garantita). Ghosty ha un ritmo
 # suo e corre in parallelo, ma non colpisce mentre qualcuno si affaccia o mentre c'e' il
@@ -99,6 +99,7 @@ const GHOSTY_DURATA_CALM := 60.0    # da quando parte a quando ti prende, senza 
 const GHOSTY_DURATA_HOT := 40.0     # ... a heat 1
 const GHOSTY_VISIBILE := 0.15       # prima di qui non e' ancora entrato nella stanza
 const GHOSTY_TRATTIENE := 0.97      # dove aspetta se in quel momento non puo' colpire
+const GHOSTY_GUARDATO := 2.0       # guardato senza luce avanza tante volte piu' in fretta (proprietario, 25/11/2026: prima si fermava)
 const GHOSTY_TELL_DA := 0.35        # da qui il PC comincia a raffreddarsi ai bordi
 # --- Torcia ---
 const AIM_TOL_DEG := 30.0           # quanto devi essere girato "verso la zona" per illuminarla
@@ -314,8 +315,7 @@ func _avanza_ghosty(delta: float) -> void:
 	if guardato and _torcia_accesa() and _g_p >= GHOSTY_VISIBILE:
 		_ghosty_via()                      # la luce lo cancella
 		return
-	if not guardato:
-		_g_p += delta / lerpf(GHOSTY_DURATA_CALM, GHOSTY_DURATA_HOT, _heat)
+	_g_p += delta / lerpf(GHOSTY_DURATA_CALM, GHOSTY_DURATA_HOT, _heat) * (GHOSTY_GUARDATO if guardato else 1.0)
 	# non colpisce mentre qualcuno si affaccia o c'e' il virus mortale: aspetta all'ultimo
 	# passo, fermo, finche' non tocca di nuovo a lui
 	if _state == State.PEEK or (virus != null and virus.mortale_in_corso()):

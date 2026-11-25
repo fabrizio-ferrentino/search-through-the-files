@@ -1,8 +1,8 @@
 extends Node3D
 
 # Ghosty (M4, nome provvisorio): attacca SOLO DA DIETRO. Piu' a lungo non ti giri, piu'
-# si avvicina; finche' lo guardi resta fermo dove e' arrivato; appena gli punti contro la
-# torcia accesa, sparisce. Qui c'e' solo il CORPO (dove sta, come si vede): il ritmo, cioe'
+# si avvicina; se lo guardi senza luce corre ancora piu' in fretta; appena gli punti contro
+# la torcia accesa, sparisce. Qui c'e' solo il CORPO (dove sta, come si vede): il ritmo, cioe'
 # quanto avanza e quando colpisce, sta nel ThreatDirector, che chiama metti_a(t).
 # Il modello di ghosty.tscn e' un SEGNAPOSTO (figura pallida e semitrasparente).
 

@@ -307,8 +307,8 @@ are placeholders**, replaced last, after the gameplay.
   button / Start ▸ Shut down) to send him away. He only comes while the PC is on.
   **Never at the same time as the Jester.**
 - **Ghosty** *(working name)* — strikes only from **behind**. The longer you do not look
-  back (or sit inside the PC), the closer he gets; **looking at him freezes him**, and **the
-  torch makes him vanish** at once. Inside the PC a light sign gives him away: the screen's
+  back (or sit inside the PC), the closer he gets; **looking at him without light makes him rush
+  twice as fast** (owner, 2026-11-25; he used to freeze), and **the torch makes him vanish** at once. Inside the PC a light sign gives him away: the screen's
   edges cool and darken as he closes in.
 
 **Fairness rules:** Jester and HaloMan share one peek slot, and after each peek there is a
