@@ -65,7 +65,9 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
 - gif_test.gd (-s, headless, 2026-10-23: every web/img/*.gif decodes; frame
   counts and delays, colours, transparency, disposal 2/3, the textures
   (animated vs single frame), broken files rejected, interlace. Sabotaged:
-  LZW code-size growth broken - red),
+  LZW code-size growth broken - red). 2026-11-26: the fixtures follow the new files from
+  tools/web/fonti.py: busta = 6 frames x 100 ms, opaque pixel (57,44), disposal pixel (39,45)
+  opaque in frame 0 and empty in frame 3; globo = 36 frames,
 
 - midi_test.gd (-s, headless, 2026-10-23: a hand-built SMF with a tempo change,
   running status and drums; the real melodies of web/audio parse; the render is

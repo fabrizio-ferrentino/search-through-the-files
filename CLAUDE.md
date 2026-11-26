@@ -171,3 +171,5 @@ NOT implemented yet: real enemy models/animations (placeholders, owner's art com
   - `disk-writer` (Sonnet): adds/changes ordinary disk files, folders, programs.
   - `docs-keeper` (Sonnet): updates docs/code/ (and one line here) after a change.
 - **Lore texts and design decisions stay in the main chat**, never in a sub-agent.
+- The project enables the `godot` + `router` skills of awesome-gamedev-agent-skills (`.claude/settings.json`).
+  They target Godot 4.7: here 4.6.2 and the rules of this file win.

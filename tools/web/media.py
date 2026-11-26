@@ -10,7 +10,7 @@ Regole: nelle immagini NIENTE PAROLE (le pagine sono in due lingue, un'immagine 
 solo pittogrammi e cifre; niente marchi veri; melodie inventate, mai motivi esistenti.
 
     python tools/web/media.py            # rigenera tutto
-    python tools/web/media.py busta      # solo i file il cui nome contiene "busta"
+    python tools/web/media.py smile      # solo i file il cui nome contiene "smile"
 """
 import math, os, random, struct, sys
 
@@ -72,9 +72,79 @@ def _lzw(indici, min_size):
     return bytes(out)
 
 
+# Le GIF disegnate qui erano "piatte" (tinte unite, niente ombre: sembravano icone del 2015,
+# proprietario 26/11/2026). Queste passano da _epoca(), che da' loro l'aria delle clip art
+# renderizzate del '97: luce in alto a sinistra e ombra in basso a destra RETINATE (Bayer
+# 4x4, come il dithering a 256 colori), contorno nero e ombra a scacchiera sotto.
+EPOCA = {"cantiere.gif", "smile.gif", "floppy.gif", "ingranaggio.gif",
+         "pallone.gif", "pentola.gif", "fiore.gif", "stemma.gif", "zodiaco.gif", "zampa.gif",
+         "sole.gif", "aereo.gif", "carrello.gif", "pacco.gif", "stellina.gif", "fulmine.gif",
+         "allarme.gif", "antenna.gif"}
+_BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+
+
+def _mescola(c, verso, t):
+    return tuple(int(round(a + (b - a) * t)) for a, b in zip(c, verso))
+
+
+def _epoca(fotogrammi, palette, trasparente):
+    """Rende un'animazione "d'epoca": torna (fotogrammi, palette, trasparente) nuovi."""
+    nero, ombra = (0, 0, 0), (48, 48, 48)
+    pal, indice = [palette[trasparente]], {}
+
+    def idx(c):
+        if c not in indice:
+            indice[c] = len(pal)
+            pal.append(c)
+        return indice[c]
+
+    nuovi = []
+    for f in fotogrammi:
+        h, w = len(f), len(f[0])
+        prof = 2 if min(w, h) < 32 else 3          # quanto entra la luce dal bordo
+
+        def bordo(x, y):
+            if not (0 <= x < w and 0 <= y < h):
+                return True
+            return f[y][x] == trasparente or palette[f[y][x]] == nero
+
+        def pieno(x, y):
+            return 0 <= x < w and 0 <= y < h and f[y][x] != trasparente
+
+        rgb = [[None] * w for _ in range(h)]
+        for y in range(h):
+            for x in range(w):
+                if f[y][x] == trasparente:
+                    continue
+                c = palette[f[y][x]]
+                if c != nero:
+                    luce = sum(bordo(x - k, y - k) for k in range(1, prof + 1))
+                    buio = sum(bordo(x + k, y + k) for k in range(1, prof + 1))
+                    soglia = (_BAYER[y % 4][x % 4] + 0.5) / 16
+                    if luce > buio and soglia < (luce - buio) / prof:
+                        c = _mescola(c, (255, 255, 255), 0.5)
+                    elif buio > luce and soglia < (buio - luce) / prof:
+                        c = _mescola(c, nero, 0.45)
+                rgb[y][x] = c
+        for y in range(h):
+            for x in range(w):
+                if rgb[y][x] is not None:
+                    continue
+                vicini = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+                if any(pieno(a, b) and palette[f[b][a]] != nero for a, b in vicini):
+                    rgb[y][x] = nero                                  # contorno
+                elif (x + y) % 2 == 0 and pieno(x - 2, y - 2):
+                    rgb[y][x] = ombra                                 # ombra a scacchiera
+        nuovi.append([[0 if c is None else idx(c) for c in riga] for riga in rgb])
+    assert len(pal) <= 256, "troppi colori dopo _epoca: %d" % len(pal)
+    return nuovi, pal, 0
+
+
 def scrivi_gif(nome, fotogrammi, palette, ritardo=10, trasparente=None, ritardi=None):
     """fotogrammi: liste di righe di indici nella palette (tutti della stessa misura).
     ritardo in centesimi di secondo; trasparente = indice trasparente o None."""
+    if nome in EPOCA and trasparente is not None:
+        fotogrammi, palette, trasparente = _epoca(fotogrammi, palette, trasparente)
     h = len(fotogrammi[0])
     w = len(fotogrammi[0][0])
     pal = list(palette)
@@ -216,74 +286,10 @@ def cantiere():
     scrivi_gif("cantiere.gif", fs, pal, ritardo=25, trasparente=0)
 
 
-def busta():
-    """La busta della posta che gira su se stessa (il "scrivimi" di ogni pagina)."""
-    pal = [(255, 0, 255), (0, 0, 0), (255, 255, 255), (200, 200, 220), (220, 0, 0)]
-    fs = []
-    for f in range(12):
-        t = Tela(40, 28, 0)
-        k = math.cos(f / 12 * math.tau)
-        mezza = max(1, abs(k) * 17)
-        x0, x1 = 20 - mezza, 20 + mezza
-        t.rett(x0, 4, x1 - x0, 20, 2 if k >= 0 else 3)
-        t.linea(x0, 4, x1, 4, 1)
-        t.linea(x0, 23, x1, 23, 1)
-        t.linea(x0, 4, x0, 23, 1)
-        t.linea(x1, 4, x1, 23, 1)
-        if k >= 0:
-            t.linea(x0, 4, 20, 15, 1)
-            t.linea(x1, 4, 20, 15, 1)
-            if mezza > 8:
-                t.rett(x1 - 6 * abs(k), 6, 4 * abs(k) + 1, 4, 4)
-        fs.append(t.p)
-    scrivi_gif("busta.gif", fs, pal, ritardo=8, trasparente=0)
 
 
-def globo():
-    """Il mappamondo che gira: Internet, per chi lo disegnava nel 1998."""
-    pal = [(255, 0, 255), (0, 40, 140), (40, 110, 230), (40, 170, 60), (0, 0, 0), (255, 255, 255)]
-    terre = [(0.3, 0.2, 0.25), (1.6, -0.3, 0.35), (2.9, 0.35, 0.3), (4.2, -0.1, 0.4), (5.3, 0.4, 0.2)]
-    fs = []
-    for f in range(16):
-        t = Tela(36, 36, 0)
-        t.cerchio(18, 18, 16, 2)
-        for y in range(36):
-            for x in range(36):
-                dx, dy = (x - 18) / 16, (y - 18) / 16
-                if dx * dx + dy * dy > 1:
-                    continue
-                lat = math.asin(dy)
-                lon = math.asin(max(-1, min(1, dx / max(0.01, math.cos(lat))))) + f / 16 * math.tau
-                for lo, la, r in terre:
-                    dl = (lon - lo + math.pi) % math.tau - math.pi
-                    if dl * dl + (lat - la) ** 2 < r * r:
-                        t.px(x, y, 3)
-                if dx < -0.55 and (dx * dx + dy * dy) > 0.5:
-                    t.px(x, y, 1 if t.p[y][x] == 2 else t.p[y][x])
-        t.cerchio(18, 18, 16, 4, pieno=False)
-        t.px(12, 10, 5)
-        t.px(13, 10, 5)
-        fs.append(t.p)
-    scrivi_gif("globo.gif", fs, pal, ritardo=10, trasparente=0)
 
 
-def nuovo():
-    """La stellina che lampeggia accanto alle novita' (senza la scritta: e' un'immagine)."""
-    pal = [(255, 0, 255), (255, 0, 0), (255, 230, 0), (255, 255, 255)]
-    fs = []
-    for f in range(4):
-        t = Tela(28, 28, 0)
-        r1, r2 = (13, 6) if f % 2 == 0 else (11, 5)
-        pt = []
-        for i in range(24):
-            r = r1 if i % 2 == 0 else r2
-            a = i / 24 * math.tau + f * 0.13
-            pt.append((14 + r * math.cos(a), 14 + r * math.sin(a)))
-        t.poligono(pt, 1 if f % 2 == 0 else 2)
-        t.cerchio(14, 14, 4, 2 if f % 2 == 0 else 3)
-        t.testo(12, 12, "!", 1)
-        fs.append(t.p)
-    scrivi_gif("nuovo.gif", fs, pal, ritardo=30, trasparente=0)
 
 
 def smile():
@@ -304,26 +310,6 @@ def smile():
     scrivi_gif("smile.gif", fs, pal, ritardo=9, trasparente=0)
 
 
-def fiamme(nome="fiamme.gif", w=480):
-    """La barra di fiamme che separa i paragrafi (il <hr> dei siti piu' "tosti")."""
-    pal = [(255, 0, 255), (120, 0, 0), (220, 30, 0), (255, 120, 0), (255, 220, 40), (255, 255, 200)]
-    h = 18
-    rng = random.Random(7)
-    fase = [rng.random() * math.tau for _ in range(w)]
-    fs = []
-    for f in range(6):
-        t = Tela(w, h, 0)
-        for x in range(w):
-            alt = 6 + 5 * (math.sin(x * 0.35 + fase[x] * 0.3 + f * 1.1) * 0.5 + 0.5) \
-                + 4 * (math.sin(x * 0.11 - f * 0.7) * 0.5 + 0.5)
-            for y in range(h):
-                d = h - y
-                if d <= alt:
-                    k = d / alt
-                    c = 5 if k < 0.15 else 4 if k < 0.4 else 3 if k < 0.7 else 2 if k < 0.9 else 1
-                    t.px(x, y, c)
-        fs.append(t.p)
-    scrivi_gif(nome, fs, pal, ritardo=10, trasparente=0)
 
 
 def arcobaleno(w=480):
@@ -568,24 +554,6 @@ def volto():
     scrivi_gif("volto.gif", [t.p], pal)
 
 
-def vecchio_pc():
-    """Un PC beige da scrivania con il monitor sopra (il mercatino dell'usato)."""
-    pal = [(255, 0, 255), (214, 204, 170), (150, 140, 110), (40, 60, 70), (0, 0, 0), (60, 160, 60)]
-    t = Tela(48, 44, 0)
-    t.rett(10, 2, 28, 22, 1)
-    t.rett(13, 5, 22, 15, 3)
-    t.rett(14, 6, 6, 1, 5)
-    t.rett(20, 24, 8, 3, 2)
-    t.rett(4, 27, 40, 14, 1)
-    t.rett(7, 30, 14, 3, 2)
-    t.rett(7, 35, 14, 2, 2)
-    t.rett(36, 32, 3, 2, 5)
-    for x0, y0, w, h in ((10, 2, 28, 22), (4, 27, 40, 14)):
-        t.linea(x0, y0, x0 + w - 1, y0, 4)
-        t.linea(x0, y0 + h - 1, x0 + w - 1, y0 + h - 1, 4)
-        t.linea(x0, y0, x0, y0 + h - 1, 4)
-        t.linea(x0 + w - 1, y0, x0 + w - 1, y0 + h - 1, 4)
-    scrivi_gif("vecchio_pc.gif", [t.p], pal, trasparente=0)
 
 
 def zampa():
@@ -974,14 +942,14 @@ def demo():
     ])
 
 
-TUTTI = [cantiere, busta, globo, nuovo, smile, fiamme, arcobaleno, floppy, ingranaggio,
+TUTTI = [cantiere, smile, arcobaleno, floppy, ingranaggio,
          pallone, pentola, fiore, stemma, zodiaco, stelle, griglia, quadretti, pergamena,
          metallo,
          lambda: contatore(4217, "contatore_jack.gif"),
          lambda: contatore(18342, "contatore_grifoni.gif"),
          lambda: contatore(951, "contatore_stelle.gif"),
          lambda: contatore(8478, "contatore_giorni.gif"),
-         volto, zampa, sole, aereo, carrello, pacco, vecchio_pc,
+         volto, zampa, sole, aereo, carrello, pacco,
          lambda: bottone("bottone_monitor.gif", "monitor", (0, 0, 128), "800x600"),
          lambda: bottone("bottone_modem.gif", "modem", (0, 90, 0), "56K"),
          lambda: bottone("bottone_dischetto.gif", "dischetto", (110, 0, 0), "144"),
