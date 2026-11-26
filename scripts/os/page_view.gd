@@ -136,6 +136,8 @@ func _gui_input(event: InputEvent) -> void:
 			# per selezionare subito dopo di noi.
 			if not _multi:
 				deselect()
+			else:
+				_ferma_timer_selezione.call_deferred()
 		else:
 			_held = false
 			# Clic "fermo": nessuna selezione residua (il timer interno tende a
@@ -157,6 +159,16 @@ func _gui_input(event: InputEvent) -> void:
 				accept_event()      # tremolio: non deve diventare una selezione
 			else:
 				_dragging = true    # da qui in poi l'engine estende la selezione
+
+# Dal 4.6.2 il doppio clic avvia anche il timer interno che estende la selezione mentre il
+# tasto e' tenuto (click_select_held, 0.05 s): col mouse fermo la riporta dal punto premuto
+# al punto premuto, e la parola appena scelta sparisce se il secondo clic dura un attimo di
+# piu' (misurato: tenuto 90 ms -> selezione vuota; 4.6.1 non avviava il timer qui). Lo
+# fermiamo DOPO che l'engine ha gestito la pressione: torna il comportamento del 4.6.1.
+func _ferma_timer_selezione() -> void:
+	for c in get_children(true):
+		if c is Timer:
+			(c as Timer).stop()
 
 # ---------------- cursore ----------------
 

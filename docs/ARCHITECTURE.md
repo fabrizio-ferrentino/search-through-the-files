@@ -3,7 +3,7 @@
 This describes the code **as it exists today**. For the design of unbuilt
 systems, see [GDD.md](GDD.md) and [ROADMAP.md](ROADMAP.md).
 
-Engine: **Godot 4.6.1**, Forward Plus. Language: **GDScript**.
+Engine: **Godot 4.6.2**, Forward Plus. Language: **GDScript**.
 
 ---
 

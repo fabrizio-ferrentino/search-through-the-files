@@ -5,7 +5,7 @@ one file per area: read the one for the area you are about to touch, not all of 
 
 ## 1. What this project is
 
-**Search Through the Files**: a first-person horror game in **Godot 4.6.1** (Forward Plus).
+**Search Through the Files**: a first-person horror game in **Godot 4.6.2** (Forward Plus).
 *Five Nights at Freddy's* (watch the room, survive) meets *Welcome to the Game* (dig through a
 fake Win95/98 OS). The player sits at a desk and hunts **4 keys** hidden in the PC - on the disk,
 on two web sites, in a photo - to open a protected folder, while enemies threaten **both the room
@@ -20,7 +20,7 @@ passes) is written around, never invented. Build order: [docs/ROADMAP.md](docs/R
 ## 2. How to run and validate
 
 ```powershell
-$godot = "C:\Users\ffria\Desktop\Dev\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe"
+$godot = "C:\Users\ffria\Desktop\Dev\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64_console.exe"
 $proj  = "z:\Progetti\Search Through the Files"
 & $godot --headless --path $proj --import                                   # parse everything
 & $godot --headless --path $proj "res://tests/<name>.tscn"                  # a headless test

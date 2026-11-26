@@ -1,6 +1,6 @@
 # Search Through the Files
 
-A first-person horror game built in **Godot 4.6.1** (Forward Plus).
+A first-person horror game built in **Godot 4.6.2** (Forward Plus).
 
 You sit at a desk in front of a retro Windows 95/98-style computer. To win, you
 must dig through the machine — files, fake websites, "HTML source", images — to
@@ -27,11 +27,11 @@ Think *Five Nights at Freddy's* meets *Welcome to the Game*.
 
 ## Running the game
 
-Open the project folder in Godot 4.6.1 and press **Play**, or from the command
+Open the project folder in Godot 4.6.2 and press **Play**, or from the command
 line:
 
 ```powershell
-$godot = "C:\Users\ffria\Desktop\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64_console.exe"
+$godot = "C:\Users\ffria\Desktop\Dev\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64_console.exe"
 & $godot --path "z:\Progetti\Search Through the Files"
 ```
 
