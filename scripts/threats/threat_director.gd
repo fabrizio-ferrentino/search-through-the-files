@@ -91,10 +91,11 @@ const GRACE_TIME := 30.0            # calma iniziale a inizio run (s)
 const CALM_TIME := 8.0
 const RIEMPI := 60.0                # s perche' un lato non guardato vada da 0 a 1 (a difficolta' 0)
 const SCARICA_SGUARDO := 30.0       # s per svuotarlo guardandolo senza luce ("piano")
-const SCARICA_TORCIA := 3.0         # ... guardandolo con la torcia accesa
-const RAMPA_TEMPO := 600.0          # in tanti secondi di partita il tempo da' tutto il suo +50%
+const SCARICA_TORCIA := 5.0         # ... con la torcia: piu' della batteria (~4 s), non svuoti due lati con una carica
+const RAMPA_TEMPO := 600.0          # in tanti secondi di partita il tempo da' tutto il suo PESO_TEMPO
+const PESO_TEMPO := 0.25            # +25%: verso la fine a spingere sono soprattutto le chiavi (26/11/2026)
 const PER_CHIAVE := 0.2             # +20% per ogni chiave trovata dopo la prima
-const M_MAX := 1.5 * (1.0 + PER_CHIAVE * 3.0)   # il moltiplicatore piu' alto (10 min, 4 chiavi)
+const M_MAX := (1.0 + PESO_TEMPO) * (1.0 + PER_CHIAVE * 3.0)   # il moltiplicatore piu' alto (10 min, 4 chiavi)
 const REACT_CALM := 8.0             # Jester: finestra di reazione a difficolta' 0 (s)
 const REACT_HOT := 4.0              # ... a difficolta' 1
 const USCITA_MIN := 1.0             # Jester: secondi di luce per scacciarlo (a caso fra i due)
@@ -265,12 +266,12 @@ func _lato_pieno() -> String:
 			return zona
 	return ""
 
-# Quanto corre la partita: il tempo da' fino a +50% in RAMPA_TEMPO, ogni chiave dopo la prima
+# Quanto corre la partita: il tempo da' fino a +PESO_TEMPO in RAMPA_TEMPO, ogni chiave dopo la prima
 # un altro PER_CHIAVE (moltiplicati). 1.0 = l'inizio.
 func _moltiplicatore() -> float:
 	var t: float = clampf(GameManager.tempo_partita / RAMPA_TEMPO, 0.0, 1.0)
 	var chiavi: int = maxi(0, GameManager.chiavi_trovate.size() - 1)
-	return (1.0 + 0.5 * t) * (1.0 + PER_CHIAVE * chiavi)
+	return (1.0 + PESO_TEMPO * t) * (1.0 + PER_CHIAVE * chiavi)
 
 # La stessa cosa in 0..1, per i tempi che vanno da "calmo" a "caldo" (reazione, Ghosty, tell).
 func _difficolta() -> float:

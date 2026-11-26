@@ -134,7 +134,7 @@ func _prova_ritmo() -> void:
 	var altro: float = _td._pressione["left"]
 	_td._battery = 100.0
 	_td.torch_accendi()
-	_passi(2.0)
+	_passi(3.5)                                       # dentro la batteria (~4 s di luce)
 	_td.torch_spegni()
 	var torcia: float = _td._pressione["right"]
 	_check("GUARDARE_SCARICA", occhio < 0.86 and occhio > 0.7 and torcia < 0.2 and altro > 0.5,
