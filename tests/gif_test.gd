@@ -26,9 +26,9 @@ func _initialize() -> void:
 				break
 	_si("ci_sono_gif", n >= 10, "%d gif" % n)
 
-	# 2. quanti fotogrammi e che ritardo (cosi' li scrive media.py)
+	# 2. quanti fotogrammi e che ritardo (busta.gif e' la GIF d'epoca di tools/web/fonti.py: 6 x 100 ms)
 	var busta := _gif("busta.gif")
-	_si("busta_12", (busta["frames"] as Array).size() == 12, str((busta["frames"] as Array).size()))
+	_si("busta_6", (busta["frames"] as Array).size() == 6, str((busta["frames"] as Array).size()))
 	_si("busta_ritardo", is_equal_approx(float(busta["frames"][0]["delay"]), 0.1), str(busta["frames"][0]["delay"]))
 	var zod := _gif("zodiaco.gif")
 	_si("zodiaco_24", (zod["frames"] as Array).size() == 24, str((zod["frames"] as Array).size()))
@@ -47,18 +47,17 @@ func _initialize() -> void:
 	# 4. trasparenza: l'angolo della busta non si dipinge
 	var b0: Image = busta["frames"][0]["image"]
 	_si("trasparente", b0.get_pixel(0, 0).a == 0.0, str(b0.get_pixel(0, 0)))
-	_si("opaco", b0.get_pixel(20, 12).a == 1.0, str(b0.get_pixel(20, 12)))
+	_si("opaco", b0.get_pixel(57, 44).a == 1.0, str(b0.get_pixel(57, 44)))
 
 	# 5. smaltimento 2: quello che un fotogramma lascia scoperto torna trasparente.
-	# Nel fotogramma 3 la busta e' di taglio (cos ~ 0): ai lati non resta niente del
-	# fotogramma 0, che era larga.
+	# Nel fotogramma 3 l'uccellino ha mosso l'ala: (39,45), pieno nel fotogramma 0, e' vuoto.
 	var b3: Image = busta["frames"][3]["image"]
-	_si("smaltimento", b0.get_pixel(5, 12).a == 1.0 and b3.get_pixel(5, 12).a == 0.0,
-			"%s / %s" % [b0.get_pixel(5, 12), b3.get_pixel(5, 12)])
+	_si("smaltimento", b0.get_pixel(39, 45).a == 1.0 and b3.get_pixel(39, 45).a == 0.0,
+			"%s / %s" % [b0.get_pixel(39, 45), b3.get_pixel(39, 45)])
 
 	# 6. texture: animata se ha piu' fotogrammi, semplice se ne ha uno
 	var at := GifDecoder.texture_da_file(IMG + "globo.gif")
-	_si("texture_animata", at is AnimatedTexture and (at as AnimatedTexture).frames == 16, str(at))
+	_si("texture_animata", at is AnimatedTexture and (at as AnimatedTexture).frames == 36, str(at))
 	_si("texture_fissa", GifDecoder.texture_da_file(IMG + "stemma.gif") is ImageTexture, "")
 	_si("texture_mancante", GifDecoder.texture_da_file(IMG + "non_ce.gif") == null, "")
 
@@ -67,7 +66,7 @@ func _initialize() -> void:
 	_si("vuoto", GifDecoder.decodifica(PackedByteArray()).is_empty(), "")
 	var intero := FileAccess.get_file_as_bytes(IMG + "globo.gif")
 	var tronco := GifDecoder.decodifica(intero.slice(0, intero.size() / 2))
-	_si("troncata", tronco.is_empty() or (tronco["frames"] as Array).size() < 16, "")
+	_si("troncata", tronco.is_empty() or (tronco["frames"] as Array).size() < 36, "")
 
 	# 8. interlacciata: righe 0,8.. poi 4.. poi 2.. poi 1..; un'immagine 1x10 con la
 	# riga y colorata con l'indice y deve tornare in ordine
