@@ -312,8 +312,15 @@ are placeholders**, replaced last, after the gameplay.
   twice as fast** (owner, 2026-11-25; he used to freeze), and **the torch makes him vanish** at once. Inside the PC a light sign gives him away: the screen's
   edges cool and darken as he closes in.
 
-**Fairness rules:** Jester and HaloMan share one peek slot, and after each peek there is a
-guaranteed calm; nobody peeks during the lethal PC virus, and Ghosty does not strike while
+**Pacing (owner, 2026-11-26):** each side of the room (the corridor doors, the window) builds
+up while you do not watch it, and calms down while you do: slowly by eye, fast with the
+torch. The enemy peeks from the side you neglected, never from the one you are staring at,
+so checking the room really buys time. **Until the first key is found only the Jester
+haunts the room** (and the PC cannot kill): the first key wakes HaloMan, Ghosty and the
+lethal virus, and every key after it makes them faster.
+
+**Fairness rules:** Jester and HaloMan share one peek slot, and after each peek its side
+starts over and there is a short pause; nobody peeks during the lethal PC virus, and Ghosty does not strike while
 someone is peeking or during that virus — he waits one step away. Two lethal threats in the
 same instant are a lottery, not tension.
 

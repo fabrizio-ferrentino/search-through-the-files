@@ -17,7 +17,12 @@ extends Node
 #   5 GHOSTY avanzi quando non lo guardi (anche dentro il PC), PIU' IN FRETTA quando lo
 #     guardi senza luce, sparisca appena lo illumini girato verso di lui (e torni dopo una pausa);
 #     non colpisca mentre qualcuno si affaccia; arrivato in fondo uccida ("ghosty");
-#     dentro il PC lo annunci il velo ai bordi, e solo da vicino.
+#     dentro il PC lo annunci il velo ai bordi, e solo da vicino;
+#   6 IL RITMO (26/11/2026): ogni lato ha la sua pressione, che scende GUARDANDOLO (piano a
+#     occhio, in fretta con la torcia) e sale se no; dal lato che fissi non si affaccia
+#     nessuno; ci si affaccia dal lato pieno; dopo un affaccio quel lato riparte da zero e
+#     c'e' la pausa breve; fino alla prima chiave c'e' solo il Jester (HaloMan mai, Ghosty
+#     fermo); le chiavi dopo la prima accelerano.
 # Salva foto da guardare: jester_finestra.png, halo_corridoio.png, ghosty_dietro.png.
 # Va eseguito A FINESTRA:
 #   & $godot --path $proj res://tests/minacce_stanza_test.tscn
@@ -48,6 +53,7 @@ func _ready() -> void:
 	_td._g_timer = 1.0e9                              # Ghosty solo quando lo chiamiamo noi
 
 	_prova_torcia()
+	_prova_ritmo()                                    # prima: qui non c'e' ancora nessuna chiave
 	await _prova_jester()
 	await _prova_finestra()
 	await _prova_halo()
@@ -99,6 +105,99 @@ func _prova_torcia() -> void:
 			str(non_riparte), str(nel_pc)])
 	_td.torch_spegni()
 	_td._battery = 100.0
+
+# ---------- 6: il ritmo, le pressioni dei lati e lo sblocco alla prima chiave ----------
+
+func _prova_ritmo() -> void:
+	GameManager.chiavi_trovate.clear()
+	_td._g_arriva = false
+	_td._g_timer = 5.0
+	var visti := {}
+	for i in range(60):
+		visti[_td._scegli_chi()] = true
+	_td._state = _td.State.CALM
+	_td._timer = 0.0
+	_gira(_player.pos_center)
+	_passi(10.0)
+	var ghosty_fermo: bool = not _td._g_arriva and is_equal_approx(_td._g_timer, 5.0)
+	_check("SOLO_JESTER_SENZA_CHIAVI", visti.keys() == ["jester"] and ghosty_fermo,
+			"senza chiavi escono %s; Ghosty arriva %s, timer %.1f" % [str(visti.keys()),
+			str(_td._g_arriva), _td._g_timer])
+
+	# guardare un lato lo scarica: piano a occhio nudo, in fretta con la torcia
+	_td._state = _td.State.CALM
+	_td._timer = 0.0
+	_td._pressione = {"right": 0.9, "left": 0.5}
+	_gira(_player.pos_right)
+	_passi(3.0)
+	var occhio: float = _td._pressione["right"]
+	var altro: float = _td._pressione["left"]
+	_td._battery = 100.0
+	_td.torch_accendi()
+	_passi(2.0)
+	_td.torch_spegni()
+	var torcia: float = _td._pressione["right"]
+	_check("GUARDARE_SCARICA", occhio < 0.86 and occhio > 0.7 and torcia < 0.2 and altro > 0.5,
+			"destra 0.90 -> a occhio %.2f -> con la torcia %.2f; sinistra 0.50 -> %.2f" % [occhio,
+			torcia, altro])
+
+	# dal lato che fissi non si affaccia nessuno
+	_td._state = _td.State.WAIT
+	_td._pressione = {"right": 0.999, "left": 0.0}
+	_gira(_player.pos_right)
+	_passi(20.0)
+	# (anche la morte: un affaccio lasciato scadere in 20 s finirebbe prima del controllo)
+	_check("NIENTE_AFFACCIO_DOVE_GUARDI", not _td.in_agguato() and _td.morte == ""
+			and _td._pressione["right"] < 0.99,
+			"fissando la destra: affaccio %s, morte '%s', pressione %.2f" % [str(_td.in_agguato()),
+			_td.morte, _td._pressione["right"]])
+	_td.morte = ""
+
+	# ci si affaccia dal lato pieno; poi quel lato riparte da zero e c'e' la pausa
+	_td._state = _td.State.WAIT
+	_td._pressione = {"right": 0.0, "left": 0.99}
+	_player._in_pc = true
+	_passi(1.0)
+	var lato: String = _td._peek_zone if _td.in_agguato() else "nessuno"
+	var a_sinistra: bool = _td.in_agguato() and _td._peek_spot.is_in_group("spot_left")
+	_td.allontana()
+	var azzerato: bool = _td._pressione["left"] == 0.0
+	_td._pressione["right"] = 1.0
+	_passi(_td.CALM_TIME - 1.0)
+	var in_pausa: bool = not _td.in_agguato()
+	_passi(2.0)
+	var dopo: bool = _td.in_agguato() and _td._peek_zone == "right"
+	_td.allontana()
+	_player._in_pc = false
+	_check("AFFACCIO_DAL_LATO_PIENO", a_sinistra, "lato pieno sinistra, affaccio da: %s" % lato)
+	_check("PAUSA_DOPO_AFFACCIO", azzerato and in_pausa and dopo,
+			"sinistra azzerata %s, nessuno nella pausa %s, poi da destra %s" % [str(azzerato),
+			str(in_pausa), str(dopo)])
+
+	# le chiavi: la prima sveglia gli altri, quelle dopo accelerano
+	var t_prima: float = GameManager.tempo_partita
+	GameManager.tempo_partita = 0.0
+	var m0: float = _td._moltiplicatore()
+	GameManager.chiavi_trovate = {1: true}
+	var m1: float = _td._moltiplicatore()
+	GameManager.chiavi_trovate = {1: true, 2: true, 3: true}
+	var m3: float = _td._moltiplicatore()
+	GameManager.tempo_partita = t_prima
+	_check("CHIAVI_ACCELERANO", is_equal_approx(m0, m1) and m3 > m1 * 1.3,
+			"moltiplicatore con 0/1/3 chiavi: %.2f / %.2f / %.2f" % [m0, m1, m3])
+
+	GameManager.chiavi_trovate.clear()
+	GameManager.scopri_in(GameManager.key_label(1))   # da qui in poi tutti e tre i nemici
+	_td._g_timer = 0.5
+	_passi(1.0)
+	var arriva: bool = _td._g_arriva
+	_td._ghosty_via()
+	_td._g_timer = 1.0e9
+	_check("GHOSTY_PARTE_ALLA_PRIMA_CHIAVE", arriva and GameManager.chiavi_trovate.has(1),
+			"trovata la chiave 1 %s, Ghosty arriva %s" % [str(GameManager.chiavi_trovate.has(1)), str(arriva)])
+	_td._pressione = {"right": 0.0, "left": 0.0}
+	_td._state = _td.State.CALM
+	_td._timer = 0.0
 
 # ---------- 2: il Jester ----------
 
@@ -242,6 +341,7 @@ func _prova_halo() -> void:
 # ---------- 5: Ghosty ----------
 
 func _prova_ghosty() -> void:
+	_td._pressione = {"right": 0.0, "left": 0.0}      # nessun affaccio nei 30 s di questa prova
 	_td._g_arriva = true
 	_td._g_p = 0.0
 	_gira(_player.pos_center)
@@ -311,6 +411,7 @@ func _affaccio(chi: String, zona: String) -> void:
 		if _td.in_agguato():
 			_td.allontana()
 		_td._state = _td.State.CALM
+		_td._pressione = {"right": 0.0, "left": 0.0}
 		_td.forza_affaccio(chi)
 		if zona == "" or _td._peek_zone == zona:
 			return

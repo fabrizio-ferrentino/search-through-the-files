@@ -66,11 +66,41 @@ ThreatDirector (M4): the room-threat director, rebuilt 2026-10-19
 on the owner's design. Runs always (even inside the PC). THREE
 enemies: JESTER and HALOMAN share ONE peek slot (never together):
 GRACE -> WAIT -> PEEK (reaction window) -> CALM (a guaranteed safe
-CALM_TIME 25 s) with the gentle "heat" (0..1) shifting interval and
-window; spots = "enemy_spots" (the three corridor doors + the
+CALM_TIME 8 s); spots = "enemy_spots" (the three corridor doors + the
 window), never the same twice in a row, zone "left" if also in
 "spot_left". _scegli_chi: HaloMan only with the PC ON, HALO_PROB
-0.4 (halved right after one of his). JESTER: dark, only the torch
+0.4 (halved right after one of his).
+PACING REWORK (owner, 2026-11-26: "I look around, go into the PC and
+the enemy pops up"; Jester and HaloMan "work very badly"). History, so
+it does not come back: peeks used to come from a "heat" (_heat, fed by
+time in the PC and decaying, _update_heat, HEAT_RISE_PC, HEAT_DECAY,
+INTERVAL_CALM/HOT, _interval(), a random "peek in ~N s", CALM_TIME 25 s):
+a random clock that ignored where you looked, so the enemy came the
+moment you turned away. Now each side has a PRESSURE,
+`_pressione := {"right", "left"}` 0..1, moved by _avanza_pressioni(delta)
+in every state but GRACE: a side FACED from the room (not is_in_pc() and
+_facing_zone(zona)) DRAINS - delta / SCARICA_TORCIA 3 s with the torch
+on, delta / SCARICA_SGUARDO 30 s by eye alone; otherwise it FILLS by
+delta * _moltiplicatore() / RIEMPI (60 s at difficulty 0), except the
+side of the peek in progress. WAIT peeks when _lato_pieno() finds a side
+at 1.0 -> _peek("", zona); _choose_spot(zona) keeps the spots of that
+side (_zone_of; all spots if it has none; still never the same twice).
+_to_calm() zeroes _pressione[_peek_zone]. F11 off resets both.
+So: watching a side keeps it quiet, the enemy comes from the side you
+have NOT looked at (inside the PC counts as not looking).
+DIFFICULTY: _moltiplicatore() = (1 + 0.5 * clamp(tempo_partita /
+RAMPA_TEMPO 600)) * (1 + PER_CHIAVE 0.2 * max(0, keys found - 1));
+_difficolta() = (m-1)/(M_MAX-1) in 0..1, M_MAX = 1.5 * 1.6; it replaces
+heat in REACT_CALM/HOT, HALO_REACT_CALM/HOT, GHOSTY_DURATA_CALM/HOT and
+the tell intensity.
+UNLOCK: _sbloccati() = GameManager.chiavi_trovate not empty. Before the
+first key only the JESTER exists: _scegli_chi returns jester while
+locked, _avanza_ghosty does not count _g_timer down (Ghosty comes
+GHOSTY_PRIMO 45-70 s AFTER the first key), and virus_director._scegli
+skips "mortale" (false alarms, YouAreStupid and the blue screen are
+unchanged). Debug forza_affaccio / ghosty_forza bypass the lock;
+stato_debug prints the two pressures, "(HaloMan and Ghosty locked until
+the first key)" and "speed xM (difficulty D)". JESTER: dark, only the torch
 shows him; repel by HOLDING the light on his zone for
 USCITA_MIN..MAX 1-2 s, drawn anew each peek (_uscita_serve) - he
 visibly slides back (NemicoAffaccio.ritira); the reaction clock is

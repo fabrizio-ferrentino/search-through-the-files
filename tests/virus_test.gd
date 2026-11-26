@@ -10,7 +10,7 @@ extends Node
 #     acceso, niente se il giocatore e' nella stanza, appena entrato, con un dialogo
 #     aperto o a minacce del PC spente (F8 congela il conto; F11, la stanza, no); dopo
 #     uno, la pausa e' fra PAUSA_MIN e PAUSA_MAX; mai lo stesso due volte di fila, e
-#     tutti e tre escono;
+#     tutti e tre escono, ma il MORTALE solo dopo la prima chiave trovata;
 #   1b le APPARIZIONI (18/10/2026, UNA FASE SOLA): ognuno dei sette tipi si VEDE davvero
 #     come falso allarme e poi SPARISCE DEL TUTTO entro Apparizione.SOGLIA_FALSO (strati,
 #     orologio all'ora vera, finestre a zero); le quattro PICCOLE stanno sotto icone e
@@ -151,6 +151,17 @@ func _prova_ritmo() -> void:
 	var pausa: float = _vd._prossimo - _vd._tempo
 	_check("PAUSA", pausa >= _vd.PAUSA_MIN and pausa <= _vd.PAUSA_MAX,
 			"pausa dopo un virus %.0f s, fuori da %d-%d" % [pausa, int(_vd.PAUSA_MIN), int(_vd.PAUSA_MAX)])
+
+	# il mortale aspetta la prima chiave trovata (26/11/2026); gli altri no
+	GameManager.chiavi_trovate.clear()
+	var senza := {}
+	for i in range(300):
+		var s: String = _vd._scegli()
+		_vd._ultimo = s
+		senza[s] = true
+	_check("MORTALE_ASPETTA_LA_CHIAVE", not senza.has("mortale") and senza.size() == 2,
+			"senza chiavi escono %s" % str(senza.keys()))
+	GameManager.scopri_in(GameManager.key_label(1))
 
 	var visti := {}
 	var doppi := 0

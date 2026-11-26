@@ -149,25 +149,22 @@ left = window); Ghosty comes from behind on a clock of his own.
   SFX.
 - [ ] **Real models and animations** for the three enemies (placeholders today) — LAST.
 - [~] **Attention mechanic & pacing.** Framework in `scripts/threats/threat_director.gd`
-  (runs always, even inside the PC): pacing `GRACE → WAIT → PEEK → CALM` (one peek slot
-  for Jester and HaloMan; Ghosty on his own clock). **After
-  every check there's a guaranteed `CALM` window** (`CALM_TIME` ≈ 25 s) with no peeks, so
-  you can investigate. A **`_heat`** value (0..1) rises **slowly** in the PC and decays
-  watching the room, gently shifting the interval (`INTERVAL_CALM`↔`INTERVAL_HOT`) and
-  reaction window (`REACT_CALM`↔`REACT_HOT`). Spawn spot is random per peek (`_choose_spot`,
-  no repeat). **Repel:** hold the light on the Jester, switch the PC off for HaloMan, light
-  Ghosty from behind (see above). A **tell** (a `glitch.gdshader` pulse on
-  the PC overlay, scaling with heat) warns you while inside the PC; failure →
-  `game_over(<id>)` (subtitle keys off `cause`).
-  (DEV-ONLY F10 stays until all triggers are wired.) *Note:* until 2026-11-26 "keys found"
-  could not drive aggression; now `GameManager.chiavi_trovate` marks a key found when its
-  place is opened (see the rework below).
-- [ ] **Rework of Jester and HaloMan** (owner, 2026-11-26: "today they work very badly").
-  (1) **Looking around must count**: checking the room should calm the enemies or partly
-  reset them. Today you look around, enter the PC and an enemy peeks at once, so checking
-  is useless. (2) **Difficulty rises with the keys found** (`chiavi_trovate`), on top of a
-  base that grows with time, so a player who finds nothing is not left in a calm room
-  forever. A separate task, in its own chat.
+  (runs always, even inside the PC): `GRACE → WAIT → PEEK → CALM` (one peek slot for Jester
+  and HaloMan; Ghosty on his own clock). **Reworked 2026-11-26** (owner: "I look around, go
+  into the PC and the enemy pops up"): each side (right = corridor doors, left = window) has
+  a **pressure** 0..1 that fills while that side is not watched (`RIEMPI` ≈ 60 s) and drains
+  while you face it: slowly by eye (`SCARICA_SGUARDO` ≈ 30 s), fast with the torch
+  (`SCARICA_TORCIA` ≈ 3 s). The side that reaches the top is where the peek comes from; the
+  side you stare at never peeks. After a peek its side restarts from zero and `CALM_TIME`
+  (8 s) holds every peek. **Until the first key is found only the Jester exists**; the first
+  key (`GameManager.chiavi_trovate`) wakes HaloMan and Ghosty, and the PC's lethal virus
+  (`virus_director._scegli`). Difficulty `_moltiplicatore()` = up to +50% over
+  `RAMPA_TEMPO` (10 min) × +20% per key after the first; `_difficolta()` (0..1) shifts the
+  reaction windows, Ghosty's speed and the tell. **Repel:** hold the light on the Jester,
+  switch the PC off for HaloMan, light Ghosty from behind (see above). A **tell** (a
+  `glitch.gdshader` pulse on the PC overlay) warns you inside the PC; failure →
+  `game_over(<id>)`. (DEV-ONLY F10 stays until all triggers are wired.) **Still TODO:**
+  tune the numbers by feel.
 
 ## Milestone 5 — The PC entity & glitches
 Threat *inside* the machine + atmosphere. Viruses per GDD §7.2.

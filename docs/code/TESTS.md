@@ -316,7 +316,18 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   (GHOSTY_AVANZA_E_CORRE_SE_GUARDATO), vanishes at the light when
   facing him (and comes back after a pause), the in-PC tell only
   when he is close, and he never strikes during a peek but does
-  right after. Sabotaged: the Jester gone at a flash, the torch
+  right after. Section 6 `_prova_ritmo()` (2026-11-26, pacing rework),
+  run right after the torch test with NO key yet: SOLO_JESTER_SENZA_CHIAVI
+  (only the Jester while locked), GUARDARE_SCARICA (facing a side drains
+  its pressure), NIENTE_AFFACCIO_DOVE_GUARDI (no peek, no death and
+  pressure < 0.99 on the faced side - the pressure check is needed because
+  a peek left to expire in 20 s would end before the check),
+  AFFACCIO_DAL_LATO_PIENO (the peek comes from the full side),
+  PAUSA_DOPO_AFFACCIO (CALM_TIME safe after one), CHIAVI_ACCELERANO
+  (keys raise the speed), GHOSTY_PARTE_ALLA_PRIMA_CHIAVE; then it unlocks
+  with GameManager.scopri_in(key_label(1)) for the rest. The `_affaccio`
+  helper and `_prova_ghosty` reset the pressures so no natural peek
+  interferes. All sabotaged once and seen red. Earlier sabotages: the Jester gone at a flash, the torch
   sending HaloMan away, lighting HaloMan harmless, Ghosty frozen
   while watched, Ghosty
   striking during a peek - all red. Saves jester_finestra,
@@ -506,7 +517,9 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   with the player in the room or just back in, none over a
   dialog, F8 freezes the clock (F11 does not), the pause after one is inside
   PAUSA_MIN..MAX, never the same twice in a row and all three come
-  up. LETHAL: it carries an apparition that stays and grows, the
+  up (MORTALE_ASPETTA_LA_CHIAVE, 2026-11-26: 300 draws with no key
+  found never give "mortale"; the test then unlocks before
+  MAI_DUE_UGUALI / TUTTI_E_TRE; sabotaged, red). LETHAL: it carries an apparition that stays and grows, the
   Jester does not peek meanwhile, and powering off saves from BOTH
   Start > Shut down and the case button (no death, apparition,
   clock and window offset all gone). YouAreStupid: the burst opens with the translated
