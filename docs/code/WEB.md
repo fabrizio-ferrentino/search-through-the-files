@@ -276,7 +276,10 @@ PageView: the browser PAGE (a RichTextLabel subclass) — real
 browser click semantics: a single click never leaves a selection
 (the RTL's internal timer would), sub-6px hand shake stays a CLICK
 so links fire (meta_clicked needs no active selection), double click
-= word, drag = range; cursor = hand on links / I-beam only over
+= word (since 4.6.2 the engine also starts its 0.05 s "held" timer on
+a double click, which collapsed the word when the second click lasted
+>~50 ms: _ferma_timer_selezione stops it right after the press,
+2026-11-26), drag = range; cursor = hand on links / I-beam only over
 text / arrow elsewhere (get_cursor_shape can't be overridden from
 script in 4.6 - 4.7 adds Control._get_cursor_shape, so the
 _aggiorna_cursore detour could be dropped after a migration). Form
@@ -852,6 +855,12 @@ original mockup, ref.)
   Placeholder media: tools/web/media.py writes web/img/*.gif and web/audio/*.mid (four
   original melodies: jack, inno, valzer, notte); the pictures contain no words. Authoring
   rules (tags, fonts, media table, Music section, style archetypes): docs/WEB_AUTHORING.md.
+  2026-11-26 (owner: the GIFs "look too modern, not period style"): media.py no longer draws
+  busta, globo, nuovo, fiamme, vecchio_pc; tools/web/fonti.py writes them (and 10 JPEG photos)
+  from real PD/CC0 originals in tools/web/fonti/, with web/img/CREDITI.md. media.py's `_epoca()`
+  pass (hooked in scrivi_gif for the names in EPOCA) gives the other drawn animations the
+  look of 1997 rendered clip-art (Bayer 4x4 dither, black outline, checkerboard shadow).
+  Details and sourcing rules: docs/WEB_AUTHORING.md, Images.
   Not stopped by design: music keeps playing while the browser is minimised. siti_catalogo_test
   check MEDIA_ESISTONO fails if a page references a media file that does not exist.
 

@@ -297,15 +297,50 @@ image ON PURPOSE goes in that test's `MEDIA_ROTTI` list.
 shows them, and kept: Godot does not import `.gif`, so they ship as plain files (see the
 export note). Transparency, per-frame delays and frame disposal work.
 
-**The placeholder media** are drawn by `tools/web/media.py` (stdlib Python: re-run it to
-regenerate, or replace any file keeping its name). Rule: **no words inside a picture** — an
-image is the same in both languages — only pictograms and digits; no real brands.
+**JPEG photos** are allowed too (`<img src="foto_cane.jpg" width="120" height="90">`); the
+page images are either REAL images from `tools/web/fonti.py` or drawn by `tools/web/media.py`.
+
+**Real images, `tools/web/fonti.py`** (Pillow; owner, 2026-11-26: the drawn GIFs "look too
+modern, not period style", and he prefers images taken from the internet when possible, clean
+licences only). It reads the ORIGINALS kept in `tools/web/fonti/` (downloaded once, so
+regenerating needs no network; photos in `fonti/foto/`) and writes `web/img/` plus
+**`web/img/CREDITI.md`** (generated, do not edit: file, what, original, author, licence,
+source URL). Sourced now: `globo.gif` (Commons Globe_rotating), `busta.gif` (Commons
+E-mail_oiseau, a bird carrying a letter), `fiamme.gif` (strip cut from Commons
+Fire-animation), `nuovo.gif` (Apache `burst.gif`, made to flash), `vecchio_pc.gif` (Apache
+`comp.blue.gif`), and 10 photos made "1998-style" by `foto(w, h, bordo)` (crop to fill,
+colours slightly faded, JPEG quality 32): `foto_villaggio_mare`, `foto_spiaggia`,
+`foto_lago_monti` (200x150, viaggi), `foto_cane`, `foto_gatto`, `foto_cucciolo` (120x90,
+animali), `foto_torta_mele`, `foto_lasagna`, `foto_spaghetti` (160x120, ricette),
+`foto_municipio` (200x150, comune).
+
+To add one: put the original in `tools/web/fonti/` (or `fonti/foto/`), add a row to `VOCI` in
+`fonti.py` (file, function `copia` / `lampeggia` / `striscia_fuoco` / `foto(w,h,bordo)`,
+original, what, author, licence, source URL), run `python tools/web/fonti.py`, and give the
+`<img>` the real width/height (the resized GIFs forced new sizes on 40 pages). Rules:
+- Only **public domain / CC0, verified in the file's metadata**. No GifCities/GeoCities rips
+  (no licence, and the game will be sold).
+- **No words inside the image** (two languages).
+- Wikimedia rate-limits: one request every few seconds. Pexels blocks scripts.
+- Images for the **lore sites** are chosen in the main chat, not by web-writer.
+
+**The drawn media** come from `tools/web/media.py` (stdlib Python: re-run it to regenerate,
+or replace any file keeping its name). `busta`, `globo`, `nuovo`, `fiamme` and `vecchio_pc`
+are NOT drawn there any more: `fonti.py` owns those files (running `media.py` does not touch
+them). The names in `EPOCA` (cantiere, smile, floppy, ingranaggio, pallone, pentola, fiore,
+stemma, zodiaco, zampa, sole, aereo, carrello, pacco, stellina, fulmine, allarme, antenna) go
+through `_epoca()` in `scrivi_gif`, which gives them the look of rendered 1997 clip-art:
+Bayer 4x4 dithered light top-left / shade bottom-right, black outline, checkerboard drop
+shadow. Tiles, counters, 88x31 buttons, `arcobaleno.gif` and `volto.gif` (lore) are untouched.
+Rule: **no words inside a picture** — an image is the same in both languages — only
+pictograms and digits; no real brands.
 
 | File | What |
 |---|---|
 | `cantiere.gif` | under-construction sign, animated |
-| `busta.gif` / `globo.gif` / `smile.gif` / `nuovo.gif` | spinning envelope / spinning globe / bouncing smiley / flashing star burst |
-| `fiamme.gif` / `arcobaleno.gif` (480x18 / 480x6) | flame divider (animated) / rainbow divider |
+| `busta.gif` (88x72) / `globo.gif` (40x40) / `smile.gif` / `nuovo.gif` (20x22) | bird carrying a letter, 6 frames (fonti.py) / rotating globe, 36 frames (fonti.py) / bouncing smiley (media.py) / flashing burst (fonti.py) |
+| `fiamme.gif` / `arcobaleno.gif` (480x18 / 480x6) | flame divider, animated (fonti.py) / rainbow divider (media.py) |
+| `vecchio_pc.gif` (20x22) | old computer icon (fonti.py) |
 | `floppy.gif` / `ingranaggio.gif` | floppy with a falling arrow / turning gear |
 | `pallone.gif` / `pentola.gif` / `fiore.gif` / `stemma.gif` | bouncing ball / steaming pot / flower / town coat of arms |
 | `zodiaco.gif` (160x160) | turning zodiac wheel with the moon |
