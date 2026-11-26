@@ -159,12 +159,14 @@ left = window); Ghosty comes from behind on a clock of his own.
   (8 s) holds every peek. **Until the first key is found only the Jester exists**; the first
   key (`GameManager.chiavi_trovate`) wakes HaloMan and Ghosty, and the PC's lethal virus
   (`virus_director._scegli`). Difficulty `_moltiplicatore()` = up to +25% (`PESO_TEMPO`) over
-  `RAMPA_TEMPO` (10 min) × +20% per key after the first; `_difficolta()` (0..1) shifts the
+  `RAMPA_TEMPO` (15 min, provisional until the playtests) × +20% per key after the first; `_difficolta()` (0..1) shifts the
   reaction windows, Ghosty's speed and the tell. **Repel:** hold the light on the Jester,
   switch the PC off for HaloMan, light Ghosty from behind (see above). A **tell** (a
   `glitch.gdshader` pulse on the PC overlay) warns you inside the PC; failure →
   `game_over(<id>)`. (DEV-ONLY F10 stays until all triggers are wired.) **Still TODO:**
-  tune the numbers by feel.
+  tune the numbers on real data: once the sites and photos are final, the owner will run
+  playtests with friends (some told how it works, some told nothing), note problems and the
+  end-of-run stats (time, keys found, deaths avoided), and the numbers get set from those.
 
 ## Milestone 5 — The PC entity & glitches
 Threat *inside* the machine + atmosphere. Viruses per GDD §7.2.

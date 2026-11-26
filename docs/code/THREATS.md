@@ -89,7 +89,7 @@ _to_calm() zeroes _pressione[_peek_zone]. F11 off resets both.
 So: watching a side keeps it quiet, the enemy comes from the side you
 have NOT looked at (inside the PC counts as not looking).
 DIFFICULTY: _moltiplicatore() = (1 + PESO_TEMPO 0.25 * clamp(tempo_partita /
-RAMPA_TEMPO 600)) * (1 + PER_CHIAVE 0.2 * max(0, keys found - 1));
+RAMPA_TEMPO 900)) * (1 + PER_CHIAVE 0.2 * max(0, keys found - 1));
 _difficolta() = (m-1)/(M_MAX-1) in 0..1, M_MAX = 1.25 * 1.6; it replaces
 heat in REACT_CALM/HOT, HALO_REACT_CALM/HOT, GHOSTY_DURATA_CALM/HOT and
 the tell intensity.
