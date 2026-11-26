@@ -77,6 +77,13 @@ static func get_desktop() -> Dictionary:
 			OSContent.DIR_SISTEMA, OSContent._t("VFS_DESKTOP")])
 	return d if d is Dictionary else get_root()
 
+# C:\Documenti\Immagini, dove aprono l'icona "Immagini" della scrivania (al posto di
+# "Documenti" dal 26/11/2026, richiesta del proprietario). Se manca, la cartella piu'
+# profonda che c'e' ancora sulla strada (resolve_path).
+static func get_pictures() -> Dictionary:
+	return resolve_path([OSContent._t("VFS_MY_COMPUTER"), OSContent._t("VFS_C_DRIVE"),
+			OSContent._t("VFS_DOCUMENTS"), OSContent._t("VFS_PICTURES")])
+
 # Cartella "Cestino" (figlia diretta della radice).
 static func get_trash() -> Dictionary:
 	var d = resolve_node([OSContent._t("VFS_MY_COMPUTER"), OSContent._t("VFS_TRASH")])
@@ -120,7 +127,9 @@ const NOME_VIETATI := "\\/:*?\"<>|"
 #  - quello che sta NEL CESTINO (in Win95 prima si ripristinava);
 #  - la catena che porta al Desktop (C:\WHALE\Desktop): get_desktop() la cerca per NOME,
 #    quindi rinominare WHALE o Desktop farebbe sparire tutte le icone della scrivania.
-#    E' l'unica ricerca per nome che il gioco fa mentre si gioca (l'altra, il Cestino,
+#  - la catena che porta a Immagini (C:\Documenti\Immagini): l'icona "Immagini" della
+#    scrivania e la voce "Documenti" del menu Avvio la cercano per NOME, come il Desktop.
+#    Sono le sole ricerche per nome che il gioco fa mentre si gioca (l'altra, il Cestino,
 #    e' gia' esclusa sopra).
 # Tutto il resto si'; anche le cartelle di sistema come SYSTEM o FONTS, che nessuno cerca
 # per nome -- come in Win95, che lasciava farlo.
@@ -134,11 +143,11 @@ static func rinominabile(node) -> bool:
 		return false
 	if is_trash(genitore):
 		return false
-	var d = get_desktop()
-	while d is Dictionary:
-		if is_same(d, node):
-			return false
-		d = d.get("_parent", null)
+	for d in [get_desktop(), get_pictures()]:
+		while d is Dictionary:
+			if is_same(d, node):
+				return false
+			d = d.get("_parent", null)
 	return true
 
 # Cambia il nome. Torna "" se fatto (anche quando non c'era niente da cambiare), oppure la

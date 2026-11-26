@@ -125,9 +125,12 @@ not a Desktop folder in the root of C:.
 RENAME (2026-10-18): rinominabile(node) is THE rule, shared by the
 desktop and the Explorer - NOT the protected folder, NOT the
 children of the root (drives A: C: D:, the Recycle Bin), NOT what
-sits in the Recycle Bin, and NOT the chain to the Desktop: it is
-the one lookup BY NAME the game does while playing, so renaming
-WHALE or Desktop would empty the whole desktop. Everything else
+sits in the Recycle Bin, NOT the chain to the Desktop (renaming
+WHALE or Desktop would empty the whole desktop) and NOT the chain
+to C:\Documents\Pictures (VFS.get_pictures(): the desktop's
+"Pictures" icon, which replaced "Documents" on 2026-11-26, and the
+Start menu's "Documents" find them by name). These are the only
+lookups BY NAME the game does while playing. Everything else
 yes, system folders like SYSTEM included (nobody looks them up,
 and Win95 let you). rinomina(node, name) refuses Windows' banned
 characters and a name already in the folder CASE-INSENSITIVELY,
@@ -473,4 +476,4 @@ saved; without it long lines ran off the right edge and you scrolled horizontall
   F2; Enter confirms, ESC cancels, a click elsewhere confirms. The box is a real text field,
   so a name can be **copied** (F2, select, CTRL+C, ESC) - which is how the folder key gets
   from a folder name into the secret dialog. Drives, the Recycle Bin and its contents, the
-  protected folder and the path to the Desktop cannot be renamed (`VFS.rinominabile`).
+  protected folder and the paths to the Desktop and to Documents\Pictures cannot be renamed (`VFS.rinominabile`).

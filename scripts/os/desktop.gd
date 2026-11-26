@@ -163,7 +163,7 @@ func _refresh_icons() -> void:
 	var trash_icon := "trash_full" if not VFS.get_trash().get("children", []).is_empty() else "trash"
 	var defs := [
 		{"name": tr("VFS_MY_COMPUTER"), "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
-		{"name": tr("VFS_DOCUMENTS"), "icon": "folder", "open": func(): open_app("explorer", _folder_path([tr("VFS_C_DRIVE"), tr("VFS_DOCUMENTS")]))},
+		{"name": tr("VFS_PICTURES"), "icon": "folder", "open": func(): open_app("explorer", VFS.get_pictures())},
 		{"name": "Web", "icon": "web", "open": func(): open_app("browser", "start")},
 		{"name": tr("VFS_TRASH"), "icon": trash_icon, "open": func(): open_app("explorer", _folder_path([tr("VFS_TRASH")]))},
 	]

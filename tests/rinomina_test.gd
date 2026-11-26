@@ -242,7 +242,8 @@ func _prova_protetti() -> void:
 	var buttato: Dictionary = _app_doc._selected.data
 	VFS.move_to_trash(buttato)
 	var casi := {"unita' C:": c_drive, "Cestino": cestino, "nel Cestino": buttato,
-			"WHALE": whale, "Desktop": desktop, "cartella protetta": segreta}
+			"WHALE": whale, "Desktop": desktop, "cartella protetta": segreta,
+			"Documenti": VFS.get_pictures().get("_parent"), "Immagini": VFS.get_pictures()}
 	var no := PackedStringArray()
 	for k in casi:
 		if VFS.rinominabile(casi[k]):

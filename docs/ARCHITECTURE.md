@@ -153,8 +153,8 @@ Built entirely in code in `_ready()`:
 - **Window manager:** `open_window()`, `open_app(kind, arg)` (kinds:
   `"explorer"`, `"browser"`, `"notepad"`, `"image"`), `focus_window()`, taskbar buttons,
   minimize/restore/close, z-order via `move_child`.
-- **Desktop icons:** built from a hardcoded list (My Computer, Documents, Web,
-  Trash) plus the Desktop folder's VFS children — which include the user's created
+- **Desktop icons:** built from a hardcoded list (My Computer, Pictures → C:\Documents\Pictures
+  via `VFS.get_pictures()`, Web, Trash) plus the Desktop folder's VFS children — which include the user's created
   files and the **secret folder** ("Cartella protetta", made non-deletable). The
   Trash icon swaps between `trash`/`trash_full`.
 - **Secret folder (win condition):** `open_secret_folder(node)` opens a glitchy
