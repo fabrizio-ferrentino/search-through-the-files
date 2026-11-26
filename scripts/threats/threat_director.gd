@@ -16,9 +16,17 @@ extends Node
 #   GHOSTY  (nome provvisorio) attacca solo DA DIETRO: piu' a lungo non ti giri, piu' si
 #           avvicina; se lo guardi senza luce corre ancora PIU' in fretta (GHOSTY_GUARDATO);
 #           appena gli punti contro la torcia accesa sparisce. Se arriva alle tue spalle -> game_over("ghosty").
-# Jester e HaloMan si dividono UN SOLO turno di affaccio (mai insieme): il ritmo e' quello
-# di prima, GRACE -> WAIT -> PEEK (reazione) -> CALM (calma garantita). Ghosty ha un ritmo
-# suo e corre in parallelo, ma non colpisce mentre qualcuno si affaccia o mentre c'e' il
+# Jester e HaloMan si dividono UN SOLO turno di affaccio (mai insieme). IL RITMO (rifatto il
+# 26/11/2026, proprietario: "mi guardo intorno, entro nel pc e spunta il cattivo") non e' piu'
+# un cronometro unico che corre comunque: ogni LATO (destra = porte, sinistra = finestra) ha
+# una sua PRESSIONE 0..1 che sale mentre non lo guardi e scende mentre lo guardi (piano a
+# occhio nudo, in fretta con la torcia). Il lato che arriva in cima e' quello da cui ci si
+# affaccia; quello che fissi non si affaccia mai. Dopo un affaccio il suo lato riparte da zero
+# e per CALM_TIME nessuno si affaccia. Stati: GRACE -> WAIT -> PEEK -> CALM -> WAIT.
+# FINO ALLA PRIMA CHIAVE TROVATA c'e' solo il Jester (proprietario, 26/11/2026: "diamo tempo al
+# giocatore alla prima partita di partire con calma"); alla prima chiave arrivano HaloMan e
+# Ghosty. La difficolta' (_moltiplicatore) sale col tempo e di PER_CHIAVE a ogni chiave dopo la
+# prima. Ghosty ha un ritmo suo e corre in parallelo, ma non colpisce mentre qualcuno si affaccia o mentre c'e' il
 # virus mortale del PC: aspetta all'ultimo passo (due minacce mortali nello stesso istante
 # non sono tensione, sono una lotteria -- la stessa regola che vale fra affacci e virus).
 # Gli spot di affaccio sono i Marker3D nel gruppo "enemy_spots" (le tre porte di
@@ -54,7 +62,7 @@ var _velo_ghosty: ColorRect = null
 enum State { GRACE, WAIT, PEEK, CALM, STOPPED }
 var _state: int = State.GRACE
 var _timer := 0.0           # tempo nello stato (GRACE/WAIT/CALM)
-var _heat := 0.0            # 0..1: "aggressivita'". Sale nel PC, scende sorvegliando.
+var _pressione := {"right": 0.0, "left": 0.0}   # 0..1 per lato: in cima = affaccio da li'
 var _react_left := 0.0      # secondi rimasti per reagire durante un PEEK
 var _react_total := 1.0     # durata piena della finestra corrente (per il tell)
 var _uscita := 0.0          # Jester: 0..1, quanto se n'e' gia' andato (illuminandolo)
@@ -78,14 +86,18 @@ const GHOSTY_SCENE := "res://scenes/enemies/ghosty.tscn"
 
 # --- Tuning: affacci ---
 const GRACE_TIME := 30.0            # calma iniziale a inizio run (s)
-# Dopo OGNI affaccio c'e' una CALMA garantita (CALM_TIME) in cui non si affaccia nessuno.
-const CALM_TIME := 25.0
-const HEAT_RISE_PC := 0.01          # heat/s mentre sei nel PC (molto blando)
-const HEAT_DECAY := 0.05            # heat/s mentre sorvegli la stanza
-const INTERVAL_CALM := 22.0         # attesa tra affacci a heat 0 (s)
-const INTERVAL_HOT := 10.0          # ... a heat 1
-const REACT_CALM := 8.0             # Jester: finestra di reazione a heat 0 (s)
-const REACT_HOT := 4.0              # ... a heat 1
+# Dopo OGNI affaccio una pausa breve in cui nessun lato si affaccia: due nemici di fila non
+# sono tensione, sono sfortuna. Le pressioni intanto continuano a salire.
+const CALM_TIME := 8.0
+const RIEMPI := 60.0                # s perche' un lato non guardato vada da 0 a 1 (a difficolta' 0)
+const SCARICA_SGUARDO := 30.0       # s per svuotarlo guardandolo senza luce ("piano")
+const SCARICA_TORCIA := 5.0         # ... con la torcia: piu' della batteria (~4 s), non svuoti due lati con una carica
+const RAMPA_TEMPO := 900.0          # in tanti secondi di partita il tempo da' tutto il suo PESO_TEMPO
+const PESO_TEMPO := 0.25            # +25%: verso la fine a spingere sono soprattutto le chiavi (26/11/2026)
+const PER_CHIAVE := 0.2             # +20% per ogni chiave trovata dopo la prima
+const M_MAX := (1.0 + PESO_TEMPO) * (1.0 + PER_CHIAVE * 3.0)   # il moltiplicatore piu' alto (15 min, 4 chiavi)
+const REACT_CALM := 8.0             # Jester: finestra di reazione a difficolta' 0 (s)
+const REACT_HOT := 4.0              # ... a difficolta' 1
 const USCITA_MIN := 1.0             # Jester: secondi di luce per scacciarlo (a caso fra i due)
 const USCITA_MAX := 2.0
 const RIENTRO := 0.5                # Jester non illuminato: torna fuori a questa velocita'
@@ -94,10 +106,10 @@ const HALO_REACT_CALM := 12.0
 const HALO_REACT_HOT := 8.0
 const HALO_PROB := 0.4              # probabilita' che l'affaccio sia suo (a PC acceso)
 # --- Tuning: Ghosty ---
-const GHOSTY_PRIMO := [45.0, 70.0]  # quando arriva la prima volta (s di partita)
+const GHOSTY_PRIMO := [45.0, 70.0]  # quando arriva la prima volta (s dalla prima chiave)
 const GHOSTY_PAUSA := [25.0, 45.0]  # quanto sta via dopo che l'hai scacciato
 const GHOSTY_DURATA_CALM := 60.0    # da quando parte a quando ti prende, senza mai girarti
-const GHOSTY_DURATA_HOT := 40.0     # ... a heat 1
+const GHOSTY_DURATA_HOT := 40.0     # ... a difficolta' 1
 const GHOSTY_VISIBILE := 0.15       # prima di qui non e' ancora entrato nella stanza
 const GHOSTY_TRATTIENE := 0.97      # dove aspetta se in quel momento non puo' colpire
 const GHOSTY_GUARDATO := 2.0       # guardato senza luce avanza tante volte piu' in fretta (proprietario, 25/11/2026: prima si fermava)
@@ -148,7 +160,6 @@ func stop() -> void:
 func _process(delta: float) -> void:
 	if _state == State.STOPPED:
 		return
-	_update_heat(delta)
 	_update_torch(delta)
 	# Debug: minacce della STANZA disabilitate (F11): niente affacci, niente Ghosty, niente
 	# game_over. La torcia resta. Si resta in CALM, cosi' riattivando si riparte da una
@@ -160,6 +171,7 @@ func _process(delta: float) -> void:
 		_reset_tell()
 		_state = State.CALM
 		_timer = 0.0
+		_pressione = {"right": 0.0, "left": 0.0}
 		_ghosty_via()
 		return
 	_avanza_affacci(delta)
@@ -169,15 +181,17 @@ func _process(delta: float) -> void:
 # ---------------- Jester e HaloMan: il turno di affaccio ----------------
 
 func _avanza_affacci(delta: float) -> void:
+	if _state != State.GRACE:
+		_avanza_pressioni(delta)
 	if _state == State.GRACE:
 		_timer += delta
 		if _timer >= GRACE_TIME:
 			_to_wait()
 	elif _state == State.WAIT:
-		_timer += delta
 		# durante il virus mortale del PC si aspetta (e il VirusDirector fa lo stesso)
-		if _timer >= _interval() and not (virus != null and virus.mortale_in_corso()):
-			_peek()
+		var zona := _lato_pieno()
+		if zona != "" and not (virus != null and virus.mortale_in_corso()):
+			_peek("", zona)
 	elif _state == State.PEEK:
 		if _chi == "jester":
 			# lo scacci TENENDOLO illuminato: avanza verso l'uscita finche' c'e' luce; senza
@@ -227,9 +241,45 @@ func _to_wait() -> void:
 	_state = State.WAIT
 	_timer = 0.0
 
+# Fine di un affaccio (scacciato, evitato o, nei test, la morte): il suo lato riparte da zero.
 func _to_calm() -> void:
 	_state = State.CALM
 	_timer = 0.0
+	_pressione[_peek_zone] = 0.0
+
+# Le pressioni dei due lati. Si guarda un lato solo dalla stanza, girati verso di lui
+# (_facing_zone, la stessa mira della torcia); quello dell'affaccio in corso non sale.
+func _avanza_pressioni(delta: float) -> void:
+	var sale: float = delta * _moltiplicatore() / RIEMPI
+	for zona in _pressione:
+		var p: float = _pressione[zona]
+		if not player.is_in_pc() and _facing_zone(zona):
+			p -= delta / (SCARICA_TORCIA if _torcia_accesa() else SCARICA_SGUARDO)
+		elif not (_state == State.PEEK and zona == _peek_zone):
+			p += sale
+		_pressione[zona] = clampf(p, 0.0, 1.0)
+
+# Il lato arrivato in cima ("" = nessuno); se lo sono tutti e due, il primo trovato.
+func _lato_pieno() -> String:
+	for zona in _pressione:
+		if float(_pressione[zona]) >= 1.0:
+			return zona
+	return ""
+
+# Quanto corre la partita: il tempo da' fino a +PESO_TEMPO in RAMPA_TEMPO, ogni chiave dopo la prima
+# un altro PER_CHIAVE (moltiplicati). 1.0 = l'inizio.
+func _moltiplicatore() -> float:
+	var t: float = clampf(GameManager.tempo_partita / RAMPA_TEMPO, 0.0, 1.0)
+	var chiavi: int = maxi(0, GameManager.chiavi_trovate.size() - 1)
+	return (1.0 + PESO_TEMPO * t) * (1.0 + PER_CHIAVE * chiavi)
+
+# La stessa cosa in 0..1, per i tempi che vanno da "calmo" a "caldo" (reazione, Ghosty, tell).
+func _difficolta() -> float:
+	return clampf((_moltiplicatore() - 1.0) / (M_MAX - 1.0), 0.0, 1.0)
+
+# Prima della prima chiave c'e' solo il Jester (HaloMan e Ghosty dormono).
+func _sbloccati() -> bool:
+	return not GameManager.chiavi_trovate.is_empty()
 
 func _fine_affaccio() -> void:
 	GameManager.conta("evitate")   # scacciato il Jester / evitato HaloMan
@@ -241,13 +291,14 @@ func _fine_affaccio() -> void:
 
 # Chi si affaccia stavolta: HaloMan solo a PC acceso, e meno spesso se l'ultimo era lui.
 func _scegli_chi() -> String:
-	if not GameManager.pc_on:
+	if not GameManager.pc_on or not _sbloccati():
 		return "jester"
 	var p: float = HALO_PROB * (0.5 if _ultimo_chi == "halo" else 1.0)
 	return "halo" if _rng.randf() < p else "jester"
 
-# Affaccia il nemico a uno spot a caso e apre la finestra di reazione.
-func _peek(chi := "") -> void:
+# Affaccia il nemico a uno spot a caso del lato dato ("" = di uno qualunque) e apre la
+# finestra di reazione.
+func _peek(chi := "", zona := "") -> void:
 	if _spots.is_empty():
 		_refresh_spots()
 		if _spots.is_empty():
@@ -256,7 +307,7 @@ func _peek(chi := "") -> void:
 	_chi = chi if chi != "" else _scegli_chi()
 	_ultimo_chi = _chi
 	_nemico = _halo if _chi == "halo" else _jester
-	var spot: Node3D = _choose_spot()
+	var spot: Node3D = _choose_spot(zona)
 	_last_spot = spot
 	_peek_spot = spot
 	_peek_zone = _zone_of(spot)
@@ -268,14 +319,20 @@ func _peek(chi := "") -> void:
 	_react_left = _react_total
 	_state = State.PEEK
 
-# Sceglie uno spot a caso, mai due volte di fila lo stesso.
-func _choose_spot() -> Node3D:
-	var candidates: Array = []
+# Sceglie uno spot a caso del lato dato ("" = tutti), mai due volte di fila lo stesso.
+func _choose_spot(zona := "") -> Node3D:
+	var del_lato: Array = []
 	for s in _spots:
+		if zona == "" or _zone_of(s) == zona:
+			del_lato.append(s)
+	if del_lato.is_empty():
+		del_lato = _spots.duplicate()   # nessuno spot di quel lato: meglio altrove che niente
+	var candidates: Array = []
+	for s in del_lato:
 		if s != _last_spot:
 			candidates.append(s)
 	if candidates.is_empty():
-		candidates = _spots.duplicate()
+		candidates = del_lato
 	var chosen: Node3D = candidates[_rng.randi() % candidates.size()]
 	return chosen
 
@@ -311,6 +368,8 @@ func _prepara_ghosty() -> void:
 
 func _avanza_ghosty(delta: float) -> void:
 	if not _g_arriva:
+		if not _sbloccati():
+			return             # dorme fino alla prima chiave: poi arriva fra GHOSTY_PRIMO s
 		_g_timer -= delta
 		if _g_timer <= 0.0:
 			_g_arriva = true
@@ -322,7 +381,7 @@ func _avanza_ghosty(delta: float) -> void:
 		GameManager.conta("evitate")
 		_ghosty_via()                      # la luce lo cancella
 		return
-	_g_p += delta / lerpf(GHOSTY_DURATA_CALM, GHOSTY_DURATA_HOT, _heat) * (GHOSTY_GUARDATO if guardato else 1.0)
+	_g_p += delta / lerpf(GHOSTY_DURATA_CALM, GHOSTY_DURATA_HOT, _difficolta()) * (GHOSTY_GUARDATO if guardato else 1.0)
 	# non colpisce mentre qualcuno si affaccia o c'e' il virus mortale: aspetta all'ultimo
 	# passo, fermo, finche' non tocca di nuovo a lui
 	if _state == State.PEEK or (virus != null and virus.mortale_in_corso()):
@@ -437,22 +496,12 @@ func _punta_torcia() -> void:
 		aim = cam_t.origin + fwd * 4.0
 	_torch.look_at(aim, Vector3.UP)
 
-# --- heat: aggiornamento e timer derivati ---
-func _update_heat(delta: float) -> void:
-	if player.is_in_pc():
-		_heat += HEAT_RISE_PC * delta      # ti esponi nel PC -> sale
-	else:
-		_heat -= HEAT_DECAY * delta        # sorvegli la stanza -> scende
-	_heat = clampf(_heat, 0.0, 1.0)
-
-func _interval() -> float:
-	return _jit(lerpf(INTERVAL_CALM, INTERVAL_HOT, _heat))
-
+# --- difficolta': i tempi che vanno da calmo a caldo ---
 func _react_time() -> float:
-	return lerpf(REACT_CALM, REACT_HOT, _heat)
+	return lerpf(REACT_CALM, REACT_HOT, _difficolta())
 
 func _halo_react_time() -> float:
-	return lerpf(HALO_REACT_CALM, HALO_REACT_HOT, _heat)
+	return lerpf(HALO_REACT_CALM, HALO_REACT_HOT, _difficolta())
 
 func _jit(t: float) -> float:
 	return t * (1.0 + _rng.randf_range(-0.15, 0.15))
@@ -500,8 +549,8 @@ func _update_tell() -> void:
 	_glitch_rect.visible = show_glitch
 	if show_glitch:
 		var urgency: float = 1.0 - clampf(_react_left / maxf(0.01, _react_total), 0.0, 1.0)
-		# piu' heat = glitch piu' marcato gia' a inizio finestra
-		var t: float = clampf(maxf(urgency, _heat * 0.6), 0.0, 1.0)
+		# piu' difficolta' = glitch piu' marcato gia' a inizio finestra
+		var t: float = clampf(maxf(urgency, _difficolta() * 0.6), 0.0, 1.0)
 		_glitch_rect.material.set_shader_parameter("intensity", lerpf(0.06, 0.55, t))
 
 func _reset_tell() -> void:
@@ -573,7 +622,7 @@ func stato_debug() -> String:
 			s += " (start grace, %d s left)" % maxi(0, ceili(GRACE_TIME - _timer))
 		State.WAIT:
 			# l'intervallo vero ha un +-15% a caso a ogni controllo: qui la media
-			s += " (peek in ~%d s)" % maxi(0, ceili(lerpf(INTERVAL_CALM, INTERVAL_HOT, _heat) - _timer))
+			s += " (a side peeks at 100%)"
 		State.PEEK:
 			s += " (%s side, %.1f s to react" % [_peek_zone, _react_left]
 			if _chi == "jester":
@@ -584,10 +633,14 @@ func stato_debug() -> String:
 			s += " (safe for %d s)" % maxi(0, ceili(CALM_TIME - _timer))
 	if not GameManager.room_threats_enabled:
 		s += " - room threats OFF"
+	s += "\n  pressure right %d%%  left %d%%" % [roundi(float(_pressione["right"]) * 100.0),
+			roundi(float(_pressione["left"]) * 100.0)]
+	if not _sbloccati():
+		s += "  (HaloMan and Ghosty locked until the first key)"
 	if _g_arriva:
 		s += "\n  Ghosty: coming, %d%% of the way%s" % [roundi(_g_p * 100.0),
 				" (watched)" if _guardi_dietro() else ""]
 	else:
 		s += "\n  Ghosty: away, back in %d s" % maxi(0, ceili(_g_timer))
-	return s + "\n  heat %.2f  torch %s, battery %d%%" % [_heat,
+	return s + "\n  speed x%.2f (difficulty %.2f)  torch %s, battery %d%%" % [_moltiplicatore(), _difficolta(),
 			"ON" if _torcia_accesa() else "off", roundi(_battery / BATTERY_MAX * 100.0)]

@@ -107,11 +107,14 @@ func _affaccio_in_corso() -> bool:
 	var t = player.get("_threats")
 	return t != null and t.has_method("in_agguato") and t.in_agguato()
 
-# A caso coi PESI, ma mai lo stesso di prima.
+# A caso coi PESI, ma mai lo stesso di prima. Il MORTALE aspetta la prima chiave trovata
+# (proprietario, 26/11/2026): prima il PC spaventa ma non uccide.
 func _scegli() -> String:
 	var tipi: Array = []
 	var pesi: Array = []
 	for i in range(TIPI.size()):
+		if TIPI[i] == "mortale" and GameManager.chiavi_trovate.is_empty():
+			continue
 		if TIPI[i] != _ultimo:
 			tipi.append(TIPI[i])
 			pesi.append(PESI[i])
