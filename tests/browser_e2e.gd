@@ -244,10 +244,14 @@ func _ready() -> void:
 			if visibile:
 				_check("CHIAVE_VISIBILE_A_SCHERMO", parsed.find(kl) >= 0,
 						"modalita' visibile ma a schermo non c'e' (%s)" % str(ancora["tipo"]))
+				_check("CHIAVE_TROVATA_APRENDO", GameManager.chiavi_trovate.has(WebRuntime.indice(n)),
+						"pagina aperta ma la chiave non risulta trovata")
 				await _snap("web_chiave_%d.png" % (n + 1))
 			else:
 				_check("CHIAVE_NON_VISIBILE", parsed.find(kl) < 0,
 						"modalita' sorgente ma la chiave si legge a schermo (%s)" % str(ancora["tipo"]))
+				_check("SORGENTE_NON_TROVATA_APRENDO", not GameManager.chiavi_trovate.has(WebRuntime.indice(n)),
+						"chiave solo nel sorgente segnata trovata senza il 'visualizza sorgente'")
 				_browser._view_source()
 				for i in range(3):
 					await get_tree().process_frame

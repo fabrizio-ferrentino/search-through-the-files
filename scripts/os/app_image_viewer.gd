@@ -83,6 +83,7 @@ func launch(node) -> void:
 	var code := str(data.get("code", ""))
 	if code != "":
 		_place_code(vp, data, code)
+		GameManager.scopri_in(code)   # basta aprire la foto, senza regolarla
 
 	var view := TextureRect.new()
 	view.texture = vp.get_texture()

@@ -278,10 +278,15 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   another seed does not (STESSO_SEME_STESSA_PARTITA); "Gioca" starts the run with the typed seed
   (AVVIA_USA_IL_SEME). Sabotaged (the run ignoring the seed): red),
 
-- statistiche_test.gd (script, headless, 2026-11-25: the end-of-run summary carries the seed,
-  the time as m:ss and every counter (RIEPILOGO), a new run resets them (AZZERA), every STATS_*
-  line exists in EN and IT (LINGUE)); minacce_stanza_test also checks the counters of the
-  enemies driven away / avoided (STATISTICHE_NEMICI),
+- statistiche_test.gd (script, headless, 2026-11-25, reworked 2026-11-26: the end-of-run summary
+  carries the time as m:ss, the "Keys found" line and every counter, WITHOUT the seed (RIEPILOGO);
+  `scopri_in` marks found only a key written in full, the bare code is not enough (TROVATE); on a
+  win the keys line is absent (VITTORIA_SENZA_CHIAVI); `pulsante_seme()` shows the seed and, once
+  pressed, the text changes to "copied" (SEME); a new run resets stats, found keys and time
+  (AZZERA); every STATS_* line exists in EN and IT (LINGUE)); minacce_stanza_test checks
+  `statistiche["evitate"] >= 3` (Jester, HaloMan, Ghosty driven away; STATISTICHE_NEMICI);
+  browser_e2e adds CHIAVE_TROVATA_APRENDO (a visible key is found on page load) and
+  SORGENTE_NON_TROVATA_APRENDO (a source-only key is NOT found by just loading the page),
 
 - visualizzatore_layout_test.tscn/.gd (WINDOWED, 2026-11-25: the photo viewer never cuts its
   controls - at the opening size every slider and "Reimposta" are whole (APERTURA_TUTTO_VISIBILE);

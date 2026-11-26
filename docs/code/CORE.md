@@ -236,13 +236,29 @@ Reusable black ColorRect + AnimationPlayer (fade_in / fade_out).
 End-of-run summary (2026-11-25, owner: "mostrare seed e tempo a fine partita e statistiche
 varie"): `tempo_partita` grows in `_process` while `run_active` (not in pause: GameManager stops
 with the paused tree); `conta(nome)` bumps `statistiche[nome]`; both are reset by
-`start_new_run`. `STATISTICHE` lists the counters and their CSV keys (STATS_*): pagine
-(app_browser `_load`, refresh included), file (desktop `open_app` notepad/image), jester (driven
-away) and halo (avoided by switching the PC off) from `ThreatDirector._fine_affaccio`, ghosty
-(torch, not the debug button), virus (lethal virus ended by switching the PC off), tentativi
-(each try at the protected folder). `riepilogo()` returns seed, time (m:ss) and the counters,
-one per line; the death screen and the win screen (player.gd `_show_ending`) show it in a
-grey Label "Statistiche".
+`start_new_run`. `STATISTICHE` lists the counters and their CSV keys (STATS_*): evitate
+(STATS_AVOIDED), pagine (app_browser `_load`, refresh included), file (desktop `open_app`
+notepad/image), tentativi (each try at the protected folder).
+Rework 2026-11-26 (owner decision: "enemy names must not appear in the end-of-run stats"): the
+old per-enemy counters jester / halo / ghosty / virus (STATS_JESTER/HALO/GHOSTY/VIRUS, removed
+from the CSV) are merged into ONE "Morti evitate" counter, `conta("evitate")`: Jester, HaloMan
+and Ghosty driven away (threat_director.gd) and a lethal virus survived by switching the PC off
+(virus_director.gd). False alarms are NOT counted. History, so it does not come back: the
+per-enemy lines gave away which enemies exist; do not re-add them.
+`chiavi_trovate: Dictionary` (key index -> true), reset in `start_new_run`, filled by
+`scopri_in(testo)`: any key whose FULL label ("2-ABCD", `key_label`) appears in the text is
+found (the bare code does not count). "Found" = the place is opened, no photo adjustment needed.
+Hooks: app_notepad.gd launch (disk file, a photo's bytes, a page's view-source, which opens in
+Notepad), app_file_explorer.gd `_refresh` (address + child names: the key in a folder name),
+app_browser.gd `_load` (the RENDERED text, `_rtl.get_parsed_text()`: a source-only key is found
+only through view-source), app_image_viewer.gd launch (the pixel key). It is meant to feed the
+future difficulty rework.
+`riepilogo(vinto := false)` returns, one per line: time (m:ss), "Keys found x/4" (STATS_KEYS,
+death only: hidden on win, where they are all found), then the STATISTICHE lines. It no longer
+contains the seed: `pulsante_seme() -> Button` is a flat button "Seed: N (click to copy)"
+(STATS_SEED); a click does `DisplayServer.clipboard_set` and the text becomes "Seed N copied"
+(STATS_SEED_COPIED). The death screen (death_screen.gd) and the win screen (player.gd, which
+passes `riepilogo(true)`) show the grey Label "Statistiche" with the button under it.
 
 Video settings (2026-10-23): schermo_intero, vsync, risoluzione
 (Vector2i, ZERO = never chosen = keep project.godot's window), saved in

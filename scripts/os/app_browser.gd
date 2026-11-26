@@ -385,6 +385,9 @@ func _load(name: String) -> void:
 	if window:
 		window.set_title(_between(_html_text, "<title>", "</title>"))
 	_render_html(HtmlBB.strip_comments(HtmlBB.body_inner(_html_text)))
+	# il testo MOSTRATO, non l'HTML: una chiave nascosta nel sorgente si trova solo col
+	# "visualizza sorgente", che passa dal Blocco note
+	GameManager.scopri_in(_rtl.get_parsed_text())
 	# la pagina e' pronta dentro, ma il modem se la prende con calma: il velo la
 	# tiene coperta per un attimo (vedi _avvia_caricamento)
 	_avvia_caricamento(name)

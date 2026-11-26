@@ -52,10 +52,9 @@ func _ready() -> void:
 	await _prova_finestra()
 	await _prova_halo()
 	await _prova_ghosty()
-	# le statistiche di fine partita contano i nemici scacciati ed evitati
+	# le morti evitate contano Jester, HaloMan e Ghosty scacciati (una per nemico)
 	var st: Dictionary = GameManager.statistiche
-	_check("STATISTICHE_NEMICI", int(st.get("jester", 0)) >= 1 and int(st.get("halo", 0)) >= 1
-			and int(st.get("ghosty", 0)) >= 1, "contati: %s" % str(st))
+	_check("STATISTICHE_NEMICI", int(st.get("evitate", 0)) >= 3, "contati: %s" % str(st))
 
 	GameManager.pc_threats_enabled = true
 	GameManager.room_threats_enabled = true
