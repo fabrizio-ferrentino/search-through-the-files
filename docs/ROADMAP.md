@@ -154,11 +154,11 @@ left = window); Ghosty comes from behind on a clock of his own.
   into the PC and the enemy pops up"): each side (right = corridor doors, left = window) has
   a **pressure** 0..1 that fills while that side is not watched (`RIEMPI` ≈ 60 s) and drains
   while you face it: slowly by eye (`SCARICA_SGUARDO` ≈ 30 s), fast with the torch
-  (`SCARICA_TORCIA` ≈ 3 s). The side that reaches the top is where the peek comes from; the
+  (`SCARICA_TORCIA` ≈ 5 s, more than one battery). The side that reaches the top is where the peek comes from; the
   side you stare at never peeks. After a peek its side restarts from zero and `CALM_TIME`
   (8 s) holds every peek. **Until the first key is found only the Jester exists**; the first
   key (`GameManager.chiavi_trovate`) wakes HaloMan and Ghosty, and the PC's lethal virus
-  (`virus_director._scegli`). Difficulty `_moltiplicatore()` = up to +50% over
+  (`virus_director._scegli`). Difficulty `_moltiplicatore()` = up to +25% (`PESO_TEMPO`) over
   `RAMPA_TEMPO` (10 min) × +20% per key after the first; `_difficolta()` (0..1) shifts the
   reaction windows, Ghosty's speed and the tell. **Repel:** hold the light on the Jester,
   switch the PC off for HaloMan, light Ghosty from behind (see above). A **tell** (a

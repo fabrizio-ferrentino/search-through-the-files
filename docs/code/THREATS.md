@@ -79,7 +79,7 @@ a random clock that ignored where you looked, so the enemy came the
 moment you turned away. Now each side has a PRESSURE,
 `_pressione := {"right", "left"}` 0..1, moved by _avanza_pressioni(delta)
 in every state but GRACE: a side FACED from the room (not is_in_pc() and
-_facing_zone(zona)) DRAINS - delta / SCARICA_TORCIA 3 s with the torch
+_facing_zone(zona)) DRAINS - delta / SCARICA_TORCIA 5 s with the torch
 on, delta / SCARICA_SGUARDO 30 s by eye alone; otherwise it FILLS by
 delta * _moltiplicatore() / RIEMPI (60 s at difficulty 0), except the
 side of the peek in progress. WAIT peeks when _lato_pieno() finds a side
@@ -88,9 +88,9 @@ side (_zone_of; all spots if it has none; still never the same twice).
 _to_calm() zeroes _pressione[_peek_zone]. F11 off resets both.
 So: watching a side keeps it quiet, the enemy comes from the side you
 have NOT looked at (inside the PC counts as not looking).
-DIFFICULTY: _moltiplicatore() = (1 + 0.5 * clamp(tempo_partita /
+DIFFICULTY: _moltiplicatore() = (1 + PESO_TEMPO 0.25 * clamp(tempo_partita /
 RAMPA_TEMPO 600)) * (1 + PER_CHIAVE 0.2 * max(0, keys found - 1));
-_difficolta() = (m-1)/(M_MAX-1) in 0..1, M_MAX = 1.5 * 1.6; it replaces
+_difficolta() = (m-1)/(M_MAX-1) in 0..1, M_MAX = 1.25 * 1.6; it replaces
 heat in REACT_CALM/HOT, HALO_REACT_CALM/HOT, GHOSTY_DURATA_CALM/HOT and
 the tell intensity.
 UNLOCK: _sbloccati() = GameManager.chiavi_trovate not empty. Before the
