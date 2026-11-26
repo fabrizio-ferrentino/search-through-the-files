@@ -1,0 +1,14 @@
+{
+  "enabledPlugins": {
+    "godot@awesome-gamedev-agent-skills": true,
+    "router@awesome-gamedev-agent-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "awesome-gamedev-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "gamedev-skills/awesome-gamedev-agent-skills"
+      }
+    }
+  }
+}
