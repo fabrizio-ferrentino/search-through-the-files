@@ -166,6 +166,7 @@ func _show_gameover() -> void:
 	stat.add_theme_font_size_override("font_size", 22)
 	stat.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 	vb.add_child(stat)
+	vb.add_child(GameManager.pulsante_seme())
 
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 24)

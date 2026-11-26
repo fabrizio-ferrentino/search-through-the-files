@@ -71,6 +71,7 @@ func launch(arg) -> void:
 	var e_immagine: bool = tipo == "image"
 	var sola_lettura: bool = e_immagine or tipo == "bin"
 	_edit.text = OSContent.byte_dump(file) if e_immagine else str(file.get("content", ""))
+	GameManager.scopri_in(_edit.text)   # file del disco, byte di una foto, sorgente di una pagina
 	_edit.editable = not sola_lettura
 	# il testo iniziale e' la base: senza questo, "Annulla" lo cancellerebbe tutto
 	_edit.clear_undo_history()

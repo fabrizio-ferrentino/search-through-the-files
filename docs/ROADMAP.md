@@ -159,9 +159,15 @@ left = window); Ghosty comes from behind on a clock of his own.
   Ghosty from behind (see above). A **tell** (a `glitch.gdshader` pulse on
   the PC overlay, scaling with heat) warns you while inside the PC; failure →
   `game_over(<id>)` (subtitle keys off `cause`).
-  (DEV-ONLY F10 stays until all triggers are wired.) *Note:* "keys found" can't drive
-  aggression — keys aren't collected (read + typed at the end) — so **time-in-PC** is the
-  exposure signal.
+  (DEV-ONLY F10 stays until all triggers are wired.) *Note:* until 2026-11-26 "keys found"
+  could not drive aggression; now `GameManager.chiavi_trovate` marks a key found when its
+  place is opened (see the rework below).
+- [ ] **Rework of Jester and HaloMan** (owner, 2026-11-26: "today they work very badly").
+  (1) **Looking around must count**: checking the room should calm the enemies or partly
+  reset them. Today you look around, enter the PC and an enemy peeks at once, so checking
+  is useless. (2) **Difficulty rises with the keys found** (`chiavi_trovate`), on top of a
+  base that grows with time, so a player who finds nothing is not left in a calm room
+  forever. A separate task, in its own chat.
 
 ## Milestone 5 — The PC entity & glitches
 Threat *inside* the machine + atmosphere. Viruses per GDD §7.2.

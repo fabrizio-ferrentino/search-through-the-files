@@ -414,11 +414,12 @@ func _show_ending() -> void:
 
 	var stat := Label.new()
 	stat.name = "Statistiche"
-	stat.text = GameManager.riepilogo()
+	stat.text = GameManager.riepilogo(true)
 	stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stat.add_theme_font_size_override("font_size", 22)
 	stat.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 	vb.add_child(stat)
+	vb.add_child(GameManager.pulsante_seme())
 
 	var btn := Button.new()
 	btn.text = tr("UI_BACK_TO_MENU")

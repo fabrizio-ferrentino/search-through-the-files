@@ -61,10 +61,15 @@ var _keys_label: Label = null        # le sue righe delle chiavi
 # tempo (proprietario, 25/11/2026). conta() le aumenta dai punti del gioco dove succedono;
 # STATISTICHE da' l'ordine e la chiave di testo. tempo_partita conta solo a partita in corso
 # e non in pausa (GameManager si ferma con l'albero in pausa).
-const STATISTICHE := [["pagine", "STATS_PAGES"], ["file", "STATS_FILES"],
-		["jester", "STATS_JESTER"], ["halo", "STATS_HALO"], ["ghosty", "STATS_GHOSTY"],
-		["virus", "STATS_VIRUS"], ["tentativi", "STATS_TRIES"]]
+# Niente nomi dei nemici (proprietario, 26/11/2026): Jester, HaloMan, Ghosty scacciati e i
+# virus mortali sventati finiscono tutti in "evitate". I falsi allarmi non contano.
+const STATISTICHE := [["evitate", "STATS_AVOIDED"], ["pagine", "STATS_PAGES"],
+		["file", "STATS_FILES"], ["tentativi", "STATS_TRIES"]]
 var statistiche: Dictionary = {}
+# Chiavi TROVATE: indice -> true quando il giocatore apre il posto dove sta (il file, la
+# cartella che la mostra, la pagina, il suo sorgente, la foto). Basta aprirlo, senza regolare
+# la foto (proprietario, 26/11/2026). Servira' anche alla difficolta' (ROADMAP).
+var chiavi_trovate: Dictionary = {}
 var tempo_partita := 0.0
 var debug_compatto := false          # pannello ridotto alle sole chiavi (resta fra un F12 e l'altro)
 # DEV-ONLY (20/10/2026, proprietario: "fai in modo che io li possa vedere tutti"): il web
@@ -257,6 +262,7 @@ func start_new_run(new_seed: int = 0) -> void:
 	key_hints.clear()         # le posizioni le riannotano i generatori qui sotto
 	key_kinds.clear()
 	statistiche.clear()
+	chiavi_trovate.clear()
 	tempo_partita = 0.0
 	first_time_in_room = true
 	pc_on = false
@@ -292,15 +298,44 @@ func _process(delta: float) -> void:
 func conta(nome: String) -> void:
 	statistiche[nome] = int(statistiche.get(nome, 0)) + 1
 
-# Il riepilogo di fine partita, una voce per riga: seme, tempo e le statistiche.
-func riepilogo() -> String:
+# Il giocatore ha davanti questo testo (un file, una pagina, un nome di cartella...): ogni
+# chiave del run che ci compare scritta e' trovata. Si cerca l'etichetta intera ("2-ABCD"):
+# nessun altro testo del gioco ha quella forma (regola dei siti e del disco).
+func scopri_in(testo: String) -> void:
+	for k in keys:
+		var label := key_label(int(k.get("index", 0)))
+		if label != "" and testo.contains(label):
+			chiavi_trovate[int(k["index"])] = true
+
+# Il riepilogo di fine partita, una voce per riga: tempo, chiavi trovate (solo da morto: a
+# vittoria sono per forza tutte) e le statistiche. Il seme sta a parte: pulsante_seme().
+func riepilogo(vinto := false) -> String:
 	var s := int(tempo_partita)
-	var righe: PackedStringArray = [tr("STATS_SEED") % run_seed,
-			tr("STATS_TIME") % ("%d:%02d" % [s / 60, s % 60])]
+	var righe: PackedStringArray = [tr("STATS_TIME") % ("%d:%02d" % [s / 60, s % 60])]
+	if not vinto:
+		righe.append(tr("STATS_KEYS") % [chiavi_trovate.size(), KEY_COUNT])
 	for st in STATISTICHE:
 		righe.append(tr(str(st[1])) % int(statistiche.get(str(st[0]), 0)))
 	return "
 ".join(righe)
+
+# Il seme a fine partita, come pulsante: un clic lo copia negli appunti, per rigiocare la
+# stessa partita dal menu (proprietario, 26/11/2026). Lo usano morte e vittoria.
+func pulsante_seme() -> Button:
+	var b := Button.new()
+	b.name = "Seme"
+	b.flat = true
+	b.text = tr("STATS_SEED") % run_seed
+	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	b.add_theme_font_size_override("font_size", 22)
+	for stato in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(stato, Color(0.6, 0.6, 0.6) if stato == "font_color" else Color(0.85, 0.85, 0.85))
+	var seme := run_seed   # copiato ora: il menu potrebbe avviarne un altro prima del clic
+	b.pressed.connect(func():
+		DisplayServer.clipboard_set(str(seme))
+		b.text = tr("STATS_SEED_COPIED") % seme)
+	return b
 
 func finish_run() -> void:
 	run_active = false

@@ -235,6 +235,11 @@ func _refresh() -> void:
 	if window:
 		window.set_title(str(_folder.get("name", tr("SHELL_EXPLORER"))))
 	_addr.text = _path_string(_folder)
+	# una chiave scritta nel NOME di una cartella si trova vedendola elencata
+	var nomi := PackedStringArray([_addr.text])
+	for c in _folder.get("children", []):
+		nomi.append(str(c.get("name", "")))
+	GameManager.scopri_in(" ".join(nomi))
 	# La cartella che stai guardando e' APERTA, come in Win95: icona "folder_open" nella
 	# casella dell'indirizzo, nella barra del titolo e nel pulsante della barra delle
 	# applicazioni. (La casella partiva gia' con l'icona aperta, ma qui veniva subito
