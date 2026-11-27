@@ -12,17 +12,16 @@ extends Node
 # la scritta arrivava con 123 pixel — sei caratteri in 123 pixel sono una macchiolina,
 # non un codice. Ingrandita la finestra (910x590) si e' passati a 575 pixel.
 #
-# Verifica anche la RIVELAZIONE: i cursori devono far emergere il codice davvero, con i
-# numeri in sRGB (lo shader adjust.gdshader converte: il 2D di Godot campiona in lineare,
-# e regolare in lineare schiaccia le zone scure nel primo 3% della corsa del cursore).
+# Verifica anche la RIVELAZIONE (27/11/2026) sullo schermo vero: a riposo la scritta non
+# deve arrivare a schermo per niente; spingendo il cursore giusto a meta' corsa e' un'ombra,
+# in fondo si legge.
 #
 # Esecuzione (FINESTRA):
 #   & $godot --path $proj res://tests/photo_chain_test.tscn
 # ============================================================
 
-const SEME := 12345
+const SEME := 12345          # da qui si cerca il primo seme con la chiave nei PIXEL
 const PIXEL_MIN := 300      # pixel della scritta che devono sopravvivere fino allo schermo
-const CUORE_MIN := 3.0      # contrasto minimo del cuore dei tratti (livelli su 255)
 const OUT := "C:/Users/ffria/AppData/Local/Temp/claude/z--Progetti-Search-Through-the-Files/1536785d-988b-4eed-baf2-48564844db2c/scratchpad/catena/"
 
 var _fails: Array = []
@@ -31,7 +30,13 @@ func _ready() -> void:
 	get_tree().create_timer(120.0).timeout.connect(func(): print("RISULTATO: FAIL -> timeout"); get_tree().quit(1))
 	await get_tree().process_frame
 	DirAccess.make_dir_recursive_absolute(OUT)
-	GameManager.start_new_run(SEME)
+	var seme := SEME
+	for i in range(60):
+		GameManager.start_new_run(SEME + i)
+		if not _portatrice().is_empty():
+			seme = SEME + i
+			break
+	GameManager.start_new_run(seme)
 	GameManager.pc_on = true
 	GameManager.logged_in = true
 	var stanza: Node = load("res://scenes/main.tscn").instantiate()
@@ -45,11 +50,7 @@ func _ready() -> void:
 
 	# Il nome della cartella e' TRADOTTO (locale/ui.csv): cercarlo scritto in italiano
 	# funzionava solo finche' il gioco era in italiano. La chiave invece non cambia.
-	var immagini := _trova(VFS.get_root(), OSContent._t("VFS_PICTURES"))
-	var foto: Dictionary = {}
-	for c in immagini.get("children", []):
-		if str(c.get("code", "")) != "":
-			foto = c
+	var foto := _portatrice()
 	if foto.is_empty():
 		print("RISULTATO: FAIL -> nessuna foto porta la chiave")
 		get_tree().quit(1)
@@ -87,52 +88,34 @@ func _ready() -> void:
 	_check("NIENTE_RIMPICCIOLIMENTO", scala >= 0.98,
 			"la finestra rimpicciolisce la foto (scala %.2f): la scritta si perde" % scala)
 
-	# --- quanto sopravvive lungo la catena ---
-	# riquadro VERO della scritta, rotazione compresa (fino a CODE_TILT): quello allineato
-	# agli assi tagliava via gli estremi del primo e dell'ultimo glifo
-	var zona := Rect2(lbl.get_transform() * Vector2.ZERO, Vector2.ZERO)
-	for p in [Vector2(lbl.size.x, 0.0), lbl.size, Vector2(0.0, lbl.size.y)]:
-		zona = zona.expand(lbl.get_transform() * p)
-	zona = zona.grow(3.0)
-	var con_comp := vp.get_texture().get_image()
-	var con_win := get_viewport().get_texture().get_image()
-	lbl.visible = false
-	for i in range(4):
-		await get_tree().process_frame
-	await RenderingServer.frame_post_draw
-	var senza_comp := vp.get_texture().get_image()
-	var senza_win := get_viewport().get_texture().get_image()
-	lbl.visible = true
+	var ric: Array = foto.get("ricetta", [])
+	print("ricetta: ", OSContent.ricetta_testo(ric))
 
-	var m1 := _delta(con_comp, senza_comp, zona)
-	var m3 := _delta(con_win, senza_win, Rect2(Vector2.ZERO, Vector2(con_win.get_size())))
-	print("composizione : %d pixel, cuore %.2f livelli" % [int(m1["pixel"]), float(m1["cuore"])])
-	print("schermo+CRT  : %d pixel, cuore %.2f livelli" % [int(m3["pixel"]), float(m3["cuore"])])
-	_check("ARRIVA_A_SCHERMO", int(m3["pixel"]) >= PIXEL_MIN,
-			"solo %d pixel della scritta arrivano a schermo (minimo %d)" % [int(m3["pixel"]), PIXEL_MIN])
-	_check("CONTRASTO_A_SCHERMO", float(m3["cuore"]) >= CUORE_MIN,
-			"contrasto %.2f livelli a schermo (minimo %.1f)" % [float(m3["cuore"]), CUORE_MIN])
+	# --- a riposo: niente ---
+	var riposo := await _misura(lbl)
+	print("a riposo     : %d pixel, cuore %.2f livelli" % [int(riposo["pixel"]), float(riposo["cuore"])])
+	_check("A_RIPOSO_NON_C_E", int(riposo["pixel"]) == 0,
+			"a riposo %d pixel della scritta arrivano a schermo" % int(riposo["pixel"]))
 
-	# --- la rivelazione funziona coi numeri in sRGB? ---
-	var base: Color = foto.get("code_base", Color(0.5, 0.5, 0.5))
-	var lum: float = (base.r + base.g + base.b) / 3.0
-	app._mat.set_shader_parameter("black_point", clampf(lum - 0.04, 0.0, 0.9))
-	app._mat.set_shader_parameter("white_point", clampf(lum + 0.04, 0.1, 1.0))
-	for i in range(5):
-		await get_tree().process_frame
-	await RenderingServer.frame_post_draw
-	var riv_con := get_viewport().get_texture().get_image()
-	lbl.visible = false
-	for i in range(4):
-		await get_tree().process_frame
-	await RenderingServer.frame_post_draw
-	var riv_senza := get_viewport().get_texture().get_image()
-	lbl.visible = true
-	var mr := _delta(riv_con, riv_senza, Rect2(Vector2.ZERO, Vector2(riv_con.get_size())))
-	print("rivelata     : %d pixel, cuore %.2f livelli (nero %.3f bianco %.3f)" % [
-			int(mr["pixel"]), float(mr["cuore"]), clampf(lum - 0.04, 0.0, 0.9), clampf(lum + 0.04, 0.1, 1.0)])
-	_check("RIVELAZIONE", float(mr["cuore"]) >= 25.0,
-			"regolando i cursori il codice sale solo a %.1f livelli: troppo poco per leggerlo" % float(mr["cuore"]))
+	# --- il cursore giusto a meta' corsa: piu' di niente, meno della piena ---
+	var p := str(ric[0]["param"])
+	var verso := int(ric[0]["verso"])
+	var d := ImageViewerApp.posizione(p, float(ImageViewerApp.DEFAULTS[p]))
+	var lato: float = (1.0 - d) if verso > 0 else d
+	_cursore(app, p, ImageViewerApp.valore_a(p, d + float(verso) * 0.4 * lato))
+	var meta := await _misura(lbl)
+	print("a meta' corsa: %d pixel, cuore %.2f livelli" % [int(meta["pixel"]), float(meta["cuore"])])
+
+	# --- in fondo: si legge, sullo schermo vero (finestra + CRT) ---
+	_cursore(app, p, ImageViewerApp.valore_a(p, 1.0 if verso > 0 else 0.0))
+	var tutta := await _misura(lbl)
+	print("in fondo     : %d pixel, cuore %.2f livelli" % [int(tutta["pixel"]), float(tutta["cuore"])])
+	_check("GRADUALE", float(meta["cuore"]) > 0.0 and float(meta["cuore"]) < float(tutta["cuore"]),
+			"a meta' corsa %.1f livelli, in fondo %.1f: non cresce per gradi" % [float(meta["cuore"]), float(tutta["cuore"])])
+	_check("ARRIVA_A_SCHERMO", int(tutta["pixel"]) >= PIXEL_MIN,
+			"solo %d pixel della scritta arrivano a schermo (minimo %d)" % [int(tutta["pixel"]), PIXEL_MIN])
+	_check("RIVELAZIONE", float(tutta["cuore"]) >= 25.0,
+			"in fondo il codice sale solo a %.1f livelli: troppo poco per leggerlo" % float(tutta["cuore"]))
 
 	for i in range(3):
 		await get_tree().process_frame
@@ -145,6 +128,33 @@ func _ready() -> void:
 	else:
 		print("RISULTATO: FAIL -> " + ", ".join(_fails))
 	get_tree().quit(0 if _fails.is_empty() else 1)
+
+# La foto che porta la chiave nei PIXEL (quella col codice nel file non ha "ricetta").
+func _portatrice() -> Dictionary:
+	for c in _trova(VFS.get_root(), OSContent._t("VFS_PICTURES")).get("children", []):
+		if c is Dictionary and str(c.get("code", "")) != "" and c.has("ricetta"):
+			return c
+	return {}
+
+# Muove un cursore VERO del visualizzatore (come farebbe il giocatore).
+func _cursore(app: ImageViewerApp, param: String, valore: float) -> void:
+	for e in app._sliders:
+		if str(e["param"]) == param:
+			(e["node"] as HSlider).value = valore
+
+# Schermo intero con e senza la scritta: quanto ne arriva agli occhi del giocatore.
+func _misura(lbl: Label) -> Dictionary:
+	for i in range(5):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var con := get_viewport().get_texture().get_image()
+	lbl.visible = false
+	for i in range(4):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var senza := get_viewport().get_texture().get_image()
+	lbl.visible = true
+	return _delta(con, senza, Rect2(Vector2.ZERO, Vector2(con.get_size())))
 
 # Quanti pixel cambia la scritta e di quanto (cuore dei tratti: i pixel che cambiano
 # almeno la meta' del massimo — la media su tutti sottostima, i bordi sfumati contano poco).

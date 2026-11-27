@@ -270,7 +270,7 @@ separated from the code that builds/renders it. The 4 keys (owner's map since
   are the only legal places — nothing can sit inside the compressed scan — and before
   2026-09-20 it was always the same line (7 of 31). `tests/photo_file_key_test` fails if the
   position stops varying.
-- **Photos** — `_make_photos` builds 3–4 image nodes (`filetype:"image"`) and hides
+- **Photos** — `_make_photos` builds `PHOTO_COUNT` (5) image nodes (`filetype:"image"`) and hides
   the **image key** in one of them (a `code` field). Source: if `PHOTO_DIR`
   (`res://assets/textures/photos/`) holds author images, the run draws a seeded subset
   (file nodes carry a `path`); otherwise it falls back to **procedural** nodes
@@ -510,19 +510,12 @@ intact for the login and the secret-folder dialogs.
   saturation, levels** (black/white point) and **"Nitidezza"** to its `TEXTURE * COLOR`.
   Identity at default values; works for both a textured rect (the photo) and a `Label` (the
   hidden code), so one shared material drives the image-adjustment puzzle
-  (`ImageViewerApp`). Everything runs on sRGB-space values, which is what makes a code
-  hidden in shadow recoverable.
+  (`ImageViewerApp`). Everything runs on sRGB-space values.
   "Nitidezza" is the only **non-point-wise** control: a band-pass (a fine blur minus a wide
-  three-ring blur, on luminance) tuned to the width of the code's strokes, ~2.2-2.5 px of
-  composition. The slider does not raise a gain — it sweeps a **threshold** with a **dead
-  zone** under it, so band amplitudes below the threshold collapse to flat grey while the
-  strokes saturate to black or white. That is what lets a faint code win against photo grain
-  of a similar size: with a plain gain, clipping favours the code only once it beats the
-  noise *peak*, which a watermark faint enough to stay hidden never does.
-  The generator must measure in exactly this band, so `OSContent.bp_shader_at` is a CPU twin
-  of this kernel — **change radii or weights here and you must change them there**; the
-  measured response of the filter to the strokes (`CODE_BP_RESPONSE`) has to be re-measured
-  too, with `tests/photo_reveal_test.tscn`.
+  three-ring blur, on luminance). Since 2026-11-27 it is just one of the six possible
+  sliders the photo key's secret **recipe** (one slider + one direction) can pick (see
+  docs/code/PHOTO_KEY.md): the code is absent at rest and the viewer fades it in from the slider positions, so the
+  shader no longer has to separate a faint code from photo grain.
 
 ---
 

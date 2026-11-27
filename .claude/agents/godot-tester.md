@@ -28,7 +28,7 @@ scripts or `locale/ui.csv` changed (the caller will tell you, or assume yes if u
   lines starting `FAIL  NAME --- reason`. Report those, nothing else.
 - **Windowed tests** (they read pixels or the clipboard; never run them headless):
   browser_e2e, browser_click_test, selection_ghost (as `-s` without `--headless`),
-  photo_key_test, photo_reveal_test, photo_chain_test, minacce_stanza_test,
+  photo_key_test, photo_chain_test, minacce_stanza_test,
   esplora_chrome_test, cartella_segreta_test, boot_test, pause_test, rinomina_test, virus_test,
   finestre_contorno_test.
   Everything else is headless. Tools ending in `_check` or `_scan` are not tests: run them only

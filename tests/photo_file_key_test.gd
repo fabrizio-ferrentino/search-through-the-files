@@ -3,12 +3,9 @@ extends Node
 # Test della SECONDA VIA della chiave nella foto: il codice nei BYTE del file invece che nei
 # pixel (OSContent._make_photos -> code_commento, OSContent.byte_dump).
 #
-# Perche' esiste questa via. Nascondere il codice nei pixel ha un limite MISURATO: perche' la
-# scritta sia insieme invisibile a riposo e rivelabile col cursore "Nitidezza" serve che la
-# struttura che la maschera sia ~6.8 volte il rumore alla scala dei tratti, e sulle foto vere
-# il meglio ottenibile e' 0.4-0.9 (tests/photo_banda_scan). Su molte foto quindi o si vede
-# subito o non si legge mai. Il codice nei byte non ha quel limite: funziona su qualsiasi
-# foto, e cercarlo aprendo l'immagine col Blocco note e' il gioco che il titolo promette.
+# Perche' esiste questa via: cercare il codice aprendo l'immagine col Blocco note e' il gioco
+# che il titolo promette, e funziona su qualsiasi foto. L'altra via (pixel + ricetta dei
+# cursori) la controlla photo_key_test.
 #
 # Qui si pretende che:
 #   1 le due modalita' escano entrambe sui semi (la randomicita' e' il punto);
