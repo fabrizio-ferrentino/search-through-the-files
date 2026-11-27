@@ -96,15 +96,15 @@ func _solo_web() -> void:
 	GameManager.start_new_run(4242)
 	GameManager.pc_on = true
 	GameManager.logged_in = true
-	var vos := _viewport(Vector2i(1440, 1080))
+	var vos := _viewport(preload("res://scripts/player.gd").OS_SIZE)
 	var os: OSDesktop = load("res://scripts/os/desktop.gd").new()
-	os.size = Vector2(1440, 1080)
+	os.size = Vector2(preload("res://scripts/player.gd").OS_SIZE)
 	vos.add_child(os)
 	for k in range(3):
 		await get_tree().process_frame
 	BrowserApp.attesa_scala = 0.05
 	var win: OSWindow = os.open_app("browser", "start")
-	win.position = Vector2(300, 120)
+	win.position = Vector2(160, 80)
 	await get_tree().create_timer(0.6).timeout
 	vos.get_texture().get_image().save_png("user://icona_web_desktop.png")
 	print("RISULTATO: salvate user://icona_web.png e user://icona_web_desktop.png")

@@ -65,7 +65,7 @@ func _ready() -> void:
 	var img := await _foto("vista_pc_" + tag + ".png")
 
 	# ritaglio ingrandito: angolo in alto a sinistra della finestra (titolo, menu, icone)
-	var k := float(dim.y) / 1080.0                 # scala OS -> schermo
+	var k := float(dim.y) / float(preload("res://scripts/player.gd").OS_SIZE.y)                # scala OS -> schermo
 	var x0 := float(dim.x) * 240.0 / 1920.0        # l'overlay e' centrato in orizzontale
 	var crop := Rect2i(int(x0 + 40.0 * k), int(40.0 * k), int(260.0 * k), int(150.0 * k))
 	var z := img.get_region(crop)
@@ -79,7 +79,7 @@ func _ready() -> void:
 	_leggibilita(img, "menu    (nero su grigio)", Rect2(76, 100, 220, 28), k, x0)
 
 	# --- profilo delle scanline su desktop piatto (a destra delle finestre) ---
-	_profilo(img, int(x0 + 1000.0 * k), int(x0 + 1300.0 * k), int(600.0 * k), int(900.0 * k), k)
+	_profilo(img, int(x0 + 800.0 * k), int(x0 + 1100.0 * k), int(480.0 * k), int(720.0 * k), k)
 
 	print("foto in: %s" % ProjectSettings.globalize_path(OUT))
 	get_tree().quit(0)

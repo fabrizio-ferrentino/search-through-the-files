@@ -32,7 +32,7 @@ extends Node
 #   & $godot --headless --path $proj res://tests/os_finestre_test.tscn
 # ============================================================
 
-const OS_SIZE := Vector2i(1440, 1080)
+const OS_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 
 var _vp: SubViewport
 var _os = null              # OSDesktop

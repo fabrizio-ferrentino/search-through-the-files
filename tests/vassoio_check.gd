@@ -7,7 +7,7 @@ extends Node
 # Va eseguito A FINESTRA:
 #   & $godot --path $proj res://tests/vassoio_check.tscn
 
-const OS_SIZE := Vector2i(1440, 1080)
+const OS_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 
 func _ready() -> void:
 	await get_tree().process_frame

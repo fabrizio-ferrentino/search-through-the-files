@@ -1068,13 +1068,13 @@ func _prova_pannello() -> void:
 	await _frame(2)
 	var centro: Vector2 = ferma.get_global_rect().get_center()
 	var sotto: OSWindow = _os.open_app("notepad", {"name": "sotto.txt", "content": ""})
-	sotto.position = (centro - Vector2(240, 0) - Vector2(150, 60)).floor()
+	sotto.position = (_player.schermo_a_os() * centro - Vector2(150, 60)).floor()
 	var davanti: OSWindow = _os.open_app("notepad", {"name": "davanti.txt", "content": ""})
 	davanti.position = Vector2(60, 500)
 	await _frame(2)
 	_os.focus_window(davanti)
 	await _frame(2)
-	var dentro_os := sotto.get_global_rect().has_point(centro - Vector2(240, 0))
+	var dentro_os := sotto.get_global_rect().has_point(_player.schermo_a_os() * centro)
 	var schermo: Vector2 = get_tree().root.get_final_transform() * centro
 	for giu in [true, false]:
 		var e := InputEventMouseButton.new()

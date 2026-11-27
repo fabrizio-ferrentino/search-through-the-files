@@ -47,7 +47,7 @@ WEB_SITES.md / WEB_CATALOG.md (the recipes for disk files and web pages).
 | **WebRuntime** | `web_runtime.gd`: picks the run's sites, generates the portal, injects keys 2 and 3. |
 | **OSDesktop / OSWindow / OSIcon / DesktopItem** | The OS controller, a Win95 window, a drawn icon, an icon+label on the desktop or in Explorer. |
 | **Win95 / bevel** | `win95.gd`: palette `C_*`, Theme, the raised/sunken borders. |
-| **SubViewport (OS) / PCLayer / MonitorScreen** | The 1440x1080 viewport the OS renders into; the fullscreen CRT overlay; the 3D quad on the monitor. |
+| **SubViewport (OS) / PCLayer / MonitorScreen** | The 1280x960 viewport the OS renders into (shown at 1440x1080); the fullscreen CRT overlay; the 3D quad on the monitor. |
 | **regista** | director: `ThreatDirector` (room, group `regista_stanza`) and `VirusDirector` (PC, group `regista_virus`). |
 | **apparizione, virus_mortale / stupido, schermo_blu** | apparition, lethal / YouAreStupid virus, blue screen. |
 | **catalogo_disco / catalogo_siti** | the data catalogs of disk content and of web sites. |
@@ -155,6 +155,9 @@ These are not optional — match them or the code will feel foreign.
   `player.gd` calls `notify_mouse_entered()` / `notify_mouse_exited()` on the OS
   viewport when entering/leaving the PC (`_set_os_mouse_in`). Any test or tool
   that drives the OS through `push_input` must do the same.
+- **Screen to OS coordinates:** the OS viewport is 1280x960 but shown at 1440x1080 centred on
+  the 1920 base, so a tool or test that pushes screen coordinates into the room must map them
+  with `player.schermo_a_os()` (a Transform2D), not just subtract 240.
 - **Cursor in the room:** a full-screen `Control` defaults to `mouse_filter = STOP`
   and will own the cursor, silently overriding `Input.set_default_cursor_shape`.
   That's why `Fade_transition`'s `ColorRect` is set to `IGNORE` — so `player.gd`'s

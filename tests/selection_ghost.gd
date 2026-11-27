@@ -14,7 +14,7 @@ extends SceneTree
 # ============================================================
 
 const OUT_DIR := "C:/Users/ffria/AppData/Local/Temp/claude/z--Progetti-Search-Through-the-Files/12447e9d-bcf2-4adc-8102-d384d3a416d2/scratchpad"
-const VP_SIZE := Vector2i(1440, 1080)
+const VP_SIZE := Vector2i(1280, 960)   # = OS_SIZE di player.gd: con -s niente preload (non vede GameManager)
 
 var _sub: SubViewport
 var _rtl: RichTextLabel
@@ -130,7 +130,7 @@ func _run() -> void:
 		var t: float = float(k + 1) / 10.0
 		_motion(drag_a.lerp(drag_b, t))
 		await create_timer(0.02).timeout
-	await create_timer(0.08).timeout
+	await create_timer(0.2).timeout   # 0.08 a volte non bastava al tick da 0.05 (1 su 3 a 1280x960)
 	_release(drag_b)
 	await process_frame
 	await RenderingServer.frame_post_draw
@@ -143,9 +143,9 @@ func _run() -> void:
 	_check("SELEZIONE_IN_TABELLA", sel_text.find("CELLA1") >= 0 or sel_text.find("COLONNA1") >= 0, "la selezione non entra nelle celle della tabella")
 
 	# --- TEST B: clic su area vuota -> la selezione sparisce SUBITO (niente fantasma) ---
-	_press(Vector2(120, 900))
+	_press(Vector2(120, VP_SIZE.y - 20))
 	await process_frame
-	_release(Vector2(120, 900))
+	_release(Vector2(120, VP_SIZE.y - 20))
 	var ghost_b := await _watch_red(60, "B", 5, 30)
 	_check("NIENTE_FANTASMA_CLIC", ghost_b <= 2, "rettangolo residuo per %d frame dopo il clic" % ghost_b)
 

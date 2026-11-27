@@ -411,7 +411,8 @@ func _sfarfalla(delta: float) -> void:
 			else:
 				_prepara_raffica()
 				_luce_passo = 0.0
-	var tau: float = 0.025 if _luce_meta < _luce else _tau_su
+	# discesa 30 ms: a 25 un calo fino al buio poteva saltare >0.25 di alfa in 1/30 s (BUIO_LAMPADINA)
+	var tau: float = 0.03 if _luce_meta < _luce else _tau_su
 	_luce = lerpf(_luce, _luce_meta, 1.0 - exp(-delta / tau))
 	var tremolio: float = 1.0 - 0.02 * absf(sin(_t * 23.0) * sin(_t * 7.3))   # mai ferma, mai piu' chiara
 	_velo.color.a = clampf(1.0 - (1.0 - scuro) * _luce * tremolio, 0.0, 0.96)

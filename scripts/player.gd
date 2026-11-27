@@ -28,7 +28,11 @@ var _in_pc := false                 # vista PC attiva (overlay a tutto schermo)
 var _ending := false                # finale in corso (vittoria): blocca ogni input
 
 # --- PC coesistente: l'OS gira sempre in un SubViewport autonomo ---
-const OS_SIZE := Vector2i(1440, 1080)
+# Risoluzione dell'OS, piu' bassa del rettangolo in cui lo si vede (OS_VISTA): tutto il
+# desktop esce ingrandito in proporzione, come un Win95 a bassa risoluzione su un 14".
+# A 1440x1080 1:1 il testo delle pagine (~12 px) col CRT si leggeva a fatica (27/11/2026).
+const OS_SIZE := Vector2i(1280, 960)
+const OS_VISTA := Vector2(1440, 1080)          # rettangolo dell'overlay, centrato sui 1920 di base
 var _os_viewport: SubViewport = null   # qui vive l'OS, rende sempre (monitor dal vivo)
 var _os = null                         # OSDesktop
 var _pc_layer: CanvasLayer = null      # overlay a tutto schermo (vista "dentro il PC")
@@ -100,7 +104,7 @@ func _spawn_computer() -> void:
 	_os_viewport.disable_3d = true
 	get_parent().add_child(_os_viewport)
 	_os = load("res://scripts/os/desktop.gd").new()
-	# rettangolo fisso 1440x1080 (ancore in alto a sx, niente full-rect che
+	# rettangolo fisso OS_SIZE (ancore in alto a sx, niente full-rect che
 	# raddoppierebbe gli offset): cosi' size e' corretta gia' in _ready -> taskbar,
 	# menu Start e overlay risultano centrati anche al primo avvio.
 	_os.position = Vector2.ZERO
@@ -127,9 +131,10 @@ func _spawn_computer() -> void:
 
 	var screen := TextureRect.new()
 	screen.texture = _os_viewport.get_texture()
-	screen.position = Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
-	screen.size = Vector2(OS_SIZE)
+	screen.position = Vector2((1920 - OS_VISTA.x) / 2.0, 0.0)
+	screen.size = OS_VISTA
 	screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	screen.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR   # ingrandimento non intero: niente pixel diseguali
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://scripts/os/crt.gdshader")
 	mat.set_shader_parameter("screen_size", Vector2(OS_SIZE))
@@ -274,9 +279,14 @@ func _forward_to_os(event: InputEvent) -> void:
 		return
 	var ev := event
 	if event is InputEventMouse:
-		ev = event.duplicate()
-		ev.position = event.position - Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
+		ev = event.xformed_by(schermo_a_os())   # posizione, relative e velocity insieme
 	_os_viewport.push_input(ev, true)
+
+# Da coordinate dello schermo (base 1920x1080) a pixel dell'OS: toglie il margine a
+# sinistra dell'overlay e riporta la scala OS_VISTA -> OS_SIZE.
+static func schermo_a_os() -> Transform2D:
+	var k := Vector2(OS_SIZE) / OS_VISTA
+	return Transform2D(0.0, k, 0.0, -Vector2((1920 - OS_VISTA.x) / 2.0, 0.0) * k)
 
 # Una SubViewport che riceve input INOLTRATO non sa che il mouse e' nella sua area:
 # con quel flag a falso il Viewport consegna i movimenti del mouse ai controlli solo
@@ -297,7 +307,7 @@ func _set_os_mouse_in(dentro: bool) -> void:
 func _update_pc_cursor(screen_pos: Vector2) -> void:
 	if _pc_bg == null or _os == null:
 		return
-	var os_pos := screen_pos - Vector2((1920 - OS_SIZE.x) / 2.0, 0.0)
+	var os_pos := schermo_a_os() * screen_pos
 	_pc_bg.mouse_default_cursor_shape = _os.cursor_shape_at(os_pos)
 
 # Pulsante di accensione sul case: spegne il PC se acceso, lo accende se spento.

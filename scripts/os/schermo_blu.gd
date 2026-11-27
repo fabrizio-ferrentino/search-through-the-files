@@ -23,7 +23,7 @@ signal scaduto
 const C_FONDO := Color("0000aa")       # il blu della modalita' testo VGA
 const C_TESTO := Color("ffffff")
 const C_GRIGIO := Color("aaaaaa")
-const FONT_PX := 30                    # ~80 colonne su 1440 px, come lo schermo vero
+const FONT_PX := 27                    # ~80 colonne sui 1280 px dell'OS, come lo schermo vero
 const LAMPEGGIO := 0.5                 # il trattino del cursore, mezzo secondo acceso
 const DURATA := 5.0                    # secondi di schermo blu prima del riavvio
 

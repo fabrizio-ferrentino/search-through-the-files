@@ -32,7 +32,7 @@ func _ready() -> void:
 	GameManager.debug_tutti_i_siti = true
 	BrowserApp.attesa_scala = 0.05
 	var sub := SubViewport.new()
-	sub.size = Vector2i(1440, 1080)
+	sub.size = preload("res://scripts/player.gd").OS_SIZE
 	add_child(sub)
 	var host := Control.new()
 	host.theme = Win95.make_theme()

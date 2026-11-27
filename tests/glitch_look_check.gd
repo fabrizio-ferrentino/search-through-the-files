@@ -51,7 +51,7 @@ func _ready() -> void:
 	# a riposo: aspetta che l'eventuale raffica d'apertura sia finita
 	await get_tree().create_timer(1.2).timeout
 	var dim := get_tree().root.get_texture().get_image().get_size()
-	var k := float(dim.y) / 1080.0
+	var k := float(dim.y) / float(preload("res://scripts/player.gd").OS_SIZE.y)
 	var x0 := float(dim.x) * 240.0 / 1920.0
 	var r_os := pannello.get_global_rect().grow(140.0)
 	var crop := Rect2i(int(x0 + r_os.position.x * k), int(r_os.position.y * k),
