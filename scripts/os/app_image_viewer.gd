@@ -3,22 +3,25 @@ extends Control
 
 # Visualizzatore immagini con strumenti di regolazione (M3 parte 3). Apre una "foto"
 # del run e la mostra con uno ShaderMaterial (adjust.gdshader) pilotato da cursori:
-# luminosita', contrasto, saturazione, livelli.
+# luminosita', contrasto, saturazione, livelli, nitidezza.
 #
-# La foto che nasconde una chiave la mostra come scritta a bassissimo contrasto,
-# posizionata e ruotata a caso (seme stabile per run). Foto e scritta vengono
-# COMPOSTE in un SubViewport e lo shader agisce sull'insieme: cosi' la scritta e'
-# invisibile all'apertura e si comporta come parte dell'immagine, emergendo solo
-# regolando (non e' un livello separabile). Le altre foto sono esche.
+# La foto che nasconde la chiave ha una RICETTA segreta (27/11/2026, scelta del
+# proprietario): UN cursore e una DIREZIONE, sorteggiati per partita. A riposo la scritta non
+# c'e' proprio (opacita' zero, nessuna filigrana); piu' si spinge quel cursore in quel verso,
+# piu' emerge, senza un valore preciso da trovare. Ripiego: alterare MOLTO la foto con
+# qualunque cursore la fa emergere lo stesso, cosi' nessuno resta bloccato. (Una prima
+# versione voleva due cursori su bersagli precisi: "troppo complicato da capire", scartata.)
+# Prima ancora la scritta era sempre presente e debole, sperando che un filtro la separasse
+# dalla trama: misurato, su foto vere o si vedeva subito o non si leggeva mai.
+# Foto e scritta sono COMPOSTE in un SubViewport e lo shader agisce sull'insieme: la
+# scritta si comporta come parte dell'immagine. Le altre foto sono esche.
 var os
 var window
 
 var _mat: ShaderMaterial
-var _sliders: Array = []   # [{ "node": HSlider, "default": float }]
-
-# Aspetto della scritta-chiave: le costanti stanno in OSContent, perche' servono anche
-# alla preparazione del nascondiglio (che deve sapere quanto sara' grande la scritta).
-# Regolare li': CODE_SIZE_FACTOR (dimensione), CODE_ALPHA (trasparenza), CODE_TILT.
+var _sliders: Array = []   # [{ "node": HSlider, "default": float, "param": String }]
+var _data: Dictionary = {}
+var _lbl: Label = null       # la scritta-chiave, se questa foto e' la portatrice
 
 # Valori di default = identita' dello shader (vedi adjust.gdshader).
 const DEFAULTS := {
@@ -29,10 +32,96 @@ const DEFAULTS := {
 	"white_point": 1.0,
 	"detail": 0.0,
 }
+# Corsa di ogni cursore: la ricetta ragiona in posizione 0..1 lungo questa corsa.
+const CORSE := {
+	"brightness": Vector2(-0.7, 0.7),
+	"contrast": Vector2(0.2, 8.0),
+	"saturation": Vector2(0.0, 3.0),
+	"black_point": Vector2(0.0, 0.95),
+	"white_point": Vector2(0.05, 1.0),
+	"detail": Vector2(0.0, 1.0),
+}
+# Versi ammessi per ogni cursore: quelli che non appiattiscono la foto (contrasto in giu'
+# o i livelli verso il centro spegnerebbero anche la scritta).
+const VERSI := {
+	"brightness": [1, -1],
+	"contrast": [1],
+	"saturation": [1, -1],
+	"black_point": [1],
+	"white_point": [-1],
+	"detail": [1],
+}
+# --- Quanto si vede (REGOLA QUI; si provano dal vivo con tests/photo_lab.tscn) ---
+# (static var e non const solo perche' il laboratorio le regola dal vivo; nel gioco non cambiano)
+static var DIR_INIZIO := 0.15   # avanzamento del cursore giusto (0..1 del suo lato) dove comincia
+static var DIR_PIENO := 0.75    # ... e dove la scritta e' piena
+static var TOT_INIZIO := 1.2    # ripiego: somma degli spostamenti di TUTTI i cursori dove comincia
+static var TOT_PIENO := 2.5     # ... e dove e' piena (un cursore solo, anche in fondo, fa al piu' 1.0)
+static var CODE_FORZA := 0.30   # scarto di colore della scritta a rivelazione piena
+static var CODE_OPACITA := 0.85 # opacita' della scritta a rivelazione piena
+
+# Posizione 0..1 di un valore lungo la corsa del suo cursore.
+static func posizione(param: String, valore: float) -> float:
+	var c: Vector2 = CORSE[param]
+	return clampf((valore - c.x) / (c.y - c.x), 0.0, 1.0)
+
+static func valore_a(param: String, pos: float) -> float:
+	var c: Vector2 = CORSE[param]
+	return lerpf(c.x, c.y, pos)
+
+# Quanto ha spinto il cursore giusto nel verso giusto: 0 al default, 1 in fondo a quel lato.
+static func avanzamento(ingrediente: Dictionary, valori: Dictionary) -> float:
+	var p := str(ingrediente["param"])
+	var d := posizione(p, float(DEFAULTS[p]))
+	var x := posizione(p, float(valori.get(p, DEFAULTS[p])))
+	if int(ingrediente["verso"]) > 0:
+		return clampf((x - d) / maxf(1.0 - d, 0.001), 0.0, 1.0)
+	return clampf((d - x) / maxf(d, 0.001), 0.0, 1.0)
+
+# Quanto e' rivelata la scritta (0..1) coi cursori a "valori" ({param: valore}).
+# ricetta = [{ "param", "verso" }]: il cursore giusto, oppure il ripiego, il piu' alto dei due.
+static func rivelazione(ricetta: Array, valori: Dictionary) -> float:
+	var r := 0.0
+	for ing in ricetta:
+		r = maxf(r, smoothstep(DIR_INIZIO, DIR_PIENO, avanzamento(ing, valori)))
+	var tot := 0.0
+	for p in DEFAULTS:
+		tot += absf(posizione(p, float(valori.get(p, DEFAULTS[p]))) - posizione(p, float(DEFAULTS[p])))
+	return maxf(r, smoothstep(TOT_INIZIO, TOT_PIENO, tot))
+
+# La parte PUNTO PER PUNTO dello shader, sulla luminanza (la saturazione non la cambia):
+# serve a scegliere un punto e un verso della scritta che ai valori della ricetta non
+# finiscano bruciati nel bianco o nel nero. La nitidezza non e' puntuale e si ignora.
+static func luma_regolata(l: float, valori: Dictionary) -> float:
+	var bp: float = float(valori.get("black_point", 0.0))
+	var wp: float = float(valori.get("white_point", 1.0))
+	var c: float = (l - bp) / maxf(wp - bp, 0.001)
+	c += float(valori.get("brightness", 0.0))
+	c = (c - 0.5) * float(valori.get("contrast", 1.0)) + 0.5
+	return clampf(c, 0.0, 1.0)
+
+# I valori dei cursori quando la scritta e' appena piena: il cursore giusto spinto fino a
+# DIR_PIENO nel suo verso, gli altri al default.
+static func valori_ricetta(ricetta: Array) -> Dictionary:
+	var v := DEFAULTS.duplicate()
+	for ing in ricetta:
+		var p := str(ing["param"])
+		var d := posizione(p, float(DEFAULTS[p]))
+		var lato: float = (1.0 - d) if int(ing["verso"]) > 0 else d
+		v[p] = valore_a(p, d + float(ing["verso"]) * DIR_PIENO * lato)
+	return v
+
+# Verso dello scarto (+1 schiarisce, -1 scurisce) che ai valori della ricetta si vede di piu'.
+static func verso_migliore(base_l: float, ricetta: Array) -> float:
+	var v := valori_ricetta(ricetta)
+	var su: float = absf(luma_regolata(clampf(base_l + CODE_FORZA, 0.0, 1.0), v) - luma_regolata(base_l, v))
+	var giu: float = absf(luma_regolata(clampf(base_l - CODE_FORZA, 0.0, 1.0), v) - luma_regolata(base_l, v))
+	return 1.0 if su >= giu else -1.0
 
 func launch(node) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var data: Dictionary = node if node is Dictionary else {}
+	_data = data
 
 	_mat = ShaderMaterial.new()
 	_mat.shader = load("res://scripts/os/adjust.gdshader")
@@ -82,8 +171,7 @@ func launch(node) -> void:
 
 	var code := str(data.get("code", ""))
 	if code != "":
-		_place_code(vp, data, code)
-		GameManager.scopri_in(code)   # basta aprire la foto, senza regolarla
+		_place_code(vp, data, code)   # "trovata" per le statistiche solo quando si legge
 
 	var view := TextureRect.new()
 	view.texture = vp.get_texture()
@@ -127,15 +215,13 @@ func launch(node) -> void:
 	title.text = tr("IV_TITLE")
 	col.add_child(title)
 
-	_add_slider(col, tr("IV_BRIGHTNESS"), "brightness", -0.7, 0.7)
-	_add_slider(col, tr("IV_CONTRAST"), "contrast", 0.2, 8.0)
-	_add_slider(col, tr("IV_SATURATION"), "saturation", 0.0, 3.0)
-	_add_slider(col, tr("IV_BLACK_POINT"), "black_point", 0.0, 0.95)
-	_add_slider(col, tr("IV_WHITE_POINT"), "white_point", 0.05, 1.0)
-	# Il passa-banda: separa la scritta dal dettaglio della foto per DIMENSIONE, non per
-	# intensita' (vedi adjust.gdshader). E' lo strumento che rende la chiave trovabile su
-	# qualsiasi foto, senza doverla ritoccare.
-	_add_slider(col, tr("IV_SHARPNESS"), "detail", 0.0, 1.0)
+	_add_slider(col, tr("IV_BRIGHTNESS"), "brightness")
+	_add_slider(col, tr("IV_CONTRAST"), "contrast")
+	_add_slider(col, tr("IV_SATURATION"), "saturation")
+	_add_slider(col, tr("IV_BLACK_POINT"), "black_point")
+	_add_slider(col, tr("IV_WHITE_POINT"), "white_point")
+	# il passa-banda (vedi adjust.gdshader): uno dei possibili ingredienti della ricetta
+	_add_slider(col, tr("IV_SHARPNESS"), "detail")
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -170,19 +256,10 @@ func _place_code(vp: SubViewport, data: Dictionary, code: String) -> void:
 	var tsz := font.get_string_size(code, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize)
 
 	var base: Color = data.get("code_base", Color(0.5, 0.5, 0.5))
-	var delta: float = float(data.get("code_delta", OSContent.CODE_DELTA_MIN))
-	# Verso dello scarto: si schiarisce sui fondi scuri, si scurisce su quelli chiari
-	# (altrimenti a caso, stabile per run). Diviso per l'opacita': quello che conta e'
-	# lo scarto del risultato COMPOSTO, e la Label e' semi-trasparente.
-	var lum: float = (base.r + base.g + base.b) / 3.0
-	var segno := 1.0
-	if lum > 0.75:
-		segno = -1.0
-	elif lum >= 0.25 and r.randf() < 0.5:
-		segno = -1.0
-	var d: float = segno * delta / maxf(0.05, OSContent.CODE_ALPHA)
+	var ricetta: Array = data.get("ricetta", [])
+	# Verso dello scarto: quello che ai valori della ricetta resta piu' leggibile.
+	var d: float = verso_migliore((base.r + base.g + base.b) / 3.0, ricetta) * CODE_FORZA
 	var c := Color(clampf(base.r + d, 0, 1), clampf(base.g + d, 0, 1), clampf(base.b + d, 0, 1))
-	c.a = OSContent.CODE_ALPHA   # semi-trasparente: la foto traspare, niente "macchia" piatta
 
 	# posizione scelta in fase di generazione, tenuta dentro i bordi della foto
 	var uv: Vector2 = data.get("code_uv", Vector2(0.5, 0.5))
@@ -201,7 +278,21 @@ func _place_code(vp: SubViewport, data: Dictionary, code: String) -> void:
 	lbl.position = uv * vps - tsz * 0.5
 	lbl.rotation = deg_to_rad(r.randf_range(-OSContent.CODE_TILT, OSContent.CODE_TILT))
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.modulate.a = 0.0   # a riposo non c'e': la fa comparire solo la ricetta
 	vp.add_child(lbl)
+	_lbl = lbl
+
+# Ricalcola quanto si vede la scritta dai cursori attuali.
+func _aggiorna_codice() -> void:
+	if _lbl == null:
+		return
+	var valori := {}
+	for e in _sliders:
+		valori[e["param"]] = (e["node"] as HSlider).value
+	var r := rivelazione(_data.get("ricetta", []), valori)
+	_lbl.modulate.a = CODE_OPACITA * r
+	if r >= 0.6:
+		GameManager.scopri_in(_lbl.text)
 
 # Dimensione del SubViewport: aspetto della foto, rimpicciolito per stare entro maxv
 # (mai ingrandito oltre l'originale).
@@ -211,23 +302,25 @@ func _fit_size(src: Vector2, maxv: Vector2) -> Vector2i:
 	var s: float = minf(1.0, minf(maxv.x / src.x, maxv.y / src.y))
 	return Vector2i(maxi(8, int(src.x * s)), maxi(8, int(src.y * s)))
 
-func _add_slider(parent: VBoxContainer, text: String, param: String, minv: float, maxv: float) -> void:
+func _add_slider(parent: VBoxContainer, text: String, param: String) -> void:
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # un nome lungo va a capo, non esce
 	parent.add_child(lbl)
 	var s := HSlider.new()
-	s.min_value = minv
-	s.max_value = maxv
+	s.min_value = (CORSE[param] as Vector2).x
+	s.max_value = (CORSE[param] as Vector2).y
 	s.step = 0.01
 	s.value = float(DEFAULTS[param])
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	s.value_changed.connect(func(value: float): _mat.set_shader_parameter(param, value))
+	s.value_changed.connect(func(value: float):
+		_mat.set_shader_parameter(param, value)
+		_aggiorna_codice())
 	parent.add_child(s)
 	var aria := Control.new()   # stacco fra un cursore e il nome del successivo
 	aria.custom_minimum_size = Vector2(0, 8)
 	parent.add_child(aria)
-	_sliders.append({"node": s, "default": float(DEFAULTS[param])})
+	_sliders.append({"node": s, "default": float(DEFAULTS[param]), "param": param})
 
 # Riporta cursori e shader ai valori di default (l'immagine torna "non regolata").
 func _reset() -> void:
