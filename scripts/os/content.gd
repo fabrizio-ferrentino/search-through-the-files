@@ -72,6 +72,8 @@ const PHOTO_TINTS := ["5a5560", "625a52", "525e58", "5c5c4e", "565c66", "604f52"
 # dei placeholder procedurali. Il codice del run viene comunque sovrapposto a runtime
 # dal visualizzatore (la chiave cambia ogni partita: un file fisso non puo' contenerla).
 const PHOTO_DIR := "res://assets/textures/photos/"
+# Foto nella cartella Immagini a ogni partita: fisse, scelta del proprietario (27/11/2026).
+const PHOTO_COUNT := 5
 
 # Testi portatori della chiave in un FILE di testo.
 const _FILE_CARRIERS := ["FT_CARRIER_1", "FT_CARRIER_2", "FT_CARRIER_3", "FT_CARRIER_4"]
@@ -476,13 +478,13 @@ static func _make_photos(rng: RandomNumberGenerator) -> Array:
 	var photos: Array = []
 
 	if files.is_empty():
-		var count := rng.randi_range(3, 4)
+		var count := PHOTO_COUNT
 		var nomi := _nomi_foto(count, seme_nomi)
 		for i in range(count):
 			photos.append(_photo_proc(nomi[i], rng.randi(), _pick(PHOTO_TINTS, rng)))
 	else:
 		var pool := _shuffled(files, rng)
-		var count: int = mini(pool.size(), rng.randi_range(3, 4))
+		var count: int = mini(pool.size(), PHOTO_COUNT)
 		var nomi := _nomi_foto(count, seme_nomi)
 		for i in range(count):
 			photos.append(_photo_file(nomi[i], str(pool[i])))

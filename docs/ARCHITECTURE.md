@@ -270,7 +270,7 @@ separated from the code that builds/renders it. The 4 keys (owner's map since
   are the only legal places — nothing can sit inside the compressed scan — and before
   2026-09-20 it was always the same line (7 of 31). `tests/photo_file_key_test` fails if the
   position stops varying.
-- **Photos** — `_make_photos` builds 3–4 image nodes (`filetype:"image"`) and hides
+- **Photos** — `_make_photos` builds `PHOTO_COUNT` (5) image nodes (`filetype:"image"`) and hides
   the **image key** in one of them (a `code` field). Source: if `PHOTO_DIR`
   (`res://assets/textures/photos/`) holds author images, the run draws a seeded subset
   (file nodes carry a `path`); otherwise it falls back to **procedural** nodes
