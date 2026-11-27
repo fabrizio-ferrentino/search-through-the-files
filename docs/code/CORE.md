@@ -298,6 +298,18 @@ Camera3D: look-around, raycast clicks (incl. torch door-clicks),
 enter/exit PC, monitor quad, and the room's WorldEnvironment
 darkness (_setup_atmosphere: clean dark, NO fog — FNAF4 style;
 @export "Buio" group).
+OS resolution (2026-11-27, owner: asked whether the desktop needed bigger text; at 1:1 the page
+body text, ~12 px under the CRT, was tiring to read and the desktop looked emptier than a period
+Win95): the OS SubViewport runs at OS_SIZE = 1280x960 and the PC overlay shows it stretched to
+OS_VISTA = 1440x1080 (linear filtering, centred on the 1920 base), so everything in the OS
+(text, windows, icons) looks 12.5% larger. 1152x864 (+25%) was tried and judged too big. Mouse
+events to the OS go through the static schermo_a_os() (a Transform2D: removes the 240 px left
+margin and scales 1440->1280), used by _forward_to_os (InputEvent.xformed_by, so position,
+relative and velocity together) and _update_pc_cursor. The CRT shader's screen_size = OS_SIZE.
+The 3D monitor still samples the same viewport texture. Side changes: schermo_blu.gd FONT_PX
+30 -> 27 (keeps ~80 columns on 1280 px); apparizione.gd "buio" flicker falling time constant
+0.025 -> 0.03 s (at 25 ms a fall to near-dark could jump >0.25 alpha in 1/30 s and fail
+virus_test BUIO_LAMPADINA: a latent issue surfaced by the different rng sequence).
 PC audio (2026-10-23, owner: "quando sono nel pc va bene mono, ma poi deve
 arrivare da avanti, dal pc"): _process calls _aggiorna_audio_pc(delta) every
 frame: inside the PC -> AudioPC.dentro(delta); otherwise
@@ -310,7 +322,7 @@ Look positions: pos_right = -90 (2026-10-23, was -70: turning right you
 look straight down the corridor, which is on the eye axis). Everything
 reads the variable (threat_director _facing_zone, arrows, tests).
 Monitor quad (2026-10-23, owner: "si vede male ... lo schermo con delle
-scanalature"): the 1440x1080 OS image shrunk to ~200 px on screen gave a
+scanalature"): the OS image (then 1440x1080) shrunk to ~200 px on screen gave a
 moire. The quad shows the SubViewport's ViewportTexture DIRECTLY (live every
 frame, the owner's requirement) through scripts/os/schermo_monitor.gdshader:
 each pixel averages 4x4 bilinear taps spread over its footprint in the

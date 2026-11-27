@@ -4,6 +4,18 @@ What every test proves and how it was sabotaged. Run them through the godot-test
 
 Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only a one-line map).
 
+## OS size in the harnesses (2026-11-27)
+
+The OS runs at 1280x960 (`OS_SIZE`, shown at 1440x1080). Every OS harness takes its size from
+`preload("res://scripts/player.gd").OS_SIZE`, no hard-coded 1440x1080. Exception:
+`selection_ghost.gd` (run with -s, which does not see the GameManager autoload, so it cannot
+preload player.gd) has a literal 1280x960 with a comment: change it with OS_SIZE. Also:
+browser_click_test / browser_e2e pixel scans and selection_ghost's empty-area click are bounded
+to VP_SIZE; browser_e2e TABELLA_LARGHEZZA threshold is 90% of VP_SIZE.x; virus_test maps the
+debug-panel point with `_player.schermo_a_os()`; crt_look_check / glitch_look_check compute the
+OS->screen scale from OS_SIZE.y; icone_check places the browser at (160,80). A test that pushes
+screen coordinates into the room must use `schermo_a_os()`.
+
 ## Files
 
 ### `tests/`
@@ -181,7 +193,7 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   1500 s; owner asked for "test accurati" to find the problems of the sites and components. For
   every language (en, it) it rebuilds the web with `debug_tutti_i_siti` on, and opens EVERY page of
   EVERY site of the catalog in the REAL BrowserApp at the in-game window size (820x560 host in a
-  1440x1080 SubViewport, `attesa_scala = 0`), using it as the player would. Checks, each printed as
+  SubViewport of OS_SIZE (1440x1080 when written, 1280x960 since 2026-11-27), `attesa_scala = 0`), using it as the player would. Checks, each printed as
   `PASS/FAIL name (N verifiche, M problemi)` with the first 25 problems and the page:
   APRE (the page opens: not the 404, not "server not found"); LARGHEZZA (the content is at most
   `_page_width() + PageView.PAD` wide, so nothing ends under the scrollbar strip); RESIDUI (the

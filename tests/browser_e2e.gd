@@ -10,7 +10,7 @@ extends Node
 # ============================================================
 
 const OUT_DIR := "C:/Users/ffria/AppData/Local/Temp/claude/z--Progetti-Search-Through-the-Files/1536785d-988b-4eed-baf2-48564844db2c/scratchpad"
-const VP_SIZE := Vector2i(1440, 1080)
+const VP_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 
 var _sub: SubViewport
 var _browser: BrowserApp
@@ -162,7 +162,7 @@ func _ready() -> void:
 			if absf(bp.r - 0.227) < 0.07 and absf(bp.g - 0.353) < 0.07 and absf(bp.b - 0.184) < 0.07:
 				conta += 1
 		banda = maxi(banda, conta)
-	_check("TABELLA_LARGHEZZA", banda > 1100, "il banner width=100%% risulta largo %d px su %d" % [banda, VP_SIZE.x])
+	_check("TABELLA_LARGHEZZA", banda > int(VP_SIZE.x * 0.9), "il banner width=100%% risulta largo %d px su %d" % [banda, VP_SIZE.x])
 
 	# --- la WIKI (home) non deve MAI contenere la chiave del run ---
 	_browser._load("home")
@@ -185,9 +185,9 @@ func _ready() -> void:
 	# il PRESS fissa l'ancora solo SUI GLIFI: trova una riga di testo scuro nella pagina
 	var page := _sub.get_texture().get_image()
 	var a := Vector2(150, 260)
-	for y in range(180, 800, 2):
+	for y in range(180, VP_SIZE.y - 280, 2):
 		var xs: Array = []
-		for x in range(60, 1200, 2):
+		for x in range(60, VP_SIZE.x - 240, 2):
 			var pc := page.get_pixel(x, y)
 			if pc.r < 0.25 and pc.g < 0.25 and pc.b < 0.25:
 				xs.append(x)

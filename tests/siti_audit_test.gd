@@ -37,7 +37,7 @@ func _ready() -> void:
 	GameManager.debug_tutti_i_siti = true
 	BrowserApp.attesa_scala = 0.0
 	_sub = SubViewport.new()
-	_sub.size = Vector2i(1440, 1080)
+	_sub.size = preload("res://scripts/player.gd").OS_SIZE
 	_sub.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_sub)
 	var host := Control.new()

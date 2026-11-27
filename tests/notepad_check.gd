@@ -14,12 +14,12 @@ func _ready() -> void:
 	GameManager.pc_on = true
 	GameManager.logged_in = true
 	var vp := SubViewport.new()
-	vp.size = Vector2i(1440, 1080)
+	vp.size = preload("res://scripts/player.gd").OS_SIZE
 	vp.transparent_bg = false
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
 	var os: OSDesktop = load("res://scripts/os/desktop.gd").new()
-	os.size = Vector2(1440, 1080)
+	os.size = Vector2(preload("res://scripts/player.gd").OS_SIZE)
 	vp.add_child(os)
 	for k in range(3):
 		await get_tree().process_frame

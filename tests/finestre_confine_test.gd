@@ -26,7 +26,7 @@ extends Node
 #   & $godot --headless --path $proj res://tests/finestre_confine_test.tscn
 # ============================================================
 
-const OS_SIZE := Vector2i(1440, 1080)
+const OS_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 const LONTANO := 3000.0      # oltre il bordo di sicuro, da qualunque punto si parta
 const EPS := 1.0
 

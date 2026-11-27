@@ -31,7 +31,7 @@ extends Node
 #   & $godot --path $proj res://tests/browser_click_test.tscn
 # ============================================================
 
-const VP_SIZE := Vector2i(1440, 1080)
+const VP_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 # Le pagine di prova sono FISSE e stanno qui, non nei siti: il test trova i punti da
 # cliccare guardando i pixel (il blu dei link, il testo neutro), e un sito ridisegnato
 # lo faceva fallire senza che il browser avesse niente (24/10/2026: la fascia blu notte
@@ -263,11 +263,11 @@ func _trova(pagina: String, cerca_link: bool, salta := 0) -> Vector2:
 	var img := _sub.get_texture().get_image()
 	var sfondo: Color = _browser._page_bg.color
 	var da: int = int(_pagina.get_global_rect().position.y) + 4 + salta
-	for y in range(da, 1000, 2):
+	for y in range(da, VP_SIZE.y - 80, 2):
 		var xs: Array = []
 		var forza_max := -1.0
 		var x_forte := -1
-		for x in range(40, 1300, 2):
+		for x in range(40, VP_SIZE.x - 140, 2):
 			var c := img.get_pixel(x, y)
 			var ok := false
 			if cerca_link:

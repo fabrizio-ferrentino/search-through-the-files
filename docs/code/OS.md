@@ -175,7 +175,7 @@ Why at all: the monitor is a fixed 4:3, there is no second screen
 and no scrolling desktop, so whatever goes past the border cannot
 be brought back with the mouse. Before, a drag could leave just
 40 px on screen and a RESIZE had no limit whatsoever (measured by
-the test's sabotage run: right edge at 3900 on a 1440 screen).
+the test's sabotage run: right edge at 3900 on a 1440 screen; the OS is 1280 wide since 2026-11-27).
 Test: finestre_confine_test.tscn.
 ONLY THE OUTLINE MOVES (2026-09-21, owner's request: the Win95
 look): dragging or resizing a window shows a DOTTED RECTANGLE and

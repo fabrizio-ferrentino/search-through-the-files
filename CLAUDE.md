@@ -44,7 +44,7 @@ Main Menu (main_menu.tscn) ─ Start ─► Room (main.tscn)
    ├─ Camera3D ← player.gd (look around, click, torch, enter/exit PC)
    ├─ Monitor + MonitorScreen (quad showing the OS viewport live)
    └─ spawned by player.gd:
-        ├─ SubViewport 1440×1080 ── OSDesktop (desktop.gd): the whole fake OS
+        ├─ SubViewport 1280×960 (shown at 1440×1080) ── OSDesktop (desktop.gd): the whole fake OS
         ├─ CanvasLayer "PCLayer" ── fullscreen CRT overlay (only when "inside")
         └─ ThreatDirector (room enemies) + VirusDirector (PC viruses)
 ```
@@ -158,6 +158,7 @@ NOT implemented yet: real enemy models/animations (placeholders, owner's art com
 - player.gd reaches room nodes by relative path; the monitor's desktop is drawn on the MODEL's
   own screen triangles (`_vetro_del_modello`, found by their atlas UV rect); the hidden node
   `test-schermo` only gives the orientation (and the flat-quad fallback).
+- Screen coordinates pushed into the room (tools, tests) go through `player.schermo_a_os()`, not a bare "minus 240".
 - Never hand-edit UIDs; `.godot/` is cache.
 
 ## 8. Working with Claude on this project (saving tokens)

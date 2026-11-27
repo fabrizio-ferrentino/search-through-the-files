@@ -24,7 +24,7 @@ extends Node
 #   & $godot --headless --path $proj res://tests/browser_chrome_test.tscn
 # ============================================================
 
-const VP_SIZE := Vector2i(1440, 1080)
+const VP_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 
 var _sub: SubViewport
 var _app: BrowserApp

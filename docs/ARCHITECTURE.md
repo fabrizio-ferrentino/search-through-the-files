@@ -70,7 +70,7 @@ login, and the desktop are all visible *live* on the 3D monitor before you ever
 dive in.
 
 ```
-SubViewport (1440×1080, UPDATE_ALWAYS)
+SubViewport (1280×960, UPDATE_ALWAYS; shown stretched to 1440×1080)
    └─ OSDesktop (desktop.gd)         ← the entire fake OS
         │  get_texture()
         ├──────────────► MonitorScreen quad   (3D, in the room)
@@ -119,7 +119,8 @@ Responsibilities:
   zoom) and fades the room to black, then reveals `PCLayer`. `_exit_pc()` fades
   the overlay, hides it, and tweens the camera back to its home pose.
 - **Input forwarding while inside the PC:** `_forward_to_os()` duplicates mouse
-  events, offsets their position into screen space, and calls
+  events, maps them into OS space with `schermo_a_os()` (removes the 240 px margin, scales
+  1440→1280), and calls
   `SubViewport.push_input()`. `_update_pc_cursor()` asks the OS
   `cursor_shape_at()` and applies the shape to the overlay's background
   `ColorRect` (the SubViewport does not control the real cursor).
@@ -129,7 +130,9 @@ Responsibilities:
   `_kill_monitor_emission()` disables the 3D model's green "fake terminal"
   emissive so the real OS shows through.
 
-Key constants: `OS_SIZE = Vector2i(1440, 1080)`, exported `fly_time`,
+Key constants: `OS_SIZE = Vector2i(1280, 960)` (the viewport) and `OS_VISTA = Vector2(1440, 1080)`
+(the overlay rectangle, centred on the 1920 base; 2026-11-27, everything in the OS looks 12.5%
+larger), exported `fly_time`,
 `fly_fov_zoom`, and the screen-panel tuning (`screen_w/h/push/nudge`).
 
 ---

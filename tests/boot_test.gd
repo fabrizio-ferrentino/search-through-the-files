@@ -22,7 +22,7 @@ extends Node
 #   & $godot --path $proj res://tests/boot_test.tscn
 # ============================================================
 
-const OS_SIZE := Vector2i(1440, 1080)
+const OS_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 const OUT := "user://avvio/"
 const LIMITE := 8.0        # attesa massima per una fase, poi e' un guasto
 

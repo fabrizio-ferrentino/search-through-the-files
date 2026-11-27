@@ -26,7 +26,7 @@ extends Node
 #   & $godot --headless --path $proj res://tests/page_load_test.tscn
 # ============================================================
 
-const VP_SIZE := Vector2i(1440, 1080)
+const VP_SIZE: Vector2i = preload("res://scripts/player.gd").OS_SIZE
 const OUT := "user://caricamento/"
 const LIMITE := 6.0        # se un caricamento non finisce entro tanto, e' un guasto
 
