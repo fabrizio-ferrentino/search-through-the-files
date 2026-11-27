@@ -65,9 +65,10 @@ Test: filesystem_test.tscn.
 From the run seed it builds the filesystem tree,
 generates the run's photos, and places the DISK (file or folder)
 and IMAGE keys
-at random (for the IMAGE key it also picks WHERE to hide it —
-_prepare_hiding_spot, scoring by BAND-PASS energy — and which
-photo carries it, chosen uniformly at random). (The WEB sites
+at random (for the IMAGE key it draws the route, file or pixels; for the pixel route a secret
+RECIPE (one slider + direction) and the point of the code - `_ricetta`, `_punto_codice`, see PHOTO_KEY.md - and
+which photo carries it, chosen uniformly at random; photos are named like a 1997-99 camera,
+`_nomi_foto`, one camera per run). (The WEB sites
 moved to web_runtime.gd — content.gd no
 longer holds the site pool; it keeps the KEY_* indices + key_label.)
 

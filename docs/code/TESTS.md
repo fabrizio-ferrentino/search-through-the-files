@@ -251,26 +251,22 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   second item sets the value `b` and closes the list). If the controls cannot be found it prints
   FAIL MODULI_TROVATI. Sabotages: none recorded when this was written,
 
-- photo_key_test.tscn/.gd (the photo key: per-photo census with
-  the findability FLOOR vs the invisibility CEILING and whether the
-  spot is feasible at all, a visibility ceiling calibrated against
-  real full-window renders, and a 60-run carrier-uniformity check
-  across all photos — windowed),
+- photo_key_test.tscn/.gd (REWRITTEN 2026-11-27, HEADLESS, 120 seeds: the recipe is one slider
+  with an allowed direction (`VERSI`); reveal zero at rest (B_A_RIPOSO_ZERO); the right slider at
+  its end > 0.95; wrong direction ~0; monotonic and gradual along the travel; every wrong slider
+  alone at either end ~0; the fallback with three sliders at the end > 0.95; stand-out >=
+  CODE_STACCO_MIN; recipes and carriers vary. Sabotage: forcing the reveal to 1 turns
+  B_A_RIPOSO_ZERO red),
 
-- photo_reveal_test.tscn/.gd (THE REAL GATE for the photo key:
-  per-GLYPH legibility through the real shader, sweeping the
-  "Nitidezza" uniform; masks from the composition upstream, values
-  from the post-shader viewport downstream. Reports LEG = how well
-  the WORST glyph separates at the best slider position, plus the
-  at-rest watermark per glyph and the true band ratio — windowed),
+- photo_lab.tscn/.gd (NEW 2026-11-27, dev tool, WINDOWED, English UI: the real viewer + a photo
+  picker; recipe seed -> slider + direction; "Show the solution" pushes the right slider to its
+  end; code position/rotation; live "taste" sliders for DIR_INIZIO, DIR_PIENO, TOT_INIZIO,
+  TOT_PIENO, CODE_FORZA, CODE_OPACITA (static vars for that reason); live reveal %),
 
 - photo_file_key_test.tscn/.gd (the photo key's SECOND route, the code
   in the file's BYTES: over 40 seeds both routes occur, FILE mode keeps
   the code out of the pixels and PIXEL mode out of the dump, decoys stay
   clean, and the comment's position in the dump varies — headless),
-
-- photo_banda_scan.tscn/.gd (dev tool: the quietest spot in the
-  shader's real band on each photo and the offset it would need),
 
 - seme_menu_test.tscn/.gd (headless, 2026-11-25: Start opens the new-game screen and does not
   start yet (AVVIA_APRE_LA_SCELTA); the seed field keeps digits only and "Gioca" stays disabled
@@ -294,9 +290,13 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   shows "Reimposta" whole (PICCOLA_SI_SCORRE). Sabotaged (scroll bar never shown): red.
   Saves user://visualizzatore_apertura.png and visualizzatore_piccolo.png),
 
-- photo_chain_test.tscn/.gd (the code must survive the REAL chain:
-  viewer window -> OS screen -> game window + CRT, and the sliders
-  must reveal it — windowed),
+- photo_chain_test.tscn/.gd (the code must survive the REAL chain: viewer window -> OS screen ->
+  game window + CRT. Windowed, reworked 2026-11-27, checks on the real screen: at rest 0 pixels
+  of code; the right slider at 40% of its side = less than full (GRADUALE); at the end readable.
+  Measured with "detail up": rest 0 px, 40% 1764 px / 170 levels, end 1660 px / 188 levels)),
+
+- Removed 2026-11-27 with the watermark route: photo_reveal_test, photo_banda_scan,
+  photo_look_check (band-pass measurements and the by-eye strip; superseded by photo_lab).
 
 - minacce_stanza_test.tscn/.gd (WINDOWED. The ROOM THREATS in the
   real room with the real ThreatDirector, its clock run by the test
@@ -365,10 +365,6 @@ Moved here from CLAUDE.md on 2026-10-22, word for word (CLAUDE.md now keeps only
   1920x1080. It waits for the room's 1 s opening fade: its first
   run photographed mid-fade and "found" the monitor at a third of
   its brightness, pure white measuring 94/255),
-
-- photo_look_check.tscn/.gd (dev tool: side-by-side original vs
-  shown photo + a CPU band-pass reveal crop, to judge the watermark
-  by eye),
 
 - cartella_segreta_test.tscn/.gd (WINDOWED - it reads pixels. The
   WIN CONDITION, which had no test at all, and its guasto: one
