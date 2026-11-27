@@ -220,8 +220,8 @@ alarm; STAYS = real, switch the PC off before it kills. It never
 turns into something else: in the real one it only grows slowly
 (crescita = VirusMortale.DURATA, intensita 0..1), "more of the
 same". Real and false START IDENTICAL (COMPARSA 0.25 s curve, same
-spot). SEVEN TIPI (PESI picks, all equal for now - the owner can
-make the grave ones rarer): four SMALL ones that live ONLY in the
+spot). SIX TIPI (PESI picks, all equal for now - the owner can
+make the grave ones rarer): three SMALL ones that live ONLY in the
 wallpaper (OSDesktop.sopra_sfondo: under icons and windows) or the
 clock - "bambino" (the curse SHOWS
 ITSELF as a child with a noose - GDD §2b - MADE OF BLACK ASCII
@@ -272,13 +272,7 @@ white characters where the eye is light, dark ones
 follows the cursor (guarda_test in the tests), cell by cell;
 they open and blink. Two stylised "(%@@@@%)" eyes were rejected:
 the owner wanted real ones), "orologio" (OSDesktop.orologio_finto:
-time backwards, 03:33, --:--), "scritte" (a VIRUS_SCRITTA_* line
-that TYPES ITSELF on the wallpaper like a terminal line: a red
-">" prompt, the letters appearing one by one in SCRITTA_DIGITA
-0.9 s - Label.visible_characters, so the Label's text stays the
-whole sentence - and a blinking "_" cursor, WHITE mono bold with
-no smear behind, in
-the wallpaper) - and three GRAVE ones, apparitions like the others
+time backwards, 03:33, --:--) - and three GRAVE ones, apparitions like the others
 with the same rule: "buio" (since 2026-10-19, owner: it used to
 darken only the wallpaper - now the WHOLE screen goes dark: windows,
 icons, taskbar, AND the Start menu and dialogs opened LATER, Shut
@@ -310,7 +304,14 @@ barcode; then the tips were a separate round ball, wider and
 brighter with a dot of shine, plus loose spatter dots and round
 falling drops - "le gocce appaiono come pallini": all gone) and "tremito"
 (the window layer shakes; pulisci puts it back at 0).
-History, so it does not come back: a third grave one, "lampeggio"
+History, so it does not come back: a small one, "scritte" (a
+VIRUS_SCRITTA_* phrase that typed itself on the wallpaper like a
+terminal line: red ">" prompt, letters one by one, blinking "_"),
+was REMOVED on 2026-11-27 (owner, in Italian: "elimina il virus
+'scritte' come virus"): TIPI, PICCOLE, PESI, the SCRITTE and
+SCRITTA_* constants, _scritte/_battute/_aggiungi_scritta and the
+VIRUS_SCRITTA_1..6 keys in ui.csv are gone; the header of
+apparizione.gd says so, like "lampeggio". A third grave one, "lampeggio"
 (the whole screen flashing red like a heartbeat), was REMOVED -
 the owner did not like it at all. A version with a quiet first
 phase that escalated into a red/blood second phase was rejected
@@ -400,9 +401,9 @@ foundation for M5. NOT the secret folder any more (see below).
 
 - **PC viruses** (M5, 2026-10-18): `scripts/threats/virus_director.gd` runs three, rare
   and one at a time (first after 3 min of PC on, then every 2-4 min; only while the player
-  is inside the PC): the **lethal** one (an **apparition**, `scripts/os/apparizione.gd`: four small
+  is inside the PC): the **lethal** one (an **apparition**, `scripts/os/apparizione.gd`: three small
   ones in the wallpaper or the clock - the hanged child (detailed black ASCII characters), two
-  realistic eyes made of characters, wrong time, a line that types itself - and three grave ones - the whole screen going dark and
+  realistic eyes made of characters, wrong time - and three grave ones - the whole screen going dark and
   flickering, blood dripping over the windows, shaking windows. The same apparitions come alone every 3-5 min as **false alarms** that vanish in
   2-2.5 s; the real one stays and grows: power off within 10 s - Start > Shut down or
   the case - or `game_over("virus")`), **YouAreStupid** (a burst of bouncing smiley windows that
