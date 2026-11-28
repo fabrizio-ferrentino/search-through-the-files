@@ -189,6 +189,9 @@ Threat *inside* the machine + atmosphere. Viruses per GDD §7.2.
   "hunting", messages — escalating to a PC jumpscare.
 - [ ] **Glitch-as-clue (optional).** Let a glitch momentarily reveal/conceal a
   key, marrying horror to puzzle.
+- [ ] **Fixed PC clock (owner, 2026-11-28).** The taskbar clock shows a FIXED time, e.g.
+  "01:01", not the player's real time. Touches `OSDesktop.ora_vera()` / `_update_clock` and
+  the tests that compare the clock with the real time (`virus_test` `_orologio_giusto`).
 
 ## Milestone 6 — Audio & polish
 - [ ] **Audio pass:** CRT hum, key clicks, dial-up, HDD chatter, drone that
