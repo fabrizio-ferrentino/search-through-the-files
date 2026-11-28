@@ -1,13 +1,15 @@
 class_name DebugPanel
 extends CanvasLayer
 
-# Il PANNELLO DI DEBUG (F12, DEV-ONLY: da togliere prima del rilascio). Era solo
-# un'etichetta con le chiavi; il proprietario (18/10/2026) non riusciva a far comparire a
-# comando tutte le minacce -- F9 gira fra i tre virus e l'apparizione del mortale esce a
-# caso -- quindi ora ha i PULSANTI: ogni apparizione vera o falsa, ogni virus, l'affaccio
-# del Jester, gli interruttori delle minacce, il PC dritto al desktop; e uno STATO che si
-# aggiorna da solo (cosa fa il Jester, fra quanto il prossimo virus, e PERCHE' un virus
-# adesso non puo' partire), piu' una riga con l'esito dell'ultimo pulsante.
+# Il PANNELLO DI DEBUG (F12, DEV-ONLY: da togliere prima del rilascio). Nato come etichetta
+# con le chiavi; il proprietario (18/10/2026) non riusciva a far comparire a comando tutte
+# le minacce, quindi ha i PULSANTI per ogni apparizione vera o falsa, ogni virus, gli
+# affacci, Ghosty, gli interruttori e il PC dritto al desktop, piu' uno STATO che si
+# aggiorna da solo e una riga con l'esito dell'ultimo pulsante.
+# Rifatto il 28/11/2026 (proprietario: "ora e' un casino, non si capisce molto, rendila
+# piu' semplice"): in alto SEMPRE le chiavi e i tre interruttori, sotto TRE SCHEDE (Room,
+# PC, Viruses) ognuna col suo stato e i suoi pulsanti, invece di un muro unico. Colori:
+# verde = acceso/riuscito, rosso = spento/rifiutato, ambra = chiavi e scheda aperta.
 # Tutto il testo e' in INGLESE, come tutto il debug, e non passa dal CSV.
 # Il mouse sopra il pannello e' del pannello: player.gd lo chiede a
 # GameManager.debug_sotto_mouse e non lo gira ne' alla stanza ne' al PC (senza, un clic su
@@ -17,27 +19,36 @@ extends CanvasLayer
 # _ready), non per scena corrente -- i test aggiungono la stanza alla radice. Fuori dalla
 # stanza i pulsanti rispondono "not in the room" invece di rompersi.
 
-const LARGO := 540.0
+const LARGO := 620.0
 const MARGINE := 16.0
-const FONT_SIZE := 15
-const C_TESTO := Color(0.95, 0.95, 0.8)
-const C_TITOLO := Color(0.95, 0.8, 0.25)
-const C_GRIGIO := Color(0.6, 0.6, 0.55)
-const C_OK := Color(0.55, 0.95, 0.55)
-const C_NO := Color(1.0, 0.55, 0.45)
-const TASTI := "F8 PC threats  F9 start a virus  Shift+F9 false alarm\nF10 die  F11 room threats  F12 close"
+const SOTTO_FPS := 44.0        # in alto a destra c'e' il contatore FPS (layer 70): si parte sotto
+const C_FONDO := Color("#1b1f2a")
+const C_BORDO := Color("#3a4153")
+const C_TESTO := Color("#e4e7ee")
+const C_SPENTO := Color("#8b92a5")
+const C_AMBRA := Color("#f2c14e")
+const C_OK := Color("#62d67f")
+const C_NO := Color("#ff7a66")
+const C_BOTTONE := Color("#2a3042")
+const TASTI := "F8 PC threats   F9 start a virus   Shift+F9 false alarm   F10 die   F11 room threats   F12 close"
+const SCHEDE := ["Room", "PC", "Viruses"]
 const OGNI := 0.25             # ogni quanto si riscrive lo stato (s)
 const REGISTA_VIRUS := preload("res://scripts/threats/virus_director.gd")   # le sue costanti
 
-var etichetta_chiavi: Label = null   # GameManager._keys_label punta qui (i test la leggono)
 var _box: PanelContainer = null
-var _corpo: VBoxContainer = null
-var _stato: Label = null
-var _esito: Label = null
+var _seme: Label = null
+var _chiavi: VBoxContainer = null
+var _corpo: VBoxContainer = null          # tutto tranne testa e chiavi: lo nasconde "-"
+var _btn_compatto: Button = null
 var _btn_stanza: Button = null
 var _btn_pc: Button = null
 var _btn_siti: Button = null
-var _btn_compatto: Button = null
+var _linguette: Array = []                # i pulsanti delle schede
+var _pagine: Array = []                   # il contenuto delle schede, stesso ordine
+var _stato_stanza: Label = null
+var _stato_pc: Label = null
+var _stato_virus: Label = null
+var _esito: Label = null
 var _passo := 0.0
 
 func _ready() -> void:
@@ -57,7 +68,7 @@ func _process(delta: float) -> void:
 func sotto(pos: Vector2) -> bool:
 	return _box != null and _box.visible and _box.get_global_rect().has_point(pos)
 
-# Tutto il testo del pannello (etichette e pulsanti), per i test.
+# Tutto il testo del pannello (etichette e pulsanti, anche delle schede chiuse), per i test.
 func testo() -> String:
 	var out := []
 	for n in _box.find_children("*", "", true, false):
@@ -80,23 +91,40 @@ func riga_apparizione(tipo: String) -> Array:
 	return [] if r == null else r.find_children("*", "Button", true, false)
 
 func aggiorna() -> void:
-	if etichetta_chiavi == null:
+	if _box == null:
 		return
-	etichetta_chiavi.text = GameManager.keys_report()
-	_btn_stanza.text = "Room threats: " + ("ON" if GameManager.room_threats_enabled else "OFF")
-	_btn_pc.text = "PC threats: " + ("ON" if GameManager.pc_threats_enabled else "OFF")
-	_btn_siti.text = "All sites: " + ("ON" if GameManager.debug_tutti_i_siti else "OFF")
+	_seme.text = "seed %d" % GameManager.run_seed
+	_aggiorna_chiavi()
+	_interruttore(_btn_stanza, "Room threats", GameManager.room_threats_enabled)
+	_interruttore(_btn_pc, "PC threats", GameManager.pc_threats_enabled)
+	_interruttore(_btn_siti, "All sites", GameManager.debug_tutti_i_siti, C_AMBRA, C_SPENTO)
 	_corpo.visible = not GameManager.debug_compatto
 	_btn_compatto.text = "+" if GameManager.debug_compatto else "-"
-	_stato.text = _testo_stato()
+	for i in range(_pagine.size()):
+		(_pagine[i] as Control).visible = i == GameManager.debug_scheda
+		(_linguette[i] as Button).set_pressed_no_signal(i == GameManager.debug_scheda)
+	var td = _regista_stanza()
+	var vd = _regista_virus()
+	_stato_stanza.text = td.stato_debug() if td != null else "Not in the room."
+	_stato_pc.text = _testo_stato_pc(vd)
+	_stato_virus.text = vd.stato_debug() if vd != null else "Not in the room."
+	_esito.visible = _esito.text != ""
 	_disponi()
 
 # In alto a DESTRA (a sinistra ci sono le icone del desktop). A mano e non con le ancore:
-# quando il pannello si compatta deve accorciarsi restando attaccato al bordo.
+# quando il pannello si compatta o cambia scheda deve accorciarsi restando attaccato al bordo.
 func _disponi() -> void:
 	_box.reset_size()
 	var largo_schermo: float = _box.get_viewport_rect().size.x
-	_box.position = Vector2(largo_schermo - _box.size.x - MARGINE, MARGINE)
+	_box.position = Vector2(largo_schermo - _box.size.x - MARGINE, SOTTO_FPS)
+
+# Le quattro righe delle chiavi: codice, tipo, dove sta (il dove va a capo, il codice no).
+func _aggiorna_chiavi() -> void:
+	for i in range(_chiavi.get_child_count()):
+		var riga := _chiavi.get_child(i)
+		(riga.get_child(0) as Label).text = GameManager.key_label(i + 1)
+		(riga.get_child(1) as Label).text = GameManager.key_kind(i + 1)
+		(riga.get_child(2) as Label).text = str(GameManager.key_hints.get(i + 1, "-"))
 
 # ---------------- costruzione ----------------
 
@@ -104,93 +132,179 @@ func _costruisci() -> void:
 	_box = PanelContainer.new()
 	_box.name = "DebugPanel"
 	_box.custom_minimum_size.x = LARGO
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.04, 0.06, 0.92)
-	sb.border_color = Color(0.9, 0.8, 0.2)
-	sb.set_border_width_all(2)
-	sb.set_content_margin_all(10)
-	_box.add_theme_stylebox_override("panel", sb)
+	_box.add_theme_stylebox_override("panel", _stile(C_FONDO, C_BORDO, 6, 12))
 	add_child(_box)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 5)
+	var v := _colonna(8)
 	_box.add_child(v)
 
+	# testa: titolo, seme, Die, compatta
 	var testa := HBoxContainer.new()
+	testa.add_theme_constant_override("separation", 10)
 	v.add_child(testa)
-	var titolo := _etichetta("DEBUG", C_TITOLO)
-	titolo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	testa.add_child(titolo)
+	testa.add_child(_etichetta("Debug", C_TESTO, 20, "sans_b"))
+	_seme = _etichetta("", C_SPENTO, 16)
+	_seme.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	testa.add_child(_seme)
+	var muori := _bottone("Die", _muori)
+	muori.add_theme_color_override("font_color", C_NO)
+	muori.tooltip_text = "game over now (F10)"
+	testa.add_child(muori)
 	_btn_compatto = _bottone("-", _compatta)
+	_btn_compatto.custom_minimum_size.x = 30
 	_btn_compatto.tooltip_text = "show only the keys"
 	testa.add_child(_btn_compatto)
-	etichetta_chiavi = _etichetta("", C_TESTO)
-	v.add_child(etichetta_chiavi)
 
-	_corpo = VBoxContainer.new()
-	_corpo.add_theme_constant_override("separation", 5)
+	# le chiavi: sempre visibili, anche compatto
+	_chiavi = _colonna(6)
+	v.add_child(_chiavi)
+	for i in range(GameManager.KEY_COUNT):
+		var riga := HBoxContainer.new()
+		riga.add_theme_constant_override("separation", 10)
+		var codice := _etichetta("", C_AMBRA, 17, "mono_b")
+		codice.custom_minimum_size.x = 82
+		riga.add_child(codice)
+		var tipo := _etichetta("", C_SPENTO, 13)
+		tipo.custom_minimum_size.x = 56
+		riga.add_child(tipo)
+		var dove := _etichetta("", C_TESTO, 15, "mono")
+		dove.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		dove.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		riga.add_child(dove)
+		_chiavi.add_child(riga)
+
+	_corpo = _colonna(8)
 	v.add_child(_corpo)
-	_sezione("STATUS")
-	_stato = _etichetta("", C_TESTO)
-	_corpo.add_child(_stato)
-
-	_sezione("SWITCHES")
 	_btn_stanza = _bottone("", _cambia_stanza)
 	_btn_pc = _bottone("", _cambia_pc)
-	_riga([_btn_stanza, _btn_pc, _bottone("Die", _muori)])
-
-	_sezione("PC")
-	_riga([_bottone("Boot to desktop", _al_desktop), _bottone("Power off", _spegni)])
-
-	_sezione("WEB  (all sites = the whole catalog answers and the portal lists it)")
 	_btn_siti = _bottone("", _cambia_siti)
-	_riga([_btn_siti, _bottone("Open the portal", _apri_portale)])
+	_btn_siti.tooltip_text = "every site of the catalog answers and the portal lists them all"
+	_corpo.add_child(_riga([_btn_stanza, _btn_pc, _btn_siti]))
 
-	_sezione("ROOM  (Jester and HaloMan never together; Ghosty comes from behind)")
-	_riga([_bottone("Jester: peek now", _affaccio.bind("jester")),
-			_bottone("HaloMan: peek now", _affaccio.bind("halo")),
-			_bottone("Peek: send away", _via)])
-	_riga([_bottone("Ghosty: come now", _ghosty), _bottone("Ghosty: go away", _ghosty_via)])
+	# le schede
+	var linguette := HBoxContainer.new()
+	linguette.add_theme_constant_override("separation", 2)
+	_corpo.add_child(linguette)
+	for i in range(SCHEDE.size()):
+		var l := _bottone(SCHEDE[i], _apri_scheda.bind(i))
+		l.toggle_mode = true
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		linguette.add_child(l)
+		_linguette.append(l)
+	_pagine = [_scheda_stanza(), _scheda_pc(), _scheda_virus()]
+	var fondo := PanelContainer.new()
+	fondo.add_theme_stylebox_override("panel", _stile(C_FONDO.darkened(0.25), C_BORDO, 4, 10))
+	_corpo.add_child(fondo)
+	var pila := _colonna(0)
+	fondo.add_child(pila)
+	for p in _pagine:
+		pila.add_child(p)
 
-	_sezione("VIRUSES  (start now, skipping the wait)")
-	_riga([_bottone("Lethal (random)", _virus.bind("mortale", "")),
-			_bottone("YouAreStupid", _virus.bind("stupido", "")),
-			_bottone("Blue screen", _virus.bind("crash", ""))])
-	_riga([_bottone("Stop current", _ferma), _bottone("Next virus: no wait", _azzera.bind(false)),
-			_bottone("Next false alarm: no wait", _azzera.bind(true))])
-
-	_sezione("APPARITIONS  REAL = lethal (%d s)  FALSE = gone in %.1f-%.1f s" % [
-			int(VirusMortale.DURATA), REGISTA_VIRUS.FALSO_DURATA[0], REGISTA_VIRUS.FALSO_DURATA[1]])
-	for t in Apparizione.TIPI:
-		var riga := HBoxContainer.new()
-		riga.name = "Riga_" + str(t)
-		var nome := _etichetta(str(t) + ("" if Apparizione.PICCOLE.has(t) else "  (grave)"), C_TESTO)
-		nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		riga.add_child(nome)
-		riga.add_child(_bottone("REAL", _virus.bind("mortale", t)))
-		riga.add_child(_bottone("FALSE", _virus.bind("falso", t)))
-		_corpo.add_child(riga)
-
-	_esito = _etichetta("", C_OK)
+	_esito = _etichetta("", C_OK, 16)
 	_esito.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_corpo.add_child(_esito)
-	v.add_child(_etichetta(TASTI, C_GRIGIO))
+	var tasti := _etichetta(TASTI, C_SPENTO, 13)
+	tasti.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_corpo.add_child(tasti)
 
-func _sezione(testo_sez: String) -> void:
-	var l := _etichetta(testo_sez, C_TITOLO)
-	_corpo.add_child(l)
+func _scheda_stanza() -> VBoxContainer:
+	var s := _colonna(8)
+	_stato_stanza = _stato()
+	s.add_child(_stato_stanza)
+	s.add_child(_riga([_bottone("Jester: peek now", _affaccio.bind("jester")),
+			_bottone("HaloMan: peek now", _affaccio.bind("halo")),
+			_bottone("Peek: send away", _via)]))
+	s.add_child(_riga([_bottone("Ghosty: come now", _ghosty), _bottone("Ghosty: go away", _ghosty_via)]))
+	s.add_child(_nota("Jester and HaloMan never peek together. Ghosty comes from behind: turn around and light it."))
+	return s
 
-func _riga(pulsanti: Array) -> void:
+func _scheda_pc() -> VBoxContainer:
+	var s := _colonna(8)
+	_stato_pc = _stato()
+	s.add_child(_stato_pc)
+	s.add_child(_riga([_bottone("Boot to desktop", _al_desktop), _bottone("Power off", _spegni),
+			_bottone("Open the portal", _apri_portale)]))
+	s.add_child(_nota("Boot to desktop skips the boot and the password."))
+	return s
+
+func _scheda_virus() -> VBoxContainer:
+	var s := _colonna(8)
+	_stato_virus = _stato()
+	s.add_child(_stato_virus)
+	s.add_child(_riga([_bottone("Lethal (random)", _virus.bind("mortale", "")),
+			_bottone("YouAreStupid", _virus.bind("stupido", "")),
+			_bottone("Blue screen", _virus.bind("crash", ""))]))
+	s.add_child(_riga([_bottone("Stop current", _ferma), _bottone("Next virus: no wait", _azzera.bind(false)),
+			_bottone("Next false alarm: no wait", _azzera.bind(true))]))
+	s.add_child(_nota("Apparitions: REAL kills in %d s, FALSE is gone in %.1f-%.1f s." % [
+			int(VirusMortale.DURATA), REGISTA_VIRUS.FALSO_DURATA[0], REGISTA_VIRUS.FALSO_DURATA[1]]))
+	# due colonne di tre: piccole a sinistra, gravi a destra
+	var griglia := GridContainer.new()
+	griglia.columns = 2
+	griglia.add_theme_constant_override("h_separation", 16)
+	griglia.add_theme_constant_override("v_separation", 4)
+	var ordine: Array = Apparizione.PICCOLE.duplicate()
+	var gravi: Array = Apparizione.TIPI.filter(func(t): return not Apparizione.PICCOLE.has(t))
+	for i in range(maxi(ordine.size(), gravi.size())):
+		for lista in [ordine, gravi]:
+			if i < lista.size():
+				griglia.add_child(_riga_apparizione(str(lista[i])))
+			else:
+				griglia.add_child(Control.new())
+	s.add_child(griglia)
+	return s
+
+func _riga_apparizione(t: String) -> HBoxContainer:
+	var riga := HBoxContainer.new()
+	riga.name = "Riga_" + t
+	riga.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var nome := _etichetta(t if Apparizione.PICCOLE.has(t) else t + " (grave)", C_TESTO, 16)
+	nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	riga.add_child(nome)
+	var vero := _bottone("REAL", _virus.bind("mortale", t))
+	vero.add_theme_color_override("font_color", C_NO)
+	riga.add_child(vero)
+	riga.add_child(_bottone("FALSE", _virus.bind("falso", t)))
+	return riga
+
+# ---------------- mattoni ----------------
+
+func _stile(fondo: Color, bordo: Color, raggio: int, margine: float) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fondo
+	sb.border_color = bordo
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(raggio)
+	sb.set_content_margin_all(margine)
+	return sb
+
+func _colonna(spazio: int) -> VBoxContainer:
+	var c := VBoxContainer.new()
+	c.add_theme_constant_override("separation", spazio)
+	return c
+
+func _riga(pulsanti: Array) -> HBoxContainer:
 	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
 	for b in pulsanti:
 		(b as Button).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(b)
-	_corpo.add_child(h)
+	return h
 
-func _etichetta(t: String, col: Color) -> Label:
+func _stato() -> Label:
+	var l := _etichetta("", C_TESTO, 15, "mono")
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return l
+
+func _nota(t: String) -> Label:
+	var l := _etichetta(t, C_SPENTO, 14)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return l
+
+func _etichetta(t: String, col: Color, size: int, font := "sans") -> Label:
 	var l := Label.new()
 	l.text = t
-	l.add_theme_font_override("font", Win95.font("mono"))
-	l.add_theme_font_size_override("font_size", FONT_SIZE)
+	l.add_theme_font_override("font", Win95.font(font))
+	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", col)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
@@ -199,33 +313,52 @@ func _bottone(t: String, azione: Callable) -> Button:
 	var b := Button.new()
 	b.text = t
 	b.focus_mode = Control.FOCUS_NONE        # lo spazio e l'Invio restano al gioco
-	b.add_theme_font_override("font", Win95.font("mono"))
-	b.add_theme_font_size_override("font_size", FONT_SIZE - 1)
+	b.add_theme_font_override("font", Win95.font("sans"))
+	b.add_theme_font_size_override("font_size", 15)
+	var normale := _stile(C_BOTTONE, C_BOTTONE, 4, 6)
+	normale.content_margin_top = 4
+	normale.content_margin_bottom = 4
+	var sopra := normale.duplicate() as StyleBoxFlat
+	sopra.bg_color = C_BOTTONE.lightened(0.15)
+	sopra.border_color = sopra.bg_color
+	var premuto := normale.duplicate() as StyleBoxFlat
+	premuto.bg_color = C_AMBRA
+	premuto.border_color = C_AMBRA
+	b.add_theme_stylebox_override("normal", normale)
+	b.add_theme_stylebox_override("hover", sopra)
+	b.add_theme_stylebox_override("pressed", premuto)
+	b.add_theme_stylebox_override("hover_pressed", premuto)
+	for k in ["font_color", "font_hover_color"]:
+		b.add_theme_color_override(k, C_TESTO)
+	for k in ["font_pressed_color", "font_hover_pressed_color"]:
+		b.add_theme_color_override(k, C_FONDO)
 	b.pressed.connect(azione)
 	return b
 
+# Un interruttore dice il suo stato a parole E a colori: verde acceso, rosso spento.
+# (All sites e' spento di norma: grigio, e ambra quando e' acceso.)
+func _interruttore(b: Button, nome: String, on: bool, c_on := C_OK, c_off := C_NO) -> void:
+	b.text = "%s: %s" % [nome, "ON" if on else "OFF"]
+	var col: Color = c_on if on else c_off
+	b.add_theme_color_override("font_color", col)
+	b.add_theme_color_override("font_hover_color", col)
+
 # ---------------- stato ----------------
 
-func _testo_stato() -> String:
-	var righe := []
+func _testo_stato_pc(vd) -> String:
 	var os = _os()
-	var pc := "OFF"
+	var pc := "off"
 	if GameManager.pc_on:
 		if os != null and os._booting:
-			pc = "ON - booting"
+			pc = "on, booting"
 		elif not GameManager.logged_in:
-			pc = "ON - login"
+			pc = "on, at the login"
 		else:
-			pc = "ON - desktop"
+			pc = "on, at the desktop"
 	var dove := "-"
-	var vd = _regista_virus()
 	if vd != null and vd.player != null:
 		dove = "inside the PC" if vd.player.is_in_pc() else "in the room, looking " + vd.player.current_view()
-	righe.append("PC: %s  |  player: %s" % [pc, dove])
-	var td = _regista_stanza()
-	righe.append(td.stato_debug() if td != null else "Room: - (not in the room)")
-	righe.append(vd.stato_debug() if vd != null else "PC virus: - (not in the room)")
-	return "\n".join(righe)
+	return "PC: %s\nPlayer: %s" % [pc, dove]
 
 func _dici(t: String, ok: bool) -> void:
 	_esito.text = t
@@ -247,6 +380,10 @@ func _os():
 
 func _compatta() -> void:
 	GameManager.debug_compatto = not GameManager.debug_compatto
+	aggiorna()
+
+func _apri_scheda(i: int) -> void:
+	GameManager.debug_scheda = i
 	aggiorna()
 
 func _cambia_stanza() -> void:

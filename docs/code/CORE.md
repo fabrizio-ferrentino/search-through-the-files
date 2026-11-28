@@ -505,14 +505,34 @@ them all (the ones not in tonight's run marked "[DEBUG: not in
 tonight's run]"); the keys stay on the sites the seed picked - and
 "Open the portal" opens a browser on it. The browser tests switch it
 on too, because they open fixed pages and a run picks 10 of 40.
-A STATUS block rewritten 4x a second:
+STATUS blocks rewritten 4x a second:
 PC state and where the player is, the peek state (who, GRACE/WAIT/PEEK, light
 progress or PC state, with seconds), Ghosty's distance, heat, torch
 state and battery, the PC virus running and the
 countdowns, and WHY a virus cannot start now (VirusDirector.
 perche_no). The last button's outcome is printed in green/red
-("refused: PC threats are OFF (F8)"). "-" collapses it to the keys
-(GameManager.debug_compatto, kept across F12). It finds the directors
+("refused: PC threats are OFF (F8)"), hidden when empty.
+REDESIGN (2026-11-28, owner: "ora è un casino non si capisce molto,
+rendila più semplice"; the file was rewritten, same public API
+sotto/testo/pulsante/riga_apparizione/MARGINE and same button texts).
+Layout, top to bottom: a header (title "Debug", "seed N", a red "Die"
+button, "-"/"+" compact toggle); the 4 keys ALWAYS visible, one row each
+(amber mono code, dim kind, wrapped hint; kind from the new
+GameManager.key_kind(index), also used by keys_report; the old
+DebugPanel.etichetta_chiavi is gone); a row of three colored switches
+"Room threats: ON/OFF", "PC threats: ON/OFF" (green/red) and "All sites:
+ON/OFF" (amber/grey); then THREE TABS: Room (director status, Jester /
+HaloMan peek, "Peek: send away", Ghosty come/go away), PC (PC state +
+player position, Boot to desktop, Power off, Open the portal), Viruses
+(director status, Lethal / YouAreStupid / Blue screen, Stop current,
+"next virus / false alarm: no wait", the 6 apparitions in a 2-column grid,
+small ones left / grave ones right, each REAL (red) and FALSE); below, the
+last outcome and the F-key line. The open tab persists across F12 in
+GameManager.debug_scheda (next to debug_compatto). Compact mode
+(GameManager.debug_compatto, kept across F12) = header + keys only.
+620 px wide (LARGO), top-right, placed at y=44 (SOTTO_FPS) so it no
+longer covers the FPS counter. Arimo for the UI, Cousine for keys and
+status. It finds the directors
 by GROUP ("regista_stanza", "regista_virus"), not by current scene.
 Two input rules: player.gd does NOT pass a mouse event over the panel
 to the room or the PC (GameManager.debug_sotto_mouse; releases still
@@ -662,7 +682,8 @@ into docs/code/README.md and the beginner's Claude Code guide removed.]
   above the room *and* the PC view (`keys_report()` / `toggle_keys_panel()`, fed by
   `note_key()` calls from the content builders), then a live STATUS (Jester, PC virus,
   countdowns, why a virus cannot start) and BUTTONS to trigger every apparition (real or
-  false), every virus, the Jester's peek, the switches, boot-to-desktop and power-off; "-"
+  false), every virus, the Jester's peek, the switches, boot-to-desktop and power-off (now
+  split in tabs Room / PC / Viruses, `debug_scheda`; see the debug_panel.gd entry); "-"
   shrinks it to the keys; **F11** = ROOM threats on/off (`room_threats_enabled`, read by the
   ThreatDirector); **F8** = PC threats on/off (`pc_threats_enabled`, read by the
   VirusDirector) - two switches since 2026-10-18 so one can be tried without the other;

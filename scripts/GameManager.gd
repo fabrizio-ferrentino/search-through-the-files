@@ -56,7 +56,6 @@ var key_hints: Dictionary = {}
 # seconda del seme (18/10/2026), quindi il pannello non puo' piu' avere una mappa fissa.
 var key_kinds: Dictionary = {}
 var _keys_panel: DebugPanel = null   # il pannello di debug F12 (debug_panel.gd)
-var _keys_label: Label = null        # le sue righe delle chiavi
 # Le statistiche della partita, mostrate a fine partita (morte e vittoria) col seme e il
 # tempo (proprietario, 25/11/2026). conta() le aumenta dai punti del gioco dove succedono;
 # STATISTICHE da' l'ordine e la chiave di testo. tempo_partita conta solo a partita in corso
@@ -72,6 +71,7 @@ var statistiche: Dictionary = {}
 var chiavi_trovate: Dictionary = {}
 var tempo_partita := 0.0
 var debug_compatto := false          # pannello ridotto alle sole chiavi (resta fra un F12 e l'altro)
+var debug_scheda := 0                # la scheda aperta del pannello (Room / PC / Viruses), idem
 # DEV-ONLY (20/10/2026, proprietario: "fai in modo che io li possa vedere tutti"): il web
 # risponde con TUTTI i siti del catalogo e il portale li elenca tutti, non solo quelli
 # estratti stanotte. Le chiavi restano dove il seme le ha messe. Pulsante nel pannello F12.
@@ -434,14 +434,15 @@ func note_key(index: int, dove: String, tipo := "") -> void:
 # Rapporto sintetico: intestazione con seme e stato delle minacce, poi una riga
 # per chiave (codice, tipo, dove sta).
 func keys_report() -> String:
-	# la 1 la dice chi l'ha piazzata (FILE o FOLDER); 2 e 3 web, 4 immagine
-	var tipi := {1: "DISK", 2: "WEB", 3: "WEB", 4: "IMAGE"}
-	tipi.merge(key_kinds, true)
 	var out := "KEYS  seed %d  -  room threats %s  -  PC threats %s\n" % [run_seed,
 			_on_off(room_threats_enabled), _on_off(pc_threats_enabled)]
 	for i in range(1, KEY_COUNT + 1):
-		out += "%-8s %-6s %s\n" % [key_label(i), str(tipi.get(i, "?")), str(key_hints.get(i, "-"))]
+		out += "%-8s %-6s %s\n" % [key_label(i), key_kind(i), str(key_hints.get(i, "-"))]
 	return out.strip_edges()
+
+# Il tipo della chiave: la 1 la dice chi l'ha piazzata (FILE o FOLDER); 2 e 3 web, 4 immagine.
+func key_kind(index: int) -> String:
+	return str(key_kinds.get(index, {1: "DISK", 2: "WEB", 3: "WEB", 4: "IMAGE"}.get(index, "?")))
 
 # Mostra/nasconde il pannello di debug con le chiavi; stampa lo stesso in console.
 # CanvasLayer alla radice: si vede sia in stanza sia dentro il PC.
@@ -458,7 +459,6 @@ func toggle_keys_panel() -> void:
 	var p := DebugPanel.new()
 	get_tree().root.add_child(p)
 	_keys_panel = p
-	_keys_label = p.etichetta_chiavi
 	_refresh_keys_panel()
 
 # Chiude il pannello di debug, se aperto.
@@ -466,7 +466,6 @@ func close_keys_panel() -> void:
 	if _keys_panel != null and is_instance_valid(_keys_panel):
 		_keys_panel.queue_free()
 	_keys_panel = null
-	_keys_label = null
 
 # Riscrive il pannello (se aperto): lo usano anche F8 e F11, cosi' lo stato delle minacce
 # si vede cambiare sul momento (il resto lo riscrive lui, quattro volte al secondo).

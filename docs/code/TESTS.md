@@ -418,8 +418,11 @@ screen coordinates into the room must use `schermo_a_os()`.
   a REAL and a FALSE for every apparition and one for every virus,
   none takes the focus, outside the room a button answers "refused:
   not in the room", and "-" collapses the panel to the keys while it
-  stays on the right edge. The buttons in the REAL room are in
-  virus_test, section 4b),
+  stays on the right edge. Since the 2026-11-28 redesign the threat
+  switches are read from the switch BUTTON texts ("Room threats: OFF",
+  "PC threats: ON/OFF") instead of the old "room threats OFF" label text,
+  and the keys from the first key label instead of "KEYS". The buttons
+  in the REAL room are in virus_test, section 4b),
 
 - boot_test.tscn/.gd (the 3-stage PC boot: stage order, keys and
   clicks must NOT skip it, and a power-off mid-boot must cancel the

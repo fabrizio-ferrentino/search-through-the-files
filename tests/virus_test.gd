@@ -1012,6 +1012,7 @@ func _prova_pannello() -> void:
 	td.stop()
 
 	# un CLIC VERO dentro il PC sopra il pannello: lo prende il pannello, non l'OS sotto
+	p.pulsante("Viruses").pressed.emit()      # Stop current sta nella scheda Viruses: per cliccarlo va aperta
 	p.pulsante("Lethal (random)").pressed.emit()
 	var ferma: Button = p.pulsante("Stop current")
 	await _frame(2)

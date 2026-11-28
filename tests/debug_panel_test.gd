@@ -57,13 +57,13 @@ func _ready() -> void:
 	_premi(KEY_F11)
 	await get_tree().process_frame
 	_check("F11_SOLO_STANZA", not GameManager.room_threats_enabled and GameManager.pc_threats_enabled
-			and _testo().contains("room threats OFF") and _testo().contains("PC threats ON"),
+			and _testo().contains("Room threats: OFF") and _testo().contains("PC threats: ON"),
 			"dopo F11: stanza %s, PC %s, pannello '%s'" % [str(GameManager.room_threats_enabled),
 			str(GameManager.pc_threats_enabled), _testo().split("\n")[0]])
 	_premi(KEY_F8)
 	await get_tree().process_frame
 	_check("F8_SOLO_PC", not GameManager.room_threats_enabled and not GameManager.pc_threats_enabled
-			and _testo().contains("PC threats OFF"),
+			and _testo().contains("PC threats: OFF"),
 			"dopo F8: stanza %s, PC %s, pannello '%s'" % [str(GameManager.room_threats_enabled),
 			str(GameManager.pc_threats_enabled), _testo().split("\n")[0]])
 	_premi(KEY_F11)
@@ -96,7 +96,7 @@ func _ready() -> void:
 	GameManager.set_lingua(lingua_prima, false)
 	_check("TIPI_DELLE_CHIAVI", tipi_sbagliati.is_empty(), str(tipi_sbagliati))
 	await get_tree().process_frame
-	_check("SEMPRE_IN_INGLESE", italiano.is_empty() and _testo().contains("KEYS")
+	_check("SEMPRE_IN_INGLESE", italiano.is_empty() and _testo().contains(GameManager.key_label(1))
 			and _testo().contains("F8 PC threats"), "parole italiane nel debug: %s" % str(italiano))
 	GameManager.start_new_run(111)
 
@@ -129,7 +129,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var alto_compatto: float = p._box.size.y
 	var destra: float = p._box.get_global_rect().end.x
-	_check("SI_COMPATTA", alto_compatto < alto_pieno * 0.5 and _testo().contains("KEYS")
+	_check("SI_COMPATTA", alto_compatto < alto_pieno * 0.5 and _testo().contains(GameManager.key_label(1))
 			and absf(destra - (p._box.get_viewport_rect().size.x - DebugPanel.MARGINE)) < 1.0,
 			"compatto: alto %.0f su %.0f, bordo destro a %.0f" % [alto_compatto, alto_pieno, destra])
 	p.pulsante("+").pressed.emit()
