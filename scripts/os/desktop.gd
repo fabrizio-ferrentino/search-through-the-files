@@ -325,7 +325,7 @@ func _build_start_menu() -> void:
 	var items := [
 		{"name": tr("SHELL_EXPLORER"), "icon": "computer", "open": func(): open_app("explorer", VFS.get_root())},
 		{"name": "Web", "icon": "web", "open": func(): open_app("browser", "start")},
-		{"name": tr("VFS_DOCUMENTS"), "icon": "folder", "open": func(): open_app("explorer", _folder_path([tr("VFS_C_DRIVE"), tr("VFS_DOCUMENTS")]))},
+		{"name": tr("VFS_PICTURES"), "icon": "folder", "open": func(): open_app("explorer", VFS.get_pictures())},
 		{"sep": true},
 		{"name": tr("SHELL_SHUTDOWN"), "icon": "shutdown", "open": func(): _show_shutdown()},
 	]
