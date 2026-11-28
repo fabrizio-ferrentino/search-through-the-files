@@ -129,7 +129,8 @@ sits in the Recycle Bin, NOT the chain to the Desktop (renaming
 WHALE or Desktop would empty the whole desktop) and NOT the chain
 to C:\Documents\Pictures (VFS.get_pictures(): the desktop's
 "Pictures" icon, which replaced "Documents" on 2026-11-26, and the
-Start menu's "Documents" find them by name). These are the only
+Start menu's "Pictures", which replaced "Documents" on 2026-11-28,
+find them by name). These are the only
 lookups BY NAME the game does while playing. Everything else
 yes, system folders like SYSTEM included (nobody looks them up,
 and Win95 let you). rinomina(node, name) refuses Windows' banned
