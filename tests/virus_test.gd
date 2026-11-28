@@ -11,10 +11,11 @@ extends Node
 #     aperto o a minacce del PC spente (F8 congela il conto; F11, la stanza, no); dopo
 #     uno, la pausa e' fra PAUSA_MIN e PAUSA_MAX; mai lo stesso due volte di fila, e
 #     tutti e tre escono, ma il MORTALE solo dopo la prima chiave trovata;
-#   1b le APPARIZIONI (18/10/2026, UNA FASE SOLA): ognuno dei sette tipi si VEDE davvero
+#   1b le APPARIZIONI (18/10/2026, UNA FASE SOLA): ognuno dei sei tipi si VEDE davvero
 #     come falso allarme e poi SPARISCE DEL TUTTO entro Apparizione.SOGLIA_FALSO (strati,
-#     orologio all'ora vera, finestre a zero); le quattro PICCOLE stanno sotto icone e
-#     finestre (il proprietario le vuole "di poco conto"); il lampeggio rosso NON c'e' piu';
+#     orologio all'ora vera, finestre a zero); le tre PICCOLE stanno sotto icone e
+#     finestre (il proprietario le vuole "di poco conto"); il lampeggio rosso e le scritte
+#     NON ci sono piu';
 #     il sangue del vero ha colate di lunghezze diverse e gocce che cadono; vero e falso
 #     partono IDENTICI; il vero RESTA (a 4 s e a DURATA * 0.8 c'e'
 #     ancora, sempre lo stesso tipo); il regista fa partire i falsi allarmi col loro conto
@@ -239,14 +240,6 @@ func _prova_apparizioni() -> void:
 			"orologio":
 				come = _os.clock_label.text
 				si_vede = come != _os.ora_vera()
-			"scritte":
-				var testi := []
-				for k in Apparizione.SCRITTE:
-					testi.append(tr(k))
-				var l: Label = a._scritte[0] if not a._scritte.is_empty() else null
-				si_vede = l != null and testi.has(l.text) and not l.text.begins_with("VIRUS_") \
-						and l.modulate.a > 0.2
-				come = l.text if l != null else "-"
 			"sangue":
 				a.avanza(0.2)
 				var colate := a.colate()
@@ -277,10 +270,10 @@ func _prova_apparizioni() -> void:
 				"dopo il falso '%s': nodo vivo %s, strati %d, orologio '%s', finestre %s" % [tipo,
 				str(is_instance_valid(a)), resti, _os.clock_label.text, str(_os.window_layer.position)])
 
-	# niente lampeggio rosso: al proprietario non piaceva per niente, e' stato tolto
-	_check("NIENTE_LAMPEGGIO", not Apparizione.TIPI.has("lampeggio")
+	# niente lampeggio rosso ne' scritte: il proprietario li ha tolti
+	_check("NIENTE_LAMPEGGIO", not Apparizione.TIPI.has("lampeggio") and not Apparizione.TIPI.has("scritte")
 			and Apparizione.PESI.size() == Apparizione.TIPI.size(),
-			"il lampeggio e' tornato fra le apparizioni, o PESI non e' allineato a TIPI")
+			"il lampeggio o le scritte sono tornati fra le apparizioni, o PESI non e' allineato a TIPI")
 
 	# il buio copre TUTTO lo schermo, anche il menu Avvio e "Arresta il sistema" aperti DOPO
 	# (si portano in primo piano: lum_prima gli passavano sopra e "rimangono invariati")
@@ -399,50 +392,6 @@ func _prova_apparizioni() -> void:
 	_check("BAMBINO_ASCII", quanti >= 60 and solo_ascii and prima != dopo,
 			"bambino: %d caratteri, solo ASCII %s, cambia mentre dondola %s" % [quanti, str(solo_ascii), str(prima != dopo)])
 	bb.pulisci()
-
-	# le scritte si DIGITANO da sole, lettera per lettera, col cursore che lampeggia
-	var sc := Apparizione.new()
-	_os.add_child(sc)
-	sc.setup(_os, "scritte", rng)
-	sc.durata = 2.0
-	sc.set_process(false)
-	sc.avanza(0.05)
-	var riga: Label = sc._scritte[0]
-	var all_inizio: int = riga.visible_characters
-	sc.avanza(1.2)
-	_check("SCRITTA_DIGITATA", all_inizio < riga.text.length()
-			and riga.visible_characters == riga.text.length()
-			and riga.get_node_or_null("Cursore") != null,
-			"scritta '%s': %d lettere a 0.05 s, %d a 1.25 s, cursore %s" % [riga.text, all_inizio,
-			riga.visible_characters, str(riga.get_node_or_null("Cursore") != null)])
-	# niente macchia scura dietro la frase (proprietario: niente alone)
-	var fondi := 0
-	for ch in riga.get_children():
-		if ch is CanvasItem and (ch as CanvasItem).show_behind_parent:
-			fondi += 1
-	# la stessa zona con la scritta nascosta e visibile: quello che la scritta SCURISCE (la
-	# frase cade dove capita, anche sopra una finestra: i pixel scuri di quella non contano)
-	var zona_s := Rect2(riga.position, riga.size).grow(20.0)
-	riga.visible = false
-	await _frame(2)
-	await RenderingServer.frame_post_draw
-	var senza: Image = _player._os_viewport.get_texture().get_image()
-	riga.visible = true
-	await _frame(2)
-	await RenderingServer.frame_post_draw
-	var con: Image = _player._os_viewport.get_texture().get_image()
-	var tot_s := 0
-	var piu_scuri := 0
-	for y in range(maxi(0, int(zona_s.position.y)), mini(con.get_height(), int(zona_s.end.y)), 2):
-		for x in range(maxi(0, int(zona_s.position.x)), mini(con.get_width(), int(zona_s.end.x)), 2):
-			tot_s += 1
-			if con.get_pixel(x, y).get_luminance() < senza.get_pixel(x, y).get_luminance() - 0.05:
-				piu_scuri += 1
-	var scuri_s := float(piu_scuri) / maxf(1.0, float(tot_s))
-	_check("SCRITTA_SENZA_FONDO", fondi == 0 and scuri_s < 0.01,
-			"dietro la scritta: %d fondi, %.1f%% di pixel piu' scuri" % [fondi, scuri_s * 100.0])
-	sc.pulisci()
-	await _frame(2)
 
 	# gli OCCHI sono occhi veri fatti di caratteri: bianchi (sclera, riflesso) E scuri (pupilla,
 	# iride, ciglia); la pupilla -- le "@" scure -- va dove guardano; quando sbattono sparisce
@@ -670,7 +619,7 @@ func _orologio_giusto() -> bool:
 # Gli strati di un'apparizione piccola stanno tutti SOTTO le icone (e quindi le finestre)?
 func _strati_sotto_le_icone(a: Apparizione) -> bool:
 	var icone: int = _os.icons_layer.get_index()
-	for n in [a._velo, a._sfondo] + a._scritte:
+	for n in [a._velo, a._sfondo]:
 		if n != null and is_instance_valid(n) and (n as Node).get_parent() == _os \
 				and (n as Node).get_index() >= icone:
 			return false
@@ -1113,10 +1062,10 @@ func _prova_stop() -> void:
 # ---------- 6: le lingue ----------
 
 func _prova_lingue() -> void:
-	var chiavi := ["VIRUS_STUPID_TITLE", "VIRUS_STUPID_MSG", "VIRUS_SCRITTA_1", "BSOD_HEADER",
+	var chiavi := ["VIRUS_STUPID_TITLE", "VIRUS_STUPID_MSG", "BSOD_HEADER",
 			"BSOD_TEXT", "BSOD_RESTART",
 			"DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
-	var tradotte := ["VIRUS_SCRITTA_1", "BSOD_TEXT", "BSOD_RESTART", "DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
+	var tradotte := ["BSOD_TEXT", "BSOD_RESTART", "DEATH_VIRUS_1", "DEATH_VIRUS_2", "DEATH_VIRUS_3", "DEATH_VIRUS_4"]
 	var mancano: Array = []
 	for k in chiavi:
 		var en := TranslationServer.get_translation_object("en").get_message(k)

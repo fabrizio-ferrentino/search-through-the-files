@@ -1,12 +1,12 @@
 extends Node
 
-# Strumento di sviluppo (non un test): le apparizioni in ASCII (bambino, occhi, scritte) nella
+# Strumento di sviluppo (non un test): le apparizioni in ASCII (bambino, occhi) nella
 # STANZA vera, dentro il PC, fotografate come le vede chi gioca -- attraverso il CRT -- per
 # giudicarle a occhio. Per ogni tipo salva:
 #   user://ascii_<tipo>.png      la finestra del gioco (CRT compreso)
 #   user://ascii_<tipo>_os.png   lo schermo del PC com'e' disegnato (senza CRT)
 #   user://ascii_<tipo>_vero.png lo stesso tipo nel VERO, a 8 s su 10 (cresciuto)
-# Va eseguito A FINESTRA; dopo "--" i tipi (di base bambino occhi scritte):
+# Va eseguito A FINESTRA; dopo "--" i tipi (di base bambino occhi):
 #   & $godot --path $proj res://tests/ascii_check.tscn -- bambino
 
 func _ready() -> void:
@@ -26,7 +26,7 @@ func _ready() -> void:
 		await get_tree().process_frame
 	var tipi := OS.get_cmdline_user_args()
 	if tipi.is_empty():
-		tipi = PackedStringArray(["bambino", "occhi", "scritte"])
+		tipi = PackedStringArray(["bambino", "occhi"])
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 33
 	for tipo in tipi:

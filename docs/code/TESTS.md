@@ -346,7 +346,7 @@ screen coordinates into the room must use `schermo_a_os()`.
   halo_corridoio and ghosty_dietro .png under user://),
 
 - ascii_check.tscn/.gd (dev tool, WINDOWED: the ASCII apparitions -
-  child, eyes, writing, or the types after "--" - in the real room
+  child, eyes (the default types), or the types after "--" - in the real room
   inside the PC, false and real -> user://ascii_<type>.png (through
   the CRT), _os.png (the OS screen) and _vero.png, plus the setup
   and step times),
@@ -548,11 +548,10 @@ screen coordinates into the room must use `schermo_a_os()`.
   the login; the real F9 opens it; no placeholder or key-shaped
   text. Plus: stop() on win,
   both languages, the "virus" death lines; the APPARITIONS - each
-  of the SEVEN shows as a false alarm (wallpaper veil, the child
-  visible IN THE PIXELS along his axis, eyes, clock off the real time, a
-  translated line, blood flowing between windows and taskbar,
+  of the SIX shows as a false alarm (wallpaper veil, the child
+  visible IN THE PIXELS along his axis, eyes, clock off the real time, blood flowing between windows and taskbar,
   windows moved) and then vanishes COMPLETELY
-  (no layer, clock back, windows at 0); the four SMALL ones stay
+  (no layer, clock back, windows at 0); the three SMALL ones stay
   under the icons with the true names; the darkness covers the WHOLE
   screen - the taskbar, and the Start menu and the Shut down dialog
   opened AFTER it, darker in the pixels, mouse ignored
@@ -561,17 +560,18 @@ screen coordinates into the room must use `schermo_a_os()`.
   over 0.25 between frames), never more than 3 drops in any second
   (BUIO_LAMPADINA) - sabotaged (a plain desktop child, a light with no
   inertia): red; the red flashing is GONE
-  (NIENTE_LAMPEGGIO, and PESI aligned with TIPI); the child is made
+  (NIENTE_LAMPEGGIO, which now also requires "scritte" absent from
+  TIPI - the typed-line apparition was removed on purpose,
+  2026-11-27, with its SCRITTA_DIGITATA / SCRITTA_SENZA_FONDO
+  checks and VIRUS_SCRITTA_1 in the LINGUE check; and PESI aligned with TIPI); the child is made
   of ASCII characters that CHANGE while he sways (BAMBINO_ASCII),
   all BLACK (BAMBINO_NERO), DETAILED (hair darker than the face, a
   dark line at the shirt hem, darker than the torso -
   BAMBINO_DETTAGLI) and with NO HALO (inside the cells he occupies
   the wallpaper still shows between the strokes -
-  BAMBINO_SENZA_ALONE); the line TYPES itself letter by letter with
-  a cursor (SCRITTA_DIGITATA) and has no smear behind
-  (SCRITTA_SENZA_FONDO); the eyes are white AND dark characters and
+  BAMBINO_SENZA_ALONE); the eyes are white AND dark characters and
   the pupil follows where they look and hides when they blink
-  (OCCHI_REALISTICI) - sabotaged (typing at once, no recomposing,
+  (OCCHI_REALISTICI) - sabotaged (no recomposing,
   the dark pool back, tone = coverage, a pupil that does not
   follow): red; the real blood at
   20 s has drips of different reach - some short, some long - and

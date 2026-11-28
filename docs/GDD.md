@@ -363,9 +363,7 @@ PC off**. As built (`scripts/threats/virus_director.gd`):
     from one side, lines where the clothes end, a few folds — straight on the wallpaper
     (owner, 2026-10-19: the curse shows itself with the PC's own characters; no halo); two **realistic eyes**
     made of characters — lids, lashes, iris, pupil, highlight — whose iris follows the
-    cursor; the taskbar clock going wrong (backwards, 03:33); a line of the curse that
-    **types itself** on the wallpaper like a terminal line ("i can see you", "she won't come
-    back tonight").
+    cursor; the taskbar clock going wrong (backwards, 03:33).
   - **Grave** ones, same rule: the **whole screen goes dark** — Start menu and dialogs included —
     **and flickers like a dying light bulb**: mostly steady, now and then a burst of short drops
     or a long drop almost to black that slowly recovers, never brighter than usual (owner,
@@ -374,7 +372,8 @@ PC off**. As built (`scripts/threats/virus_director.gd`):
     drop at the tip — never a round ball —, now and then a drop falling with a trail); the
     windows shaking.
   - Rejected on the way, so they do not come back: the whole screen flashing red (the
-    owner did not like it at all), a quiet phase escalating into a red
+    owner did not like it at all), a line of the curse typing itself on the wallpaper
+    (removed by the owner, 2026-11-27), a quiet phase escalating into a red
     phase ("tutto un'unica fase"), and a version that blacked out the screen around a
     cursor light, renamed icons and hung the child over the windows ("troppo invasivi").
 - **YouAreStupid**: a burst of small smiley windows ("YOU ARE STUPID", English in every

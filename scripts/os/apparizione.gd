@@ -11,7 +11,7 @@ extends Node
 #   2 all'inizio sono IDENTICI: stessa comparsa (COMPARSA), stesso posto -- solo il tempo li
 #     distingue (il vero cresce in "crescita" secondi, a 0.3 s la differenza non si vede);
 #   3 nessuna regola nascosta: cio' che il vero ha in piu' e' solo "di piu' dello stesso".
-# SETTE TIPI. Le quattro PICCOLE stanno SOLO nella carta da parati (sopra_sfondo: sotto icone e
+# SEI TIPI. Le tre PICCOLE stanno SOLO nella carta da parati (sopra_sfondo: sotto icone e
 # finestre) o nell'orologio -- il proprietario le vuole "di poco conto"; una versione che
 # rinominava le icone e metteva il bambino sopra le finestre e' stata provata e scartata
 # perche' troppo invasiva:
@@ -37,10 +37,9 @@ extends Node
 #               riflesso): bianchi dove l'occhio e' chiaro, scuri dove e' scuro, niente attorno;
 #               l'iride segue il cursore, sbattono. (Due occhietti stilizzati "(%@@@@%)" sono
 #               stati scartati: il proprietario li voleva veri.)
-#   "orologio"  l'ora della barra sbaglia (all'indietro, 03:33, --:--);
-#   "scritte"   una frase della maledizione (VIRUS_SCRITTA_*) che si DIGITA da sola nello
-#               sfondo, come una riga di terminale: prompt ">", cursore "_" che lampeggia,
-#               lettere bianche senza macchia scura dietro.
+#   "orologio"  l'ora della barra sbaglia (all'indietro, 03:33, --:--).
+# C'era una quarta piccola, "scritte" (una frase che si digitava da sola sullo sfondo): tolta
+# dal proprietario il 27/11/2026 -- non rimetterla.
 # Le tre GRAVI sono apparizioni come le altre, stessa regola:
 #   "buio"      TUTTO lo schermo si scurisce -- finestre, icone, barra, e anche il menu Avvio e
 #               i dialoghi aperti DOPO, "Arresta il sistema" compreso (sopra_tutto: uno strato
@@ -63,16 +62,14 @@ extends Node
 
 signal finita
 
-const TIPI := ["buio", "bambino", "occhi", "orologio", "scritte", "sangue", "tremito"]
-const PICCOLE := ["bambino", "occhi", "orologio", "scritte"]
-const PESI := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]   # stesso ordine di TIPI
+const TIPI := ["buio", "bambino", "occhi", "orologio", "sangue", "tremito"]
+const PICCOLE := ["bambino", "occhi", "orologio"]
+const PESI := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]   # stesso ordine di TIPI
 const SOGLIA_FALSO := 3.0          # un falso allarme dura SEMPRE meno di questo
 const BUIO_RAFFICA_MAX := 3        # buio: al massimo tanti cali in una raffica...
 const BUIO_PAUSA_MIN := 1.0        # ...e poi almeno tanto di quiete: mai piu' di 3 cali al secondo
 const COMPARSA := 0.25             # secondi per comparire (uguale per vero e falso)
 const IMMAGINE_BAMBINO := "res://assets/textures/virus/bambino.png"
-const SCRITTE := ["VIRUS_SCRITTA_1", "VIRUS_SCRITTA_2", "VIRUS_SCRITTA_3",
-		"VIRUS_SCRITTA_4", "VIRUS_SCRITTA_5", "VIRUS_SCRITTA_6"]
 const OROLOGI := ["03:33", "--:--", "88:88", "00:00", "33:03"]
 const GOCCE := 28                  # colate (60 tutte uguali sembravano un codice a barre)
 const GOCCE_SUBITO := 9            # quelle che partono subito: anche un falso deve far vedere il sangue
@@ -153,12 +150,8 @@ const _PIEGHE := [
 	[Vector2(0, 124), Vector2(0, 146)],                                         # la cucitura
 	[Vector2(-21, 201), Vector2(-9, 202)], [Vector2(8, 196), Vector2(20, 197)], # le ginocchia
 ]
-const C_ASCII := Color(1.0, 1.0, 1.0)                # occhi e scritte
+const C_ASCII := Color(1.0, 1.0, 1.0)                # gli occhi: sclera, riflesso
 const C_ASCII_SCURO := Color(0.03, 0.025, 0.035)   # gli occhi: pupilla, ciglia, iride scura
-# le scritte: righe di terminale digitate da sole (vedi _aggiungi_scritta)
-const SCRITTA_PUNTI := [30, 38]
-const SCRITTA_DIGITA := 0.9             # secondi per scrivere la frase intera: il falso dura 2-2.5
-const C_SCRITTA_PROMPT := Color(0.62, 0.05, 0.08)
 # gli occhi: due occhi REALISTICI fatti di caratteri (proprietario: "preferirei degli occhi
 # realistici"), sulla stessa griglia piccola del bambino. OCCHIO_A = mezza larghezza di un
 # occhio (px), OCCHIO_B = mezza apertura; l'iride segue il cursore.
@@ -187,8 +180,6 @@ var _luce_passo := 0.0             # buio: fra quanto cambia meta
 var _tau_su := 0.05                # buio: quanto ci mette a riprendersi (il filamento si riscalda)
 var _cali: Array = []              # buio: i prossimi passi della raffica, [meta, durata, tau_su]
 var _in_raffica := false
-var _scritte: Array = []           # scritte: le Label sulla carta da parati
-var _battute: Array = []           # scritte: per ognuna [nata a, secondi per lettera, passo]
 var _sangue: Control = null        # sangue: sopra le finestre
 var _passo := 0.0
 var _minuti := 0
@@ -284,8 +275,6 @@ func setup(os: OSDesktop, che_tipo: String, rng: RandomNumberGenerator) -> void:
 			var t := Time.get_time_dict_from_system()
 			_minuti = int(t.hour) * 60 + int(t.minute)
 			_cambia_orologio()
-		"scritte":
-			_aggiungi_scritta()
 		"sangue":
 			_sangue = Control.new()
 			_sangue.name = "Apparizione_sangue"
@@ -363,18 +352,6 @@ func avanza(delta: float) -> void:
 			_passo -= delta
 			if _passo <= 0.0:
 				_cambia_orologio()
-		"scritte":
-			if intensita > 0.5 and _scritte.size() < 2:
-				_aggiungi_scritta()
-			for i in range(_scritte.size()):
-				var lab := _scritte[i] as Label
-				lab.modulate.a = clampf(0.45 * comparsa() + 0.4 * intensita, 0.0, 0.85)
-				var b: Array = _battute[i]
-				var n := mini(lab.text.length(), int((_t - float(b[0])) / float(b[1])) + 1)
-				lab.visible_characters = n
-				var cur := lab.get_node("Cursore") as Label
-				cur.position.x = float(b[2]) * n
-				cur.visible = fmod(_t, 0.5) < 0.3 or n < lab.text.length()   # lampeggia a frase finita
 		"sangue":
 			_scorri_sangue(delta)
 			_sangue.queue_redraw()
@@ -447,53 +424,6 @@ func _aggiungi_occhi() -> void:
 	var area := Vector2(_os.size.x, _os.size.y - OSDesktop.TASKBAR_H)
 	var c := Vector2(_rng.randf_range(0.35, 0.75) * area.x, _rng.randf_range(0.18, 0.78) * area.y)
 	_occhi.append([c, _rng.randf_range(0.0, 5.0), _t])
-
-func _aggiungi_scritta() -> void:
-	var usate := []
-	for l in _scritte:
-		usate.append((l as Label).text)
-	var libere := []
-	for k in SCRITTE:
-		if not usate.has(tr(k)):
-			libere.append(k)
-	# Una riga di TERMINALE (come il bambino, la maledizione scrive coi caratteri del PC): il
-	# prompt, la frase che si DIGITA da sola lettera per lettera (visible_characters: il testo
-	# della Label resta la frase intera) e il cursore che lampeggia dopo l'ultima lettera. Lettere
-	# BIANCHE sulla carta da parati, senza macchia scura dietro (proprietario: niente alone).
-	var l := Label.new()
-	l.name = "Apparizione_scritta"
-	l.text = tr(libere[_rng.randi() % libere.size()])
-	var dim := _rng.randi_range(SCRITTA_PUNTI[0], SCRITTA_PUNTI[1])
-	l.add_theme_font_override("font", Win95.font(ASCII_FONT))
-	l.add_theme_font_size_override("font_size", dim)
-	l.add_theme_color_override("font_color", C_ASCII)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.visible_characters = 0
-	l.modulate.a = 0.0
-	var adv: float = Win95.font(ASCII_FONT).get_char_size(ord("M"), dim).x
-	var prompt := Label.new()
-	prompt.text = ">"
-	prompt.add_theme_font_override("font", Win95.font(ASCII_FONT))
-	prompt.add_theme_font_size_override("font_size", dim)
-	prompt.add_theme_color_override("font_color", C_SCRITTA_PROMPT)
-	prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	prompt.position = Vector2(-adv * 2.0, 0.0)
-	l.add_child(prompt)
-	var cursore := Label.new()
-	cursore.name = "Cursore"
-	cursore.text = "_"
-	cursore.add_theme_font_override("font", Win95.font(ASCII_FONT))
-	cursore.add_theme_font_size_override("font_size", dim)
-	cursore.add_theme_color_override("font_color", C_ASCII)
-	cursore.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.add_child(cursore)
-	var largo: float = adv * (l.text.length() + 4)
-	_os.sopra_sfondo(l)
-	var area := Vector2(_os.size.x, _os.size.y - OSDesktop.TASKBAR_H)
-	l.position = Vector2(_rng.randf_range(0.25, 0.65) * area.x, _rng.randf_range(0.12, 0.8) * area.y).floor()
-	l.position.x = minf(l.position.x, area.x - largo - 60.0)    # le frasi lunghe restano dentro
-	_scritte.append(l)
-	_battute.append([_t, clampf(SCRITTA_DIGITA / maxf(1.0, l.text.length()), 0.025, 0.08), adv])
 
 func _disegna_sfondo() -> void:
 	if _sfondo == null or tipo != "occhi":
@@ -1205,13 +1135,12 @@ func pulisci() -> void:
 			_os.orologio_finto("")
 		if tipo == "tremito" and _os.window_layer != null:
 			_os.window_layer.position = Vector2.ZERO
-	for n in [_sfondo, _velo, _velo_strato, _sangue] + _scritte:
+	for n in [_sfondo, _velo, _velo_strato, _sangue]:
 		if n != null and is_instance_valid(n):
 			(n as Node).queue_free()
 	_sfondo = null
 	_velo = null
 	_velo_strato = null
 	_sangue = null
-	_scritte.clear()
 	finita.emit()
 	queue_free()
