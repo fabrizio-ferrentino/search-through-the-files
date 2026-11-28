@@ -345,11 +345,12 @@ screen coordinates into the room must use `schermo_a_os()`.
   striking during a peek - all red. Saves jester_finestra,
   halo_corridoio and ghosty_dietro .png under user://),
 
-- ascii_check.tscn/.gd (dev tool, WINDOWED: the ASCII apparitions -
+- ascii_check.tscn/.gd (dev tool, WINDOWED: the ASCII ghosts -
   child, eyes (the default types), or the types after "--" - in the real room
-  inside the PC, false and real -> user://ascii_<type>.png (through
-  the CRT), _os.png (the OS screen) and _vero.png, plus the setup
-  and step times),
+  inside the PC. Since 2026-11-28 it shoots only the REAL ghost (no
+  false alarms exist): just appeared and grown at 8 s ->
+  user://ascii_<type>.png (through the CRT), _os.png (the OS screen)
+  and _vero.png, plus the setup and step times),
 
 - finestra_check.tscn/.gd (dev tool, WINDOWED: the real room
   with threats off, photographed looking LEFT and straight ahead ->
@@ -415,9 +416,11 @@ screen coordinates into the room must use `schermo_a_os()`.
   both shown in the panel; and the panel stays ENGLISH over 6
   seeds x both game languages - no word of the old Italian notes.
   Sabotaged by putting one Italian note back: red. Plus the BUTTONS:
-  a REAL and a FALSE for every apparition and one for every virus,
+  PULSANTI_PER_TUTTO (2026-11-28): one REAL per ghost plus "Nuisance:
+  darkness" and the switch "Ghost above windows: OFF" (no FALSE
+  buttons any more), one for every virus,
   none takes the focus, outside the room a button answers "refused:
-  not in the room", and "-" collapses the panel to the keys while it
+  not in the room" (FUORI_STANZA_RISPONDE presses "bambino"), and "-" collapses the panel to the keys while it
   stays on the right edge. Since the 2026-11-28 redesign the threat
   switches are read from the switch BUTTON texts ("Room threats: OFF",
   "PC threats: ON/OFF") instead of the old "room threats OFF" label text,
@@ -532,8 +535,7 @@ screen coordinates into the room must use `schermo_a_os()`.
   found never give "mortale"; the test then unlocks before
   MAI_DUE_UGUALI / TUTTI_E_TRE; sabotaged, red). LETHAL: it carries an apparition that stays and grows, the
   Jester does not peek meanwhile, and powering off saves from BOTH
-  Start > Shut down and the case button (no death, apparition,
-  clock and window offset all gone). YouAreStupid: the burst opens with the translated
+  Start > Shut down and the case button (no death, ghost gone). YouAreStupid: the burst opens with the translated
   title and taskbar buttons, the bouncers move and never leave the
   screen, it CANNOT BE IGNORED (always above a clicked normal
   window, three title buttons but "minimize" disabled - a real
@@ -550,23 +552,30 @@ screen coordinates into the room must use `schermo_a_os()`.
   ITSELF: every window closed, black first, then the BIOS, then
   the login; the real F9 opens it; no placeholder or key-shaped
   text. Plus: stop() on win,
-  both languages, the "virus" death lines; the APPARITIONS - each
-  of the SIX shows as a false alarm (wallpaper veil, the child
-  visible IN THE PIXELS along his axis, eyes, clock off the real time, blood flowing between windows and taskbar,
-  windows moved) and then vanishes COMPLETELY
-  (no layer, clock back, windows at 0); the three SMALL ones stay
-  under the icons with the true names; the darkness covers the WHOLE
+  both languages, the "virus" death lines; the APPARITIONS (section 1b,
+  rewritten 2026-11-28 after the ghost rework). NIENTE_TOLTI: no
+  lampeggio / scritte / sangue / tremito / orologio in TIPI,
+  FANTASMI == [bambino, occhi], PESI aligned with FANTASMI, "buio" is
+  not a ghost. Per ghost AND per placement (SFONDO = wallpaper, SOPRA =
+  above the windows, via GameManager.fantasma_sopra_finestre):
+  APPARE_<T>_<DOVE> (it shows IN THE PIXELS), STRATO_<T>_<DOVE> (the
+  layer sits in the right place), IL_VERO_RESTA_<T>_<DOVE> (the ghost
+  is still there, same type, later). The nuisance: APPARE_BUIO and
+  SPARISCE_BUIO (it vanishes COMPLETELY, no layer left). The darkness covers the WHOLE
   screen - the taskbar, and the Start menu and the Shut down dialog
   opened AFTER it, darker in the pixels, mouse ignored
   (BUIO_TUTTO_LO_SCHERMO) - and flickers like a dying bulb: never
   brighter than its usual, drops nearly to black, SMOOTH (no step
   over 0.25 between frames), never more than 3 drops in any second
   (BUIO_LAMPADINA) - sabotaged (a plain desktop child, a light with no
-  inertia): red; the red flashing is GONE
-  (NIENTE_LAMPEGGIO, which now also requires "scritte" absent from
-  TIPI - the typed-line apparition was removed on purpose,
-  2026-11-27, with its SCRITTA_DIGITATA / SCRITTA_SENZA_FONDO
-  checks and VIRUS_SCRITTA_1 in the LINGUE check; and PESI aligned with TIPI); the child is made
+  inertia): red. The red flashing and the typed line are gone on
+  purpose (2026-11-27, with the SCRITTA_DIGITATA / SCRITTA_SENZA_FONDO
+  checks and VIRUS_SCRITTA_1 in the LINGUE check), and in 2026-11-28
+  blood, shaking windows and the clock too: SANGUE_VARIO, the
+  STESSA_PARTENZA_* checks, APPARE / SPARISCE / PICCOLA for the old
+  types, the clock checks and the helpers _orologio_giusto,
+  _strati_sotto_le_icone, _nomi_veri, _scuri_in were removed with
+  them; the child is made
   of ASCII characters that CHANGE while he sways (BAMBINO_ASCII),
   all BLACK (BAMBINO_NERO), DETAILED (hair darker than the face, a
   dark line at the shirt hem, darker than the torso -
@@ -576,17 +585,12 @@ screen coordinates into the room must use `schermo_a_os()`.
   the pupil follows where they look and hides when they blink
   (OCCHI_REALISTICI) - sabotaged (no recomposing,
   the dark pool back, tone = coverage, a pupil that does not
-  follow): red; the real blood at
-  20 s has drips of different reach - some short, some long - and
-  a falling drop (SANGUE_VARIO); real and false
-  start identical (a small and a grave type); the real one is
-  still there, same type, at 3 s and 20 s; power-off removes it,
-  the clock and the window offset; the director's false alarm ends
-  by itself and schedules the next in FALSO_MIN..MAX, the real
-  virus waits DOPO_FALSO, never over another virus, and the real
-  SHIFT+F9 starts one (sabotaged: a small one over the windows,
-  a false one lasting too long, a real one
-  vanishing, the shake not reset - all red); and LAST, because it
+  follow): red. Power-off removes the ghost (no Apparizione layer
+  left). The director: REGISTA_FASTIDIO (a nuisance starts, always
+  "buio"), FASTIDIO_FINISCE (it ends by itself and schedules the next
+  in FASTIDIO_MIN..MAX), DOPO_FASTIDIO_ASPETTA (the real virus waits
+  DOPO_FASTIDIO), MAI_SOPRA_UN_VIRUS, SHIFT_F9_FASTIDIO (sabotaged: a
+  nuisance lasting too long, a ghost vanishing - red); and LAST, because it
   ends the run, the lethal one left alone KILLS with cause
   "virus". Sabotaged: virus clock counting in the room, no caps on
   YouAreStupid, power-off not saving, a moving window not freezing
@@ -594,13 +598,17 @@ screen coordinates into the room must use `schermo_a_os()`.
   minimizing allowed, no insistence, no focus theft, and on the
   blue screen a key that closes it, a countdown that never ends,
   ESC held by the OS - all red. THE DEBUG PANEL in the real room
-  (4b): every REAL/FALSE button starts exactly that apparition and
-  "Stop current" removes it, YouAreStupid and the blue screen start
+  (4b): PANNELLO_OGNI_APPARIZIONE presses the one REAL button per
+  ghost plus "Nuisance: darkness", each starts exactly that
+  apparition, and "Stop current" removes it (STOP_PULISCE: no
+  Apparizione* node left); PANNELLO_FANTASMA_SOPRA (the "Ghost above
+  windows" switch moves the ghost above the windows);
+  PANNELLO_DICE_PERCHE uses "bambino"; YouAreStupid and the blue screen start
   and stop, a refusal says why (PC threats off), the switch works,
   the Jester peeks and goes away on command, and a REAL click inside
   the PC on a panel button over a window does NOT reach that window
   (sabotaged by removing player.gd's guard: red). Saves
-  virus_apparizione_<type>, virus_vero_buio/sangue, virus_stupido,
+  virus_fantasma_<tipo>, virus_fastidio_buio, virus_stupido,
   virus_blu and debug_pannello .png under user:// to look at),
 
 - os_finestre_test.tscn/.gd (window focus and input: a MINIMISED

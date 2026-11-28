@@ -101,16 +101,16 @@ func _ready() -> void:
 	GameManager.start_new_run(111)
 
 	# 2d) il pannello ha i PULSANTI (proprietario, 18/10/2026: "non riesco a ricreare tutti i
-	# bug"): ogni apparizione vera E falsa, nessun pulsante prende il fuoco (lo spazio scritto
+	# bug"): ogni fantasma, il fastidio, nessun pulsante prende il fuoco (lo spazio scritto
 	# nel Blocco note lo premerebbe), si compatta alle sole chiavi, e qui fuori dalla stanza un
 	# pulsante risponde invece di rompersi
 	var p: DebugPanel = GameManager._keys_panel
 	var mancano := []
-	for t in Apparizione.TIPI:
+	for t in Apparizione.FANTASMI:
 		var b := p.riga_apparizione(t)
-		if b.size() != 2 or (b[0] as Button).text != "REAL" or (b[1] as Button).text != "FALSE":
+		if b.size() != 1 or (b[0] as Button).text != "REAL":
 			mancano.append(t)
-	for nome in ["Lethal (random)", "YouAreStupid", "Blue screen", "Stop current", "Jester: peek now",
+	for nome in ["Lethal (random)", "Nuisance: darkness", "Ghost above windows: OFF", "YouAreStupid", "Blue screen", "Stop current", "Jester: peek now",
 			"HaloMan: peek now", "Peek: send away", "Ghosty: come now", "Ghosty: go away",
 			"Boot to desktop"]:
 		if p.pulsante(nome) == null:
@@ -121,7 +121,7 @@ func _ready() -> void:
 		if (b as Button).focus_mode != Control.FOCUS_NONE:
 			col_fuoco.append((b as Button).text)
 	_check("PULSANTI_SENZA_FUOCO", col_fuoco.is_empty(), "prendono il fuoco: %s" % str(col_fuoco))
-	p.riga_apparizione("sangue")[0].pressed.emit()
+	p.riga_apparizione("bambino")[0].pressed.emit()
 	_check("FUORI_STANZA_RISPONDE", _testo().contains("refused: not in the room"),
 			"fuori dalla stanza il pulsante non lo dice: '%s'" % p._esito.text)
 	var alto_pieno: float = p._box.size.y

@@ -3,7 +3,7 @@ extends CanvasLayer
 
 # Il PANNELLO DI DEBUG (F12, DEV-ONLY: da togliere prima del rilascio). Nato come etichetta
 # con le chiavi; il proprietario (18/10/2026) non riusciva a far comparire a comando tutte
-# le minacce, quindi ha i PULSANTI per ogni apparizione vera o falsa, ogni virus, gli
+# le minacce, quindi ha i PULSANTI per ogni fantasma, il fastidio, ogni virus, gli
 # affacci, Ghosty, gli interruttori e il PC dritto al desktop, piu' uno STATO che si
 # aggiorna da solo e una riga con l'esito dell'ultimo pulsante.
 # Rifatto il 28/11/2026 (proprietario: "ora e' un casino, non si capisce molto, rendila
@@ -30,7 +30,7 @@ const C_AMBRA := Color("#f2c14e")
 const C_OK := Color("#62d67f")
 const C_NO := Color("#ff7a66")
 const C_BOTTONE := Color("#2a3042")
-const TASTI := "F8 PC threats   F9 start a virus   Shift+F9 false alarm   F10 die   F11 room threats   F12 close"
+const TASTI := "F8 PC threats   F9 start a virus   Shift+F9 nuisance   F10 die   F11 room threats   F12 close"
 const SCHEDE := ["Room", "PC", "Viruses"]
 const OGNI := 0.25             # ogni quanto si riscrive lo stato (s)
 const REGISTA_VIRUS := preload("res://scripts/threats/virus_director.gd")   # le sue costanti
@@ -43,6 +43,7 @@ var _btn_compatto: Button = null
 var _btn_stanza: Button = null
 var _btn_pc: Button = null
 var _btn_siti: Button = null
+var _btn_sopra: Button = null           # il fantasma sopra le finestre (scheda Viruses)
 var _linguette: Array = []                # i pulsanti delle schede
 var _pagine: Array = []                   # il contenuto delle schede, stesso ordine
 var _stato_stanza: Label = null
@@ -85,7 +86,7 @@ func pulsante(testo_btn: String) -> Button:
 			return n
 	return null
 
-# I due pulsanti REAL/FALSE della riga di un'apparizione.
+# Il pulsante REAL della riga di un fantasma.
 func riga_apparizione(tipo: String) -> Array:
 	var r = _box.find_child("Riga_" + tipo, true, false)
 	return [] if r == null else r.find_children("*", "Button", true, false)
@@ -98,6 +99,7 @@ func aggiorna() -> void:
 	_interruttore(_btn_stanza, "Room threats", GameManager.room_threats_enabled)
 	_interruttore(_btn_pc, "PC threats", GameManager.pc_threats_enabled)
 	_interruttore(_btn_siti, "All sites", GameManager.debug_tutti_i_siti, C_AMBRA, C_SPENTO)
+	_interruttore(_btn_sopra, "Ghost above windows", GameManager.fantasma_sopra_finestre, C_AMBRA, C_SPENTO)
 	_corpo.visible = not GameManager.debug_compatto
 	_btn_compatto.text = "+" if GameManager.debug_compatto else "-"
 	for i in range(_pagine.size()):
@@ -231,39 +233,30 @@ func _scheda_virus() -> VBoxContainer:
 	_stato_virus = _stato()
 	s.add_child(_stato_virus)
 	s.add_child(_riga([_bottone("Lethal (random)", _virus.bind("mortale", "")),
+			_bottone("Nuisance: darkness", _virus.bind("fastidio", "")),
 			_bottone("YouAreStupid", _virus.bind("stupido", "")),
 			_bottone("Blue screen", _virus.bind("crash", ""))]))
 	s.add_child(_riga([_bottone("Stop current", _ferma), _bottone("Next virus: no wait", _azzera.bind(false)),
-			_bottone("Next false alarm: no wait", _azzera.bind(true))]))
-	s.add_child(_nota("Apparitions: REAL kills in %d s, FALSE is gone in %.1f-%.1f s." % [
-			int(VirusMortale.DURATA), REGISTA_VIRUS.FALSO_DURATA[0], REGISTA_VIRUS.FALSO_DURATA[1]]))
-	# due colonne di tre: piccole a sinistra, gravi a destra
-	var griglia := GridContainer.new()
-	griglia.columns = 2
-	griglia.add_theme_constant_override("h_separation", 16)
-	griglia.add_theme_constant_override("v_separation", 4)
-	var ordine: Array = Apparizione.PICCOLE.duplicate()
-	var gravi: Array = Apparizione.TIPI.filter(func(t): return not Apparizione.PICCOLE.has(t))
-	for i in range(maxi(ordine.size(), gravi.size())):
-		for lista in [ordine, gravi]:
-			if i < lista.size():
-				griglia.add_child(_riga_apparizione(str(lista[i])))
-			else:
-				griglia.add_child(Control.new())
-	s.add_child(griglia)
+			_bottone("Next nuisance: no wait", _azzera.bind(true))]))
+	s.add_child(_nota("Ghost: kills in %d s unless the PC is switched off. Nuisance: gone in %.1f-%.1f s." % [
+			int(VirusMortale.DURATA), REGISTA_VIRUS.FASTIDIO_DURATA[0], REGISTA_VIRUS.FASTIDIO_DURATA[1]]))
+	for t in Apparizione.FANTASMI:
+		s.add_child(_riga_apparizione(str(t)))
+	_btn_sopra = _bottone("", _cambia_sopra)
+	_btn_sopra.tooltip_text = "the ghost shows above the windows instead of on the wallpaper (next ghost)"
+	s.add_child(_riga([_btn_sopra]))
 	return s
 
 func _riga_apparizione(t: String) -> HBoxContainer:
 	var riga := HBoxContainer.new()
 	riga.name = "Riga_" + t
 	riga.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var nome := _etichetta(t if Apparizione.PICCOLE.has(t) else t + " (grave)", C_TESTO, 16)
+	var nome := _etichetta("ghost: " + t, C_TESTO, 16)
 	nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	riga.add_child(nome)
 	var vero := _bottone("REAL", _virus.bind("mortale", t))
 	vero.add_theme_color_override("font_color", C_NO)
 	riga.add_child(vero)
-	riga.add_child(_bottone("FALSE", _virus.bind("falso", t)))
 	return riga
 
 # ---------------- mattoni ----------------
@@ -390,6 +383,10 @@ func _cambia_stanza() -> void:
 	GameManager.imposta_minacce_stanza(not GameManager.room_threats_enabled)
 	_dici("room threats " + ("ON" if GameManager.room_threats_enabled else "OFF"), true)
 
+func _cambia_sopra() -> void:
+	GameManager.fantasma_sopra_finestre = not GameManager.fantasma_sopra_finestre
+	_dici("ghost " + ("above the windows" if GameManager.fantasma_sopra_finestre else "on the wallpaper"), true)
+
 func _cambia_pc() -> void:
 	GameManager.imposta_minacce_pc(not GameManager.pc_threats_enabled)
 	_dici("PC threats " + ("ON" if GameManager.pc_threats_enabled else "OFF"), true)
@@ -480,11 +477,11 @@ func _ferma() -> void:
 	else:
 		_dici("refused: " + no, false)
 
-func _azzera(falso: bool) -> void:
+func _azzera(fastidio: bool) -> void:
 	var vd = _regista_virus()
 	if vd == null:
 		_dici("refused: not in the room", false)
 		return
-	vd.azzera_attesa(falso)
+	vd.azzera_attesa(fastidio)
 	_dici("next %s: no wait - it starts once the player has been inside the PC for %d s" % [
-			"false alarm" if falso else "virus", int(vd.ENTRATA_MIN)], true)
+			"nuisance" if fastidio else "virus", int(vd.ENTRATA_MIN)], true)

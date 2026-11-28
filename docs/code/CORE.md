@@ -243,7 +243,7 @@ Rework 2026-11-26 (owner decision: "enemy names must not appear in the end-of-ru
 old per-enemy counters jester / halo / ghosty / virus (STATS_JESTER/HALO/GHOSTY/VIRUS, removed
 from the CSV) are merged into ONE "Morti evitate" counter, `conta("evitate")`: Jester, HaloMan
 and Ghosty driven away (threat_director.gd) and a lethal virus survived by switching the PC off
-(virus_director.gd). False alarms are NOT counted. History, so it does not come back: the
+(virus_director.gd). Nuisances (the "buio", 2026-11-28; they were the false alarms) are NOT counted. History, so it does not come back: the
 per-enemy lines gave away which enemies exist; do not re-add them.
 `chiavi_trovate: Dictionary` (key index -> true), reset in `start_new_run`, filled by
 `scopri_in(testo)`: any key whose FULL label ("2-ABCD", `key_label`) appears in the text is
@@ -278,6 +278,10 @@ PC audio (2026-10-23): pc_volume (0.8) and pc_muto (false), set through
 AudioPC (scripts/os/audio_pc.gd, see OS.md) from the tray speaker. They are
 session-wide and NOT reset by start_new_run: whoever muted does not want the
 sound back next game. Not saved to disk.
+
+Ghost placement (2026-11-28, dev switch): `fantasma_sopra_finestre` (false at start), read by
+Apparizione: false = the ghost goes on the wallpaper, true = above the windows. Toggled by the F12
+Viruses tab ("Ghost above windows"); not reset by start_new_run, not saved.
 
 Notepad Word Wrap (2026-11-20): `np_a_capo` (false at start), the Word Wrap choice of Notepad
 (see OS.md app_notepad.gd). Session-wide, NOT reset by start_new_run, not saved to disk.
@@ -491,9 +495,9 @@ on the root (layer 30) built in code by GameManager.toggle_keys_panel.
 It used to be one label with the keys; the owner could not trigger
 every threat on demand ("non riesco a ricreare tutti i bug": F9 only
 cycles the three viruses and the lethal one picks its apparition at
-random), so now it has BUTTONS: every apparition as REAL (lethal) or
-FALSE (false alarm), lethal-random / YouAreStupid / blue screen, Stop
-current, "next virus / false alarm: no wait" (the natural path, with
+random), so now it has BUTTONS: every ghost as a REAL (lethal) button,
+lethal-random / nuisance / YouAreStupid / blue screen, Stop
+current, "next virus / nuisance: no wait" (the natural path, with
 its normal conditions), Jester / HaloMan peek now, "Peek: send away", Ghosty come
 now / go away (2026-10-19), both threat
 switches, Die, Boot to desktop (OSDesktop.salta_al_desktop: no boot,
@@ -524,10 +528,13 @@ DebugPanel.etichetta_chiavi is gone); a row of three colored switches
 ON/OFF" (amber/grey); then THREE TABS: Room (director status, Jester /
 HaloMan peek, "Peek: send away", Ghosty come/go away), PC (PC state +
 player position, Boot to desktop, Power off, Open the portal), Viruses
-(director status, Lethal / YouAreStupid / Blue screen, Stop current,
-"next virus / false alarm: no wait", the 6 apparitions in a 2-column grid,
-small ones left / grave ones right, each REAL (red) and FALSE); below, the
-last outcome and the F-key line. The open tab persists across F12 in
+(director status, "Lethal (random)", "Nuisance: darkness", YouAreStupid,
+Blue screen, Stop current, "Next virus: no wait", "Next nuisance: no wait",
+one row per ghost - "ghost: bambino" / "ghost: occhi" - with a single REAL
+button, and the switch "Ghost above windows: ON/OFF" =
+GameManager.fantasma_sopra_finestre; reworked 2026-11-28 with the ghost
+rework, the 6 apparitions with REAL/FALSE are gone; the F-key line says
+"Shift+F9 nuisance"); below, the last outcome and the F-key line. The open tab persists across F12 in
 GameManager.debug_scheda (next to debug_compatto). Compact mode
 (GameManager.debug_compatto, kept across F12) = header + keys only.
 620 px wide (LARGO), top-right, placed at y=44 (SOTTO_FPS) so it no
@@ -681,8 +688,7 @@ into docs/code/README.md and the beginner's Claude Code guide removed.]
   seed and the state of both threat switches, printed to the console and shown top-right
   above the room *and* the PC view (`keys_report()` / `toggle_keys_panel()`, fed by
   `note_key()` calls from the content builders), then a live STATUS (Jester, PC virus,
-  countdowns, why a virus cannot start) and BUTTONS to trigger every apparition (real or
-  false), every virus, the Jester's peek, the switches, boot-to-desktop and power-off (now
+  countdowns, why a virus cannot start) and BUTTONS to trigger every ghost (real), the nuisance, every virus, the Jester's peek, the switches, boot-to-desktop and power-off (now
   split in tabs Room / PC / Viruses, `debug_scheda`; see the debug_panel.gd entry); "-"
   shrinks it to the keys; **F11** = ROOM threats on/off (`room_threats_enabled`, read by the
   ThreatDirector); **F8** = PC threats on/off (`pc_threats_enabled`, read by the

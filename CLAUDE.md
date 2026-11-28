@@ -89,7 +89,7 @@ scripts/
     gif_decoder, web_effetti, midi, midi_synth   page GIFs, marquee/blink, MIDI music (GDScript synth)
     web_runtime, web_anchor   run's sites, portal, keys 2 and 3;  catalogo_siti.gd = the 39 sites
     app_file_explorer, app_notepad, app_image_viewer   the other apps
-    apparizione, virus_mortale, virus_stupido, schermo_blu   PC threats
+    apparizione (ghost child/eyes + darkness nuisance), virus_mortale, virus_stupido, schermo_blu   PC threats
     audio_pc.gd            audio bus "PC": tray volume/mute, sound from the desk in the room
     secret_glitch.gd       the secret folder's glitch
     crt / adjust / glitch / secret_glitch .gdshader
@@ -137,7 +137,7 @@ Implemented (details in the area docs):
 - Random disk per run; 4 keys (disk / two sites / photo) and the secret folder that wins.
 - 39 web sites (24 ordinary, 15 lore), 10 per run, generated WebNet portal.
 - Room threats: Jester, HaloMan, Ghosty, held torch with battery.
-- PC threats: lethal apparitions, false alarms, YouAreStupid, blue screen.
+- PC threats: lethal ghost (child or eyes: switch off or die, no false alarms), darkness nuisance, YouAreStupid, blue screen.
 - Game over with per-cause lines; F12 debug panel (dev-only) with every threat on a button.
 
 NOT implemented yet: real enemy models/animations (placeholders, owner's art comes last); the final

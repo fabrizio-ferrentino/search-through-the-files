@@ -1,20 +1,15 @@
 class_name Apparizione
 extends Node
 
-# Un'APPARIZIONE della maledizione dentro il PC (M5, proprietario 18/10/2026). E' il virus
-# mortale ed e' anche il FALSO ALLARME: una cosa sola, con UNA regola -- se sparisce in un
-# attimo era falso, se RESTA e' vero e bisogna spegnere il PC prima che uccida. Niente fasi:
-# un'apparizione non diventa mai un'altra cosa (il proprietario ha scartato la versione
-# "prima piccola, poi sangue"); nel vero cresce piano, ma resta se stessa.
-# Le tre garanzie perche' sia difficile ma giusto:
-#   1 il falso dura meno di SOGLIA_FALSO e poi sparisce DEL TUTTO; il vero non sparisce mai;
-#   2 all'inizio sono IDENTICI: stessa comparsa (COMPARSA), stesso posto -- solo il tempo li
-#     distingue (il vero cresce in "crescita" secondi, a 0.3 s la differenza non si vede);
-#   3 nessuna regola nascosta: cio' che il vero ha in piu' e' solo "di piu' dello stesso".
-# SEI TIPI. Le tre PICCOLE stanno SOLO nella carta da parati (sopra_sfondo: sotto icone e
-# finestre) o nell'orologio -- il proprietario le vuole "di poco conto"; una versione che
-# rinominava le icone e metteva il bambino sopra le finestre e' stata provata e scartata
-# perche' troppo invasiva:
+# Un'APPARIZIONE della maledizione dentro il PC (M5). Due usi, con UNA regola semplice
+# (proprietario, 28/11/2026): se vedi il FANTASMA -- il bambino o gli occhi -- e' vero e devi
+# SPEGNERE il PC entro VirusMortale.DURATA, se no muori. Il fantasma non ha falsi allarmi.
+# Il dubbio lo danno i FASTIDI che non uccidono: qui il "buio" (breve, sparisce da solo), fuori
+# lo schermo blu e YouAreStupid. Il fantasma cresce piano ma resta se stesso: niente fasi (il
+# proprietario ha scartato la versione "prima piccola, poi sangue").
+#   FANTASMI (VirusMortale): sulla carta da parati (sopra_sfondo: sotto icone e finestre: un
+#   po' di difficolta', proprietario) o, con GameManager.fantasma_sopra_finestre (interruttore
+#   di sviluppo, F12), sopra le finestre -- i due modi si confrontano nei playtest.
 #   "bambino"   la maledizione si MOSTRA (GDD §2b: l'origine e' il ragazzo, il bambino e' la
 #               forma che prende): un BAMBINO (maschio: la maledizione e' maschile)
 #               impiccato, vicino al bordo destro dello sfondo, fatto di CARATTERI ASCII
@@ -37,10 +32,7 @@ extends Node
 #               riflesso): bianchi dove l'occhio e' chiaro, scuri dove e' scuro, niente attorno;
 #               l'iride segue il cursore, sbattono. (Due occhietti stilizzati "(%@@@@%)" sono
 #               stati scartati: il proprietario li voleva veri.)
-#   "orologio"  l'ora della barra sbaglia (all'indietro, 03:33, --:--).
-# C'era una quarta piccola, "scritte" (una frase che si digitava da sola sullo sfondo): tolta
-# dal proprietario il 27/11/2026 -- non rimetterla.
-# Le tre GRAVI sono apparizioni come le altre, stessa regola:
+#   FASTIDIO (VirusDirector, con "durata"):
 #   "buio"      TUTTO lo schermo si scurisce -- finestre, icone, barra, e anche il menu Avvio e
 #               i dialoghi aperti DOPO, "Arresta il sistema" compreso (sopra_tutto: uno strato
 #               a parte, sempre sopra; il menu e i dialoghi si portano in primo piano e prima
@@ -48,33 +40,23 @@ extends Node
 #               una LAMPADINA CHE STA PER SPEGNERSI (proprietario, 19/10/2026: era solo la carta
 #               da parati, poi un lampeggio che "non mi piace", poco naturale): vedi _sfarfalla.
 #               Mai piu' di 3 cali al secondo (BUIO_RAFFICA_MAX, poi BUIO_PAUSA_MIN di quiete):
-#               uno sfarfallio piu' fitto puo' far male a chi e' fotosensibile. Nel vero il buio
-#               cresce, lo sfarfallio resta lo stesso;
-#   "sangue"    cola dal bordo alto, sopra le finestre ma sotto barra e menu Avvio: un orlo
-#               che gonfia, colate che scendono a strappi (viscose, non pioggia) con la
-#               goccia in punta (fusa col corpo, mai una pallina), e ogni tanto una
-#               goccia che si stacca e cade lasciando una scia;
-#   "tremito"   le finestre tremano a scatti (si sposta il CONTENITORE: pulisci lo rimette).
-# C'era una terza grave, "lampeggio" (lo schermo che lampeggiava di rosso): tolta, al
-# proprietario non piaceva per niente -- non rimetterla.
-# Quale esce lo decidono i PESI (scegli). Nessuno strato prende il mouse; pulisci() rimette
-# tutto com'era.
+#               uno sfarfallio piu' fitto puo' far male a chi e' fotosensibile. Dura meno di
+#               SOGLIA_FALSO e sparisce del tutto.
+# TOLTI dal proprietario, da NON rimettere: i falsi allarmi del fantasma, "sangue", "tremito" e
+# "orologio" (28/11/2026: la regola "aspetta e vedi se resta" non piaceva piu'), "scritte" (una
+# frase che si digitava sullo sfondo, 27/11/2026), "lampeggio" (lo schermo rosso a lampi).
+# Nessuno strato prende il mouse; pulisci() rimette tutto com'era.
 
 signal finita
 
-const TIPI := ["buio", "bambino", "occhi", "orologio", "sangue", "tremito"]
-const PICCOLE := ["bambino", "occhi", "orologio"]
-const PESI := [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]   # stesso ordine di TIPI
-const SOGLIA_FALSO := 3.0          # un falso allarme dura SEMPRE meno di questo
+const TIPI := ["bambino", "occhi", "buio"]
+const FANTASMI := ["bambino", "occhi"]   # i mortali; il resto di TIPI sono fastidi
+const PESI := [1.0, 1.0]           # stesso ordine di FANTASMI
+const SOGLIA_FALSO := 3.0          # un fastidio dura SEMPRE meno di questo
 const BUIO_RAFFICA_MAX := 3        # buio: al massimo tanti cali in una raffica...
 const BUIO_PAUSA_MIN := 1.0        # ...e poi almeno tanto di quiete: mai piu' di 3 cali al secondo
-const COMPARSA := 0.25             # secondi per comparire (uguale per vero e falso)
+const COMPARSA := 0.25             # secondi per comparire
 const IMMAGINE_BAMBINO := "res://assets/textures/virus/bambino.png"
-const OROLOGI := ["03:33", "--:--", "88:88", "00:00", "33:03"]
-const GOCCE := 28                  # colate (60 tutte uguali sembravano un codice a barre)
-const GOCCE_SUBITO := 9            # quelle che partono subito: anche un falso deve far vedere il sangue
-const PASSO_ORLO := 48.0           # l'orlo in alto: un punto ogni tanti px, raccordati
-const GRAVITA := 1400.0            # le gocce che si staccano
 # --- il bambino ---
 const SCALA_BAMBINO := 1.35          # la figura e' alta ~350 unita': ~470 px (a 1.1, coi caratteri
                                      # da 9 px, i dettagli non avevano spazio)
@@ -158,12 +140,9 @@ const C_ASCII_SCURO := Color(0.03, 0.025, 0.035)   # gli occhi: pupilla, ciglia,
 const OCCHIO_A := 110.0                 # a 66 px erano 5 righe: non si capiva che fossero occhi
 const OCCHIO_B := 44.0
 const OCCHIO_DISTANZA := 150.0          # dal centro della coppia al centro di un occhio
-const C_SANGUE_SCURO := Color(0.19, 0.0, 0.015)    # in alto, dove si rapprende
-const C_SANGUE := Color(0.40, 0.0, 0.03)           # il corpo
-const C_SANGUE_VIVO := Color(0.60, 0.02, 0.05)     # la punta, fresca
 
 var tipo := ""
-var durata := 0.0          # > 0: falso allarme, sparisce da solo dopo questi secondi
+var durata := 0.0          # > 0: fastidio, sparisce da solo dopo questi secondi
 var crescita := 0.0        # > 0: vero, l'intensita' arriva a 1 in questi secondi
 var intensita := 0.0       # 0..1
 
@@ -171,7 +150,7 @@ var _os: OSDesktop = null
 var _rng: RandomNumberGenerator = null
 var _t := 0.0
 var _fatta := false
-var _sfondo: Control = null        # piccole: uno strato sulla carta da parati
+var _sfondo: Control = null        # fantasmi: lo strato (sfondo o sopra le finestre)
 var _velo: ColorRect = null        # buio
 var _velo_strato: CanvasLayer = null   # buio: lo strato sopra tutto che lo contiene
 var _luce := 1.0                   # buio: la "lampadina" (1 = al suo solito, 0 = spenta)
@@ -180,9 +159,6 @@ var _luce_passo := 0.0             # buio: fra quanto cambia meta
 var _tau_su := 0.05                # buio: quanto ci mette a riprendersi (il filamento si riscalda)
 var _cali: Array = []              # buio: i prossimi passi della raffica, [meta, durata, tau_su]
 var _in_raffica := false
-var _sangue: Control = null        # sangue: sopra le finestre
-var _passo := 0.0
-var _minuti := 0
 var _occhi: Array = []             # [centro della coppia, fase del battito, nato a (s)]
 var _celle_occhi: Array = []       # [posizione, carattere, colore], ricomposte ogni ASCII_PASSO
 var guarda_test: Variant = null    # SOLO i test: il punto che gli occhi guardano (se no il mouse)
@@ -209,22 +185,18 @@ var _griglia := Rect2()
 var _celle: Array = []                  # [posizione, carattere, colore]
 var _sparsi := {}                       # cella -> [carattere, soglia]: cambiano piano
 var _ascii_t := 0.0
-var _gocce: Array = []             # una Dictionary per colata (vedi setup)
-var _cadute: Array = []            # gocce staccate: [posizione, velocita']
-var _orlo: PackedFloat32Array = PackedFloat32Array()
-var _orlo_fase := 0.0
 
-# Un tipo a caso secondo i PESI.
+# Un fantasma a caso secondo i PESI.
 static func scegli(rng: RandomNumberGenerator) -> String:
 	var tot := 0.0
 	for p in PESI:
 		tot += float(p)
 	var x := rng.randf() * tot
-	for i in range(TIPI.size()):
+	for i in range(FANTASMI.size()):
 		x -= float(PESI[i])
 		if x <= 0.0:
-			return TIPI[i]
-	return TIPI[TIPI.size() - 1]
+			return FANTASMI[i]
+	return FANTASMI[FANTASMI.size() - 1]
 
 func setup(os: OSDesktop, che_tipo: String, rng: RandomNumberGenerator) -> void:
 	_os = os
@@ -246,7 +218,10 @@ func setup(os: OSDesktop, che_tipo: String, rng: RandomNumberGenerator) -> void:
 			_sfondo.name = "Apparizione_" + tipo
 			_sfondo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			_sfondo.draw.connect(_disegna_sfondo)
-			os.sopra_sfondo(_sfondo)
+			if GameManager.fantasma_sopra_finestre:
+				os.sopra_finestre(_sfondo)
+			else:
+				os.sopra_sfondo(_sfondo)
 			_sfondo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			if tipo == "bambino":
 				if ResourceLoader.exists(IMMAGINE_BAMBINO):
@@ -271,51 +246,13 @@ func setup(os: OSDesktop, che_tipo: String, rng: RandomNumberGenerator) -> void:
 				_sfondo.modulate.a = 0.0
 				_aggiungi_occhi()
 				_componi_occhi()
-		"orologio":
-			var t := Time.get_time_dict_from_system()
-			_minuti = int(t.hour) * 60 + int(t.minute)
-			_cambia_orologio()
-		"sangue":
-			_sangue = Control.new()
-			_sangue.name = "Apparizione_sangue"
-			_sangue.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			_sangue.draw.connect(_disegna_sangue)
-			os.sopra_finestre(_sangue)
-			_sangue.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-			_orlo.resize(int(os.size.x / PASSO_ORLO) + 2)
-			for i in range(_orlo.size()):
-				_orlo[i] = _rng.randf_range(0.55, 1.3)
-			for i in range(4):
-				_orlo[_rng.randi() % _orlo.size()] = _rng.randf_range(1.6, 2.2)   # qualche sacca gonfia
-			_orlo_fase = _rng.randf_range(0.0, TAU)
-			for i in range(GOCCE):
-				var subito := i < GOCCE_SUBITO
-				_gocce.append({
-					"x": _rng.randf_range(8.0, os.size.x - 8.0),
-					# qualcuna grossa; sotto i 6-7 px, lunghe, sembravano spaghi
-					"w": lerpf(6.5, 20.0, pow(_rng.randf(), 1.4)),
-					"v": _rng.randf_range(60.0, 150.0),
-					# le prime subito, le altre si aggiungono nei secondi dopo
-					"parte": 0.0 if subito else _rng.randf_range(0.4, 16.0),
-					"lun": 0.0,
-					# fin dove arriva: quasi tutte corte, poche fino in fondo
-					"max": lerpf(50.0, os.size.y, pow(_rng.randf(), 1.7)),
-					"f": _rng.randf_range(1.4, 3.0),
-					# le prime partono di slancio (spinta al massimo), le altre a caso
-					"ph": PI * 0.5 if subito else _rng.randf_range(0.0, TAU),
-					"amp": _rng.randf_range(0.8, 3.5),
-					"m": _rng.randf_range(0.0, TAU),
-				})
 
-# Quanto e' "comparsa" adesso (0..1): uguale per vero e falso.
+# Quanto e' "comparsa" adesso (0..1).
 func comparsa() -> float:
 	return smoothstep(0.0, COMPARSA, _t)
 
 func attiva() -> bool:
 	return not _fatta
-
-func grave() -> bool:
-	return not PICCOLE.has(tipo)
 
 func _process(delta: float) -> void:
 	avanza(delta)
@@ -348,29 +285,17 @@ func avanza(delta: float) -> void:
 			if _ascii_t <= 0.0:
 				_ascii_t = ASCII_PASSO
 				_componi_occhi()
-		"orologio":
-			_passo -= delta
-			if _passo <= 0.0:
-				_cambia_orologio()
-		"sangue":
-			_scorri_sangue(delta)
-			_sangue.queue_redraw()
-		"tremito":
-			var forza: float = (2.0 + 7.0 * intensita) * comparsa()
-			if _rng.randf() < 0.35:
-				_os.window_layer.position = Vector2(_rng.randf_range(-forza, forza),
-						_rng.randf_range(-forza, forza)).round()
 
-# --- piccole ---
+# --- il buio ---
 
-# Il buio: lo scuro cresce col vero (fino a 0.85: Avvio deve restare trovabile) e la luce
+# Il buio: lo scuro (che con una crescita arriverebbe a 0.85: Avvio deve restare trovabile) e la luce
 # sfarfalla come una LAMPADINA CHE STA PER SPEGNERSI (proprietario: "piu' naturale"). Quasi
 # sempre accesa al suo solito, con un tremolio appena; ogni tanto una RAFFICA di 2-3 cali brevi
 # (il filamento che perde contatto) oppure un calo LUNGO quasi al buio che si riprende piano
 # (il filamento che si raffredda e si riscalda); poi quiete. Niente scatti: la luce va verso la
 # meta con un'inerzia, scende in fretta e risale piu' lenta. Mai PIU' CHIARA del suo solito: la
 # prima versione tornava quasi normale a lampi, e sembrava un interruttore, non una lampadina.
-# Comparsa uguale per vero e falso: lo sfarfallio parte dopo, quando e' gia' buio.
+# Lo sfarfallio parte dopo la comparsa, quando e' gia' buio.
 func _sfarfalla(delta: float) -> void:
 	var scuro: float = clampf(0.62 * comparsa() + 0.23 * intensita, 0.0, 0.85)
 	if _t >= COMPARSA + 0.1:
@@ -407,18 +332,6 @@ func _prepara_raffica() -> void:
 		_cali.append([_rng.randf_range(0.15, 0.5), _rng.randf_range(0.04, 0.09), 0.05])
 		if i < n - 1:
 			_cali.append([_rng.randf_range(0.8, 1.0), _rng.randf_range(0.06, 0.16), 0.05])
-
-func _cambia_orologio() -> void:
-	if intensita >= 0.9:
-		_os.orologio_finto("03:33")          # alla fine si ferma li'
-		_passo = 1.0
-		return
-	if _rng.randf() < 0.5:
-		_minuti = posmod(_minuti - _rng.randi_range(1, 7), 24 * 60)   # all'indietro
-		_os.orologio_finto("%02d:%02d" % [_minuti / 60, _minuti % 60])
-	else:
-		_os.orologio_finto(OROLOGI[_rng.randi() % OROLOGI.size()])
-	_passo = lerpf(0.4, 0.15, intensita)
 
 func _aggiungi_occhi() -> void:
 	var area := Vector2(_os.size.x, _os.size.y - OSDesktop.TASKBAR_H)
@@ -973,174 +886,17 @@ func _misura_cella() -> Vector2:
 		_cella = Vector2(ceilf(Win95.font(ASCII_FONT).get_char_size(ord("M"), ASCII_PUNTI).x), ASCII_RIGA)
 	return _cella
 
-# --- gravi ---
-
-# Quante colate sono gia' scese di almeno "px" sotto l'orlo (per i test).
-func colate(px := 5.0) -> int:
-	var n := 0
-	for g in _gocce:
-		if float(g["lun"]) > px:
-			n += 1
-	return n
-
-# Le colate scendono A STRAPPI: una spinta che va e viene (sangue viscoso, non pioggia) e
-# rallenta man mano che si allungano. Ognuna ha un suo traguardo, che nel vero si allunga
-# con l'intensita'; da quelle gia' lunghe ogni tanto si stacca una goccia e cade.
-func _scorri_sangue(delta: float) -> void:
-	for g in _gocce:
-		var parte: float = g["parte"]
-		if _t < parte:
-			continue
-		var lun: float = g["lun"]
-		var lmax: float = g["max"]
-		var tetto: float = maxf(minf(lmax, 30.0), lmax * (0.25 + 0.75 * intensita))
-		if lun < tetto:
-			var spinta: float = 0.5 + 0.5 * sin((_t - parte) * float(g["f"]) + float(g["ph"]))
-			var vel: float = float(g["v"]) * (1.0 + intensita) * (0.2 + 0.8 * spinta * spinta) \
-					/ (1.0 + lun / 600.0)
-			g["lun"] = minf(tetto, lun + vel * delta)
-		if lun > 60.0 and _cadute.size() < 6 and _rng.randf() < delta * 0.06 * (0.3 + intensita):
-			var x: float = g["x"]
-			var y: float = _altezza_orlo(x) + lun
-			_cadute.append([Vector2(x + _serpeggia(g, y), y), 0.0])
-	var fondo: float = _sangue.size.y
-	for i in range(_cadute.size() - 1, -1, -1):
-		var c: Array = _cadute[i]
-		c[1] = float(c[1]) + GRAVITA * delta
-		c[0] = (c[0] as Vector2) + Vector2(0, float(c[1]) * delta)
-		if (c[0] as Vector2).y > fondo + 20.0:
-			_cadute.remove_at(i)
-
-# L'altezza dell'orlo di sangue lungo il bordo alto, in x: punti raccordati morbidi (a
-# punte strette, la prima versione, sembrava una sega), e cresce con l'intensita'.
-func _altezza_orlo(x: float) -> float:
-	var alto: float = (16.0 + 46.0 * intensita) * comparsa()
-	var p: float = x / PASSO_ORLO
-	var i: int = clampi(int(p), 0, _orlo.size() - 2)
-	var k: float = smoothstep(0.0, 1.0, p - i)
-	return alto * lerpf(_orlo[i], _orlo[i + 1], k) + 2.0 * sin(x * 0.17 + _orlo_fase) * comparsa()
-
-# Lo spostamento di lato di una colata alla quota y: scende serpeggiando appena.
-func _serpeggia(g: Dictionary, y: float) -> float:
-	var amp: float = g["amp"]
-	var m: float = g["m"]
-	return sin(y * 0.012 + m) * amp + sin(y * 0.033 + m * 2.0) * amp * 0.35
-
-func _disegna_sangue() -> void:
-	if _sangue == null:
-		return
-	var s := _sangue.size
-	var a: float = comparsa()
-	# prima le colate, POI l'orlo sopra: cosi' l'attacco della colata sparisce sotto l'orlo
-	for g in _gocce:
-		_disegna_colata(g, a, s.y)
-	for c in _cadute:
-		_disegna_caduta(c[0], float(c[1]), a)
-	# l'orlo: scuro in cima (si rapprende), il colore del corpo sul bordo, dove attacca le colate
-	var bordo := PackedVector2Array()
-	var x0 := 0.0
-	while x0 <= s.x + 6.0:
-		bordo.append(Vector2(x0, _altezza_orlo(x0)))
-		x0 += 6.0
-	var scuro := Color(C_SANGUE_SCURO, a)
-	var corpo := Color(C_SANGUE, a)
-	for i in range(bordo.size() - 1):
-		_sangue.draw_primitive(PackedVector2Array([Vector2(bordo[i].x, 0), Vector2(bordo[i + 1].x, 0),
-				bordo[i + 1], bordo[i]]), PackedColorArray([scuro, scuro, corpo, corpo]), PackedVector2Array())
-	_sangue.draw_polyline(bordo, corpo, 1.5, true)
-	# un filo di lucido appena sopra il bordo: e' bagnato
-	var lucido := PackedVector2Array()
-	for p in bordo:
-		lucido.append(p + Vector2(0, -3.5))
-	_sangue.draw_polyline(lucido, Color(1.0, 0.5, 0.45, 0.16 * a), 1.5, true)
-
-# Una colata: si allarga dove esce dall'orlo, si assottiglia scendendo, serpeggia appena e
-# finisce GONFIANDOSI in una goccia allungata che fa parte dello stesso contorno -- non una
-# pallina attaccata in fondo: cosi', piu' larga, piu' chiara e col riflesso a puntino,
-# sembrava uno spillo (proprietario: "le gocce appaiono come pallini"). La goccia e' appena
-# piu' scura in basso (il sangue li' e' piu' spesso); il lato destro e' in ombra e un filo
-# di lucido corre sul sinistro, giu' fin dentro la goccia.
-func _disegna_colata(g: Dictionary, a: float, fondo: float) -> void:
-	var lun: float = g["lun"]
-	if lun <= 0.5:
-		return
-	var x: float = g["x"]
-	var w: float = g["w"]
-	var orlo := _altezza_orlo(x)
-	var punta: float = minf(orlo + lun, fondo)
-	var r: float = minf(w * 0.5, 0.3 * w + lun * 0.25)   # mezza larghezza della goccia
-	var lb: float = r * 3.2                               # quanto e' lunga la goccia
-	var fine_corpo: float = maxf(punta - lb, 0.0)
-	# le quote: il corpo a passi regolari, la goccia fitta (in fondo e' tonda)
-	var ys := PackedFloat32Array()
-	var n: int = clampi(int(fine_corpo / 14.0) + 2, 2, 48)
-	for k in range(n):
-		ys.append(fine_corpo * k / n)
-	for k in range(13):
-		ys.append(lerpf(fine_corpo, punta, sin(PI * 0.5 * k / 12.0)))
-	var sx := PackedVector2Array()
-	var dx := PackedVector2Array()
-	var cols := PackedColorArray()
-	for y in ys:
-		var u: float = clampf((y - orlo) / maxf(lun, 1.0), 0.0, 1.0)
-		var hw: float = w * 0.5 * lerpf(1.0, 0.72, u)
-		hw *= 1.0 + 1.5 * (1.0 - smoothstep(orlo - 2.0, orlo + 2.2 * w, y))
-		var d: float = punta - y                          # distanza dalla punta
-		if d < r:
-			# il fondo della goccia: mezza ellisse che chiude il contorno in punta
-			var q: float = (r - d) / r
-			hw = maxf(hw, r) * sqrt(maxf(0.0, 1.0 - q * q))
-		else:
-			hw = maxf(hw, lerpf(r, 0.0, smoothstep(r, lb, d)))
-		var cx: float = x + _serpeggia(g, y)
-		sx.append(Vector2(cx - hw, y))
-		dx.append(Vector2(cx + hw, y))
-		var col: Color = C_SANGUE.lerp(C_SANGUE_VIVO, 0.3 * u)
-		col = col.lerp(C_SANGUE_SCURO, 0.35 * (1.0 - clampf(d / lb, 0.0, 1.0)))
-		cols.append(Color(col, a))
-	for k in range(sx.size() - 1):
-		_sangue.draw_primitive(PackedVector2Array([sx[k], dx[k], dx[k + 1], sx[k + 1]]),
-				PackedColorArray([cols[k], cols[k], cols[k + 1], cols[k + 1]]), PackedVector2Array())
-	_sangue.draw_polyline(sx, Color(C_SANGUE, a), 1.0, true)
-	_sangue.draw_polyline(dx, Color(C_SANGUE_SCURO, 0.7 * a), 1.0, true)
-	if lun > 2.0 * w:
-		var luce := PackedVector2Array()
-		for k in range(sx.size()):
-			if sx[k].y > orlo + w and sx[k].y < punta - r * 0.4:
-				luce.append(sx[k].lerp(dx[k], 0.3))
-		if luce.size() >= 2:
-			_sangue.draw_polyline(luce, Color(1.0, 0.55, 0.5, 0.18 * a), clampf(w * 0.15, 1.0, 2.0), true)
-
-# Una goccia che si e' staccata e cade: in caduta e' una goccia con la SCIA (piu' lunga
-# quanto piu' va veloce, che sfuma verso l'alto), non un pallino.
-func _disegna_caduta(p: Vector2, v: float, a: float) -> void:
-	var r := 2.2
-	var coda: float = clampf(v * 0.02, 4.0, 26.0)
-	var pts := PackedVector2Array([p + Vector2(0, -r - coda)])
-	var cols := PackedColorArray([Color(C_SANGUE, 0.0)])
-	for k in range(9):                    # il fondo tondo, da destra a sinistra
-		var ang: float = PI * k / 8.0
-		pts.append(p + Vector2(cos(ang) * r, sin(ang) * r))
-		cols.append(Color(C_SANGUE, a))
-	_sangue.draw_polygon(pts, cols)
-
-# Rimette tutto com'era: strati liberati, orologio, finestre al loro posto.
+# Rimette tutto com'era: strati liberati.
 func pulisci() -> void:
 	if _fatta:
 		return
 	_fatta = true
 	set_process(false)
-	if _os != null and is_instance_valid(_os):
-		if tipo == "orologio":
-			_os.orologio_finto("")
-		if tipo == "tremito" and _os.window_layer != null:
-			_os.window_layer.position = Vector2.ZERO
-	for n in [_sfondo, _velo, _velo_strato, _sangue]:
+	for n in [_sfondo, _velo, _velo_strato]:
 		if n != null and is_instance_valid(n):
 			(n as Node).queue_free()
 	_sfondo = null
 	_velo = null
 	_velo_strato = null
-	_sangue = null
 	finita.emit()
 	queue_free()

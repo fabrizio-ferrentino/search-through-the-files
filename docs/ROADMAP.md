@@ -175,10 +175,13 @@ Threat *inside* the machine + atmosphere. Viruses per GDD §7.2.
   visuals (flicker, tears, frozen frames, corrupted text). Expose a `glitch(level)`
   entry point. (Foundation already exists in `glitch.gdshader`.)
 - [x] **Shutdown-or-die virus.** (2026-10-18, `virus_mortale.gd` + `apparizione.gd`) One
-  phase: an **apparition** (five small ones in the wallpaper or clock, three grave ones:
-  blood, shaking windows) that **stays** — power off within 10 s (Start >
-  Shut down or the case) or → `game_over("virus")`. The same apparitions come alone as
-  **false alarms**, gone after 2-2.5 s.
+  phase: a **ghost** (the child or the eyes) that **stays** — power off within 10 s (Start >
+  Shut down or the case) or → `game_over("virus")`. **Reworked 2026-11-28** (owner: "basta
+  spegnere altrimenti muori"): the ghost has no false alarms; blood, shaking windows and the
+  wrong clock were deleted ("cancellali tutti lascia solo il buio"); only the darkness stays,
+  as a brief harmless **nuisance** every 3-5 min (the old false alarms, renamed); a dev switch
+  puts the ghost above the windows instead of on the wallpaper (default wallpaper).
+  - [x] **Ghost rework (2026-11-28).** Done, see above and `docs/code/THREATS.md`.
 - [x] **"YouAreStupid" virus.** (2026-10-18, `virus_stupido.gd`) A burst of bouncing
   smiley windows that multiply when closed, capped (9 open, 16 in all) so it always ends.
 - [x] **Crashes / BSOD.** (2026-10-18, `schermo_blu.gd`) A text-mode blue screen; after a
@@ -191,7 +194,8 @@ Threat *inside* the machine + atmosphere. Viruses per GDD §7.2.
   key, marrying horror to puzzle.
 - [ ] **Fixed PC clock (owner, 2026-11-28).** The taskbar clock shows a FIXED time, e.g.
   "01:01", not the player's real time. Touches `OSDesktop.ora_vera()` / `_update_clock` and
-  the tests that compare the clock with the real time (`virus_test` `_orologio_giusto`).
+  the tests that compare the clock with the real time (`virus_test` `_orologio_giusto`: removed
+  with the wrong-clock apparition on 2026-11-28, so nothing in `virus_test` compares it now).
 
 ## Milestone 6 — Audio & polish
 - [ ] **Audio pass:** CRT hum, key clicks, dial-up, HDD chatter, drone that

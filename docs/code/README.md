@@ -34,8 +34,8 @@ WEB_SITES.md / WEB_CATALOG.md (the recipes for disk files and web pages).
 | **HaloMan** | Same spots, never with the Jester, only with the PC on; lighting him kills - switch the PC off. |
 | **Ghosty** | From behind; advances while you do not look back, freezes when watched, vanishes in the torch light. |
 | **Torch** | Held (press = on), with a battery; repels the Jester and Ghosty. |
-| **PC viruses** | The lethal one (an apparition: power off within 10 s), YouAreStupid (window spam), the blue screen (reboots the PC). Plus false alarms. |
-| **Apparition** | How the curse shows itself in the PC (`apparizione.gd`): the hanged child in ASCII, eyes, wrong clock, darkness, blood, shaking windows. Brief = false alarm, lasting = real. |
+| **PC viruses** | The lethal one (a ghost: power off within 10 s), YouAreStupid (window spam), the blue screen (reboots the PC). Plus nuisances. |
+| **Apparition** | How the curse shows itself in the PC (`apparizione.gd`). The **ghost** (`FANTASMI`: the hanged child in ASCII, or eyes) is always real: switch off within 10 s or die, no false alarms. The **nuisance** ("fastidio": the darkness, brief and harmless) is what keeps you doubting. Blood, shaking windows and the wrong clock were removed 2026-11-28. |
 | **Site / catalog** | The 39 authored sites (`catalogo_siti.gd`, one folder each under `web/pages/<lang>/`); 24 ordinary, 15 lore. |
 
 ### Code terms (and the Italian names in the code)

@@ -1,11 +1,11 @@
 extends Node
 
-# Strumento di sviluppo (non un test): le apparizioni in ASCII (bambino, occhi) nella
+# Strumento di sviluppo (non un test): i fantasmi in ASCII (bambino, occhi) nella
 # STANZA vera, dentro il PC, fotografate come le vede chi gioca -- attraverso il CRT -- per
 # giudicarle a occhio. Per ogni tipo salva:
-#   user://ascii_<tipo>.png      la finestra del gioco (CRT compreso)
+#   user://ascii_<tipo>.png      la finestra del gioco (CRT compreso), appena comparso
 #   user://ascii_<tipo>_os.png   lo schermo del PC com'e' disegnato (senza CRT)
-#   user://ascii_<tipo>_vero.png lo stesso tipo nel VERO, a 8 s su 10 (cresciuto)
+#   user://ascii_<tipo>_vero.png lo stesso a 8 s su 10 (cresciuto)
 # Va eseguito A FINESTRA; dopo "--" i tipi (di base bambino occhi):
 #   & $godot --path $proj res://tests/ascii_check.tscn -- bambino
 
@@ -37,16 +37,11 @@ func _ready() -> void:
 			a.setup(os, tipo, rng)
 			print("%s: setup %.1f ms" % [tipo, (Time.get_ticks_usec() - t0) / 1000.0])
 			a.set_process(false)
+			a.crescita = VirusMortale.DURATA
 			if tipo == "occhi":
 				a.guarda_test = Vector2(os.size.x * 0.5, os.size.y * 0.75)   # un cursore credibile
-			if vero:
-				a.crescita = VirusMortale.DURATA
-				for k in range(8 * 30):
-					a.avanza(1.0 / 30.0)
-			else:
-				a.durata = 2.0
-				for k in range(12):
-					a.avanza(1.0 / 30.0)
+			for k in range(8 * 30 if vero else 12):
+				a.avanza(1.0 / 30.0)
 			for k in range(3):
 				await get_tree().process_frame
 			var nome := "ascii_%s%s" % [tipo, "_vero" if vero else ""]

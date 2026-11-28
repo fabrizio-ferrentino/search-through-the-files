@@ -2,7 +2,7 @@ extends Node
 
 # VirusDirector (M5): il regista delle minacce DENTRO il PC, gemello del ThreatDirector
 # della stanza. Tre virus (GDD §7.2), uno alla volta:
-#   "mortale" -> VirusMortale: un'apparizione che RESTA; spegni il PC o muori;
+#   "mortale" -> VirusMortale: il fantasma (bambino o occhi) che RESTA; spegni il PC o muori;
 #   "stupido" -> VirusStupido: la raffica di finestre "YouAreStupid", non uccide;
 #   "crash"   -> lo SCHERMO BLU (OSDesktop.schermo_blu): dopo 5 s il PC si riavvia da solo.
 # Ritmo scelto dal proprietario ("rari", non devono essere troppo invasivi): il tempo conta
@@ -15,15 +15,15 @@ extends Node
 # ThreatDirector, dal canto suo, non si affaccia durante il virus mortale).
 # Spegnere le minacce del PC (F8, GameManager.pc_threats_enabled) congela il conto e toglie
 # il virus mortale in corso; F11 (le minacce della STANZA) qui non c'entra.
-# FALSI ALLARMI (18/10/2026, proprietario): ogni FALSO_MIN..FALSO_MAX secondi di PC acceso
-# (il primo dopo FALSO_PRIMO) un'Apparizione -- la stessa con cui comincia il virus mortale
-# -- compare per meno di Apparizione.SOGLIA_FALSO e sparisce. "Rari", scelta sua. Hanno un
-# conto tutto loro: non spostano i virus veri, ma dopo un falso il prossimo virus aspetta
-# almeno DOPO_FALSO secondi, perche' un vero che parte appena finito un falso si
-# confonderebbe con lui. Spegnere per un falso allarme costa il riavvio: e' il prezzo
-# dell'errore, ed e' voluto.
+# FASTIDI (proprietario, 28/11/2026; erano i "falsi allarmi" del 18/10): ogni
+# FASTIDIO_MIN..FASTIDIO_MAX secondi di PC acceso (il primo dopo FASTIDIO_PRIMO) il "buio"
+# (Apparizione) dura meno di Apparizione.SOGLIA_FALSO e sparisce. Non uccide: il fantasma
+# vero (il bambino o gli occhi, VirusMortale) non ha falsi allarmi, se lo vedi e' vero. I
+# fastidi hanno un conto tutto loro: non spostano i virus, ma dopo un fastidio il prossimo
+# virus aspetta almeno DOPO_FASTIDIO secondi. Spegnere per un fastidio costa il riavvio: e'
+# il prezzo dell'errore, ed e' voluto.
 # DEV-ONLY: F9 fa partire subito il prossimo virus, a giro (mortale -> stupido -> crash);
-# SHIFT+F9 un falso allarme. Per sceglierne uno preciso (anche QUALE apparizione) c'e' il
+# SHIFT+F9 un fastidio. Per sceglierne uno preciso (anche QUALE fantasma) c'e' il
 # pannello di debug F12 (debug_panel.gd), che usa forza_debug / ferma_debug / stato_debug.
 
 var player = null            # la Camera3D (player.gd): is_in_pc() e il regista della stanza
@@ -37,13 +37,13 @@ const TIPI := ["mortale", "stupido", "crash"]
 const PESI := [0.4, 0.3, 0.3]
 # Il nome di ogni virus nei messaggi di debug (in inglese, come tutto il debug).
 const NOMI_DEBUG := {"mortale": "lethal", "stupido": "YouAreStupid", "crash": "blue screen",
-		"falso": "false alarm"}
-const FALSO_PRIMO := [90.0, 180.0]   # il primo falso allarme, in secondi di PC acceso
-const FALSO_MIN := 180.0             # poi uno ogni 3-5 minuti
-const FALSO_MAX := 300.0
-const FALSO_DURATA := [2.0, 2.5]     # sempre sotto Apparizione.SOGLIA_FALSO (proprietario:
+		"fastidio": "nuisance (darkness)"}
+const FASTIDIO_PRIMO := [90.0, 180.0]   # il primo fastidio, in secondi di PC acceso
+const FASTIDIO_MIN := 180.0             # poi uno ogni 3-5 minuti
+const FASTIDIO_MAX := 300.0
+const FASTIDIO_DURATA := [2.0, 2.5]     # sempre sotto Apparizione.SOGLIA_FALSO (proprietario:
                                      # 2-2,5 s; prima 0,3-1,2 s, troppo poco per vederlo)
-const DOPO_FALSO := 15.0             # un virus vero non parte prima di questo, dopo un falso
+const DOPO_FASTIDIO := 15.0             # un virus non parte prima di questo, dopo un fastidio
 
 var _rng := RandomNumberGenerator.new()
 var _evento := ""            # il virus in corso ("" = nessuno)
@@ -51,7 +51,7 @@ var _nodo = null             # il suo nodo (VirusMortale / VirusStupido), se ne 
 var _ultimo := ""
 var _tempo := 0.0            # secondi di PC acceso e loggato
 var _prossimo := PRIMO_VIRUS
-var _prossimo_falso := 0.0
+var _prossimo_fastidio := 0.0
 var _in_pc_da := 0.0
 var _fermo := false
 var _giro_debug := 0
@@ -59,7 +59,7 @@ var _giro_debug := 0
 func _ready() -> void:
 	add_to_group("regista_virus")      # cosi' lo trova il pannello di debug (F12)
 	_rng.seed = GameManager.run_seed + 5151
-	_prossimo_falso = _rng.randf_range(FALSO_PRIMO[0], FALSO_PRIMO[1])
+	_prossimo_fastidio = _rng.randf_range(FASTIDIO_PRIMO[0], FASTIDIO_PRIMO[1])
 
 func in_corso() -> String:
 	return _evento
@@ -70,7 +70,7 @@ func mortale_in_corso() -> bool:
 # Fermo definitivo (vittoria): via il virus in corso e niente piu' virus.
 func stop() -> void:
 	_fermo = true
-	if (_evento == "mortale" or _evento == "falso") and is_instance_valid(_nodo):
+	if (_evento == "mortale" or _evento == "fastidio") and is_instance_valid(_nodo):
 		_nodo.pulisci()
 	elif _evento == "stupido" and is_instance_valid(_nodo):
 		_nodo.ferma()
@@ -94,8 +94,8 @@ func avanza(delta: float) -> void:
 		_tempo += delta
 	if _tempo >= _prossimo and _pronto():
 		_avvia(_scegli())
-	elif _tempo >= _prossimo_falso and _pronto():
-		_avvia("falso")
+	elif _tempo >= _prossimo_fastidio and _pronto():
+		_avvia("fastidio")
 
 # _in_pc_da conta solo DENTRO il PC (fuori torna a zero), quindi dice anche "e' dentro".
 func _pronto() -> bool:
@@ -128,30 +128,29 @@ func _scegli() -> String:
 			return tipi[i]
 	return tipi[tipi.size() - 1]
 
-# apparizione = il tipo di Apparizione per "falso" e "mortale" ("" = a caso secondo i PESI;
-# il pannello di debug la sceglie a mano).
+# apparizione = il fantasma per "mortale" ("" = a caso secondo i PESI; il pannello di debug lo
+# sceglie a mano). Il fastidio e' sempre il "buio".
 func _avvia(tipo: String, apparizione := "") -> void:
 	_evento = tipo
-	if tipo != "falso":          # un falso allarme non conta nel "mai lo stesso due volte"
+	if tipo != "fastidio":          # un fastidio non conta nel "mai lo stesso due volte"
 		_ultimo = tipo
 	print("[VirusDirector] virus: ", NOMI_DEBUG.get(tipo, tipo))
 	match tipo:
-		"falso":
+		"fastidio":
 			var a := Apparizione.new()
 			os.add_child(a)
-			# gli stessi tipi del vero
-			a.setup(os, apparizione if apparizione != "" else Apparizione.scegli(_rng), _rng)
-			a.durata = _rng.randf_range(FALSO_DURATA[0], FALSO_DURATA[1])
+			a.setup(os, "buio", _rng)
+			a.durata = _rng.randf_range(FASTIDIO_DURATA[0], FASTIDIO_DURATA[1])
 			a.finita.connect(_fine)
 			_nodo = a
-			print("[VirusDirector] false alarm: ", a.tipo, " (%.1f s)" % a.durata)
+			print("[VirusDirector] nuisance: ", a.tipo, " (%.1f s)" % a.durata)
 		"mortale":
 			var v := VirusMortale.new()
 			os.add_child(v)
 			v.setup(os, _rng, apparizione)
 			v.scaduto.connect(_uccidi)
 			_nodo = v
-			print("[VirusDirector] lethal apparition: ", v.apparizione().tipo)
+			print("[VirusDirector] lethal ghost: ", v.apparizione().tipo)
 		"stupido":
 			var s := VirusStupido.new()
 			s.setup(os, _rng)
@@ -164,7 +163,7 @@ func _avvia(tipo: String, apparizione := "") -> void:
 # Il virus in corso e' finito? Spegnere il PC salva dal mortale.
 func _segui() -> void:
 	match _evento:
-		"falso":
+		"fastidio":
 			if not GameManager.pc_on and is_instance_valid(_nodo):
 				_nodo.pulisci()          # a PC spento non resta niente a schermo
 			if not is_instance_valid(_nodo):
@@ -188,9 +187,9 @@ func _segui() -> void:
 func _fine() -> void:
 	if _evento == "":
 		return
-	if _evento == "falso":
-		_prossimo_falso = _tempo + _rng.randf_range(FALSO_MIN, FALSO_MAX)
-		_prossimo = maxf(_prossimo, _tempo + DOPO_FALSO)
+	if _evento == "fastidio":
+		_prossimo_fastidio = _tempo + _rng.randf_range(FASTIDIO_MIN, FASTIDIO_MAX)
+		_prossimo = maxf(_prossimo, _tempo + DOPO_FASTIDIO)
 	else:
 		_prossimo = _tempo + _rng.randf_range(PAUSA_MIN, PAUSA_MAX)
 	_evento = ""
@@ -216,8 +215,8 @@ func forza(tipo := "") -> bool:
 # ---------------- DEV-ONLY: il pannello di debug (F12) ----------------
 # Testi in inglese, come tutto il debug.
 
-# Un virus scelto a mano: tipo = uno di TIPI o "falso"; apparizione = uno di
-# Apparizione.TIPI per "mortale"/"falso" ("" = a caso). "" se e' partito, se no il motivo.
+# Un virus scelto a mano: tipo = uno di TIPI o "fastidio"; apparizione = uno di
+# Apparizione.FANTASMI per "mortale" ("" = a caso). "" se e' partito, se no il motivo.
 func forza_debug(tipo: String, apparizione := "") -> String:
 	var no := perche_no()
 	if no == "":
@@ -248,7 +247,7 @@ func ferma_debug() -> String:
 	if _evento == "":
 		return "no virus is running"
 	match _evento:
-		"falso", "mortale":
+		"fastidio", "mortale":
 			if is_instance_valid(_nodo):
 				_nodo.pulisci()
 		"stupido":
@@ -262,12 +261,12 @@ func ferma_debug() -> String:
 	_fine()
 	return ""
 
-# Porta a ZERO l'attesa del prossimo virus (o falso allarme): parte appena le condizioni
+# Porta a ZERO l'attesa del prossimo virus (o fastidio): parte appena le condizioni
 # normali lo permettono -- dentro il PC da ENTRATA_MIN, desktop libero. Serve a provare il
 # ritmo vero, non a forzare.
-func azzera_attesa(falso: bool) -> void:
-	if falso:
-		_prossimo_falso = _tempo
+func azzera_attesa(fastidio: bool) -> void:
+	if fastidio:
+		_prossimo_fastidio = _tempo
 	else:
 		_prossimo = _tempo
 
@@ -280,7 +279,7 @@ func evento_debug() -> String:
 		var v: VirusMortale = _nodo
 		var app := v.apparizione()
 		s += " '%s' - kills in %d s" % [app.tipo if app != null else "?", ceili(v.DURATA - v._t)]
-	elif _evento == "falso" and is_instance_valid(_nodo):
+	elif _evento == "fastidio" and is_instance_valid(_nodo):
 		var a: Apparizione = _nodo
 		s += " '%s' - gone in %.1f s" % [a.tipo, maxf(0.0, a.durata - a._t)]
 	return s
@@ -289,8 +288,8 @@ func stato_debug() -> String:
 	var s := "PC virus: %s" % evento_debug()
 	if _fermo:
 		return s + "  (stopped)"
-	s += "\n  next virus in %d s, next false alarm in %d s  (PC-on time %d s)" % [
-			maxi(0, ceili(_prossimo - _tempo)), maxi(0, ceili(_prossimo_falso - _tempo)), int(_tempo)]
+	s += "\n  next virus in %d s, next nuisance in %d s  (PC-on time %d s)" % [
+			maxi(0, ceili(_prossimo - _tempo)), maxi(0, ceili(_prossimo_fastidio - _tempo)), int(_tempo)]
 	var no := perche_no()
 	if _evento == "" and no == "" and _in_pc_da < ENTRATA_MIN:
 		no = "the player must be inside the PC for %d s (only for the natural ones)" % int(ENTRATA_MIN)
@@ -299,6 +298,6 @@ func stato_debug() -> String:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F9:
-		var tipo := "falso" if (event as InputEventKey).shift_pressed else ""
+		var tipo := "fastidio" if (event as InputEventKey).shift_pressed else ""
 		if GameManager.run_active and not forza(tipo):
 			print("[VirusDirector] F9 ignored: a virus is already running or the desktop is busy")

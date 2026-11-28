@@ -349,29 +349,31 @@ PC off**. As built (`scripts/threats/virus_director.gd`):
   every 2-4 minutes, never the same twice in a row, only while the player is inside the PC
   (they must see it begin), never over a dialog (the secret folder included) and never while
   the Jester is peeking (and the Jester waits during the lethal one).
-- **The lethal virus is an apparition that stays** (owner, 2026-10-18 — ONE phase, one
-  rule). An apparition appears; *if it vanishes in a moment it was a false alarm, if it
-  stays it is real* and the PC must be switched off within 10 s (Start ▸ Shut down or the
-  case button), or `game_over("virus")`. The same apparitions come alone as **false
-  alarms** every 3-5 minutes, gone after 2-2.5 s. Real and false start identical, so the
-  only way to know is to watch — and both mistakes cost: switching off for nothing means a
-  reboot and every window lost, waiting too long means death. A real one never turns into
-  something else; it only grows slowly.
-  - **Small** ones, only in the wallpaper or the clock: **the child with
+- **The lethal virus is a ghost that stays** (owner, 2026-10-18 — ONE phase, one rule;
+  reworked 2026-11-28: "basta spegnere altrimenti muori"). If you see the ghost it is
+  real, and the PC must be switched off within 10 s (Start ▸ Shut down or the case button),
+  or `game_over("virus")`. **The ghost has no false alarms.** It never turns into something
+  else; it only grows slowly. Every virus death line says to switch off; the player learns
+  the rule from the death line alone ("solo la frase di morte").
+  - **The ghost** is one of two (owner: keep the child and the eyes): **the child with
     the noose** (§2b) hanging near the edge of the wallpaper, a boy made of small **black
     ASCII characters**, detailed like a drawing — darker hair and shorts, lighter skin, shading
     from one side, lines where the clothes end, a few folds — straight on the wallpaper
-    (owner, 2026-10-19: the curse shows itself with the PC's own characters; no halo); two **realistic eyes**
+    (owner, 2026-10-19: the curse shows itself with the PC's own characters; no halo); or two **realistic eyes**
     made of characters — lids, lashes, iris, pupil, highlight — whose iris follows the
-    cursor; the taskbar clock going wrong (backwards, 03:33).
-  - **Grave** ones, same rule: the **whole screen goes dark** — Start menu and dialogs included —
+    cursor. By default it sits on the wallpaper, under icons and windows ("diamo un po di
+    difficolta"); a dev switch (F12) puts it above the windows, to compare in playtests.
+  - **Nuisances** (the old false alarms, renamed 2026-11-28): every 3-5 minutes the **whole
+    screen goes dark** for 2-2.5 s — Start menu and dialogs included —
     **and flickers like a dying light bulb**: mostly steady, now and then a burst of short drops
     or a long drop almost to black that slowly recovers, never brighter than usual (owner,
-    2026-10-19 — it used to darken only the wallpaper; never more than 3 drops a second); blood dripping over the windows (a wavy rim along the top,
-    drips of different length running in viscous surges, each swelling into an elongated
-    drop at the tip — never a round ball —, now and then a drop falling with a trail); the
-    windows shaking.
-  - Rejected on the way, so they do not come back: the whole screen flashing red (the
+    2026-10-19 — it used to darken only the wallpaper; never more than 3 drops a second).
+    Harmless; with the blue screen and YouAreStupid it is what keeps the player doubting.
+    Switching off for it costs a reboot and every window lost.
+  - Rejected / removed, so they do not come back: blood dripping over the windows, the
+    windows shaking and the taskbar clock going wrong (all removed 2026-11-28: "cancellali
+    tutti lascia solo il buio"), the false alarms of the ghost (the "wait and see if it
+    stays" rule), the whole screen flashing red (the
     owner did not like it at all), a line of the curse typing itself on the wallpaper
     (removed by the owner, 2026-11-27), a quiet phase escalating into a red
     phase ("tutto un'unica fase"), and a version that blacked out the screen around a

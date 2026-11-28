@@ -97,7 +97,7 @@ UNLOCK: _sbloccati() = GameManager.chiavi_trovate not empty. Before the
 first key only the JESTER exists: _scegli_chi returns jester while
 locked, _avanza_ghosty does not count _g_timer down (Ghosty comes
 GHOSTY_PRIMO 45-70 s AFTER the first key), and virus_director._scegli
-skips "mortale" (false alarms, YouAreStupid and the blue screen are
+skips "mortale" (nuisances, YouAreStupid and the blue screen are
 unchanged). Debug forza_affaccio / ghosty_forza bypass the lock;
 stato_debug prints the two pressures, "(HaloMan and Ghosty locked until
 the first key)" and "speed xM (difficulty D)". JESTER: dark, only the torch
@@ -176,17 +176,22 @@ threats at once are a lottery, not tension. Powering off (Start >
 Shut down OR the case button) cancels the lethal one; F8 (PC
 threats off) freezes the clock and removes it - F11 is the ROOM's
 switch and does not touch it; stop() on win. DEV-ONLY: F9 forces the
-next virus now (mortale -> stupido -> crash), SHIFT+F9 a false
-alarm. avanza(delta) is public so tests run minutes in a loop.
-FALSE ALARMS (2026-10-18, owner): a fourth event, "falso", on its
-OWN clock - first after FALSO_PRIMO 90-180 s of PC on, then every
-FALSO_MIN..MAX 180-300 s ("rari", owner's pick) - shows an
-Apparizione for FALSO_DURATA 2-2.5 s (owner; it was 0.3-1.2 s) and removes it. It does not
-count for "never the same twice" and does not move the real
-viruses, except that after one the next real virus waits at least
-DOPO_FALSO 15 s (a real one right after a false one would read as
-the same). Same conditions as the viruses; never over another
-event. Test: virus_test.tscn.
+next virus now (mortale -> stupido -> crash), SHIFT+F9 a nuisance.
+avanza(delta) is public so tests run minutes in a loop.
+NUISANCES (2026-11-28, owner; they were the "false alarms" of 2026-10-18): a fourth
+event, "fastidio", on its OWN clock - first after FASTIDIO_PRIMO
+90-180 s of PC on, then every FASTIDIO_MIN..MAX 180-300 s ("rari",
+owner's pick) - shows the "buio" Apparizione for FASTIDIO_DURATA 2-2.5 s
+(owner; it was 0.3-1.2 s) and removes it; it ALWAYS starts "buio" (the
+only nuisance apparition). It does not count for "never the same
+twice" and does not move the real viruses, except that after one the
+next real virus waits at least DOPO_FASTIDIO 15 s. Same conditions as
+the viruses; never over another event. The lethal ghost has NO false
+alarm any more: see it = it is real. Renamed from "falso" / FALSO_*
+/ DOPO_FALSO / _prossimo_falso; azzera_attesa(fastidio) (debug panel
+"no wait" buttons); NOMI_DEBUG "fastidio": "nuisance (darkness)".
+Pacing numbers UNCHANGED (provisional until the owner's playtests).
+Test: virus_test.tscn.
 
 ### `scripts/threats/nemico_affaccio.gd`
 
@@ -213,17 +218,26 @@ sparisci, a slow float. How far he is comes from the director.
 
 ### `scripts/os/apparizione.gd`
 
-Apparizione (M5, 2026-10-18, owner): an APPARITION of the curse in
-the PC - it IS the lethal virus and it IS the false alarm. ONE
-PHASE, ONE RULE (owner): gone in under SOGLIA_FALSO 3 s = false
-alarm; STAYS = real, switch the PC off before it kills. It never
-turns into something else: in the real one it only grows slowly
-(crescita = VirusMortale.DURATA, intensita 0..1), "more of the
-same". Real and false START IDENTICAL (COMPARSA 0.25 s curve, same
-spot). SIX TIPI (PESI picks, all equal for now - the owner can
-make the grave ones rarer): three SMALL ones that live ONLY in the
-wallpaper (OSDesktop.sopra_sfondo: under icons and windows) or the
-clock - "bambino" (the curse SHOWS
+Apparizione (M5, 2026-10-18, owner; reworked 2026-11-28): an APPARITION
+of the curse in the PC. ONE RULE (owner, 2026-11-28, "basta spegnere
+altrimenti muori"): if you see the GHOST - the child or the eyes - it is
+real, switch the PC off within VirusMortale.DURATA 10 s or die. The ghost
+has NO false alarms. The doubt comes from NUISANCES that do not kill
+(here "buio"; outside this file the blue screen and YouAreStupid). The
+player learns the rule "solo la frase di morte" (the death line is the
+only teacher; owner). The ghost never turns into something else: it only
+grows slowly (crescita = VirusMortale.DURATA, intensita 0..1), "more of
+the same". TIPI = ["bambino", "occhi", "buio"]; FANTASMI = ["bambino",
+"occhi"] (the lethal ones; PESI aligned with FANTASMI, 1.0 each for now);
+scegli() picks a ghost. PICCOLE and grave() are gone. WHERE (owner:
+"proviamo sopra le finestre ma preferirei come adesso, diamo un po di
+difficolta"): the ghost layer goes on the WALLPAPER by default
+(OSDesktop.sopra_sfondo: under icons and windows, on purpose, a little
+difficulty); with the dev switch GameManager.fantasma_sopra_finestre
+(default false, F12 Viruses tab "Ghost above windows") it goes ABOVE the
+windows (OSDesktop.sopra_finestre: under taskbar, Start menu and dialogs,
+so Start > Shut down stays clean) - the two placements are to be compared
+in playtests. The two GHOSTS - "bambino" (the curse SHOWS
 ITSELF as a child with a noose - GDD §2b - MADE OF BLACK ASCII
 CHARACTERS since 2026-10-19 (owner, from a video of ASCII art),
 ~470 px tall (SCALA_BAMBINO 1.35), hanging near the right edge of
@@ -271,9 +285,8 @@ white characters where the eye is light, dark ones
 (C_ASCII_SCURO) where it is dark, nothing around it. The iris
 follows the cursor (guarda_test in the tests), cell by cell;
 they open and blink. Two stylised "(%@@@@%)" eyes were rejected:
-the owner wanted real ones), "orologio" (OSDesktop.orologio_finto:
-time backwards, 03:33, --:--) - and three GRAVE ones, apparitions like the others
-with the same rule: "buio" (since 2026-10-19, owner: it used to
+the owner wanted real ones). The NUISANCE: "buio" (brief, harmless,
+`durata` > 0 and < SOGLIA_FALSO 3 s, removes itself; since 2026-10-19, owner: it used to
 darken only the wallpaper - now the WHOLE screen goes dark: windows,
 icons, taskbar, AND the Start menu and dialogs opened LATER, Shut
 down included. OSDesktop.sopra_tutto puts it in its OWN CanvasLayer
@@ -290,52 +303,53 @@ follows its target with inertia, down fast (tau 0.025 s) and up
 slower - and never BRIGHTER than its usual. At most 3 drops a second
 (BUIO_RAFFICA_MAX, then BUIO_PAUSA_MIN 1 s of quiet): a faster
 flicker can hurt photosensitive players. The darkness grows in the
-real one, up to 0.85, so Start can still be found), "sangue" (over the windows, under taskbar and
-Start menu: a soft wavy RIM along the top - dark where it clots, a
-few swollen sacks, a wet sheen - and GOCCE 28 drips of DIFFERENT
-width and reach that flare out of the rim, meander slightly, thin
-out and end SWELLING into an elongated drop that is part of the
-same outline, slightly darker at the bottom, and run in viscous
-surges, not as rain; now and then a drop detaches from a long
-drip and falls as a drop with a fading TRAIL. Redrawn 2026-10-18
-on the owner's request "migliora l'effetto del sangue": it used
-to be 60 straight identical bars under a saw-tooth rim, a
-barcode; then the tips were a separate round ball, wider and
-brighter with a dot of shine, plus loose spatter dots and round
-falling drops - "le gocce appaiono come pallini": all gone) and "tremito"
-(the window layer shakes; pulisci puts it back at 0).
-History, so it does not come back: a small one, "scritte" (a
-VIRUS_SCRITTA_* phrase that typed itself on the wallpaper like a
-terminal line: red ">" prompt, letters one by one, blinking "_"),
-was REMOVED on 2026-11-27 (owner, in Italian: "elimina il virus
-'scritte' come virus"): TIPI, PICCOLE, PESI, the SCRITTE and
-SCRITTA_* constants, _scritte/_battute/_aggiungi_scritta and the
-VIRUS_SCRITTA_1..6 keys in ui.csv are gone; the header of
-apparizione.gd says so, like "lampeggio". A third grave one, "lampeggio"
-(the whole screen flashing red like a heartbeat), was REMOVED -
-the owner did not like it at all. A version with a quiet first
-phase that escalated into a red/blood second phase was rejected
+real one, up to 0.85, so Start can still be found).
+History, so it does not come back. REMOVED on 2026-11-28 (owner, in
+Italian: "cancellali tutti lascia solo il buio"; keep the child and the
+eyes): the false alarms of the ghost (the old rule "wait and see if it
+stays" no longer pleased), "sangue" (blood dripping over the windows:
+wavy rim, 28 drips, redrawn once on "migliora l'effetto del sangue"
+after the barcode-like bars and the round "pallini" tips), "tremito"
+(the window layer shaking; desktop.gd's riavvia no longer resets
+window_layer.position) and "orologio" (OSDesktop.orologio_finto:
+the taskbar clock going wrong - backwards, 03:33, --:--; the function
+and its calls are gone). PICCOLE and grave() went with them: no small /
+grave split any more. Earlier: "scritte" (a VIRUS_SCRITTA_* phrase that
+typed itself on the wallpaper like a terminal line) was REMOVED on
+2026-11-27 (owner: "elimina il virus 'scritte' come virus"; constants,
+_scritte/_battute/_aggiungi_scritta and VIRUS_SCRITTA_1..6 in ui.csv
+are gone); "lampeggio" (the whole screen flashing red like a heartbeat)
+was REMOVED, the owner did not like it at all. A version with a quiet
+first phase that escalated into a red/blood second phase was rejected
 (owner: "tutto un'unica fase"), and so was a "scarier" version that
 blacked out the whole screen around a cursor light, renamed the
 desktop icons, hung the child over the windows and flashed it
-subliminally - "troppo invasivi". durata > 0 = false alarm
-(self-removes), crescita > 0 = real. Nothing takes the mouse;
-pulisci() puts everything back (layers, clock, window layer).
+subliminally - "troppo invasivi". durata > 0 = nuisance
+(self-removes), crescita > 0 = the real ghost. Nothing takes the mouse;
+pulisci() puts everything back (layers).
 
 ### `scripts/os/virus_mortale.gd`
 
 VirusMortale (M5): the LETHAL virus - now a THIN wrapper: it picks
-an apparition type (Apparizione.scegli, or a given one for tests),
+a GHOST (Apparizione.scegli, or a given one for tests; it asserts the
+type is in Apparizione.FANTASMI - a nuisance can never be lethal),
 grows it for DURATA 10 s (owner: 25 was too long) and then emits "scaduto" ->
 game_over("virus"). Powering off in time (Start > Shut down or the
 case button) saves you: the director calls pulisci(). No phases,
 no red wallpaper, no "non spegnermi" (VIRUS_CURSE_MSG removed from
-the CSV): the old blood / shaking code moved into apparizione.gd
-as apparitions of their own. It lives INSIDE the OS, so the 3D
-monitor shows it too, and does not use glitch.gdshader (the
-corridor enemy's warning). Known risk, accepted by the owner: a
-real SMALL apparition hidden behind a maximized window may go
-unseen - raise DURATA or the grave PESI if it proves unfair.
+the CSV; the old blood / shaking code is gone, see apparizione.gd).
+The ghost has no false alarms: see it = switch off (Start > Shut
+down, or the case button) within DURATA or die. The death lines
+DEATH_VIRUS_1..4 all say to switch off (2026-11-28: 2 "One button.
+You never pressed it.", 3 "It only stays while the PC is on.", 4 "You
+could have switched it off. You kept reading."; 1 unchanged). It
+lives INSIDE the OS, so the 3D monitor shows it too, and does not use
+glitch.gdshader (the corridor enemy's warning). Known risk, accepted
+by the owner: a ghost on the wallpaper (the default) hidden behind a
+maximized window may go unseen ("diamo un po di difficolta"). It is
+now addressed by the dev switch GameManager.fantasma_sopra_finestre
+(ghost above the windows); the default stays the wallpaper on purpose.
+Raise DURATA if it proves unfair.
 
 ### `scripts/os/virus_stupido.gd`
 
@@ -401,12 +415,13 @@ foundation for M5. NOT the secret folder any more (see below).
 
 - **PC viruses** (M5, 2026-10-18): `scripts/threats/virus_director.gd` runs three, rare
   and one at a time (first after 3 min of PC on, then every 2-4 min; only while the player
-  is inside the PC): the **lethal** one (an **apparition**, `scripts/os/apparizione.gd`: three small
-  ones in the wallpaper or the clock - the hanged child (detailed black ASCII characters), two
-  realistic eyes made of characters, wrong time - and three grave ones - the whole screen going dark and
-  flickering, blood dripping over the windows, shaking windows. The same apparitions come alone every 3-5 min as **false alarms** that vanish in
-  2-2.5 s; the real one stays and grows: power off within 10 s - Start > Shut down or
-  the case - or `game_over("virus")`), **YouAreStupid** (a burst of bouncing smiley windows that
+  is inside the PC): the **lethal** one (a **ghost**, `scripts/os/apparizione.gd`: the hanged
+  child (detailed black ASCII characters) or two realistic eyes made of characters, on the
+  wallpaper by default or above the windows with the dev switch; it stays and grows - power
+  off within 10 s - Start > Shut down or the case - or `game_over("virus")`; no false alarms,
+  owner 2026-11-28 "basta spegnere altrimenti muori"). Alone every 3-5 min comes a
+  **nuisance**, the screen going dark and flickering for 2-2.5 s (blood, shaking windows and the
+  wrong clock were removed 2026-11-28, "cancellali tutti lascia solo il buio"), **YouAreStupid** (a burst of bouncing smiley windows that
   multiply when closed, capped so it always ends; not lethal) and the **blue screen** (after a
   5-second countdown the PC reboots by itself: black, BIOS, boot, login; every window lost). DEV-ONLY **F9** forces the next one.
   Test: `tests/virus_test.tscn`.

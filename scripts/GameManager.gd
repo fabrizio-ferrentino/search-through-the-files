@@ -47,6 +47,10 @@ var run_active := false
 # F8 = quelle del PC (VirusDirector: niente virus, il conto si ferma).
 var room_threats_enabled := true
 var pc_threats_enabled := true
+# DEV-ONLY (F12): il fantasma del PC (bambino o occhi) compare SOPRA le finestre invece che
+# sulla carta da parati. Il proprietario preferisce lo sfondo (un po' di difficolta') ma vuole
+# provare tutti e due nei playtest (28/11/2026).
+var fantasma_sopra_finestre := false
 
 # DEV-ONLY. Dove e' finita ogni chiave: lo riempiono i generatori dei contenuti
 # mentre le piazzano (content.gd, web_runtime.gd) chiamando note_key(). Serve al
@@ -61,7 +65,7 @@ var _keys_panel: DebugPanel = null   # il pannello di debug F12 (debug_panel.gd)
 # STATISTICHE da' l'ordine e la chiave di testo. tempo_partita conta solo a partita in corso
 # e non in pausa (GameManager si ferma con l'albero in pausa).
 # Niente nomi dei nemici (proprietario, 26/11/2026): Jester, HaloMan, Ghosty scacciati e i
-# virus mortali sventati finiscono tutti in "evitate". I falsi allarmi non contano.
+# virus mortali sventati finiscono tutti in "evitate". I fastidi non contano.
 const STATISTICHE := [["evitate", "STATS_AVOIDED"], ["pagine", "STATS_PAGES"],
 		["file", "STATS_FILES"], ["tentativi", "STATS_TRIES"]]
 var statistiche: Dictionary = {}
